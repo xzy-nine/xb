@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+import { emitUnauthorized } from '@/lib/weibo/services/auth-events'
+
 const DEFAULT_TIMEOUT_MS = 10000
 
 export type WeiboQueryParams = Record<string, string | number | null | undefined>
@@ -28,6 +30,16 @@ const weiboClient = axios.create({
     Accept: 'application/json, text/plain, */*',
     'X-Requested-With': 'XMLHttpRequest',
   },
+})
+
+weiboClient.interceptors.response.use(undefined, (error) => {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status
+    if (status === 401 || status === 403) {
+      emitUnauthorized()
+    }
+  }
+  return Promise.reject(error)
 })
 
 export async function wbGet<T>(path: string, params: WeiboQueryParams = {}): Promise<T> {
