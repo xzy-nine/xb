@@ -1,9 +1,11 @@
 import type {
   FeedAuthor,
   FeedDashQuality,
+  FeedDashSource,
   FeedEmoticon,
   FeedImage,
   FeedItem,
+  FeedMixMediaItem,
 } from '@/lib/weibo/models/feed'
 import type { CommentItem } from '@/lib/weibo/models/status'
 
@@ -104,6 +106,38 @@ export interface WeiboPicInfo {
   thumbnail?: { url?: string }
 }
 
+/** mix_media_info item types from Weibo API */
+export interface WeiboMixMediaItemVideo {
+  type: 'video'
+  id: string
+  data: {
+    object_type: 'video'
+    content1?: string
+    content2?: string
+    media_info?: WeiboMediaInfo
+    page_pic?: string
+    page_url?: string
+  }
+}
+
+export interface WeiboMixMediaItemPic {
+  type: 'pic'
+  id: string
+  data: {
+    thumbnail?: { url?: string; width?: number; height?: number }
+    bmiddle?: { url?: string; width?: number; height?: number }
+    large?: { url?: string; width?: number; height?: number }
+    original?: { url?: string; width?: number; height?: number }
+    largest?: { url?: string; width?: number; height?: number }
+  }
+}
+
+export type WeiboMixMediaItem = WeiboMixMediaItemVideo | WeiboMixMediaItemPic
+
+export interface WeiboMixMediaInfo {
+  items: WeiboMixMediaItem[]
+}
+
 export interface WeiboStatus {
   /** Numeric status id when `idstr` / `mid` omitted (some payloads). */
   id?: number | string
@@ -141,6 +175,7 @@ export interface WeiboStatus {
   title?: {
     text?: string
   }
+  mix_media_info?: WeiboMixMediaInfo
 }
 
 export interface WeiboLongTextData extends Pick<
@@ -630,6 +665,78 @@ function getStatusAuthor(user: WeiboStatusUser | undefined): FeedAuthor {
   }
 }
 
+export function toMixMediaInfo(
+  mixMediaInfo: WeiboMixMediaInfo | undefined,
+): FeedMixMediaItem[] | undefined {
+  if (!mixMediaInfo?.items) {
+    return undefined
+  }
+
+  const results: FeedMixMediaItem[] = []
+
+  for (const item of mixMediaInfo.items) {
+    if (item.type === 'video') {
+      const mediaInfo = item.data.media_info
+      if (!mediaInfo) continue
+
+      const rawMpdXml = mediaInfo?.mpdInfo?.mpdcontent ?? mediaInfo?.mpdInfo?.mpdContent
+      const hasMpd = rawMpdXml && /<AdaptationSet/i.test(rawMpdXml)
+      const sources = playbackSourcesFromList(mediaInfo)
+      let dash: FeedDashSource | undefined
+
+      if (hasMpd) {
+        dash = {
+          type: 'mpd',
+          manifestXml: rawMpdXml.trim(),
+          qualities: dashQualitiesFromPlaybackList(mediaInfo),
+        }
+      } else if (sources.length > 0) {
+        dash = {
+          type: 'playback',
+          sources,
+          selectedIndex: 0,
+        }
+      }
+
+      const streamUrl = progressiveFallbackUrl(mediaInfo) ?? mediaInfo.stream_url
+      if (!streamUrl && !item.data.page_pic && !mediaInfo.big_pic_info?.pic_big?.url) {
+        continue
+      }
+
+      results.push({
+        type: 'video',
+        id: item.id,
+        videoCoverUrl: item.data.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url,
+        videoStreamUrl: streamUrl,
+        videoDash: dash,
+        videoOrientation: mediaInfo.video_orientation,
+      })
+    } else {
+      // type === 'pic'
+      const thumbnailUrl =
+        item.data.large?.url ?? item.data.bmiddle?.url ?? item.data.thumbnail?.url
+      const largeUrl =
+        item.data.largest?.url ??
+        item.data.original?.url ??
+        item.data.large?.url ??
+        item.data.bmiddle?.url ??
+        item.data.thumbnail?.url
+
+      if (!thumbnailUrl || !largeUrl) {
+        continue
+      }
+
+      results.push({
+        type: 'pic',
+        id: item.id,
+        image: { id: item.id, thumbnailUrl, largeUrl },
+      })
+    }
+  }
+
+  return results.length > 0 ? results : undefined
+}
+
 export function toFeedItem(status: WeiboStatus, includeRetweeted = true): FeedItem {
   const mediaBelongsToRetweeted =
     includeRetweeted && Boolean(status.retweeted_status) && shouldAttachMediaToRetweeted(status)
@@ -699,6 +806,7 @@ export function toFeedItem(status: WeiboStatus, includeRetweeted = true): FeedIt
     images: mediaBelongsToRetweeted ? [] : toImages(status),
     ...(hasImageEntities ? { imageEntities } : {}),
     media: mediaBelongsToRetweeted ? null : toMedia(status),
+    mixMediaInfo: toMixMediaInfo(status.mix_media_info),
     ...(Object.keys(emoticons).length > 0 ? { emoticons } : {}),
     ...(urlEntities.length > 0 ? { urlEntities } : {}),
     ...(topicEntities.length > 0 ? { topicEntities } : {}),

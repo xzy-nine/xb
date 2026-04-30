@@ -16,6 +16,18 @@ export interface FeedImage {
   largeUrl: string
 }
 
+/** A single item inside mix_media_info */
+export interface FeedMixMediaItem {
+  type: 'video' | 'pic'
+  id: string
+  videoCoverUrl?: string
+  videoStreamUrl?: string
+  videoDash?: FeedDashSource
+  videoOrientation?: 'vertical' | 'horizontal'
+  /** Only present when type === 'pic' */
+  image?: FeedImage
+}
+
 export interface FeedDashQuality {
   id: string
   label: string
@@ -80,6 +92,8 @@ export interface FeedItem {
   images: FeedImage[]
   imageEntities?: Record<string, FeedImage[]>
   media: FeedMedia | null
+  /** 视频+图片混合类型的媒体列表 */
+  mixMediaInfo?: FeedMixMediaItem[]
   emoticons?: Record<string, FeedEmoticon>
   urlEntities?: FeedUrlEntity[]
   topicEntities?: FeedTopicEntity[]

@@ -1,33 +1,74 @@
+import { PlayIcon } from 'lucide-react'
 import React from 'react'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
-
-import { getUiPortalContainer } from '@/components/ui/portal'
+import type { PhotoRenderParams } from 'react-photo-view/dist/types'
 
 import 'react-photo-view/dist/react-photo-view.css'
+import { getUiPortalContainer } from '@/components/ui/portal'
 import { useAppSettings } from '@/lib/app-settings-store'
+import type { FeedMixMediaItem } from '@/lib/weibo/models/feed'
+
+import { VideoPlayer } from './video-player'
 
 interface ImageCarouselProps {
   images: { id: string; thumbnailUrl: string; largeUrl: string }[]
+  mixMediaItems?: FeedMixMediaItem[]
 }
 
-export function ImageCarousel({ images }: ImageCarouselProps) {
+export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
 
-  if (images.length === 0) {
-    return null
-  }
+  // Build the flat list of items to render in the grid + lightbox
+  const gridItems = React.useMemo(() => {
+    const items: Array<{
+      id: string
+      /** Used as PhotoView src (null for video renders) */
+      src: string | null
+      /** Thumbnail shown in grid */
+      thumbnailNode: React.ReactElement
+      /** Full render for PhotoView overlay */
+      render: (props: PhotoRenderParams) => React.ReactNode
+      /** Dimensions for render prop */
+      width?: number
+      height?: number
+    }> = []
 
-  return (
-    <div onClick={(event) => event.stopPropagation()}>
-      <PhotoProvider portalContainer={container}>
-        <div
-          className={`grid gap-2 ${
-            images.length <= 4 ? 'grid-cols-2' : images.length <= 9 ? 'grid-cols-3' : 'grid-cols-4'
-          }`}
-        >
-          {images.map((image, index) => (
-            <PhotoView key={index} src={image.largeUrl}>
+    // Add images first
+    for (const img of images) {
+      items.push({
+        id: img.id,
+        src: img.largeUrl,
+        thumbnailNode: (
+          <div className="border-foreground/10 relative overflow-hidden rounded-xl border">
+            {darkModeImageDim && (
+              <div className="absolute top-0 right-0 bottom-0 left-0 dark:bg-neutral-500/25" />
+            )}
+            <img src={img.thumbnailUrl} className="aspect-square w-full object-cover" alt="" />
+          </div>
+        ),
+        render: ({ attrs, scale }) => (
+          <div {...attrs} style={attrs.style}>
+            <img
+              src={img.largeUrl}
+              className="h-full w-full object-contain"
+              alt=""
+              style={{ transform: `scale(${scale})` }}
+            />
+          </div>
+        ),
+      })
+    }
+
+    // Then add mix_media_info items
+    if (mixMediaItems) {
+      for (const item of mixMediaItems) {
+        if (item.type === 'pic' && item.image) {
+          const image = item.image
+          items.push({
+            id: item.id,
+            src: image.largeUrl,
+            thumbnailNode: (
               <div className="border-foreground/10 relative overflow-hidden rounded-xl border">
                 {darkModeImageDim && (
                   <div className="absolute top-0 right-0 bottom-0 left-0 dark:bg-neutral-500/25" />
@@ -38,8 +79,90 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
                   alt=""
                 />
               </div>
-            </PhotoView>
-          ))}
+            ),
+            render: ({ attrs, scale }) => (
+              <div {...attrs} style={attrs.style}>
+                <img
+                  src={image.largeUrl}
+                  className="h-full w-full object-contain"
+                  alt=""
+                  style={{ transform: `scale(${scale})` }}
+                />
+              </div>
+            ),
+          })
+        } else if (item.type === 'video') {
+          // Video: use render prop with custom overlay
+          items.push({
+            id: item.id,
+            src: null,
+            thumbnailNode: item.videoCoverUrl ? (
+              <div className="border-foreground/10 relative overflow-hidden rounded-xl border">
+                {darkModeImageDim && (
+                  <div className="absolute top-0 right-0 bottom-0 left-0 dark:bg-neutral-500/25" />
+                )}
+                <PlayIcon className="absolute top-1/2 left-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-white" />
+                <img
+                  src={item.videoCoverUrl}
+                  className="aspect-square w-full object-cover"
+                  alt=""
+                />
+              </div>
+            ) : (
+              <div className="border-foreground/10 aspect-square w-full overflow-hidden rounded-xl border" />
+            ),
+            render: ({ attrs }) => (
+              <div
+                {...attrs}
+                className="flex h-full w-full items-center justify-center"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <VideoPlayer
+                  progressiveSrc={item.videoStreamUrl ?? ''}
+                  poster={item.videoCoverUrl}
+                  dash={item.videoDash}
+                />
+              </div>
+            ),
+            width: 800,
+            height: 450,
+          })
+        }
+      }
+    }
+
+    return items
+  }, [images, mixMediaItems, darkModeImageDim])
+
+  if (gridItems.length === 0) {
+    return null
+  }
+
+  return (
+    <div onClick={(event) => event.stopPropagation()}>
+      <PhotoProvider portalContainer={container}>
+        <div
+          className={`grid gap-2 ${
+            gridItems.length <= 4
+              ? 'grid-cols-2'
+              : gridItems.length <= 9
+                ? 'grid-cols-3'
+                : 'grid-cols-4'
+          }`}
+        >
+          {gridItems.map((item) =>
+            item.src ? (
+              <PhotoView key={item.id} src={item.src} render={item.render}>
+                {item.thumbnailNode}
+              </PhotoView>
+            ) : (
+              <PhotoView key={item.id} render={item.render} width={item.width} height={item.height}>
+                {item.thumbnailNode}
+              </PhotoView>
+            ),
+          )}
         </div>
       </PhotoProvider>
     </div>

@@ -362,7 +362,7 @@ function RetweetedFeedBlock({
 
         <FeedMediaBlock item={resolvedItem} />
 
-        <ImageCarousel images={resolvedItem.images} />
+        <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
 
         <FeedActions
           item={resolvedItem}
@@ -616,7 +616,7 @@ export function FeedCard({
 
         <FeedMediaBlock item={resolvedItem} />
 
-        <ImageCarousel images={resolvedItem.images} />
+        <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
 
         {resolvedItem.retweetedStatus ? (
           <RetweetedFeedBlock
