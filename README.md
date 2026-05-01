@@ -37,7 +37,7 @@ xb currently enhances the following pages:
 - [x] Notifications
 - [x] Favorites
 - [x] Search
-- [ ] Explore(hot topic)
+- [x] Explore(hot topic)
 - [ ] Articles
 
 ## Credits
