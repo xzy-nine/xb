@@ -121,8 +121,8 @@ export function NotificationsPage() {
   return (
     <div>
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col">
-        <div className="sticky top-0 z-10 backdrop-blur">
-          <TabsList className="grid w-full grid-cols-3">
+        <div className="bg-muted/60 sticky top-0 z-10 backdrop-blur">
+          <TabsList className="grid w-full grid-cols-3" variant="line">
             <TabsTrigger value="mentions">@我</TabsTrigger>
             <TabsTrigger value="comments">评论</TabsTrigger>
             <TabsTrigger value="likes">赞</TabsTrigger>

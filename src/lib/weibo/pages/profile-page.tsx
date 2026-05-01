@@ -133,7 +133,7 @@ export function ProfilePage() {
   const errorMessage = profileQuery.error instanceof Error ? profileQuery.error.message : null
 
   return (
-    <div>
+    <div className="pt-4">
       {profileQuery.isLoading ? <PageLoadingState label="正在加载此用户主页..." /> : null}
       {!profileQuery.isLoading && errorMessage ? (
         <PageErrorState description={errorMessage} />

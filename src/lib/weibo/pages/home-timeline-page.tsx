@@ -62,12 +62,13 @@ export function HomeTimelinePage() {
         className="flex flex-col"
         onValueChange={(value) => ctx.onHomeTabChange(value as 'for-you' | 'following')}
       >
-        <div className="sticky top-0 z-10 backdrop-blur">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="for-you">推荐</TabsTrigger>
-            <TabsTrigger value="following">我关注的</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList
+          className="bg-muted/60 sticky top-0 z-10 grid w-full grid-cols-2 backdrop-blur"
+          variant="line"
+        >
+          <TabsTrigger value="for-you">推荐</TabsTrigger>
+          <TabsTrigger value="following">我关注的</TabsTrigger>
+        </TabsList>
 
         <TabsContent value={activeTab} className="flex flex-col gap-3">
           {isLoading ? <PageLoadingState label="正在加载微博时间线..." /> : null}
