@@ -24,6 +24,8 @@ export interface FeedMixMediaItem {
   videoStreamUrl?: string
   videoDash?: FeedDashSource
   videoOrientation?: 'vertical' | 'horizontal'
+  /** Direct mp4 URL for downloading (avoids DASH/DRM issues) */
+  videoDownloadUrl?: string
   /** Only present when type === 'pic' */
   image?: FeedImage
 }
@@ -60,6 +62,8 @@ export interface FeedMedia {
   liveStartTime?: number
   replayUrl?: string
   videoOrientation?: 'vertical' | 'horizontal'
+  /** Direct mp4 URL for downloading (avoids DASH/DRM issues) */
+  downloadUrl?: string
 }
 
 export interface FeedEmoticon {

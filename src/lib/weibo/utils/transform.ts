@@ -26,6 +26,7 @@ export interface WeiboMediaInfo {
   video_orientation?: 'vertical' | 'horizontal'
   mp4_720p_mp4?: string
   h265_mp4_hd?: string
+  mp4_hd_url?: string
   mpdInfo?: {
     mpdContent?: string
     mpdcontent?: string
@@ -420,6 +421,16 @@ function progressiveFallbackUrl(mediaInfo: WeiboMediaInfo): string | undefined {
   )
 }
 
+function downloadUrlFromMediaInfo(mediaInfo: WeiboMediaInfo): string | undefined {
+  return (
+    pickNonEmptyUrl(mediaInfo.mp4_720p_mp4) ??
+    pickNonEmptyUrl(mediaInfo.h265_mp4_hd) ??
+    pickNonEmptyUrl(mediaInfo.mp4_hd_url) ??
+    pickNonEmptyUrl(mediaInfo.stream_url_hd) ??
+    pickNonEmptyUrl(mediaInfo.stream_url)
+  )
+}
+
 function playbackSourcesFromList(
   mediaInfo: WeiboMediaInfo,
 ): Array<{ id: string; label: string; url: string }> {
@@ -496,6 +507,7 @@ export function toMedia(status: WeiboStatus) {
   }
 
   const rawMpdXml = getMpdXml(mediaInfo)
+  const dlUrl = downloadUrlFromMediaInfo(mediaInfo)
 
   if (rawMpdXml) {
     if (hasAudioAdaptationInMpd(rawMpdXml)) {
@@ -507,6 +519,7 @@ export function toMedia(status: WeiboStatus) {
           title: mediaInfo.video_title ?? '',
           coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
           videoOrientation: mediaInfo.video_orientation,
+          downloadUrl: dlUrl,
           dash: {
             type: 'mpd' as const,
             manifestXml: rawMpdXml,
@@ -525,6 +538,7 @@ export function toMedia(status: WeiboStatus) {
       title: mediaInfo.video_title ?? '',
       coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
       videoOrientation: mediaInfo.video_orientation,
+      downloadUrl: dlUrl,
     }
   }
 
@@ -536,6 +550,7 @@ export function toMedia(status: WeiboStatus) {
       title: mediaInfo.video_title ?? '',
       coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
       videoOrientation: mediaInfo.video_orientation,
+      downloadUrl: dlUrl,
       dash: {
         type: 'playback' as const,
         sources,
@@ -554,6 +569,7 @@ export function toMedia(status: WeiboStatus) {
     title: mediaInfo.video_title ?? '',
     coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
     videoOrientation: mediaInfo.video_orientation,
+    downloadUrl: dlUrl,
   }
 }
 
@@ -710,6 +726,7 @@ export function toMixMediaInfo(
         videoStreamUrl: streamUrl,
         videoDash: dash,
         videoOrientation: mediaInfo.video_orientation,
+        videoDownloadUrl: downloadUrlFromMediaInfo(mediaInfo),
       })
     } else {
       // type === 'pic'
