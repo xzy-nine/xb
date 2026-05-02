@@ -52,7 +52,7 @@ export function FavoritesPage() {
   }, [hasNextPage, isFetchingNextPage, favoritesQuery])
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pt-4">
       {isLoading ? <PageLoadingState label="正在加载收藏..." /> : null}
       {!isLoading && errorMessage ? (
         <PageErrorState description={errorMessage} onRetry={() => void favoritesQuery.refetch()} />

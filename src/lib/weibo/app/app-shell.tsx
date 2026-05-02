@@ -1,9 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 
 import { useAppSettings } from '@/lib/app-settings-store'
 import { RewritePausedCard, ShellFrame } from '@/lib/weibo/app/app-shell-layout'
+import { AuthRequiredDialog } from '@/lib/weibo/components/auth-required-dialog'
 import { CommentModal } from '@/lib/weibo/components/comment-modal'
 import { GenImageDialog } from '@/lib/weibo/components/gen-image-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
@@ -11,6 +12,7 @@ import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+import { onUnauthorized } from '@/lib/weibo/services/auth-events'
 
 function getHomeTimelinePath(tab: 'for-you' | 'following') {
   return tab === 'following' ? '/mygroups' : '/'
@@ -40,7 +42,10 @@ export function AppShell() {
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
 
   const resetMainScroll = () => {
     if (mainRef.current) {
@@ -115,6 +120,13 @@ export function AppShell() {
         {composeModal}
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <GenImageDialog />
+        <AuthRequiredDialog
+          open={authDialogOpen}
+          onLogin={async () => {
+            await setRewriteEnabled(false)
+            window.location.href = 'https://weibo.com/newlogin'
+          }}
+        />
       </ShellFrame>
     </GenImageDialogProvider>
   )

@@ -110,7 +110,7 @@ export function StatusDetailPage() {
   const detail = detailQuery.data
 
   return (
-    <div>
+    <div className="pt-4">
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
       {detailQuery.error instanceof Error ? (
         <PageErrorState description={detailQuery.error.message} />

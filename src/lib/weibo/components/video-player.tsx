@@ -2,15 +2,21 @@
 
 import { selectPlaybackRate } from '@videojs/core/dom'
 import {
-  createPlayer,
+  AlertDialog,
+  BufferingIndicator,
   Controls,
+  createPlayer,
+  ErrorDialog,
   FullscreenButton,
+  Gesture,
+  Hotkey,
   MuteButton,
   PiPButton,
-  Popover,
   PlayButton,
+  Popover,
   Time,
   TimeSlider,
+  Tooltip,
   usePlayer,
   VolumeSlider,
 } from '@videojs/react'
@@ -29,16 +35,18 @@ import {
   VolumeX,
   Expand,
   Shrink,
+  Loader2,
+  RotateCcw,
 } from 'lucide-react'
 import {
   forwardRef,
   type ComponentPropsWithoutRef,
-  type MutableRefObject,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  RefObject,
 } from 'react'
 
 import { cn } from '@/lib/utils'
@@ -46,7 +54,9 @@ import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed
 
 import '@videojs/react/video/skin.css'
 
-const Player = createPlayer({ features: [...videoFeatures] })
+const { Provider: PlayerProvider, Container: PlayerContainer } = createPlayer({
+  features: [...videoFeatures],
+})
 
 const AUTO_QUALITY_ID = 'auto'
 
@@ -54,6 +64,8 @@ interface VideoPlayerProps {
   progressiveSrc: string
   poster?: string
   dash?: FeedDashSource
+  videoOrientation?: 'vertical' | 'horizontal'
+  hidePageFullScreen?: boolean
 }
 
 interface QualityOption {
@@ -110,8 +122,8 @@ function applyVideoQuality(player: MediaPlayerClass, mode: string) {
 }
 
 function destroyDashPlayer(
-  playerRef: MutableRefObject<MediaPlayerClass | null>,
-  blobUrlRef: MutableRefObject<string | null>,
+  playerRef: RefObject<MediaPlayerClass | null>,
+  blobUrlRef: RefObject<string | null>,
 ) {
   if (playerRef.current) {
     try {
@@ -151,6 +163,7 @@ const IconButton = forwardRef<
 })
 
 function VolumeControl() {
+  const volumeUnsupported = usePlayer((s) => s.volumeAvailability === 'unsupported')
   const muteButton = (
     <MuteButton
       className="media-button--mute"
@@ -167,6 +180,8 @@ function VolumeControl() {
       )}
     />
   )
+
+  if (volumeUnsupported) return muteButton
 
   return (
     <Popover.Root openOnHover delay={200} closeDelay={100} side="top">
@@ -244,7 +259,6 @@ function QualityControl({
 }
 
 function PlaybackRateControl() {
-  const [open, setOpen] = useState(false)
   const playbackRateState = usePlayer(selectPlaybackRate)
 
   if (!playbackRateState) {
@@ -256,7 +270,7 @@ function PlaybackRateControl() {
   const disabled = playbackRates.length === 0
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen} side="top" align="end">
+    <Popover.Root side="top" align="end">
       <Popover.Trigger
         disabled={disabled}
         render={(props) => (
@@ -280,7 +294,6 @@ function PlaybackRateControl() {
                 )}
                 onClick={() => {
                   setPlaybackRate(rate)
-                  setOpen(false)
                 }}
               >
                 {formatPlaybackRate(rate)}
@@ -318,7 +331,12 @@ function getPlaybackSrc({
   return sources[selectedIndex]?.url ?? sources[0]?.url ?? progressiveSrc
 }
 
-export function VideoPlayer({ progressiveSrc, poster, dash }: VideoPlayerProps) {
+export function VideoPlayer({
+  progressiveSrc,
+  poster,
+  dash,
+  hidePageFullScreen,
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<MediaPlayerClass | null>(null)
   const blobUrlRef = useRef<string | null>(null)
@@ -520,34 +538,72 @@ export function VideoPlayer({ progressiveSrc, poster, dash }: VideoPlayerProps) 
   }, [])
 
   return (
-    <div className="relative h-full w-full">
-      <Player.Provider>
-        <Player.Container className="media-default-skin media-default-skin--video relative h-full w-full overflow-hidden rounded-[inherit]">
-          <Video
-            key={isMpd ? 'dash-video' : 'html-video'}
-            ref={videoRef}
-            src={videoSrc}
-            poster={poster}
-            preload="none"
-            playsInline
-            onLoadedMetadata={handleLoadedMetadata}
-            onPointerDownCapture={ensureLoaded}
-            onPlay={ensureLoaded}
-          />
-          <Controls.Root className="media-surface media-controls">
+    <PlayerProvider>
+      <PlayerContainer className="media-default-skin media-default-skin--video relative h-full w-full overflow-hidden rounded-[inherit]">
+        <Video
+          key={isMpd ? 'dash-video' : 'html-video'}
+          ref={videoRef}
+          src={videoSrc}
+          poster={poster}
+          preload="none"
+          playsInline
+          onLoadedMetadata={handleLoadedMetadata}
+          onPointerDownCapture={ensureLoaded}
+          onPlay={ensureLoaded}
+        />
+
+        <BufferingIndicator
+          render={(props) => (
+            <div {...props} className="media-buffering-indicator">
+              <div className="media-surface">
+                <Loader2 className="media-icon size-[18px] animate-spin" />
+              </div>
+            </div>
+          )}
+        />
+
+        <ErrorDialog.Root>
+          <AlertDialog.Popup className="media-error">
+            <div className="media-error__dialog media-surface">
+              <div className="media-error__content">
+                <AlertDialog.Title className="media-error__title">
+                  Something went wrong.
+                </AlertDialog.Title>
+                <ErrorDialog.Description className="media-error__description" />
+              </div>
+              <div className="media-error__actions">
+                <AlertDialog.Close className="media-button media-button--primary">
+                  OK
+                </AlertDialog.Close>
+              </div>
+            </div>
+          </AlertDialog.Popup>
+        </ErrorDialog.Root>
+
+        <Controls.Root className="media-surface media-controls">
+          <Tooltip.Provider>
             <div className="media-button-group">
-              <PlayButton
-                className="media-button--play"
-                render={(props, state) => (
-                  <IconButton {...props}>
-                    {state.paused || state.ended ? (
-                      <Play className="media-icon size-[18px] fill-current" />
-                    ) : (
-                      <Pause className="media-icon size-[18px] fill-current" />
-                    )}
-                  </IconButton>
-                )}
-              />
+              <Tooltip.Root side="top">
+                <Tooltip.Trigger
+                  render={
+                    <PlayButton
+                      className="media-button--play"
+                      render={(props, state) => (
+                        <IconButton {...props}>
+                          <RotateCcw className="media-icon media-icon--restart size-[18px]" />
+                          {state.paused || state.ended ? (
+                            <Play className="media-icon media-icon--play size-[18px]" />
+                          ) : (
+                            <Pause className="media-icon media-icon--pause size-[18px]" />
+                          )}
+                        </IconButton>
+                      )}
+                    />
+                  }
+                />
+                <Tooltip.Popup className="media-surface media-tooltip" />
+              </Tooltip.Root>
+
               {qualities.length > 0 ? (
                 <QualityControl
                   value={qualityId}
@@ -571,54 +627,108 @@ export function VideoPlayer({ progressiveSrc, poster, dash }: VideoPlayerProps) 
             </div>
 
             <div className="media-button-group">
-              <PlaybackRateControl />
+              <Tooltip.Root side="top">
+                <Tooltip.Trigger render={<PlaybackRateControl />} />
+                <Tooltip.Popup className="media-surface media-tooltip">
+                  Toggle playback rate
+                </Tooltip.Popup>
+              </Tooltip.Root>
 
               <VolumeControl />
 
-              <PiPButton
-                className="media-button--pip"
-                render={(props, state) => (
-                  <IconButton
-                    {...props}
-                    aria-label={state.pip ? '退出画中画' : '进入画中画'}
-                    disabled={state.availability !== 'available'}
-                  >
-                    {state.pip ? (
-                      <PictureInPicture className="media-icon size-[18px]" />
-                    ) : (
-                      <PictureInPicture2 className="media-icon size-[18px]" />
-                    )}
-                  </IconButton>
-                )}
-              />
+              <Tooltip.Root side="top">
+                <Tooltip.Trigger
+                  render={
+                    <PiPButton
+                      className="media-button--pip"
+                      render={(props, state) => (
+                        <IconButton
+                          {...props}
+                          aria-label={state.pip ? '退出画中画' : '进入画中画'}
+                          disabled={state.availability !== 'available'}
+                        >
+                          {state.pip ? (
+                            <PictureInPicture className="media-icon size-[18px]" />
+                          ) : (
+                            <PictureInPicture2 className="media-icon size-[18px]" />
+                          )}
+                        </IconButton>
+                      )}
+                    />
+                  }
+                />
+                <Tooltip.Popup className="media-surface media-tooltip" />
+              </Tooltip.Root>
 
-              <IconButton
-                onClick={() => setInlineFullscreen(!inlineFullscreen)}
-                aria-label={inlineFullscreen ? '退出网页内全屏' : '网页内全屏'}
-              >
-                {inlineFullscreen ? (
-                  <Shrink className="media-icon size-[18px]" />
-                ) : (
-                  <Expand className="media-icon size-[18px]" />
-                )}
-              </IconButton>
+              {hidePageFullScreen && (
+                <Tooltip.Root side="top">
+                  <Tooltip.Trigger
+                    render={
+                      <IconButton
+                        onClick={() => setInlineFullscreen(!inlineFullscreen)}
+                        aria-label={inlineFullscreen ? '退出网页内全屏' : '网页内全屏'}
+                      >
+                        {inlineFullscreen ? (
+                          <Shrink className="media-icon size-[18px]" />
+                        ) : (
+                          <Expand className="media-icon size-[18px]" />
+                        )}
+                      </IconButton>
+                    }
+                  />
+                  <Tooltip.Popup className="media-surface media-tooltip" />
+                </Tooltip.Root>
+              )}
 
-              <FullscreenButton
-                className="media-button--fullscreen"
-                render={(props, state) => (
-                  <IconButton {...props}>
-                    {state.fullscreen ? (
-                      <Minimize className="media-icon size-[18px]" />
-                    ) : (
-                      <Maximize className="media-icon size-[18px]" />
-                    )}
-                  </IconButton>
-                )}
-              />
+              <Tooltip.Root side="top">
+                <Tooltip.Trigger
+                  render={
+                    <FullscreenButton
+                      className="media-button--fullscreen"
+                      render={(props, state) => (
+                        <IconButton {...props}>
+                          {state.fullscreen ? (
+                            <Minimize className="media-icon size-[18px]" />
+                          ) : (
+                            <Maximize className="media-icon size-[18px]" />
+                          )}
+                        </IconButton>
+                      )}
+                    />
+                  }
+                />
+                <Tooltip.Popup className="media-surface media-tooltip" />
+              </Tooltip.Root>
             </div>
-          </Controls.Root>
-        </Player.Container>
-      </Player.Provider>
-    </div>
+          </Tooltip.Provider>
+        </Controls.Root>
+
+        <div className="media-overlay" />
+
+        <Hotkey keys="Space" action="togglePaused" />
+        <Hotkey keys="k" action="togglePaused" />
+        <Hotkey keys="m" action="toggleMuted" />
+        <Hotkey keys="f" action="toggleFullscreen" />
+        <Hotkey keys="c" action="toggleSubtitles" />
+        <Hotkey keys="i" action="togglePictureInPicture" />
+        <Hotkey keys="ArrowRight" action="seekStep" value={5} />
+        <Hotkey keys="ArrowLeft" action="seekStep" value={-5} />
+        <Hotkey keys="l" action="seekStep" value={10} />
+        <Hotkey keys="j" action="seekStep" value={-10} />
+        <Hotkey keys="ArrowUp" action="volumeStep" value={0.05} />
+        <Hotkey keys="ArrowDown" action="volumeStep" value={-0.05} />
+        <Hotkey keys="0-9" action="seekToPercent" />
+        <Hotkey keys="Home" action="seekToPercent" value={0} />
+        <Hotkey keys="End" action="seekToPercent" value={100} />
+        <Hotkey keys=">" action="speedUp" />
+        <Hotkey keys="<" action="speedDown" />
+
+        <Gesture type="tap" action="togglePaused" pointer="mouse" region="center" />
+        <Gesture type="tap" action="toggleControls" pointer="touch" />
+        <Gesture type="doubletap" action="seekStep" value={-10} region="left" />
+        <Gesture type="doubletap" action="toggleFullscreen" region="center" />
+        <Gesture type="doubletap" action="seekStep" value={10} region="right" />
+      </PlayerContainer>
+    </PlayerProvider>
   )
 }
