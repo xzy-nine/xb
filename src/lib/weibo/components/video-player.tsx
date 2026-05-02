@@ -64,6 +64,8 @@ interface VideoPlayerProps {
   progressiveSrc: string
   poster?: string
   dash?: FeedDashSource
+  videoOrientation?: 'vertical' | 'horizontal'
+  hidePageFullScreen?: boolean
 }
 
 interface QualityOption {
@@ -329,7 +331,12 @@ function getPlaybackSrc({
   return sources[selectedIndex]?.url ?? sources[0]?.url ?? progressiveSrc
 }
 
-export function VideoPlayer({ progressiveSrc, poster, dash }: VideoPlayerProps) {
+export function VideoPlayer({
+  progressiveSrc,
+  poster,
+  dash,
+  hidePageFullScreen,
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<MediaPlayerClass | null>(null)
   const blobUrlRef = useRef<string | null>(null)
@@ -653,23 +660,25 @@ export function VideoPlayer({ progressiveSrc, poster, dash }: VideoPlayerProps) 
                 <Tooltip.Popup className="media-surface media-tooltip" />
               </Tooltip.Root>
 
-              <Tooltip.Root side="top">
-                <Tooltip.Trigger
-                  render={
-                    <IconButton
-                      onClick={() => setInlineFullscreen(!inlineFullscreen)}
-                      aria-label={inlineFullscreen ? '退出网页内全屏' : '网页内全屏'}
-                    >
-                      {inlineFullscreen ? (
-                        <Shrink className="media-icon size-[18px]" />
-                      ) : (
-                        <Expand className="media-icon size-[18px]" />
-                      )}
-                    </IconButton>
-                  }
-                />
-                <Tooltip.Popup className="media-surface media-tooltip" />
-              </Tooltip.Root>
+              {hidePageFullScreen && (
+                <Tooltip.Root side="top">
+                  <Tooltip.Trigger
+                    render={
+                      <IconButton
+                        onClick={() => setInlineFullscreen(!inlineFullscreen)}
+                        aria-label={inlineFullscreen ? '退出网页内全屏' : '网页内全屏'}
+                      >
+                        {inlineFullscreen ? (
+                          <Shrink className="media-icon size-[18px]" />
+                        ) : (
+                          <Expand className="media-icon size-[18px]" />
+                        )}
+                      </IconButton>
+                    }
+                  />
+                  <Tooltip.Popup className="media-surface media-tooltip" />
+                </Tooltip.Root>
+              )}
 
               <Tooltip.Root side="top">
                 <Tooltip.Trigger
