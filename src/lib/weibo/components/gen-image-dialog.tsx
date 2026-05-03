@@ -46,6 +46,33 @@ import {
 } from '@/lib/weibo/components/gen-image/card-index'
 import { transformFeedItem } from '@/lib/weibo/components/gen-image/utils'
 
+/** Valid data URL when a remote image fetch fails; empty string breaks `img` load in Firefox. */
+const CAPTURE_FAILED_IMAGE_PLACEHOLDER =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='
+
+/**
+ * Sina 图床会校验 Referer；无 Referer 时 `fetch` 常返回 HTML 错误页但仍为 200，
+ * 被当成 JPEG 转成 data URL 后触发 `img` `error`（第一次失败），并污染 html-to-image 的全局缓存。
+ */
+const WEIBO_CAPTURE_FETCH_INIT: RequestInit = {
+  referrer: 'https://weibo.com/',
+  referrerPolicy: 'unsafe-url',
+}
+
+async function waitForCardImages(root: HTMLElement): Promise<void> {
+  const imgs = [...root.querySelectorAll('img')]
+  await Promise.all(
+    imgs.map(async (img) => {
+      if (!img.src || img.src.startsWith('data:')) return
+      try {
+        await img.decode()
+      } catch {
+        // 展示图加载失败时仍继续；嵌入阶段会用带 Referer 的 fetch 重拉
+      }
+    }),
+  )
+}
+
 const CARD_STYLE_OPTIONS: { value: CardStyle; label: string }[] = [
   { value: 'default', label: '默认' },
   { value: 'minimal', label: '现代' },
@@ -84,10 +111,14 @@ async function captureCardAsBlob(
 ): Promise<Blob | null> {
   if (!cardRef.current) return null
 
+  await waitForCardImages(cardRef.current)
+
   const blob = await toBlob(cardRef.current, {
     pixelRatio: 2,
     cacheBust: true,
     fontEmbedCSS: '',
+    imagePlaceholder: CAPTURE_FAILED_IMAGE_PLACEHOLDER,
+    fetchRequestInit: WEIBO_CAPTURE_FETCH_INIT,
     filter: (node) => {
       if (node.nodeName === 'LINK' && node.getAttribute('rel') === 'stylesheet') {
         return false
