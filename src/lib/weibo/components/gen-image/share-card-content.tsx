@@ -27,7 +27,7 @@ export function ShareCardAvatar({
   const fallback = fallbackClassName ?? 'text-sm font-semibold'
   return (
     <Avatar className={sizeClassName}>
-      <AvatarImage src={author.avatarUrl ?? undefined} alt={author.name} />
+      <AvatarImage src={author.avatarUrl ?? undefined} alt={author.name} crossOrigin="anonymous" />
       <AvatarFallback className={fallback}>{getAuthorInitial(author.name)}</AvatarFallback>
     </Avatar>
   )
@@ -81,7 +81,13 @@ export function ShareCardImages({
             key={image.thumbnailUrl}
             className="border-foreground/10 relative overflow-hidden rounded-xl border"
           >
-            <img src={image.largeUrl} className="w-full object-contain" alt="" width="100%" />
+            <img
+              src={image.largeUrl}
+              className="w-full object-contain"
+              alt=""
+              width="100%"
+              crossOrigin="anonymous"
+            />
           </div>
         ))}
       </div>
@@ -105,7 +111,12 @@ export function ShareCardImages({
           key={image.thumbnailUrl}
           className="border-foreground/10 relative overflow-hidden rounded-xl border"
         >
-          <img src={image.largeUrl} className="aspect-square w-full object-cover" alt="" />
+          <img
+            src={image.largeUrl}
+            className="aspect-square w-full object-cover"
+            alt=""
+            crossOrigin="anonymous"
+          />
         </div>
       ))}
     </div>
