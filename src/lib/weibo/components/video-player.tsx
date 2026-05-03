@@ -49,6 +49,7 @@ import {
   useState,
   RefObject,
 } from 'react'
+import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
@@ -395,6 +396,10 @@ export function VideoPlayer({
 
     setDownloading(true)
     try {
+      const name = downloadFilename
+        ? `${downloadFilename.replaceAll(/[\\/:*?"<>|]/g, '_')}.mp4`
+        : 'weibo_video.mp4'
+      toast.info(`准备下载：${name}`)
       const res = await fetch(downloadUrl)
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`)
@@ -403,14 +408,13 @@ export function VideoPlayer({
       const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = blobUrl
-      const name = downloadFilename
-        ? `${downloadFilename.replaceAll(/[\\/:*?"<>|]/g, '_')}.mp4`
-        : 'weibo_video.mp4'
       a.download = name
       a.click()
       URL.revokeObjectURL(blobUrl)
+      toast.success(`已下载：${name}`)
+      a.remove()
     } catch {
-      // download failed — silently ignore, user can see browser download progress/error
+      toast.error('下载失败，请稍后重试')
     } finally {
       setDownloading(false)
     }
