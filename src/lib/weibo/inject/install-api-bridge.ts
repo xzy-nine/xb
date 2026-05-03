@@ -1,7 +1,6 @@
 import axios from 'axios'
 
 import {
-  API_REQUEST_EVENT,
   API_RESPONSE_EVENT,
   API_UNAUTHORIZED_EVENT,
   XB_SOURCE,

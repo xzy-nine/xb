@@ -12,7 +12,6 @@ import {
 import { StatusText } from '@/lib/weibo/components/status-text'
 
 import {
-  formatCount,
   formatDate,
   RetweetedShareCard,
   ShareCardActions,

@@ -1,6 +1,4 @@
 import {
-  API_RESPONSE_EVENT,
-  API_UNAUTHORIZED_EVENT,
   API_REQUEST_EVENT,
   XB_SOURCE,
   isApiResponseMessage,
