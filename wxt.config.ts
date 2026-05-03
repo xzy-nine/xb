@@ -43,6 +43,9 @@ export default defineConfig({
       },
     ],
   },
+  suppressWarnings: {
+    firefoxDataCollection: true,
+  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),
