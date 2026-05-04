@@ -100,6 +100,8 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
           progressiveSrc={item.media.streamUrl}
           poster={item.media.coverUrl ?? undefined}
           dash={item.media.dash}
+          downloadUrl={item.media.downloadUrl}
+          downloadFilename={`${item.author.name} ${item.text.slice(0, 15).replaceAll(/[\\/:*?"<>|]/g, '_')}`}
         />
       </AspectRatio>
     </div>

@@ -1,89 +1,91 @@
-import axios from 'axios'
-
+import {
+  API_REQUEST_EVENT,
+  XB_SOURCE,
+  isApiResponseMessage,
+  isApiUnauthorizedMessage,
+} from '@/lib/weibo/platform/messages'
 import { emitUnauthorized } from '@/lib/weibo/services/auth-events'
-
-const DEFAULT_TIMEOUT_MS = 10000
 
 export type WeiboQueryParams = Record<string, string | number | null | undefined>
 
-function readXsrfTokenFromCookie(): string | null {
-  if (typeof document === 'undefined') {
-    return null
-  }
+const DEFAULT_TIMEOUT_MS = 10000
 
-  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
-  if (!match?.[1]) {
-    return null
-  }
-
-  try {
-    return decodeURIComponent(match[1])
-  } catch {
-    return match[1]
-  }
+type PendingRequest = {
+  resolve: (data: unknown) => void
+  reject: (error: Error) => void
+  timer: ReturnType<typeof setTimeout>
 }
 
-const weiboClient = axios.create({
-  timeout: DEFAULT_TIMEOUT_MS,
-  withCredentials: true,
-  headers: {
-    Accept: 'application/json, text/plain, */*',
-    'X-Requested-With': 'XMLHttpRequest',
-  },
-})
+const pendingRequests = new Map<string, PendingRequest>()
 
-weiboClient.interceptors.response.use(undefined, (error) => {
-  if (axios.isAxiosError(error)) {
-    const status = error.response?.status
-    if (status === 401 || status === 403) {
-      emitUnauthorized()
+let requestCounter = 0
+
+function generateRequestId(): string {
+  return `xb-${++requestCounter}-${Date.now()}`
+}
+
+function postApiRequest(
+  method: 'get' | 'post',
+  path: string,
+  params?: WeiboQueryParams,
+  body?: Record<string, string>,
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const id = generateRequestId()
+
+    const timer = setTimeout(() => {
+      pendingRequests.delete(id)
+      reject(new Error('weibo-request-timeout'))
+    }, DEFAULT_TIMEOUT_MS)
+
+    pendingRequests.set(id, { resolve, reject, timer })
+
+    window.postMessage(
+      {
+        source: XB_SOURCE,
+        type: API_REQUEST_EVENT,
+        id,
+        method,
+        path,
+        ...(params !== undefined && { params }),
+        ...(body !== undefined && { body }),
+      },
+      '*',
+    )
+  })
+}
+
+window.addEventListener('message', (event: MessageEvent) => {
+  if (event.source !== window) return
+
+  if (isApiResponseMessage(event.data)) {
+    const pending = pendingRequests.get(event.data.id)
+    if (!pending) return
+
+    pendingRequests.delete(event.data.id)
+    clearTimeout(pending.timer)
+
+    if (event.data.error) {
+      const { status, message } = event.data.error
+      if (status) {
+        pending.reject(new Error(`weibo-request-failed:${status}`))
+      } else {
+        pending.reject(new Error(message ?? 'weibo-request-failed'))
+      }
+    } else {
+      pending.resolve(event.data.data)
     }
   }
-  return Promise.reject(error)
+
+  if (isApiUnauthorizedMessage(event.data)) {
+    emitUnauthorized()
+  }
 })
 
 export async function wbGet<T>(path: string, params: WeiboQueryParams = {}): Promise<T> {
-  try {
-    const response = await weiboClient.get<T>(path, { params })
-    return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.code === 'ECONNABORTED') {
-        throw new Error('weibo-request-timeout')
-      }
-
-      const status = error.response?.status
-      if (status) {
-        throw new Error(`weibo-request-failed:${status}`)
-      }
-    }
-
-    throw error
-  }
+  return postApiRequest('get', path, params) as Promise<T>
 }
 
 export async function wbPostForm<T>(path: string, data: Record<string, string>): Promise<T> {
-  try {
-    const xsrf = readXsrfTokenFromCookie()
-    const response = await weiboClient.post<T>(path, new URLSearchParams(data), {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
-      },
-    })
-    return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.code === 'ECONNABORTED') {
-        throw new Error('weibo-request-timeout')
-      }
-
-      const status = error.response?.status
-      if (status) {
-        throw new Error(`weibo-request-failed:${status}`)
-      }
-    }
-
-    throw error
-  }
+  return postApiRequest('post', path, undefined, data) as Promise<T>
 }

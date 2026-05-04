@@ -30,6 +30,10 @@ export default defineConfig({
     host_permissions: [
       'https://weibo.com/*',
       'https://www.weibo.com/*',
+      // html-to-image fetches media URLs to embed; avatars/images live on CDNs.
+      'https://*.sinaimg.cn/*',
+      'https://*.sinajs.cn/*',
+      'https://*.weibocdn.com/*',
       // 'https://s.weibo.com/*',
     ],
     web_accessible_resources: [
@@ -42,6 +46,9 @@ export default defineConfig({
         ],
       },
     ],
+  },
+  suppressWarnings: {
+    firefoxDataCollection: true,
   },
   vite: () => ({
     plugins: [tailwindcss()],

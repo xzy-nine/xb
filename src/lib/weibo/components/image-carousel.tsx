@@ -126,7 +126,9 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
                     poster={item.videoCoverUrl}
                     dash={item.videoDash}
                     videoOrientation={item.videoOrientation}
-                    hidePageFullScreen={true}
+                    hideInlineFullScreen={true}
+                    downloadUrl={item.videoDownloadUrl}
+                    downloadFilename="weibo_video"
                   />
                 </div>
               )

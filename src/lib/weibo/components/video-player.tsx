@@ -37,6 +37,7 @@ import {
   Shrink,
   Loader2,
   RotateCcw,
+  Download,
 } from 'lucide-react'
 import {
   forwardRef,
@@ -48,6 +49,7 @@ import {
   useState,
   RefObject,
 } from 'react'
+import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
@@ -65,7 +67,10 @@ interface VideoPlayerProps {
   poster?: string
   dash?: FeedDashSource
   videoOrientation?: 'vertical' | 'horizontal'
-  hidePageFullScreen?: boolean
+  hideInlineFullScreen?: boolean
+  downloadUrl?: string
+  /** Used to generate the downloaded filename: "作者名+前15个字.mp4" */
+  downloadFilename?: string
 }
 
 interface QualityOption {
@@ -335,7 +340,9 @@ export function VideoPlayer({
   progressiveSrc,
   poster,
   dash,
-  hidePageFullScreen,
+  hideInlineFullScreen,
+  downloadUrl,
+  downloadFilename,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<MediaPlayerClass | null>(null)
@@ -347,6 +354,7 @@ export function VideoPlayer({
   const [qualityId, setQualityId] = useState(AUTO_QUALITY_ID)
   const [shouldLoad, setShouldLoad] = useState(false)
   const [inlineFullscreen, setInlineFullscreen] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const isMpd = dash?.type === 'mpd'
   const playbackSource = dash?.type === 'playback' ? dash : undefined
@@ -380,6 +388,37 @@ export function VideoPlayer({
     : playbackSource
       ? getPlaybackSrc({ progressiveSrc, qualityId, selectedIndex, sources })
       : progressiveSrc
+
+  const handleDownload = useCallback(async () => {
+    if (!downloadUrl || downloading) {
+      return
+    }
+
+    setDownloading(true)
+    try {
+      const name = downloadFilename
+        ? `${downloadFilename.replaceAll(/[\\/:*?"<>|]/g, '_')}.mp4`
+        : 'weibo_video.mp4'
+      toast.info(`准备下载：${name}`)
+      const res = await fetch(downloadUrl)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = name
+      a.click()
+      URL.revokeObjectURL(blobUrl)
+      toast.success(`已下载：${name}`)
+      a.remove()
+    } catch {
+      toast.error('下载失败，请稍后重试')
+    } finally {
+      setDownloading(false)
+    }
+  }, [downloadUrl, downloading, downloadFilename])
 
   useEffect(() => {
     pendingPlaybackRef.current = null
@@ -601,7 +640,7 @@ export function VideoPlayer({
                     />
                   }
                 />
-                <Tooltip.Popup className="media-surface media-tooltip" />
+                <Tooltip.Popup className="media-surface media-tooltip">播放/暂停</Tooltip.Popup>
               </Tooltip.Root>
 
               {qualities.length > 0 ? (
@@ -611,6 +650,28 @@ export function VideoPlayer({
                   disabled={!shouldLoad}
                   onValueChange={handleQualityChange}
                 />
+              ) : null}
+
+              {downloadUrl ? (
+                <Tooltip.Root side="top">
+                  <Tooltip.Trigger
+                    render={
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void handleDownload()
+                        }}
+                        aria-label="下载视频"
+                        disabled={downloading}
+                      >
+                        <Download className="media-icon size-[18px]" />
+                      </IconButton>
+                    }
+                  />
+                  <Tooltip.Popup className="media-surface media-tooltip">
+                    {downloading ? '下载中…' : '下载视频'}
+                  </Tooltip.Popup>
+                </Tooltip.Root>
               ) : null}
             </div>
 
@@ -629,9 +690,7 @@ export function VideoPlayer({
             <div className="media-button-group">
               <Tooltip.Root side="top">
                 <Tooltip.Trigger render={<PlaybackRateControl />} />
-                <Tooltip.Popup className="media-surface media-tooltip">
-                  Toggle playback rate
-                </Tooltip.Popup>
+                <Tooltip.Popup className="media-surface media-tooltip">播放速度</Tooltip.Popup>
               </Tooltip.Root>
 
               <VolumeControl />
@@ -657,10 +716,11 @@ export function VideoPlayer({
                     />
                   }
                 />
-                <Tooltip.Popup className="media-surface media-tooltip" />
+
+                <Tooltip.Popup className="media-surface media-tooltip">画中画</Tooltip.Popup>
               </Tooltip.Root>
 
-              {hidePageFullScreen && (
+              {!hideInlineFullScreen && (
                 <Tooltip.Root side="top">
                   <Tooltip.Trigger
                     render={
@@ -676,7 +736,7 @@ export function VideoPlayer({
                       </IconButton>
                     }
                   />
-                  <Tooltip.Popup className="media-surface media-tooltip" />
+                  <Tooltip.Popup className="media-surface media-tooltip">网页全屏</Tooltip.Popup>
                 </Tooltip.Root>
               )}
 
@@ -697,7 +757,7 @@ export function VideoPlayer({
                     />
                   }
                 />
-                <Tooltip.Popup className="media-surface media-tooltip" />
+                <Tooltip.Popup className="media-surface media-tooltip">全屏</Tooltip.Popup>
               </Tooltip.Root>
             </div>
           </Tooltip.Provider>
