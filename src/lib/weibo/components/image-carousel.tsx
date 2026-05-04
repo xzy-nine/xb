@@ -42,7 +42,7 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
         thumbnailNode: (
           <div className="border-foreground/10 relative overflow-hidden rounded-xl border">
             {darkModeImageDim && (
-              <div className="absolute top-0 right-0 bottom-0 left-0 dark:bg-neutral-500/25" />
+              <div className="dark:bg-background/25 absolute top-0 right-0 bottom-0 left-0" />
             )}
             <img src={img.thumbnailUrl} className="aspect-square w-full object-cover" alt="" />
           </div>
@@ -72,7 +72,7 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
             thumbnailNode: (
               <div className="border-foreground/10 relative overflow-hidden rounded-xl border">
                 {darkModeImageDim && (
-                  <div className="absolute top-0 right-0 bottom-0 left-0 dark:bg-neutral-500/25" />
+                  <div className="dark:bg-background/25 absolute top-0 right-0 bottom-0 left-0" />
                 )}
                 <img
                   src={image.thumbnailUrl}
@@ -99,9 +99,6 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
             src: null,
             thumbnailNode: item.videoCoverUrl ? (
               <div className="border-foreground/10 relative overflow-hidden rounded-xl border">
-                {darkModeImageDim && (
-                  <div className="absolute top-0 right-0 bottom-0 left-0 dark:bg-neutral-500/25" />
-                )}
                 <PlayIcon className="absolute top-1/2 left-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-white" />
                 <img
                   src={item.videoCoverUrl}
