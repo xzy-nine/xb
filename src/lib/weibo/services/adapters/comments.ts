@@ -114,6 +114,8 @@ function adaptComment(comment: WeiboComment) {
       : undefined,
     createdAtLabel: parseWeiboDate(comment.created_at),
     source: comment.source?.replace(/<[^>]+>/g, '') || '',
+    images: [],
+    comments: [],
   }
 }
 
