@@ -5,7 +5,7 @@ export interface UserProfile {
   bio: string
   avatarUrl: string | null
   bannerUrl: string | null
-  followersCount: string | null
+  followersCount: number | null
   friendsCount: number | null
   ipLocation: string | null
   /** 认证信息，来自 profile/detail 的 `desc_text`（与简介 `description` 不同）。 */

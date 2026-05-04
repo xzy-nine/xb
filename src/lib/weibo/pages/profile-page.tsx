@@ -1,5 +1,5 @@
 import { skipToken, useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -37,7 +37,10 @@ function ProfilePostsTabs({
     enabled: profileId !== '',
   })
 
-  const items = flattenInfiniteItems<FeedItem>(postsQuery.data?.pages as TimelinePage[] | undefined)
+  const items = useMemo(
+    () => flattenInfiniteItems<FeedItem>(postsQuery.data?.pages as TimelinePage[] | undefined),
+    [postsQuery.data?.pages],
+  )
 
   const errorMessage = postsQuery.error instanceof Error ? postsQuery.error.message : null
   const hasNextPage = Boolean(postsQuery.hasNextPage)
@@ -70,7 +73,7 @@ function ProfilePostsTabs({
 
   return (
     <Tabs defaultValue="posts" className="flex flex-col gap-4">
-      <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2">
+      <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 overflow-hidden">
         <TabsTrigger value="posts">微博</TabsTrigger>
         <TabsTrigger value="pictures">图片</TabsTrigger>
       </TabsList>
@@ -96,7 +99,7 @@ function ProfilePostsTabs({
       </TabsContent>
 
       <TabsContent value="pictures" className="flex flex-col gap-0">
-        <PageEmptyState label="暂时还没有媒体内容" />
+        <PageEmptyState label="施工中..." />
       </TabsContent>
     </Tabs>
   )
@@ -128,7 +131,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     ctx.onProfileUserIdChange(profileQuery.data?.id ?? null)
-  }, [ctx, profileQuery.data?.id])
+  }, [ctx.onProfileUserIdChange, profileQuery.data?.id])
 
   const errorMessage = profileQuery.error instanceof Error ? profileQuery.error.message : null
 

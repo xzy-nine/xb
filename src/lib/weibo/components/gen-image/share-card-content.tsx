@@ -107,7 +107,11 @@ export function ShareCardImages({
           key={image.thumbnailUrl}
           className="border-foreground/10 relative overflow-hidden rounded-xl border"
         >
-          <img src={image.largeUrl} className="aspect-square w-full object-cover" alt="" />
+          <img
+            src={image.largeUrl}
+            className="aspect-square w-full object-cover object-center"
+            alt=""
+          />
         </div>
       ))}
     </div>

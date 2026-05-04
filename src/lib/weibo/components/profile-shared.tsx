@@ -25,7 +25,7 @@ export function ProfileBanner({
   return (
     <div className={className}>
       {bannerUrl ? (
-        <img src={bannerUrl} alt="" className="h-full w-full object-cover" />
+        <img src={bannerUrl} alt="" className="h-full w-full object-cover object-center" />
       ) : (
         <div className={fallbackClassName} />
       )}
