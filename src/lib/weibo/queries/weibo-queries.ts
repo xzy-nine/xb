@@ -1,3 +1,4 @@
+import type { HotSearchType } from '@/lib/app-settings'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
@@ -8,7 +9,7 @@ import {
   loadExploreGroups,
   loadExploreHot,
   loadFavorites,
-  loadHotSearch,
+  loadHotSearchByType,
   loadHomeTimeline,
   loadMentions,
   loadProfilePosts,
@@ -81,11 +82,13 @@ export function notificationsInfiniteOptions(_tab: NotificationTab) {
   }
 }
 
-export const hotSearchQueryOptions = {
-  queryKey: ['weibo', 'hotsearch'] as const,
-  queryFn: () => loadHotSearch(),
-  staleTime: 5 * 60 * 1000,
-  refetchInterval: 10 * 60 * 1000,
+export function hotSearchQueryOptions(type: HotSearchType = 'hot') {
+  return {
+    queryKey: ['weibo', 'hotsearch', type],
+    queryFn: () => loadHotSearchByType(type),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+  }
 }
 
 export function searchQueryOptions(query: string) {

@@ -5,6 +5,8 @@ type LegacyFontSize = 'small' | 'medium' | 'large'
 
 export type FontFamilyClass = 'font-sans' | 'font-serif'
 
+export type HotSearchType = 'hot' | 'mine' | 'entertainment' | 'life' | 'social'
+
 export interface AppSettings {
   theme: AppTheme
   rewriteEnabled: boolean
@@ -19,6 +21,7 @@ export interface AppSettings {
   imageGenShowWeiboLink: boolean
   imageGenTheme: GenImageCardTheme
   imageGenCardStyle: CardStyle
+  hotSearchType: HotSearchType
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -55,6 +58,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenShowWeiboLink: false,
   imageGenTheme: 'light' as GenImageCardTheme,
   imageGenCardStyle: 'default' as CardStyle,
+  hotSearchType: 'hot' as HotSearchType,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -93,6 +97,16 @@ function toFontSize(value: unknown): FontSize | null {
 
 function isFontFamilyClass(value: unknown): value is FontFamilyClass {
   return value === 'font-sans' || value === 'font-serif'
+}
+
+function isHotSearchType(value: unknown): value is HotSearchType {
+  return (
+    value === 'hot' ||
+    value === 'mine' ||
+    value === 'entertainment' ||
+    value === 'life' ||
+    value === 'social'
+  )
 }
 
 export function normalizeAppSettings(value: unknown): AppSettings {
@@ -149,6 +163,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.imageGenCardStyle === 'string'
         ? candidate.imageGenCardStyle
         : DEFAULT_APP_SETTINGS.imageGenCardStyle,
+    hotSearchType: isHotSearchType(candidate.hotSearchType)
+      ? candidate.hotSearchType
+      : DEFAULT_APP_SETTINGS.hotSearchType,
   }
 }
 

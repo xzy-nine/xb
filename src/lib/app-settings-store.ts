@@ -12,6 +12,7 @@ import {
   type FontFamilyClass,
   type FontSize,
   type GenImageCardTheme,
+  type HotSearchType,
 } from '@/lib/app-settings'
 
 export interface AppSettingsStoreState extends AppSettings {
@@ -30,6 +31,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setImageGenShowWeiboLink: (show: boolean) => Promise<void>
   setImageGenTheme: (theme: GenImageCardTheme) => Promise<void>
   setImageGenCardStyle: (style: CardStyle) => Promise<void>
+  setHotSearchType: (type: HotSearchType) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -49,6 +51,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     imageGenShowWeiboLink: state.imageGenShowWeiboLink,
     imageGenTheme: state.imageGenTheme,
     imageGenCardStyle: state.imageGenCardStyle,
+    hotSearchType: state.hotSearchType,
   }
 }
 
@@ -115,6 +118,9 @@ export function createAppSettingsStore(
       },
       async setImageGenCardStyle(imageGenCardStyle) {
         await updateAndPersist({ imageGenCardStyle })
+      },
+      async setHotSearchType(hotSearchType) {
+        await updateAndPersist({ hotSearchType })
       },
     }
   })

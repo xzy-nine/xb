@@ -3,13 +3,30 @@ import { RefreshCw } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import type { HotSearchType } from '@/lib/app-settings'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { hotSearchQueryOptions } from '@/lib/weibo/queries/weibo-queries'
-import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
+
+const HOT_SEARCH_TYPES: { value: HotSearchType; label: string }[] = [
+  { value: 'hot', label: '热搜' },
+  { value: 'mine', label: '我的' },
+  { value: 'entertainment', label: '文娱' },
+  { value: 'life', label: '生活' },
+  { value: 'social', label: '社会' },
+]
 
 export interface HotSearchListData {
+  type: HotSearchType
   word: string
   num: number
   realpos: number
@@ -29,14 +46,15 @@ function getRankClassName(index: number): string {
 
 function HotSearchItemComponent({ item, index }: { item: HotSearchListData; index: number }) {
   const word = normalizeWord(item.word)
+  const fullWord = item.word.startsWith('#') ? `#${word}#` : word
   const url = `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${word}#`)}`
 
-  return (
+  const content = (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex min-w-0 items-center gap-3 rounded-lg px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-2 rounded px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
     >
       <span
         className={cn(getRankClassName(index), 'w-4 shrink-0 text-xs font-medium tabular-nums')}
@@ -46,12 +64,21 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
       <span className="text-foreground group-hover:text-foreground min-w-0 flex-1 truncate text-sm transition-colors">
         {word}
       </span>
-      {item.num > 0 ? (
-        <span className="text-muted-foreground shrink-0 text-[11px] tabular-nums">
-          {formatWeiboCount(item.num)}
-        </span>
-      ) : null}
+      {/* {item.num > 0 ? (
+            <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+              {formatWeiboCount(item.num)}
+            </span>
+          ) : null} */}
     </a>
+  )
+
+  return word.length > 10 ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{content}</TooltipTrigger>
+      <TooltipContent>{fullWord}</TooltipContent>
+    </Tooltip>
+  ) : (
+    content
   )
 }
 
@@ -60,9 +87,27 @@ interface HotSearchCardProps {
 }
 
 export function HotSearchCard({ className }: HotSearchCardProps) {
-  const hotSearchQuery = useQuery(hotSearchQueryOptions)
+  const selectedType = useAppSettings((s) => s.hotSearchType)
+  const setHotSearchType = useAppSettings((s) => s.setHotSearchType)
+
+  const hotQuery = useQuery(hotSearchQueryOptions('hot'))
+  const mineQuery = useQuery(hotSearchQueryOptions('mine'))
+  const entertainmentQuery = useQuery(hotSearchQueryOptions('entertainment'))
+  const lifeQuery = useQuery(hotSearchQueryOptions('life'))
+  const socialQuery = useQuery(hotSearchQueryOptions('social'))
+
+  const queries = {
+    hot: hotQuery,
+    mine: mineQuery,
+    entertainment: entertainmentQuery,
+    life: lifeQuery,
+    social: socialQuery,
+  }
+
+  const currentQuery = queries[selectedType]
   const items =
-    hotSearchQuery.data?.items.map((item) => ({
+    currentQuery.data?.items.map((item) => ({
+      type: item.type,
       word: item.word,
       num: item.num,
       realpos: item.realpos,
@@ -71,32 +116,48 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
 
   return (
     <Card className={className}>
-      <div className="flex items-center justify-between pl-2">
-        <span className="text-muted-foreground text-sm font-medium">热搜</span>
+      <div className="flex items-center justify-between gap-2">
+        <Select
+          value={selectedType}
+          onValueChange={(value) => setHotSearchType(value as HotSearchType)}
+        >
+          <SelectTrigger size="sm" className="w-fit">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="start">
+            {HOT_SEARCH_TYPES.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           variant="ghost"
           size="icon-xs"
-          onClick={() => hotSearchQuery.refetch()}
-          disabled={hotSearchQuery.isFetching}
+          onClick={() => currentQuery.refetch()}
+          disabled={currentQuery.isFetching}
           title="刷新热搜"
         >
-          <RefreshCw className={cn(hotSearchQuery.isFetching && 'animate-spin')} />
+          <RefreshCw className={cn(currentQuery.isFetching && 'animate-spin')} />
         </Button>
       </div>
-      {hotSearchQuery.isLoading ? (
+      {currentQuery.isLoading ? (
         <div className="flex justify-center py-4">
           <Spinner />
         </div>
-      ) : hotSearchQuery.isError ? (
+      ) : currentQuery.isError ? (
         <CardDescription className="px-2 pb-2">热搜加载失败</CardDescription>
       ) : items.length === 0 ? (
         <CardDescription className="px-2 pb-2">暂无热搜</CardDescription>
       ) : (
-        <ScrollArea className="h-[400px] w-full overflow-x-hidden">
-          {items.map((item, index) => (
-            <HotSearchItemComponent key={item.realpos || index} item={item} index={index} />
-          ))}
-        </ScrollArea>
+        <div className="h-[380px] w-full overflow-x-hidden overflow-y-auto">
+          <TooltipProvider>
+            {items.map((item, index) => (
+              <HotSearchItemComponent key={`${item.type}-${item.word}`} item={item} index={index} />
+            ))}
+          </TooltipProvider>
+        </div>
       )}
     </Card>
   )
