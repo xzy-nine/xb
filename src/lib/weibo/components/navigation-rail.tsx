@@ -49,6 +49,8 @@ function NavButton({
       href={href}
       target={isExternal ? '_blank' : undefined}
       rel={isExternal ? 'noopener noreferrer' : undefined}
+      aria-label={showLabel ? undefined : String(label)}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
         'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
         isActive ? 'bg-accent' : 'transparent',
@@ -63,6 +65,8 @@ function NavButton({
   ) : (
     <button
       type="button"
+      aria-label={showLabel ? undefined : String(label)}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
         'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
         isActive ? 'bg-accent' : 'transparent',
