@@ -414,6 +414,29 @@ export async function submitComposeAction(input: SubmitComposeInput): Promise<vo
   }
 }
 
+export interface PublishStatusResponse {
+  ok?: number
+  msg?: string
+  message?: string
+  id?: string
+  mid?: string
+}
+
+export async function publishWeiboStatus(content: string): Promise<void> {
+  const response = await wbPostForm<PublishStatusResponse>(WEIBO_ENDPOINTS.statusUpdate, {
+    content,
+    visible: '0',
+    share_id: '',
+    vote: '',
+    media: '',
+    fp: '02Aa8jV4cFY7L8Cm_r5uJ5m4csk5xK',
+  })
+
+  if (response.ok !== 1) {
+    throw new Error(response.msg || response.message || '发布失败，请稍后重试')
+  }
+}
+
 export async function loadHotSearch(): Promise<HotSearchPage> {
   const payload = await wbGet<HotSearchPayload>(WEIBO_ENDPOINTS.searchBand, {
     last_tab: 'hot',

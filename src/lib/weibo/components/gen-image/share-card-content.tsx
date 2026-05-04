@@ -93,11 +93,13 @@ export function ShareCardImages({
       className={`mb-6 grid gap-2 ${
         displayImages.length === 1
           ? 'grid-cols-1'
-          : displayImages.length <= 4
-            ? 'grid-cols-2'
-            : displayImages.length <= 9
-              ? 'grid-cols-3'
-              : 'grid-cols-4'
+          : displayImages.length === 3
+            ? 'grid-cols-3'
+            : displayImages.length <= 4
+              ? 'grid-cols-2'
+              : displayImages.length <= 9
+                ? 'grid-cols-3'
+                : 'grid-cols-4'
       }`}
     >
       {displayImages.map((image) => (

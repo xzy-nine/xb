@@ -6,6 +6,7 @@ import {
   Compass,
   House,
   MailIcon,
+  Pencil,
   RefreshCw,
   Settings,
   UserRound,
@@ -33,6 +34,7 @@ function NavButton({
   isExternal,
   onMouseEnter,
   onMouseLeave,
+  variant,
 }: {
   children: React.ReactNode
   label: React.ReactNode
@@ -43,41 +45,44 @@ function NavButton({
   isExternal?: boolean
   onMouseEnter?: () => void
   onMouseLeave?: () => void
+  variant?: React.ComponentProps<typeof Button>['variant']
 }) {
+  const buttonVariant = variant ?? (isActive ? 'secondary' : 'ghost')
   const button = href ? (
-    <a
-      href={href}
-      target={isExternal ? '_blank' : undefined}
-      rel={isExternal ? 'noopener noreferrer' : undefined}
-      aria-label={showLabel ? undefined : String(label)}
-      aria-current={isActive ? 'page' : undefined}
-      className={cn(
-        'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
-        isActive ? 'bg-accent' : 'transparent',
-      )}
+    <Button
+      asChild
+      className={cn('flex items-center gap-2', showLabel ? 'justify-start' : 'justify-center')}
+      variant={buttonVariant}
       onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      size={showLabel ? 'default' : 'icon'}
     >
-      {children}
-      {showLabel && <span>{label}</span>}
-    </a>
+      <a
+        href={href}
+        target={isExternal ? '_blank' : undefined}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
+        aria-label={showLabel ? undefined : String(label)}
+        aria-current={isActive ? 'page' : undefined}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {children}
+        {showLabel && <span>{label}</span>}
+      </a>
+    </Button>
   ) : (
-    <button
-      type="button"
+    <Button
+      variant={buttonVariant}
       aria-label={showLabel ? undefined : String(label)}
       aria-current={isActive ? 'page' : undefined}
-      className={cn(
-        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
-        isActive ? 'bg-accent' : 'transparent',
-      )}
+      className={cn('w-full items-center gap-2', showLabel ? 'justify-start' : 'justify-center')}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      size={showLabel ? 'default' : 'icon'}
     >
       {children}
       {showLabel && <span>{label}</span>}
-    </button>
+    </Button>
   )
 
   return showLabel ? (
@@ -99,6 +104,7 @@ export function NavigationRail({
   onThemeChange,
   onRefresh,
   onSettingsOpen,
+  onComposeOpen,
 }: {
   pageKind: WeiboPageDescriptor['kind']
   viewingProfileUserId?: string | null
@@ -108,6 +114,7 @@ export function NavigationRail({
   onThemeChange: (theme: AppTheme) => void
   onRefresh?: () => void
   onSettingsOpen: () => void
+  onComposeOpen: () => void
 }) {
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
   const navigate = useNavigate()
@@ -215,6 +222,10 @@ export function NavigationRail({
               onClick={() => navigate(profileHref)}
             >
               <UserRound aria-hidden="true" className="size-4 shrink-0" />
+            </NavButton>
+
+            <NavButton label="发微博" showLabel={isXl} onClick={onComposeOpen} variant="default">
+              <Pencil aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
           </div>
 

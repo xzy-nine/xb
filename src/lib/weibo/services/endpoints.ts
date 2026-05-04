@@ -17,6 +17,7 @@ export const WEIBO_ENDPOINTS = {
   destroyComment: '/ajax/statuses/destroyComment',
   commentCreate: '/ajax/comments/create',
   commentReply: '/ajax/comments/reply',
+  statusUpdate: '/ajax/statuses/update',
   profileInfo: '/ajax/profile/info',
   profileDetail: '/ajax/profile/detail',
   profilePosts: '/ajax/statuses/mymblog',
