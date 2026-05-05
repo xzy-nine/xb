@@ -1,3 +1,4 @@
+import type { HotSearchType } from '@/lib/app-settings'
 import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import type { WeiboEmoticonConfig } from '@/lib/weibo/models/emoticon'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
@@ -23,9 +24,17 @@ import {
   type ExploreGroup,
 } from '@/lib/weibo/services/adapters/explore-groups'
 import {
+  adaptEntertainmentBandResponse,
   adaptHotSearchResponse,
-  HotSearchPayload,
+  adaptLifeBandResponse,
+  adaptMineBandResponse,
+  adaptSocialBandResponse,
+  type EntertainmentBandPayload,
   type HotSearchPage,
+  type HotSearchPayload,
+  type LifeBandPayload,
+  type MineBandPayload,
+  type SocialBandPayload,
 } from '@/lib/weibo/services/adapters/hotsearch'
 import { adaptLikes, type WeiboLikesPayload } from '@/lib/weibo/services/adapters/likes'
 import {
@@ -414,11 +423,64 @@ export async function submitComposeAction(input: SubmitComposeInput): Promise<vo
   }
 }
 
+export interface PublishStatusResponse {
+  ok?: number
+  msg?: string
+  message?: string
+  id?: string
+  mid?: string
+}
+
+export async function publishWeiboStatus(content: string): Promise<void> {
+  const response = await wbPostForm<PublishStatusResponse>(WEIBO_ENDPOINTS.statusUpdate, {
+    content,
+    visible: '0',
+    share_id: '',
+    vote: '',
+    media: '',
+    fp: '02Aa8jV4cFY7L8Cm_r5uJ5m4csk5xK',
+  })
+
+  if (response.ok !== 1) {
+    throw new Error(response.msg || response.message || '发布失败，请稍后重试')
+  }
+}
+
 export async function loadHotSearch(): Promise<HotSearchPage> {
   const payload = await wbGet<HotSearchPayload>(WEIBO_ENDPOINTS.searchBand, {
     last_tab: 'hot',
   })
   return adaptHotSearchResponse(payload)
+}
+
+export async function loadHotSearchByType(type: HotSearchType = 'hot'): Promise<HotSearchPage> {
+  switch (type) {
+    case 'mine': {
+      const payload = await wbGet<MineBandPayload>(WEIBO_ENDPOINTS.mineBand)
+      const items = adaptMineBandResponse(payload, type)
+      return { items }
+    }
+    case 'entertainment': {
+      const payload = await wbGet<EntertainmentBandPayload>(WEIBO_ENDPOINTS.entertainmentBand)
+      const items = adaptEntertainmentBandResponse(payload, type)
+      return { items }
+    }
+    case 'life': {
+      const payload = await wbGet<LifeBandPayload>(WEIBO_ENDPOINTS.lifeBand)
+      const items = adaptLifeBandResponse(payload, type)
+      return { items }
+    }
+    case 'social': {
+      const payload = await wbGet<SocialBandPayload>(WEIBO_ENDPOINTS.socialBand)
+      const items = adaptSocialBandResponse(payload, type)
+      return { items }
+    }
+    default:
+      return adaptHotSearchResponse(
+        await wbGet<HotSearchPayload>(WEIBO_ENDPOINTS.searchBand, { last_tab: 'hot' }),
+        type,
+      )
+  }
 }
 
 export type ExploreTab = 'hot' | 'local' | 'realtime' | 'rank'

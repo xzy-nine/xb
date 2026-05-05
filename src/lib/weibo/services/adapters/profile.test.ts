@@ -11,7 +11,7 @@ describe('adaptProfileInfoResponse', () => {
           screen_name: 'Alice',
           description: 'bio',
           avatar_hd: 'https://wx1.sinaimg.cn/large/avatar.jpg',
-          followers_count_str: '100万',
+          followers_count: 1000000,
           friends_count: 500,
         },
       },
@@ -20,7 +20,7 @@ describe('adaptProfileInfoResponse', () => {
     expect(result.id).toBe('1969776354')
     expect(result.name).toBe('Alice')
     expect(result.bio).toBe('bio')
-    expect(result.followersCount).toBe('100万')
+    expect(result.followersCount).toBe(1000000)
     expect(result.friendsCount).toBe(500)
   })
 })

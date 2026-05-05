@@ -59,6 +59,7 @@ describe('app-settings', () => {
       imageGenShowWeiboLink: false,
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
+      hotSearchType: 'hot',
     })
 
     await persistAppSettings(
@@ -76,6 +77,7 @@ describe('app-settings', () => {
         imageGenShowWeiboLink: false,
         imageGenTheme: 'light',
         imageGenCardStyle: 'default',
+        hotSearchType: 'mine',
       },
       storage,
     )
@@ -94,6 +96,7 @@ describe('app-settings', () => {
       imageGenShowWeiboLink: false,
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
+      hotSearchType: 'mine',
     })
   })
 

@@ -66,6 +66,7 @@ interface ShellFrameProps {
   onThemeChange: (theme: AppTheme) => void
   onRefresh?: () => void
   onSettingsOpen: () => void
+  onComposeOpen: () => void
   mainRef: React.RefObject<HTMLDivElement | null>
   children: ReactNode
 }
@@ -83,6 +84,7 @@ export function ShellFrame({
   onThemeChange,
   onRefresh,
   onSettingsOpen,
+  onComposeOpen,
   mainRef,
   children,
 }: ShellFrameProps) {
@@ -130,6 +132,7 @@ export function ShellFrame({
             onThemeChange={onThemeChange}
             onRefresh={onRefresh}
             onSettingsOpen={onSettingsOpen}
+            onComposeOpen={onComposeOpen}
           />
         </div>
         <main className="no-scrollbar min-w-0 flex-1 overflow-y-auto pb-8" ref={mainRef}>

@@ -9,6 +9,7 @@ interface ProfileUserPayload {
   avatar_hd?: string
   cover_image_phone?: string
   description?: string
+  followers_count?: number
   followers_count_str?: string
   friends_count?: number
   id?: number | string
@@ -54,8 +55,9 @@ export function adaptProfileInfoResponse(payload: ProfileInfoPayload): UserProfi
     name: user.screen_name ?? '',
     bio: user.description ?? '',
     avatarUrl: stripUrlQuery(user.avatar_hd) ?? stripUrlQuery(user.profile_image_url) ?? null,
-    bannerUrl: user.cover_image_phone?.split(';')[0] ?? null,
-    followersCount: user.followers_count_str ?? null,
+    bannerUrl:
+      user.cover_image_phone?.split(';')[0]?.replace('crop.0.0.640.640.640', 'mw2000') ?? null,
+    followersCount: user.followers_count ?? null,
     friendsCount: user.friends_count ?? null,
     ipLocation: null,
     descText: null,

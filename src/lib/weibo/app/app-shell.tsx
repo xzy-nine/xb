@@ -6,6 +6,7 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { RewritePausedCard, ShellFrame } from '@/lib/weibo/app/app-shell-layout'
 import { AuthRequiredDialog } from '@/lib/weibo/components/auth-required-dialog'
 import { CommentModal } from '@/lib/weibo/components/comment-modal'
+import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
 import { GenImageDialog } from '@/lib/weibo/components/gen-image-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
@@ -43,6 +44,7 @@ export function AppShell() {
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
+  const [composeOpen, setComposeOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
@@ -94,6 +96,7 @@ export function AppShell() {
       <>
         <RewritePausedCard onResume={() => void setRewriteEnabled(true)} />
         {composeModal}
+        <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
       </>
     )
   }
@@ -114,10 +117,12 @@ export function AppShell() {
         onThemeChange={(nextTheme: typeof theme) => void setTheme(nextTheme)}
         onRefresh={refreshTimeline}
         onSettingsOpen={() => setSettingsOpen(true)}
+        onComposeOpen={() => setComposeOpen(true)}
         mainRef={mainRef}
       >
         <Outlet context={context} />
         {composeModal}
+        <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <GenImageDialog />
         <AuthRequiredDialog

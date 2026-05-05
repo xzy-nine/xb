@@ -133,7 +133,10 @@ function adaptLikeAttitude(att: WeiboLikeAttitude) {
   return {
     id: String(att.id),
     user: adaptUser(att.user),
-    status,
+    status: {
+      ...status,
+      images: [],
+    },
     createdAtLabel: parseWeiboDate(att.created_at),
     source: att.source?.replace(/<[^>]+>/g, '') ?? '',
   }

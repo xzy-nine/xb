@@ -22,6 +22,7 @@ describe('ShellFrame', () => {
           onRewriteEnabledChange={vi.fn()}
           onThemeChange={vi.fn()}
           onSettingsOpen={vi.fn()}
+          onComposeOpen={vi.fn()}
           mainRef={mainRef}
         >
           <div>center content</div>
