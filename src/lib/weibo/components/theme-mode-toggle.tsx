@@ -1,4 +1,4 @@
-import { MoonStar, Sun, SunMoon } from 'lucide-react'
+import { CheckIcon, MoonStar, Sun, SunMoon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -48,7 +48,7 @@ export function ThemeModeToggle({
             <DropdownMenuItem key={theme} onClick={() => onChange(theme)}>
               <Icon className="size-4" />
               <span className="flex-1">{label}</span>
-              {isActive ? <span className="text-muted-foreground text-xs">当前</span> : null}
+              {isActive ? <CheckIcon className="size-3" /> : null}
             </DropdownMenuItem>
           )
         })}

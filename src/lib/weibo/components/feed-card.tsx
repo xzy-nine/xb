@@ -349,7 +349,10 @@ function RetweetedFeedBlock({
   }
 
   return (
-    <Card className="cursor-pointer gap-3 py-4" onClick={handleRetweetedClick}>
+    <Card
+      className={cn('gap-3 py-4', onNavigate && 'cursor-pointer')}
+      onClick={handleRetweetedClick}
+    >
       <CardHeader>
         <RetweetedAuthorHeader item={resolvedItem} />
       </CardHeader>
@@ -553,9 +556,11 @@ export function FeedCard({
     pointerDownPositionRef.current = null
   }
 
+  const canNavigate = onNavigate && statusAllowsCardNavigate(surfaceProp, 'root')
+
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation()
-    if (!onNavigate || !statusAllowsCardNavigate(surfaceProp, 'root')) {
+    if (!canNavigate) {
       return
     }
 
@@ -582,7 +587,7 @@ export function FeedCard({
 
   return (
     <Card
-      className={cn('gap-4 py-4 relative cursor-pointer', className)}
+      className={cn('gap-4 py-4 relative', canNavigate && 'cursor-pointer', className)}
       data-testid="feed-card-body"
       onClick={handleCardClick}
     >
