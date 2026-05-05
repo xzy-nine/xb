@@ -131,6 +131,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     ctx.onProfileUserIdChange(profileQuery.data?.id ?? null)
+    // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
   }, [ctx.onProfileUserIdChange, profileQuery.data?.id])
 
   const errorMessage = profileQuery.error instanceof Error ? profileQuery.error.message : null
