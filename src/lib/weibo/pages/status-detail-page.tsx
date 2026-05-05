@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -88,6 +89,14 @@ function StatusCommentsSection({
   )
 }
 
+function handleGoBack() {
+  if (window.history.length > 2) {
+    window.history.back()
+  } else {
+    window.location.href = 'https://weibo.com'
+  }
+}
+
 export function StatusDetailPage() {
   const ctx = useAppShellContext()
   const navigate = useNavigate()
@@ -111,6 +120,15 @@ export function StatusDetailPage() {
 
   return (
     <div className="pt-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground mb-2 gap-1"
+        onClick={handleGoBack}
+      >
+        <ArrowLeft className="size-4" />
+        返回
+      </Button>
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
       {detailQuery.error instanceof Error ? (
         <PageErrorState description={detailQuery.error.message} />
@@ -120,7 +138,6 @@ export function StatusDetailPage() {
           <FeedCard
             item={detail.status}
             surface="detail"
-            onNavigate={ctx.navigateToStatusDetail}
             onCommentClick={(item) =>
               ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
             }
