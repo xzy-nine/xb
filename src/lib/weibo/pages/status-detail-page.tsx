@@ -119,16 +119,13 @@ export function StatusDetailPage() {
   const detail = detailQuery.data
 
   return (
-    <div className="pt-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground mb-2 gap-1"
-        onClick={handleGoBack}
-      >
-        <ArrowLeft className="size-4" />
-        返回
-      </Button>
+    <div className="">
+      <div className="sticky top-0 z-10 py-2 backdrop-blur">
+        <Button variant="ghost" size="sm" className="gap-2" onClick={handleGoBack}>
+          <ArrowLeft className="size-4" />
+          返回
+        </Button>
+      </div>
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
       {detailQuery.error instanceof Error ? (
         <PageErrorState description={detailQuery.error.message} />
