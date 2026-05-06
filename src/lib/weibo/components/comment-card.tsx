@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircleIcon } from 'lucide-react'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -23,7 +23,7 @@ import {
   setCommentLike,
 } from '@/lib/weibo/services/weibo-repository'
 
-export function CommentCard({
+export const CommentCard = memo(function CommentCard({
   item,
   rootStatusId,
   authorUid,
@@ -236,4 +236,4 @@ export function CommentCard({
       </CardContent>
     </Card>
   )
-}
+})

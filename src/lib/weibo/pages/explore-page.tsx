@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/button'
@@ -44,14 +44,18 @@ export function ExplorePage() {
     enabled: isEnabled && Boolean(activeGroup),
   })
 
-  const items = flattenInfiniteItems<FeedItem>(
-    timelineQuery.data?.pages as TimelinePage[] | undefined,
+  const items = useMemo(
+    () => flattenInfiniteItems<FeedItem>(timelineQuery.data?.pages as TimelinePage[] | undefined),
+    [timelineQuery.data?.pages],
   )
 
   const errorMessage = timelineQuery.error instanceof Error ? timelineQuery.error.message : null
   const hasNextPage = Boolean(timelineQuery.hasNextPage)
   const isFetchingNextPage = timelineQuery.isFetchingNextPage
   const isLoading = timelineQuery.isLoading
+
+  const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
+  fetchNextPageRef.current = timelineQuery.fetchNextPage
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
@@ -60,14 +64,14 @@ export function ExplorePage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          void timelineQuery.fetchNextPage()
+          void fetchNextPageRef.current()
         }
       },
       { threshold: 0.2 },
     )
     observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, timelineQuery])
+  }, [hasNextPage, isFetchingNextPage])
 
   const handleGroupClick = (group: ExploreGroup) => {
     navigate(`/hot/weibo/${group.gid}`)

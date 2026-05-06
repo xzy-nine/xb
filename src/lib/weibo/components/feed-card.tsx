@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircle, Repeat2 } from 'lucide-react'
-import { type MouseEvent, type ReactNode, useRef } from 'react'
+import { memo, type MouseEvent, type ReactNode, useRef } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -379,7 +379,7 @@ function RetweetedFeedBlock({
   )
 }
 
-export function FeedCard({
+export const FeedCard = memo(function FeedCard({
   item,
   surface: surfaceProp = 'timeline',
   onNavigate,
@@ -645,4 +645,4 @@ export function FeedCard({
       </CardFooter>
     </Card>
   )
-}
+})

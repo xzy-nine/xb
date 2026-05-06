@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/button'
@@ -114,7 +114,10 @@ export function NotificationsPage() {
     enabled: isEnabled,
   })
 
-  const items = notificationsQuery.data?.pages.flatMap((p) => p.items) ?? []
+  const items = useMemo(
+    () => notificationsQuery.data?.pages.flatMap((p) => p.items) ?? [],
+    [notificationsQuery.data?.pages],
+  )
   const errorMessage =
     notificationsQuery.error instanceof Error ? notificationsQuery.error.message : null
 

@@ -1,5 +1,5 @@
 import { PlayIcon } from 'lucide-react'
-import React from 'react'
+import React, { memo } from 'react'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
 import type { PhotoRenderParams } from 'react-photo-view/dist/types'
 
@@ -15,7 +15,10 @@ interface ImageCarouselProps {
   mixMediaItems?: FeedMixMediaItem[]
 }
 
-export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
+export const ImageCarousel = memo(function ImageCarousel({
+  images,
+  mixMediaItems,
+}: ImageCarouselProps) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
 
@@ -44,7 +47,13 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
             {darkModeImageDim && (
               <div className="dark:bg-background/25 absolute top-0 right-0 bottom-0 left-0" />
             )}
-            <img src={img.thumbnailUrl} className="aspect-square w-full object-cover" alt="" />
+            <img
+              src={img.thumbnailUrl}
+              className="aspect-square w-full object-cover object-center"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           </div>
         ),
         render: ({ attrs, scale }) => (
@@ -76,8 +85,10 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
                 )}
                 <img
                   src={image.thumbnailUrl}
-                  className="aspect-square w-full object-cover"
+                  className="aspect-square w-full object-cover object-center"
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             ),
@@ -102,8 +113,10 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
                 <PlayIcon className="absolute top-1/2 left-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-white" />
                 <img
                   src={item.videoCoverUrl}
-                  className="aspect-square w-full object-cover"
+                  className="aspect-square w-full object-cover object-center"
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             ) : (
@@ -184,4 +197,4 @@ export function ImageCarousel({ images, mixMediaItems }: ImageCarouselProps) {
       </PhotoProvider>
     </div>
   )
-}
+})

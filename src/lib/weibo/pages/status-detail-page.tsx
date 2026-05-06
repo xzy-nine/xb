@@ -105,7 +105,8 @@ export function StatusDetailPage() {
 
   useEffect(() => {
     ctx.resetMainScroll()
-  }, [ctx])
+    // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
+  }, [ctx.resetMainScroll])
 
   const urlStatusId = page.kind === 'status' ? page.statusId : null
   const authorId = page.kind === 'status' ? page.authorId : null
