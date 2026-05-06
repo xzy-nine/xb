@@ -1,16 +1,53 @@
 export type AppTheme = 'system' | 'light' | 'dark'
 
-export type FontSize = 'text-xs' | 'text-sm' | 'text-base' | 'text-lg' | 'text-xl'
-type LegacyFontSize = 'small' | 'medium' | 'large'
-
 export type FontFamilyClass = 'font-sans' | 'font-serif'
 
 export type HotSearchType = 'hot' | 'mine' | 'entertainment' | 'life' | 'social'
 
+export type FontSizeClass =
+  | 'text-xs'
+  | 'text-sm'
+  | 'text-base'
+  | 'text-lg'
+  | 'text-xl'
+  | 'text-2xl'
+  | 'text-3xl'
+  | 'text-4xl'
+
+export type FontWeightClass =
+  | 'font-thin'
+  | 'font-extralight'
+  | 'font-light'
+  | 'font-normal'
+  | 'font-medium'
+  | 'font-semibold'
+  | 'font-bold'
+  | 'font-extrabold'
+  | 'font-black'
+
+export type LetterSpacingClass =
+  | 'tracking-tighter'
+  | 'tracking-tight'
+  | 'tracking-normal'
+  | 'tracking-wide'
+  | 'tracking-wider'
+  | 'tracking-widest'
+
+export type LineHeightClass =
+  | 'leading-none'
+  | 'leading-tight'
+  | 'leading-snug'
+  | 'leading-normal'
+  | 'leading-relaxed'
+  | 'leading-loose'
+
 export interface AppSettings {
   theme: AppTheme
   rewriteEnabled: boolean
-  fontSizeClass: FontSize
+  fontSizeClass: FontSizeClass
+  fontWeightClass: FontWeightClass
+  letterSpacingClass: LetterSpacingClass
+  lineHeightClass: LineHeightClass
   fontFamilyClass: FontFamilyClass
   showHotSearchCard: boolean
   collapseRepliesEnabled: boolean
@@ -48,6 +85,9 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   theme: 'system',
   rewriteEnabled: true,
   fontSizeClass: 'text-base',
+  fontWeightClass: 'font-normal',
+  letterSpacingClass: 'tracking-normal',
+  lineHeightClass: 'leading-relaxed',
   fontFamilyClass: 'font-sans',
   showHotSearchCard: true,
   collapseRepliesEnabled: false,
@@ -65,36 +105,6 @@ function isAppTheme(value: unknown): value is AppTheme {
   return value === 'system' || value === 'light' || value === 'dark'
 }
 
-function isFontSize(value: unknown): value is FontSize {
-  return (
-    value === 'text-xs' ||
-    value === 'text-sm' ||
-    value === 'text-base' ||
-    value === 'text-lg' ||
-    value === 'text-xl'
-  )
-}
-
-function toFontSize(value: unknown): FontSize | null {
-  if (isFontSize(value)) {
-    return value
-  }
-
-  if (value === 'small') {
-    return 'text-sm'
-  }
-
-  if (value === 'medium') {
-    return 'text-base'
-  }
-
-  if (value === 'large') {
-    return 'text-lg'
-  }
-
-  return null
-}
-
 function isFontFamilyClass(value: unknown): value is FontFamilyClass {
   return value === 'font-sans' || value === 'font-serif'
 }
@@ -109,13 +119,61 @@ function isHotSearchType(value: unknown): value is HotSearchType {
   )
 }
 
+function isFontSizeClass(value: unknown): value is FontSizeClass {
+  return (
+    value === 'text-xs' ||
+    value === 'text-sm' ||
+    value === 'text-base' ||
+    value === 'text-lg' ||
+    value === 'text-xl' ||
+    value === 'text-2xl' ||
+    value === 'text-3xl' ||
+    value === 'text-4xl'
+  )
+}
+
+function isFontWeightClass(value: unknown): value is FontWeightClass {
+  return (
+    value === 'font-thin' ||
+    value === 'font-extralight' ||
+    value === 'font-light' ||
+    value === 'font-normal' ||
+    value === 'font-medium' ||
+    value === 'font-semibold' ||
+    value === 'font-bold' ||
+    value === 'font-extrabold' ||
+    value === 'font-black'
+  )
+}
+
+function isLetterSpacingClass(value: unknown): value is LetterSpacingClass {
+  return (
+    value === 'tracking-tighter' ||
+    value === 'tracking-tight' ||
+    value === 'tracking-normal' ||
+    value === 'tracking-wide' ||
+    value === 'tracking-wider' ||
+    value === 'tracking-widest'
+  )
+}
+
+function isLineHeightClass(value: unknown): value is LineHeightClass {
+  return (
+    value === 'leading-none' ||
+    value === 'leading-tight' ||
+    value === 'leading-snug' ||
+    value === 'leading-normal' ||
+    value === 'leading-relaxed' ||
+    value === 'leading-loose'
+  )
+}
+
 export function normalizeAppSettings(value: unknown): AppSettings {
   if (!value || typeof value !== 'object') {
     return { ...DEFAULT_APP_SETTINGS }
   }
 
-  const candidate = value as Partial<AppSettings> & { fontSize?: LegacyFontSize | FontSize }
-  const normalizedFontSize = toFontSize(candidate.fontSizeClass ?? candidate.fontSize)
+  const candidate = value as Partial<AppSettings>
 
   return {
     theme: isAppTheme(candidate.theme) ? candidate.theme : DEFAULT_APP_SETTINGS.theme,
@@ -123,7 +181,18 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.rewriteEnabled === 'boolean'
         ? candidate.rewriteEnabled
         : DEFAULT_APP_SETTINGS.rewriteEnabled,
-    fontSizeClass: normalizedFontSize ?? DEFAULT_APP_SETTINGS.fontSizeClass,
+    fontSizeClass: isFontSizeClass(candidate.fontSizeClass)
+      ? candidate.fontSizeClass
+      : DEFAULT_APP_SETTINGS.fontSizeClass,
+    fontWeightClass: isFontWeightClass(candidate.fontWeightClass)
+      ? candidate.fontWeightClass
+      : DEFAULT_APP_SETTINGS.fontWeightClass,
+    letterSpacingClass: isLetterSpacingClass(candidate.letterSpacingClass)
+      ? candidate.letterSpacingClass
+      : DEFAULT_APP_SETTINGS.letterSpacingClass,
+    lineHeightClass: isLineHeightClass(candidate.lineHeightClass)
+      ? candidate.lineHeightClass
+      : DEFAULT_APP_SETTINGS.lineHeightClass,
     fontFamilyClass: isFontFamilyClass(candidate.fontFamilyClass)
       ? candidate.fontFamilyClass
       : DEFAULT_APP_SETTINGS.fontFamilyClass,

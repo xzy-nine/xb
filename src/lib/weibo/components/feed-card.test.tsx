@@ -27,7 +27,10 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
 vi.mock('@/lib/weibo/hooks/use-font-settings', () => ({
   useFontSettings: () => ({
     fontSizeClass: 'text-sm',
-    fontFamily: '',
+    fontWeightClass: 'font-normal',
+    letterSpacingClass: 'tracking-normal',
+    lineHeightClass: 'leading-relaxed',
+    fontFamilyClass: 'font-sans',
   }),
 }))
 

@@ -37,7 +37,8 @@ export const CommentCard = memo(function CommentCard({
   const [showNestedCommentsDialog, setShowNestedCommentsDialog] = useState(false)
   const uid = getCurrentUserUid()
   const showOwnerMenu = uid !== null && uid === item.author.id
-  const { fontSizeClass, fontFamilyClass } = useFontSettings()
+  const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
+    useFontSettings()
   const queryClient = useQueryClient()
 
   const likeMutation = useMutation({
@@ -163,8 +164,11 @@ export const CommentCard = memo(function CommentCard({
       <CardContent className="flex flex-col gap-3 px-4">
         <div
           className={cn(
-            'whitespace-pre-wrap leading-6 text-foreground',
+            'whitespace-pre-wrap text-foreground',
             fontSizeClass,
+            fontWeightClass,
+            letterSpacingClass,
+            lineHeightClass,
             fontFamilyClass,
           )}
         >

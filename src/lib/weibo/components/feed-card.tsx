@@ -210,13 +210,17 @@ function FeedTextBlock({
   hasLongTextError: boolean
   onLoadLongText: () => void
 }) {
-  const { fontSizeClass, fontFamilyClass } = useFontSettings()
+  const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
+    useFontSettings()
 
   return (
     <div
       className={cn(
-        'whitespace-pre-wrap leading-6 text-foreground',
+        'whitespace-pre-wrap text-foreground',
         fontSizeClass,
+        fontWeightClass,
+        letterSpacingClass,
+        lineHeightClass,
         fontFamilyClass,
       )}
     >
