@@ -1,11 +1,14 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { RefreshCw } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { FeedList } from '@/lib/weibo/components/feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
@@ -18,6 +21,66 @@ import {
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
+
+interface RefreshTabTriggerProps {
+  value: string
+  label: string
+  isActive: boolean
+  onRefresh: () => void
+  isRefreshing: boolean
+}
+
+function RefreshTabTrigger({
+  value,
+  label,
+  isActive,
+  onRefresh,
+  isRefreshing,
+}: RefreshTabTriggerProps) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  const showRefresh = isActive && (isHovered || isRefreshing)
+
+  return (
+    <TabsTrigger
+      value={value}
+      className={cn('relative overflow-hidden', isActive && showRefresh && 'text-foreground')}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => {
+        if (isActive && !isRefreshing) {
+          onRefresh()
+        }
+      }}
+    >
+      <AnimatePresence mode="wait">
+        {showRefresh ? (
+          <motion.span
+            key="refresh"
+            className="flex items-center gap-1.5"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.15 }}
+          >
+            <RefreshCw className={cn('size-4', isRefreshing && 'animate-spin')} />
+            刷新
+          </motion.span>
+        ) : (
+          <motion.span
+            key="label"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.15 }}
+          >
+            {label}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </TabsTrigger>
+  )
+}
 
 export function ExplorePage() {
   const ctx = useAppShellContext()
@@ -53,9 +116,20 @@ export function ExplorePage() {
   const hasNextPage = Boolean(timelineQuery.hasNextPage)
   const isFetchingNextPage = timelineQuery.isFetchingNextPage
   const isLoading = timelineQuery.isLoading
+  const isRefreshing = timelineQuery.isFetching && !isFetchingNextPage && !isLoading
 
   const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
   fetchNextPageRef.current = timelineQuery.fetchNextPage
+
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const wasRefreshingRef = useRef(false)
+
+  useEffect(() => {
+    if (wasRefreshingRef.current && !isRefreshing) {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    wasRefreshingRef.current = isRefreshing
+  }, [isRefreshing])
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
@@ -102,15 +176,21 @@ export function ExplorePage() {
         ) : (
           <TabsList className="flex w-full justify-start gap-2 overflow-x-auto pb-2" variant="line">
             {groups.map((group) => (
-              <TabsTrigger key={group.gid} value={group.gid}>
-                {group.title}
-              </TabsTrigger>
+              <RefreshTabTrigger
+                key={group.gid}
+                value={group.gid}
+                label={group.title}
+                isActive={group.gid === groupId}
+                onRefresh={() => void timelineQuery.refetch()}
+                isRefreshing={group.gid === groupId && isRefreshing}
+              />
             ))}
           </TabsList>
         )}
       </div>
 
       <TabsContent value={groupId} className="flex flex-col gap-3">
+        <div ref={scrollRef} />
         {isLoading ? <PageLoadingState label="正在加载探索内容..." /> : null}
         {!isLoading && errorMessage ? (
           <PageErrorState description={errorMessage} onRetry={() => void timelineQuery.refetch()} />

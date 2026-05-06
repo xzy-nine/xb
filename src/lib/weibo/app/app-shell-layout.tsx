@@ -64,7 +64,6 @@ interface ShellFrameProps {
   theme: AppTheme
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
-  onRefresh?: () => void
   onSettingsOpen: () => void
   onComposeOpen: () => void
   mainRef: React.RefObject<HTMLDivElement | null>
@@ -82,7 +81,6 @@ export function ShellFrame({
   theme,
   onRewriteEnabledChange,
   onThemeChange,
-  onRefresh,
   onSettingsOpen,
   onComposeOpen,
   mainRef,
@@ -130,7 +128,6 @@ export function ShellFrame({
             theme={theme}
             onRewriteEnabledChange={onRewriteEnabledChange}
             onThemeChange={onThemeChange}
-            onRefresh={onRefresh}
             onSettingsOpen={onSettingsOpen}
             onComposeOpen={onComposeOpen}
           />

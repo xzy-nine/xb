@@ -137,7 +137,6 @@ export function AppShell() {
           }
         }}
         onThemeChange={(nextTheme: typeof theme) => void setTheme(nextTheme)}
-        onRefresh={refreshTimeline}
         onSettingsOpen={() => setSettingsOpen(true)}
         onComposeOpen={() => setComposeOpen(true)}
         mainRef={mainRef}
