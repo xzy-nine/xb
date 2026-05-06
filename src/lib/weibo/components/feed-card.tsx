@@ -159,6 +159,12 @@ function RetweetedAuthorHeader({
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
 }) {
+  const isDeletedAuthor = !item.author.id
+
+  if (isDeletedAuthor) {
+    return <div className="text-muted-foreground text-sm">未知用户</div>
+  }
+
   return (
     <div className="grid grid-cols-[36px_minmax(0,1fr)] gap-2">
       <UserHoverCard uid={item.author.id}>
@@ -341,6 +347,8 @@ function RetweetedFeedBlock({
     onLoadLongText,
   } = useFeedLongText(item)
 
+  const isDeletedAuthor = !resolvedItem.author.id
+
   const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (!onNavigate) {
@@ -373,11 +381,13 @@ function RetweetedFeedBlock({
 
         <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
 
-        <FeedActions
-          item={resolvedItem}
-          onLikeClick={onLikeClick}
-          likePending={likePendingForId === resolvedItem.id}
-        />
+        {!isDeletedAuthor && (
+          <FeedActions
+            item={resolvedItem}
+            onLikeClick={onLikeClick}
+            likePending={likePendingForId === resolvedItem.id}
+          />
+        )}
       </CardContent>
     </Card>
   )
