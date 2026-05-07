@@ -58,6 +58,7 @@ export function adaptProfileInfoResponse(payload: ProfileInfoPayload): UserProfi
     bannerUrl:
       user.cover_image_phone?.split(';')[0]?.replace('crop.0.0.640.640.640', 'mw2000') ?? null,
     followersCount: user.followers_count ?? null,
+    followersCountStr: user.followers_count_str ?? null,
     friendsCount: user.friends_count ?? null,
     ipLocation: null,
     descText: null,

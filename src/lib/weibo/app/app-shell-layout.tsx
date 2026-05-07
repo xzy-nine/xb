@@ -135,7 +135,7 @@ export function ShellFrame({
         <main className="no-scrollbar min-w-0 flex-1 overflow-y-auto pb-8" ref={mainRef}>
           {children}
         </main>
-        <div className="hidden shrink-0 pt-4 md:flex md:w-[200px] xl:w-[240px]">
+        <div className="hidden shrink-0 pt-4 md:flex md:w-[240px] xl:w-[300px]">
           <RightRail />
         </div>
         <BackToTop containerRef={mainRef} />
