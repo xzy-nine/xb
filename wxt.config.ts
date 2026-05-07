@@ -53,4 +53,9 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
   }),
+  dev: {
+    server: {
+      port: 3111,
+    },
+  },
 })

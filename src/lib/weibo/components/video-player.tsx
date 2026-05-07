@@ -395,24 +395,48 @@ export function VideoPlayer({
     }
 
     setDownloading(true)
+    const name = downloadFilename
+      ? `${downloadFilename.replaceAll(/[\\/:*?"<>|]/g, '_')}.mp4`
+      : 'weibo_video.mp4'
+    toast.info(`准备下载：${name}`)
     try {
-      const name = downloadFilename
-        ? `${downloadFilename.replaceAll(/[\\/:*?"<>|]/g, '_')}.mp4`
-        : 'weibo_video.mp4'
-      toast.info(`准备下载：${name}`)
-      const res = await fetch(downloadUrl)
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
+      // firefox doesn't support cors download, so we need to open a tab
+      if (import.meta.env.FIREFOX) {
+        try {
+          const a = document.createElement('a')
+          a.href = downloadUrl
+          console.log('🚀 ~ VideoPlayer ~ downloadUrl:', downloadUrl)
+          a.download = name
+          a.target = '_blank'
+          a.rel = 'noopener'
+          document.body.appendChild(a)
+          a.click()
+          a.remove()
+          toast.success(`已下载：${name}`)
+        } catch (error) {
+          console.error(error)
+          toast.error('下载失败，请稍后重试')
+        }
+        return
       }
-      const blob = await res.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = blobUrl
-      a.download = name
-      a.click()
-      URL.revokeObjectURL(blobUrl)
-      toast.success(`已下载：${name}`)
-      a.remove()
+      try {
+        const res = await fetch(downloadUrl)
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`)
+        }
+        const blob = await res.blob()
+        const blobUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = name
+        a.click()
+        URL.revokeObjectURL(blobUrl)
+        toast.success(`已下载：${name}`)
+        a.remove()
+      } catch (error) {
+        console.error(error)
+        toast.error('下载失败，请稍后重试')
+      }
     } catch {
       toast.error('下载失败，请稍后重试')
     } finally {
