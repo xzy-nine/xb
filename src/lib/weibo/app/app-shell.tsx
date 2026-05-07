@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -7,13 +7,16 @@ import { RewritePausedCard, ShellFrame } from '@/lib/weibo/app/app-shell-layout'
 import { AuthRequiredDialog } from '@/lib/weibo/components/auth-required-dialog'
 import { CommentModal } from '@/lib/weibo/components/comment-modal'
 import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
-import { GenImageDialog } from '@/lib/weibo/components/gen-image-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
+
+const GenImageDialog = lazy(() =>
+  import('@/lib/weibo/components/gen-image-dialog').then((m) => ({ default: m.GenImageDialog })),
+)
 
 function getHomeTimelinePath(tab: 'for-you' | 'following') {
   return tab === 'following' ? '/mygroups' : '/'
@@ -49,35 +52,54 @@ export function AppShell() {
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
 
-  const resetMainScroll = () => {
+  const resetMainScroll = useCallback(() => {
     if (mainRef.current) {
       mainRef.current.scrollTop = 0
     }
-  }
+  }, [])
 
-  const navigateToStatusDetail = (item: StatusDetailNavigationItem) => {
-    const statusId = item.mblogId ?? item.id
-    if (!item.author.id || !statusId) {
-      return
-    }
-    navigate(`/${item.author.id}/${statusId}`)
-  }
+  const navigateToStatusDetail = useCallback(
+    (item: StatusDetailNavigationItem) => {
+      const statusId = item.mblogId ?? item.id
+      if (!item.author.id || !statusId) {
+        return
+      }
+      navigate(`/${item.author.id}/${statusId}`)
+    },
+    [navigate],
+  )
 
-  const refreshTimeline = () => {
+  const refreshTimeline = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['weibo', 'timeline'] })
-  }
+  }, [queryClient])
 
-  const context: AppShellContext = {
-    page,
-    navigateToStatusDetail,
-    resetMainScroll,
-    composeTarget,
-    setComposeTarget,
-    viewingProfileUserId,
-    onProfileUserIdChange: setViewingProfileUserId,
-    onHomeTabChange: (tab) => navigate(getHomeTimelinePath(tab)),
-    refreshTimeline,
-  }
+  const onHomeTabChange = useCallback(
+    (tab: 'for-you' | 'following') => navigate(getHomeTimelinePath(tab)),
+    [navigate],
+  )
+
+  const context: AppShellContext = useMemo(
+    () => ({
+      page,
+      navigateToStatusDetail,
+      resetMainScroll,
+      composeTarget,
+      setComposeTarget,
+      viewingProfileUserId,
+      onProfileUserIdChange: setViewingProfileUserId,
+      onHomeTabChange,
+      refreshTimeline,
+    }),
+    [
+      page,
+      navigateToStatusDetail,
+      resetMainScroll,
+      composeTarget,
+      viewingProfileUserId,
+      onHomeTabChange,
+      refreshTimeline,
+    ],
+  )
 
   const composeModal = (
     <CommentModal
@@ -115,7 +137,6 @@ export function AppShell() {
           }
         }}
         onThemeChange={(nextTheme: typeof theme) => void setTheme(nextTheme)}
-        onRefresh={refreshTimeline}
         onSettingsOpen={() => setSettingsOpen(true)}
         onComposeOpen={() => setComposeOpen(true)}
         mainRef={mainRef}
@@ -124,7 +145,9 @@ export function AppShell() {
         {composeModal}
         <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-        <GenImageDialog />
+        <Suspense fallback={null}>
+          <GenImageDialog />
+        </Suspense>
         <AuthRequiredDialog
           open={authDialogOpen}
           onLogin={async () => {

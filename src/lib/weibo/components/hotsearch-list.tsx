@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { HotSearchType } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
@@ -46,10 +45,9 @@ function getRankClassName(index: number): string {
 
 function HotSearchItemComponent({ item, index }: { item: HotSearchListData; index: number }) {
   const word = normalizeWord(item.word)
-  const fullWord = item.word.startsWith('#') ? `#${word}#` : word
   const url = `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${word}#`)}`
 
-  const content = (
+  return (
     <a
       href={url}
       target="_blank"
@@ -70,15 +68,6 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
             </span>
           ) : null} */}
     </a>
-  )
-
-  return word.length > 10 ? (
-    <Tooltip>
-      <TooltipTrigger asChild>{content}</TooltipTrigger>
-      <TooltipContent>{fullWord}</TooltipContent>
-    </Tooltip>
-  ) : (
-    content
   )
 }
 
@@ -152,11 +141,9 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
         <CardDescription className="px-2 pb-2">暂无热搜</CardDescription>
       ) : (
         <div className="h-[380px] w-full overflow-x-hidden overflow-y-auto">
-          <TooltipProvider>
-            {items.map((item, index) => (
-              <HotSearchItemComponent key={`${item.type}-${item.word}`} item={item} index={index} />
-            ))}
-          </TooltipProvider>
+          {items.map((item, index) => (
+            <HotSearchItemComponent key={`${item.type}-${item.word}`} item={item} index={index} />
+          ))}
         </div>
       )}
     </Card>

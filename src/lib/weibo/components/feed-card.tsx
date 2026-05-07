@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircle, Repeat2 } from 'lucide-react'
-import { type MouseEvent, type ReactNode, useRef } from 'react'
+import { memo, type MouseEvent, type ReactNode, useRef } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -95,7 +95,7 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
         event.stopPropagation()
       }}
     >
-      <AspectRatio ratio={item.media.videoOrientation === 'vertical' ? 1 / 1 : 16 / 9}>
+      <AspectRatio ratio={item.media.videoOrientation === 'vertical' ? 4 / 3 : 16 / 9}>
         <VideoPlayer
           progressiveSrc={item.media.streamUrl}
           poster={item.media.coverUrl ?? undefined}
@@ -159,6 +159,12 @@ function RetweetedAuthorHeader({
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
 }) {
+  const isDeletedAuthor = !item.author.id
+
+  if (isDeletedAuthor) {
+    return <div className="text-muted-foreground text-sm">未知用户</div>
+  }
+
   return (
     <div className="grid grid-cols-[36px_minmax(0,1fr)] gap-2">
       <UserHoverCard uid={item.author.id}>
@@ -210,13 +216,17 @@ function FeedTextBlock({
   hasLongTextError: boolean
   onLoadLongText: () => void
 }) {
-  const { fontSizeClass, fontFamilyClass } = useFontSettings()
+  const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
+    useFontSettings()
 
   return (
     <div
       className={cn(
-        'whitespace-pre-wrap leading-6 text-foreground',
+        'whitespace-pre-wrap text-foreground',
         fontSizeClass,
+        fontWeightClass,
+        letterSpacingClass,
+        lineHeightClass,
         fontFamilyClass,
       )}
     >
@@ -337,6 +347,8 @@ function RetweetedFeedBlock({
     onLoadLongText,
   } = useFeedLongText(item)
 
+  const isDeletedAuthor = !resolvedItem.author.id
+
   const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (!onNavigate) {
@@ -369,17 +381,19 @@ function RetweetedFeedBlock({
 
         <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
 
-        <FeedActions
-          item={resolvedItem}
-          onLikeClick={onLikeClick}
-          likePending={likePendingForId === resolvedItem.id}
-        />
+        {!isDeletedAuthor && (
+          <FeedActions
+            item={resolvedItem}
+            onLikeClick={onLikeClick}
+            likePending={likePendingForId === resolvedItem.id}
+          />
+        )}
       </CardContent>
     </Card>
   )
 }
 
-export function FeedCard({
+export const FeedCard = memo(function FeedCard({
   item,
   surface: surfaceProp = 'timeline',
   onNavigate,
@@ -645,4 +659,4 @@ export function FeedCard({
       </CardFooter>
     </Card>
   )
-}
+})

@@ -10,7 +10,10 @@ import {
   type AppTheme,
   type CardStyle,
   type FontFamilyClass,
-  type FontSize,
+  type FontSizeClass,
+  type FontWeightClass,
+  type LetterSpacingClass,
+  type LineHeightClass,
   type GenImageCardTheme,
   type HotSearchType,
 } from '@/lib/app-settings'
@@ -20,7 +23,10 @@ export interface AppSettingsStoreState extends AppSettings {
   hydrate: () => Promise<void>
   setTheme: (theme: AppTheme) => Promise<void>
   setRewriteEnabled: (enabled: boolean) => Promise<void>
-  setFontSizeClass: (fontSizeClass: FontSize) => Promise<void>
+  setFontSizeClass: (fontSizeClass: FontSizeClass) => Promise<void>
+  setFontWeightClass: (fontWeightClass: FontWeightClass) => Promise<void>
+  setLetterSpacingClass: (letterSpacingClass: LetterSpacingClass) => Promise<void>
+  setLineHeightClass: (lineHeightClass: LineHeightClass) => Promise<void>
   setFontFamilyClass: (fontFamilyClass: FontFamilyClass) => Promise<void>
   setShowHotSearchCard: (show: boolean) => Promise<void>
   setCollapseRepliesEnabled: (enabled: boolean) => Promise<void>
@@ -41,6 +47,9 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     theme: state.theme,
     rewriteEnabled: state.rewriteEnabled,
     fontSizeClass: state.fontSizeClass,
+    fontWeightClass: state.fontWeightClass,
+    letterSpacingClass: state.letterSpacingClass,
+    lineHeightClass: state.lineHeightClass,
     fontFamilyClass: state.fontFamilyClass,
     showHotSearchCard: state.showHotSearchCard,
     collapseRepliesEnabled: state.collapseRepliesEnabled,
@@ -88,6 +97,15 @@ export function createAppSettingsStore(
       },
       async setFontSizeClass(fontSizeClass) {
         await updateAndPersist({ fontSizeClass })
+      },
+      async setFontWeightClass(fontWeightClass) {
+        await updateAndPersist({ fontWeightClass })
+      },
+      async setLetterSpacingClass(letterSpacingClass) {
+        await updateAndPersist({ letterSpacingClass })
+      },
+      async setLineHeightClass(lineHeightClass) {
+        await updateAndPersist({ lineHeightClass })
       },
       async setFontFamilyClass(fontFamilyClass) {
         await updateAndPersist({ fontFamilyClass })

@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -26,14 +26,18 @@ export function FavoritesPage() {
     enabled: isEnabled && uid !== '',
   })
 
-  const items = flattenInfiniteItems<FeedItem>(
-    favoritesQuery.data?.pages as TimelinePage[] | undefined,
+  const items = useMemo(
+    () => flattenInfiniteItems<FeedItem>(favoritesQuery.data?.pages as TimelinePage[] | undefined),
+    [favoritesQuery.data?.pages],
   )
 
   const errorMessage = favoritesQuery.error instanceof Error ? favoritesQuery.error.message : null
   const hasNextPage = Boolean(favoritesQuery.hasNextPage)
   const isFetchingNextPage = favoritesQuery.isFetchingNextPage
   const isLoading = favoritesQuery.isLoading
+
+  const fetchNextPageRef = useRef(favoritesQuery.fetchNextPage)
+  fetchNextPageRef.current = favoritesQuery.fetchNextPage
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
@@ -42,14 +46,14 @@ export function FavoritesPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          void favoritesQuery.fetchNextPage()
+          void fetchNextPageRef.current()
         }
       },
       { threshold: 0.2 },
     )
     observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, favoritesQuery])
+  }, [hasNextPage, isFetchingNextPage])
 
   return (
     <div className="flex flex-col gap-3 pt-4">

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircleIcon } from 'lucide-react'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -23,7 +23,7 @@ import {
   setCommentLike,
 } from '@/lib/weibo/services/weibo-repository'
 
-export function CommentCard({
+export const CommentCard = memo(function CommentCard({
   item,
   rootStatusId,
   authorUid,
@@ -37,7 +37,8 @@ export function CommentCard({
   const [showNestedCommentsDialog, setShowNestedCommentsDialog] = useState(false)
   const uid = getCurrentUserUid()
   const showOwnerMenu = uid !== null && uid === item.author.id
-  const { fontSizeClass, fontFamilyClass } = useFontSettings()
+  const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
+    useFontSettings()
   const queryClient = useQueryClient()
 
   const likeMutation = useMutation({
@@ -163,8 +164,11 @@ export function CommentCard({
       <CardContent className="flex flex-col gap-3 px-4">
         <div
           className={cn(
-            'whitespace-pre-wrap leading-6 text-foreground',
+            'whitespace-pre-wrap text-foreground',
             fontSizeClass,
+            fontWeightClass,
+            letterSpacingClass,
+            lineHeightClass,
             fontFamilyClass,
           )}
         >
@@ -236,4 +240,4 @@ export function CommentCard({
       </CardContent>
     </Card>
   )
-}
+})

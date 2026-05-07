@@ -7,12 +7,11 @@ import {
   House,
   MailIcon,
   Pencil,
-  RefreshCw,
   Settings,
   UserRound,
   ZapOff,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 
 import WeiboLogo from '@/assets/icons/weibo.svg'
@@ -32,8 +31,6 @@ function NavButton({
   onClick,
   href,
   isExternal,
-  onMouseEnter,
-  onMouseLeave,
   variant,
 }: {
   children: React.ReactNode
@@ -43,8 +40,6 @@ function NavButton({
   onClick?: () => void
   href?: string
   isExternal?: boolean
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
   variant?: React.ComponentProps<typeof Button>['variant']
 }) {
   const buttonVariant = variant ?? (isActive ? 'secondary' : 'ghost')
@@ -62,8 +57,6 @@ function NavButton({
         rel={isExternal ? 'noopener noreferrer' : undefined}
         aria-label={showLabel ? undefined : String(label)}
         aria-current={isActive ? 'page' : undefined}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
       >
         {children}
         {showLabel && <span>{label}</span>}
@@ -76,8 +69,6 @@ function NavButton({
       aria-current={isActive ? 'page' : undefined}
       className={cn('w-full items-center gap-2', showLabel ? 'justify-start' : 'justify-center')}
       onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       size={showLabel ? 'default' : 'icon'}
     >
       {children}
@@ -95,6 +86,17 @@ function NavButton({
   )
 }
 
+interface NavigationRailProps {
+  pageKind: WeiboPageDescriptor['kind']
+  viewingProfileUserId?: string | null
+  rewriteEnabled: boolean
+  theme: AppTheme
+  onRewriteEnabledChange: (enabled: boolean) => void
+  onThemeChange: (theme: AppTheme) => void
+  onSettingsOpen: () => void
+  onComposeOpen: () => void
+}
+
 export function NavigationRail({
   pageKind,
   viewingProfileUserId,
@@ -102,24 +104,12 @@ export function NavigationRail({
   theme,
   onRewriteEnabledChange,
   onThemeChange,
-  onRefresh,
   onSettingsOpen,
   onComposeOpen,
-}: {
-  pageKind: WeiboPageDescriptor['kind']
-  viewingProfileUserId?: string | null
-  rewriteEnabled: boolean
-  theme: AppTheme
-  onRewriteEnabledChange: (enabled: boolean) => void
-  onThemeChange: (theme: AppTheme) => void
-  onRefresh?: () => void
-  onSettingsOpen: () => void
-  onComposeOpen: () => void
-}) {
+}: NavigationRailProps) {
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
   const navigate = useNavigate()
-  const [isHomeHovered, setIsHomeHovered] = useState(false)
-  const isHomePage = pageKind === 'home'
+  const isXl = useMediaQuery('(min-width: 1280px)')
 
   const profileHref = useMemo(
     () => (currentUserUid ? `/u/${currentUserUid}` : '/'),
@@ -136,16 +126,6 @@ export function NavigationRail({
     currentUserUid === viewingProfileUserId
   const isFavoritesActive = pageKind === 'favorites'
 
-  const isXl = useMediaQuery('(min-width: 1280px)')
-
-  const handleHomeClick = () => {
-    if (isHomePage && onRefresh) {
-      onRefresh()
-    } else {
-      navigate('/')
-    }
-  }
-
   return (
     <TooltipProvider>
       <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
@@ -160,18 +140,12 @@ export function NavigationRail({
         <nav aria-label="主导航" className="flex min-h-0 flex-1 flex-col">
           <div className="flex flex-col gap-1">
             <NavButton
-              label={isHomePage && isHomeHovered ? '刷新' : '主页'}
+              label="主页"
               showLabel={isXl}
-              isActive={!isOwnProfileActive && isHomePage}
-              onClick={handleHomeClick}
-              onMouseEnter={() => setIsHomeHovered(true)}
-              onMouseLeave={() => setIsHomeHovered(false)}
+              isActive={!isOwnProfileActive && pageKind === 'home'}
+              onClick={() => navigate('/')}
             >
-              {isHomePage && isHomeHovered ? (
-                <RefreshCw aria-hidden="true" className="size-4 shrink-0" />
-              ) : (
-                <House aria-hidden="true" className="size-4 shrink-0" />
-              )}
+              <House aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             <NavButton
@@ -216,7 +190,7 @@ export function NavigationRail({
             </NavButton>
 
             <NavButton
-              label="个人主页"
+              label="我的"
               showLabel={isXl}
               isActive={isOwnProfileActive}
               onClick={() => navigate(profileHref)}

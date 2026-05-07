@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router'
 
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
@@ -154,7 +155,7 @@ function LikeNotificationContent({ item }: { item: LikeNotification }) {
   )
 }
 
-export function NotificationCard({
+export const NotificationCard = memo(function NotificationCard({
   item,
   className,
 }: {
@@ -175,4 +176,4 @@ export function NotificationCard({
       </CardContent>
     </Card>
   )
-}
+})

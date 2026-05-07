@@ -130,7 +130,9 @@ export function UserHoverCard(props: UserHoverCardProps) {
                 ) : null}
                 {profile.followersCount ? (
                   <span className="text-muted-foreground">
-                    <span className="text-foreground font-semibold">{profile.followersCount}</span>{' '}
+                    <span className="text-foreground font-semibold">
+                      {profile.followersCountStr}
+                    </span>{' '}
                     粉丝
                   </span>
                 ) : null}
