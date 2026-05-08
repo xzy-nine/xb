@@ -1,6 +1,8 @@
+import { FONT_FAMILY_CLASSES, RemoteFontFamily, SystemFontFamily } from './font-loader'
+
 export type AppTheme = 'system' | 'light' | 'dark'
 
-export type FontFamilyClass = 'font-sans' | 'font-serif'
+export type FontFamilyClass = SystemFontFamily | RemoteFontFamily
 
 export type HotSearchType = 'hot' | 'mine' | 'entertainment' | 'life' | 'social'
 
@@ -106,7 +108,7 @@ function isAppTheme(value: unknown): value is AppTheme {
 }
 
 function isFontFamilyClass(value: unknown): value is FontFamilyClass {
-  return value === 'font-sans' || value === 'font-serif'
+  return FONT_FAMILY_CLASSES.includes(value as FontFamilyClass)
 }
 
 function isHotSearchType(value: unknown): value is HotSearchType {

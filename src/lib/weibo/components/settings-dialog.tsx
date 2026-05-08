@@ -14,7 +14,9 @@ import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -58,12 +60,6 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [version, setVersion] = useState<string>('')
 
-  useEffect(() => {
-    if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
-      setVersion(browser.runtime.getManifest().version)
-    }
-  }, [])
-
   const fontSizeClass = useAppSettings((s) => s.fontSizeClass)
   const fontWeightClass = useAppSettings((s) => s.fontWeightClass)
   const letterSpacingClass = useAppSettings((s) => s.letterSpacingClass)
@@ -80,6 +76,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
+
+  useEffect(() => {
+    if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
+      setVersion(browser.runtime.getManifest().version)
+    }
+  }, [])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -215,8 +217,25 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="font-sans">无衬线</SelectItem>
-                  <SelectItem value="font-serif">衬线</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>本地字体</SelectLabel>
+                    <SelectItem value="font-sans">默认无衬线</SelectItem>
+                    <SelectItem value="font-serif">默认衬线</SelectItem>
+                    <SelectItem value="font-simhei">黑体</SelectItem>
+                    <SelectItem value="font-simsun">宋体</SelectItem>
+                    <SelectItem value="font-kaiti">楷体</SelectItem>
+                    <SelectItem value="font-fangsong">仿宋</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>远程字体</SelectLabel>
+                    <SelectItem value="font-lxgw-wenkai">霞鹜文楷</SelectItem>
+                    <SelectItem value="font-smiley-sans">得意黑</SelectItem>
+                    <SelectItem value="font-zhuque">朱雀仿宋</SelectItem>
+                    <SelectItem value="font-source-han-serif">思源宋体</SelectItem>
+                    <SelectItem value="font-source-han-sans">思源黑体</SelectItem>
+                    <SelectItem value="font-fz-kai">方正楷体</SelectItem>
+                    <SelectItem value="font-canger-jinkai">仓耳今楷</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </Field>
