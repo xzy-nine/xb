@@ -67,6 +67,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const fontFamilyClass = useAppSettings((s) => s.fontFamilyClass)
   const showHotSearchCard = useAppSettings((s) => s.showHotSearchCard)
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
+  const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
@@ -75,6 +76,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setFontFamilyClass = useAppSettings((s) => s.setFontFamilyClass)
   const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
+  const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
 
   useEffect(() => {
@@ -111,12 +113,21 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </Field>
 
-            <Field label="折叠引用" description="微博中引用超过2条时折叠中间的引用">
+            <Field label="QuoteChains 渲染" description="将“//@ 用户名: 格式”渲染成 QuoteChains">
               <Switch
-                checked={collapseRepliesEnabled}
-                onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
+                checked={renderReplyChainEnabled}
+                onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
               />
             </Field>
+
+            {renderReplyChainEnabled && (
+              <Field label="QuoteChains 折叠" description="QuoteChains 超过2条时折叠中间的引用">
+                <Switch
+                  checked={collapseRepliesEnabled}
+                  onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
+                />
+              </Field>
+            )}
 
             <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
               <Switch
