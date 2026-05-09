@@ -46,6 +46,14 @@ export default defineConfig({
         ],
       },
     ],
+    browser_specific_settings: {
+      gecko: {
+        id: '@xb-weibo',
+        data_collection_permissions: {
+          required: ['none'],
+        },
+      },
+    },
   },
   suppressWarnings: {
     firefoxDataCollection: true,
@@ -53,4 +61,9 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
   }),
+  dev: {
+    server: {
+      port: 3111,
+    },
+  },
 })
