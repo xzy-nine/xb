@@ -4,7 +4,6 @@ import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ItemContent, ItemGroup } from '@/components/ui/item'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useEmoticonConfigQuery } from '@/lib/weibo/app/emoticon-query'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
@@ -398,7 +397,7 @@ function renderReplyChainText(
         </span>
       ) : null}
       {leading && leading.images.length > 0 ? <ImageCarousel images={leading.images} /> : null}
-      <ItemGroup data-testid="reply-chain" className="flex flex-col gap-2">
+      <div data-testid="reply-chain" className="flex flex-col gap-2">
         {chain.map((segment, index) =>
           renderReplyChainItem(
             segment,
@@ -409,7 +408,7 @@ function renderReplyChainText(
             extractImages,
           ),
         )}
-      </ItemGroup>
+      </div>
     </span>
   )
 }

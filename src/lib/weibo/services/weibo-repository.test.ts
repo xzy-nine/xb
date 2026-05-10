@@ -77,6 +77,7 @@ describe('submitComposeAction', () => {
       is_repost: '1',
       comment_ori: '0',
       is_comment: '0',
+      fp: '',
     })
   })
 
@@ -104,6 +105,7 @@ describe('submitComposeAction', () => {
       is_repost: '0',
       comment_ori: '0',
       is_comment: '0',
+      fp: '',
     })
   })
 
