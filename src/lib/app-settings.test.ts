@@ -64,6 +64,13 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'hot',
+      statusDetailPopupEnabled: true,
+      statusDetailPopupPosition: 'right',
+      backgroundEnabled: true,
+      backgroundColor: '#1e40af',
+      backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
+      glassOpacity: 80,
+      glassBlur: 12,
     })
 
     await persistAppSettings(
@@ -86,6 +93,13 @@ describe('app-settings', () => {
         imageGenTheme: 'light',
         imageGenCardStyle: 'default',
         hotSearchType: 'mine',
+        statusDetailPopupEnabled: false,
+        statusDetailPopupPosition: 'right',
+        backgroundEnabled: true,
+        backgroundColor: '#1e40af',
+        backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
+        glassOpacity: 80,
+        glassBlur: 12,
       },
       storage,
     )
@@ -109,6 +123,13 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'mine',
+      statusDetailPopupEnabled: false,
+      statusDetailPopupPosition: 'right',
+      backgroundEnabled: true,
+      backgroundColor: '#1e40af',
+      backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
+      glassOpacity: 80,
+      glassBlur: 12,
     })
   })
 

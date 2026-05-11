@@ -9,7 +9,9 @@ import { CommentModal } from '@/lib/weibo/components/comment-modal'
 import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
+import { StatusDetailDialog } from '@/lib/weibo/components/status-detail-dialog'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
@@ -25,6 +27,7 @@ function getHomeTimelinePath(tab: 'for-you' | 'following') {
 export interface AppShellContext {
   page: ReturnType<typeof useWeiboPage>
   navigateToStatusDetail: (item: StatusDetailNavigationItem) => void
+  openStatusDetailDialog: (item: StatusDetailNavigationItem) => void
   resetMainScroll: () => void
   composeTarget: ComposeTarget | null
   setComposeTarget: (target: ComposeTarget | null) => void
@@ -41,6 +44,8 @@ export function AppShell() {
 
   const theme = useAppSettings((state) => state.theme)
   const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
+  const statusDetailPopupEnabled = useAppSettings((state) => state.statusDetailPopupEnabled)
+  const statusDetailPopupPosition = useAppSettings((state) => state.statusDetailPopupPosition)
   const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
   const setTheme = useAppSettings((state) => state.setTheme)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
@@ -48,6 +53,8 @@ export function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
+  const [statusDetailDialogOpen, setStatusDetailDialogOpen] = useState(false)
+  const [statusDetailItem, setStatusDetailItem] = useState<StatusDetailNavigationItem | null>(null)
   const mainRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
@@ -64,10 +71,20 @@ export function AppShell() {
       if (!item.author.id || !statusId) {
         return
       }
-      navigate(`/${item.author.id}/${statusId}`)
+      if (statusDetailPopupEnabled) {
+        setStatusDetailItem(item)
+        setStatusDetailDialogOpen(true)
+      } else {
+        navigate(`/${item.author.id}/${statusId}`)
+      }
     },
-    [navigate],
+    [navigate, statusDetailPopupEnabled],
   )
+
+  const openStatusDetailDialog = useCallback((item: StatusDetailNavigationItem) => {
+    setStatusDetailItem(item)
+    setStatusDetailDialogOpen(true)
+  }, [])
 
   const refreshTimeline = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['weibo', 'timeline'] })
@@ -82,6 +99,7 @@ export function AppShell() {
     () => ({
       page,
       navigateToStatusDetail,
+      openStatusDetailDialog,
       resetMainScroll,
       composeTarget,
       setComposeTarget,
@@ -93,6 +111,7 @@ export function AppShell() {
     [
       page,
       navigateToStatusDetail,
+      openStatusDetailDialog,
       resetMainScroll,
       composeTarget,
       viewingProfileUserId,
@@ -119,6 +138,14 @@ export function AppShell() {
         <RewritePausedCard onResume={() => void setRewriteEnabled(true)} />
         {composeModal}
         <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
+        <StatusDetailDialog
+          open={statusDetailDialogOpen}
+          item={statusDetailItem}
+          position={statusDetailPopupPosition}
+          onOpenChange={setStatusDetailDialogOpen}
+          setComposeTarget={setComposeTarget}
+          onNavigate={navigateToStatusDetail}
+        />
       </>
     )
   }
@@ -154,6 +181,14 @@ export function AppShell() {
             await setRewriteEnabled(false)
             window.location.href = 'https://weibo.com/newlogin'
           }}
+        />
+        <StatusDetailDialog
+          open={statusDetailDialogOpen}
+          item={statusDetailItem}
+          position={statusDetailPopupPosition}
+          onOpenChange={setStatusDetailDialogOpen}
+          setComposeTarget={setComposeTarget}
+          onNavigate={navigateToStatusDetail}
         />
       </ShellFrame>
     </GenImageDialogProvider>

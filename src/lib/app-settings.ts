@@ -43,6 +43,8 @@ export type LineHeightClass =
   | 'leading-relaxed'
   | 'leading-loose'
 
+export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
+
 export interface AppSettings {
   theme: AppTheme
   rewriteEnabled: boolean
@@ -62,6 +64,13 @@ export interface AppSettings {
   imageGenTheme: GenImageCardTheme
   imageGenCardStyle: CardStyle
   hotSearchType: HotSearchType
+  statusDetailPopupEnabled: boolean
+  statusDetailPopupPosition: StatusDetailPopupPosition
+  backgroundEnabled: boolean
+  backgroundColor: string
+  backgroundImageUrl: string
+  glassOpacity: number
+  glassBlur: number
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -103,6 +112,13 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenTheme: 'light' as GenImageCardTheme,
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
+  statusDetailPopupEnabled: true,
+  statusDetailPopupPosition: 'right',
+  backgroundEnabled: true,
+  backgroundColor: '#1e40af',
+  backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
+  glassOpacity: 80,
+  glassBlur: 12,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -170,6 +186,10 @@ function isLineHeightClass(value: unknown): value is LineHeightClass {
     value === 'leading-relaxed' ||
     value === 'leading-loose'
   )
+}
+
+function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopupPosition {
+  return value === 'left' || value === 'center' || value === 'right'
 }
 
 export function normalizeAppSettings(value: unknown): AppSettings {
@@ -243,6 +263,37 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     hotSearchType: isHotSearchType(candidate.hotSearchType)
       ? candidate.hotSearchType
       : DEFAULT_APP_SETTINGS.hotSearchType,
+    statusDetailPopupEnabled:
+      typeof candidate.statusDetailPopupEnabled === 'boolean'
+        ? candidate.statusDetailPopupEnabled
+        : DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
+    statusDetailPopupPosition: isStatusDetailPopupPosition(candidate.statusDetailPopupPosition)
+      ? candidate.statusDetailPopupPosition
+      : DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
+    backgroundEnabled:
+      typeof candidate.backgroundEnabled === 'boolean'
+        ? candidate.backgroundEnabled
+        : DEFAULT_APP_SETTINGS.backgroundEnabled,
+    backgroundColor:
+      typeof candidate.backgroundColor === 'string'
+        ? candidate.backgroundColor
+        : DEFAULT_APP_SETTINGS.backgroundColor,
+    backgroundImageUrl:
+      typeof candidate.backgroundImageUrl === 'string'
+        ? candidate.backgroundImageUrl
+        : DEFAULT_APP_SETTINGS.backgroundImageUrl,
+    glassOpacity:
+      typeof candidate.glassOpacity === 'number' &&
+      candidate.glassOpacity >= 0 &&
+      candidate.glassOpacity <= 100
+        ? candidate.glassOpacity
+        : DEFAULT_APP_SETTINGS.glassOpacity,
+    glassBlur:
+      typeof candidate.glassBlur === 'number' &&
+      candidate.glassBlur >= 0 &&
+      candidate.glassBlur <= 20
+        ? candidate.glassBlur
+        : DEFAULT_APP_SETTINGS.glassBlur,
   }
 }
 

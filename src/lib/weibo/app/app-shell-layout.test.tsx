@@ -9,6 +9,34 @@ vi.mock('@/lib/weibo/components/right-rail', () => ({
   RightRail: () => <div data-testid="right-rail">right rail</div>,
 }))
 
+vi.mock('@/lib/app-settings-store', () => {
+  const noop = vi.fn()
+  return {
+    useAppSettings: (selector: (s: Record<string, unknown>) => unknown) => {
+      const state = {
+        backgroundEnabled: true,
+        backgroundColor: '#1e40af',
+        backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
+        glassOpacity: 80,
+        glassBlur: 12,
+        setBackgroundEnabled: noop,
+        setBackgroundColor: noop,
+        setBackgroundImageUrl: noop,
+        setGlassOpacity: noop,
+        setGlassBlur: noop,
+      }
+      return selector(state)
+    },
+    getAppSettingsStore: vi.fn(),
+    resetAppSettingsStoreForTest: vi.fn(),
+  }
+})
+
+vi.mock('@/components/ui/portal', () => ({
+  getUiPortalContainer: () => document.body,
+  setUiPortalContainer: vi.fn(),
+}))
+
 describe('ShellFrame', () => {
   it('renders one navigation landmark and preserves page content', () => {
     const mainRef = createRef<HTMLDivElement>()

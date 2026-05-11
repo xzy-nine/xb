@@ -16,6 +16,7 @@ import {
   type LineHeightClass,
   type GenImageCardTheme,
   type HotSearchType,
+  type StatusDetailPopupPosition,
 } from '@/lib/app-settings'
 
 export interface AppSettingsStoreState extends AppSettings {
@@ -39,6 +40,13 @@ export interface AppSettingsStoreState extends AppSettings {
   setImageGenTheme: (theme: GenImageCardTheme) => Promise<void>
   setImageGenCardStyle: (style: CardStyle) => Promise<void>
   setHotSearchType: (type: HotSearchType) => Promise<void>
+  setStatusDetailPopupEnabled: (enabled: boolean) => Promise<void>
+  setStatusDetailPopupPosition: (position: StatusDetailPopupPosition) => Promise<void>
+  setBackgroundEnabled: (enabled: boolean) => Promise<void>
+  setBackgroundColor: (color: string) => Promise<void>
+  setGlassOpacity: (opacity: number) => Promise<void>
+  setGlassBlur: (blur: number) => Promise<void>
+  setBackgroundImageUrl: (url: string) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -63,6 +71,13 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     imageGenTheme: state.imageGenTheme,
     imageGenCardStyle: state.imageGenCardStyle,
     hotSearchType: state.hotSearchType,
+    statusDetailPopupEnabled: state.statusDetailPopupEnabled,
+    statusDetailPopupPosition: state.statusDetailPopupPosition,
+    backgroundEnabled: state.backgroundEnabled,
+    backgroundColor: state.backgroundColor,
+    backgroundImageUrl: state.backgroundImageUrl,
+    glassOpacity: state.glassOpacity,
+    glassBlur: state.glassBlur,
   }
 }
 
@@ -144,6 +159,27 @@ export function createAppSettingsStore(
       },
       async setHotSearchType(hotSearchType) {
         await updateAndPersist({ hotSearchType })
+      },
+      async setStatusDetailPopupEnabled(statusDetailPopupEnabled) {
+        await updateAndPersist({ statusDetailPopupEnabled })
+      },
+      async setStatusDetailPopupPosition(statusDetailPopupPosition) {
+        await updateAndPersist({ statusDetailPopupPosition })
+      },
+      async setBackgroundEnabled(backgroundEnabled) {
+        await updateAndPersist({ backgroundEnabled })
+      },
+      async setBackgroundColor(backgroundColor) {
+        await updateAndPersist({ backgroundColor })
+      },
+      async setGlassOpacity(glassOpacity) {
+        await updateAndPersist({ glassOpacity })
+      },
+      async setGlassBlur(glassBlur) {
+        await updateAndPersist({ glassBlur })
+      },
+      async setBackgroundImageUrl(backgroundImageUrl) {
+        await updateAndPersist({ backgroundImageUrl })
       },
     }
   })

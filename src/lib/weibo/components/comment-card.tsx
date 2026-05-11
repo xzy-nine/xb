@@ -65,10 +65,10 @@ export const CommentCard = memo(function CommentCard({
               likeCount: comment.likeCount + (comment.liked ? -1 : 1),
             }
           }
-          if (Array.isArray(comment.comments) && comment.comments.length > 0) {
+          if ((comment.comments?.length ?? 0) > 0) {
             return {
               ...comment,
-              comments: comment.comments.map(updateCommentInTree),
+              comments: comment.comments!.map(updateCommentInTree),
             }
           }
           return comment
@@ -115,70 +115,66 @@ export const CommentCard = memo(function CommentCard({
   const liked = item.liked === true
 
   return (
-    <Card className="py-4">
-      <CardHeader className="flex flex-row gap-3">
-        <UserHoverCard uid={item.author.id}>
-          <Link
-            to={`/n/${encodeURIComponent(item.author.name)}`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <UserAvatar
-              author={item.author}
-              sizeClassName="size-10"
-              fallbackClassName="text-xs font-semibold"
-            />
-          </Link>
-        </UserHoverCard>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
+    <Card className="py-3">
+      <CardContent className="flex flex-col gap-2 px-4">
+        <div className="flex flex-row gap-3">
+          <UserHoverCard uid={item.author.id}>
+            <Link
+              to={`/n/${encodeURIComponent(item.author.name)}`}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <UserAvatar
+                author={item.author}
+                sizeClassName="size-9"
+                fallbackClassName="text-xs font-semibold"
+              />
+            </Link>
+          </UserHoverCard>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <UserHoverCard uid={item.author.id}>
                   <Link
                     to={`/n/${encodeURIComponent(item.author.name)}`}
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <CardTitle className="truncate text-sm hover:underline">
+                    <span className="truncate text-sm font-medium hover:underline">
                       {item.author.name}
-                    </CardTitle>
+                    </span>
                   </Link>
                 </UserHoverCard>
-                <CreatedAtBadge label={item.createdAtLabel} className="text-[10px]" />
+                <span className="text-muted-foreground text-[11px]">{item.createdAtLabel}</span>
               </div>
-              {item.source ? (
-                <p className="text-muted-foreground truncate text-[11px]">{item.source}</p>
+              {showOwnerMenu ? (
+                <FeedCardMoreMenu
+                  type="comment"
+                  isOwner={showOwnerMenu}
+                  contentLabel="这条评论"
+                  isDeleting={deleteMutation.isPending}
+                  onDelete={() => deleteMutation.mutateAsync()}
+                />
               ) : null}
             </div>
-            {showOwnerMenu ? (
-              <FeedCardMoreMenu
-                type="comment"
-                isOwner={showOwnerMenu}
-                contentLabel="这条评论"
-                isDeleting={deleteMutation.isPending}
-                onDelete={() => deleteMutation.mutateAsync()}
-              />
-            ) : null}
+            <div
+              className={cn(
+                'whitespace-pre-wrap text-foreground mt-1',
+                fontSizeClass,
+                fontWeightClass,
+                letterSpacingClass,
+                lineHeightClass,
+                fontFamilyClass,
+              )}
+            >
+              <StatusText item={item} text={item.text || ''} />
+            </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3 px-4">
-        <div
-          className={cn(
-            'whitespace-pre-wrap text-foreground',
-            fontSizeClass,
-            fontWeightClass,
-            letterSpacingClass,
-            lineHeightClass,
-            fontFamilyClass,
-          )}
-        >
-          <StatusText item={item} text={item.text || ''} />
-        </div>
+
         <ImageCarousel images={item.images} />
 
-        {Array.isArray(item.comments) && item.comments.length > 0 ? (
+        {(item.comments?.length ?? 0) > 0 ? (
           <div className="flex flex-col gap-2">
-            {item.comments.map((child) => (
+            {item.comments!.map((child) => (
               <CommentCard
                 key={child.id}
                 item={child}
@@ -208,7 +204,7 @@ export const CommentCard = memo(function CommentCard({
           onCommentReply={onCommentReply}
         />
 
-        <div className="text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-4 pt-1">
           <Button
             type="button"
             variant="ghost"
@@ -236,6 +232,7 @@ export const CommentCard = memo(function CommentCard({
             />
             <span className={cn(liked && 'text-rose-500')}>{item.likeCount}</span>
           </Button>
+          {item.source ? <span className="text-[11px]">{item.source}</span> : null}
         </div>
       </CardContent>
     </Card>
