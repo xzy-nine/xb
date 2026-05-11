@@ -38,9 +38,9 @@ import {
 } from '@/lib/weibo/services/weibo-repository'
 import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
 
-import { AudioPlayerComponent } from './audio-player'
-import { LivePlayer } from './live-player'
-import { VideoPlayer } from './video-player'
+import { AudioPlayerComponent } from './media-player/audio-player'
+import { LivePlayer } from './media-player/live-player'
+import { VideoPlayer } from './media-player/video-player'
 
 function hasTextSelectionWithin(container: HTMLElement) {
   const selection = window.getSelection()
