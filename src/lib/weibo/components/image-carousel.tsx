@@ -157,7 +157,7 @@ export const ImageCarousel = memo(function ImageCarousel({
         photoClassName="max-w-[900px]"
       >
         <div
-          className={`grid gap-2 ${
+          className={`grid gap-2 overflow-hidden ${
             gridItems.length === 3
               ? 'grid-cols-3'
               : gridItems.length <= 4
@@ -166,6 +166,7 @@ export const ImageCarousel = memo(function ImageCarousel({
                   ? 'grid-cols-3'
                   : 'grid-cols-4'
           }`}
+          style={{ maxHeight: 'min(60vh, 540px)' }}
         >
           {gridItems.map((item) => (
             <div key={item.id} onClick={(event) => event.stopPropagation()}>
