@@ -4,7 +4,6 @@ import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useEmoticonConfigQuery } from '@/lib/weibo/app/emoticon-query'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
@@ -75,12 +74,10 @@ function createImageExtractor(imageEntities: Record<string, FeedImage[]>): Image
   }
 }
 
-function renderMentionLink(screenName: string, key: string, className = LINK_TEXT_CLASS_NAME) {
+function renderMentionLink(screenName: string, key: string) {
   return (
     <UserHoverCard key={key} screenName={screenName}>
-      <Link to={`/n/${encodeURIComponent(screenName)}`} className={className}>
-        @{screenName}
-      </Link>
+      <Link to={`/n/${encodeURIComponent(screenName)}`}>@{screenName}</Link>
     </UserHoverCard>
   )
 }
@@ -300,30 +297,19 @@ function renderReplyChainItem(
 ) {
   const { strippedText, images } = extractImages(segment.text)
   return (
-    <Item
+    <blockquote
       key={`chain-${segment.screenName}-${index}`}
-      variant="muted"
-      size="sm"
-      className="bg-muted/40 flex-col items-stretch"
+      className="flex-col items-stretch border-l-2 pl-6 italic"
     >
-      <ItemContent>
-        <ItemTitle>
-          {renderMentionLink(segment.screenName, `chain-label-${index}`, 'text-sm')}
-        </ItemTitle>
-        {strippedText ? (
-          <ItemDescription className="line-clamp-none text-sm">
-            {renderInlineText(
-              strippedText,
-              `chain-${index}`,
-              urlEntities,
-              topicEntities,
-              phraseMap,
-            )}
-          </ItemDescription>
-        ) : null}
-        {images.length > 0 ? <ImageCarousel images={images} /> : null}
-      </ItemContent>
-    </Item>
+      {renderMentionLink(segment.screenName, `chain-label-${index}`)}
+      {strippedText ? (
+        <span>
+          :{' '}
+          {renderInlineText(strippedText, `chain-${index}`, urlEntities, topicEntities, phraseMap)}
+        </span>
+      ) : null}
+      {images.length > 0 ? <ImageCarousel images={images} /> : null}
+    </blockquote>
   )
 }
 
@@ -378,19 +364,17 @@ function renderReplyChainText(
               )}
             </div>
           </CollapsibleTrigger>
-          <CollapsibleContent>
-            <ItemGroup data-testid="reply-chain">
-              {middleItems.map((segment, idx) =>
-                renderReplyChainItem(
-                  segment,
-                  idx + 2,
-                  urlEntities,
-                  topicEntities,
-                  phraseMap,
-                  extractImages,
-                ),
-              )}
-            </ItemGroup>
+          <CollapsibleContent data-testid="reply-chain" className="flex flex-col gap-2">
+            {middleItems.map((segment, idx) =>
+              renderReplyChainItem(
+                segment,
+                idx + 2,
+                urlEntities,
+                topicEntities,
+                phraseMap,
+                extractImages,
+              ),
+            )}
           </CollapsibleContent>
         </Collapsible>
         {renderReplyChainItem(
@@ -413,7 +397,7 @@ function renderReplyChainText(
         </span>
       ) : null}
       {leading && leading.images.length > 0 ? <ImageCarousel images={leading.images} /> : null}
-      <ItemGroup data-testid="reply-chain" className="flex flex-col gap-2">
+      <div data-testid="reply-chain" className="flex flex-col gap-2">
         {chain.map((segment, index) =>
           renderReplyChainItem(
             segment,
@@ -424,7 +408,7 @@ function renderReplyChainText(
             extractImages,
           ),
         )}
-      </ItemGroup>
+      </div>
     </span>
   )
 }
@@ -454,6 +438,7 @@ export function StatusText({
 }) {
   const emoticonQuery = useEmoticonConfigQuery()
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
+  const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const phraseMap = {
     ...emoticonQuery.data?.phraseMap,
     ...item.emoticons,
@@ -468,8 +453,10 @@ export function StatusText({
   const imageEntities = item.imageEntities ?? {}
   const extractImages = createImageExtractor(imageEntities)
   const parsedReplyChain = parseReplyChainText(raw)
+  const shouldRenderAsReplyChain =
+    renderReplyChainEnabled && parsedReplyChain.kind === 'reply-chain'
 
-  if (parsedReplyChain.kind === 'reply-chain') {
+  if (shouldRenderAsReplyChain) {
     return (
       <span className="whitespace-pre-wrap">
         {renderReplyChainText(

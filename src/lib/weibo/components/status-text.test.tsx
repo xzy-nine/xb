@@ -68,6 +68,7 @@ describe('StatusText', () => {
     store.setState({
       ...store.getState(),
       collapseRepliesEnabled: false,
+      renderReplyChainEnabled: true,
       isHydrated: true,
     })
   })
@@ -320,11 +321,11 @@ describe('StatusText', () => {
 
     const view = within(container)
     const replyChain = view.getByTestId('reply-chain')
-    const items = replyChain.querySelectorAll('[data-slot="item"]')
+    const blocks = replyChain.querySelectorAll('blockquote')
 
-    expect(items).toHaveLength(2)
-    expect(items[0]!.querySelector('img')).toBeNull()
-    const carouselImg = items[1]!.querySelector('img')
+    expect(blocks).toHaveLength(2)
+    expect(blocks[0]!.querySelector('img')).toBeNull()
+    const carouselImg = blocks[1]!.querySelector('img')
     expect(carouselImg).not.toBeNull()
     expect(carouselImg).toHaveAttribute('src', 'https://img/thumb.jpg')
     expect(replyChain).not.toHaveTextContent('http://t.cn/IMG')
@@ -359,7 +360,35 @@ describe('StatusText', () => {
 })
 
 describe('StatusText reply-chain collapsible', () => {
+  beforeEach(() => {
+    resetAppSettingsStoreForTest()
+    const store = getAppSettingsStore({
+      get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
+      set: async () => {},
+    })
+    store.setState({ isHydrated: true })
+  })
+
+  afterEach(() => {
+    const store = getAppSettingsStore()
+    store.setState({
+      collapseRepliesEnabled: false,
+      renderReplyChainEnabled: true,
+    })
+  })
+
+  const setupStore = (overrides = {}) => {
+    const store = getAppSettingsStore()
+    store.setState({
+      collapseRepliesEnabled: false,
+      renderReplyChainEnabled: true,
+      isHydrated: true,
+      ...overrides,
+    })
+  }
+
   it('renders all items without collapsible when collapseRepliesEnabled is false', () => {
+    setupStore()
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
@@ -369,13 +398,13 @@ describe('StatusText reply-chain collapsible', () => {
 
     const view = within(container)
     const replyChain = view.getByTestId('reply-chain')
-    const items = replyChain.querySelectorAll('[data-slot="item"]')
-    expect(items).toHaveLength(3)
+    const blocks = replyChain.querySelectorAll('blockquote')
+    expect(blocks).toHaveLength(3)
     expect(container.querySelectorAll('[data-slot="collapsible"]')).toHaveLength(0)
   })
 
   it('renders all items without collapsible when chain has 2 or fewer items', () => {
-    getAppSettingsStore().setState({ collapseRepliesEnabled: true })
+    setupStore({ collapseRepliesEnabled: true })
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
@@ -385,13 +414,13 @@ describe('StatusText reply-chain collapsible', () => {
 
     const view = within(container)
     const replyChain = view.getByTestId('reply-chain')
-    const items = replyChain.querySelectorAll('[data-slot="item"]')
-    expect(items).toHaveLength(2)
+    const blocks = replyChain.querySelectorAll('blockquote')
+    expect(blocks).toHaveLength(2)
     expect(container.querySelectorAll('[data-slot="collapsible"]')).toHaveLength(0)
   })
 
   it('collapses middle items when collapseRepliesEnabled is true and chain length > 2', () => {
-    getAppSettingsStore().setState({ collapseRepliesEnabled: true })
+    setupStore({ collapseRepliesEnabled: true })
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
@@ -404,7 +433,7 @@ describe('StatusText reply-chain collapsible', () => {
   })
 
   it('places collapsible trigger after second item', () => {
-    getAppSettingsStore().setState({ collapseRepliesEnabled: true })
+    setupStore({ collapseRepliesEnabled: true })
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
@@ -412,8 +441,8 @@ describe('StatusText reply-chain collapsible', () => {
       />,
     )
 
-    const allItems = container.querySelectorAll('[data-slot="item"]')
-    expect(allItems).toHaveLength(3)
+    const allBlocks = container.querySelectorAll('blockquote')
+    expect(allBlocks).toHaveLength(3)
   })
 })
 

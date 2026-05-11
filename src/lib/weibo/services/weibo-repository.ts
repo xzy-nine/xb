@@ -391,6 +391,7 @@ function buildCommentPayload(input: SubmitComposeInput): Record<string, string> 
     is_repost: input.alsoSecondaryAction ? '1' : '0',
     comment_ori: '0',
     is_comment: '0',
+    fp: '',
   }
 
   if (input.target.kind === 'comment') {
@@ -438,7 +439,7 @@ export async function publishWeiboStatus(content: string): Promise<void> {
     share_id: '',
     vote: '',
     media: '',
-    fp: '02Aa8jV4cFY7L8Cm_r5uJ5m4csk5xK',
+    fp: '',
   })
 
   if (response.ok !== 1) {

@@ -8,7 +8,7 @@ export default defineConfig({
     passWithNoTests: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['bewlycat/**', '.output/**', 'node_modules/**'],
+    exclude: ['.output/**', 'node_modules/**'],
   },
   resolve: {
     alias: {

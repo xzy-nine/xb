@@ -25,7 +25,9 @@ Visit [Landing Page](https://xb-extension.vercel.app/) for more.
 3. 🎯 **Focus on Reading** — Distraction-free, clearly feed.
 4. 🚫 **No Interruptions** — No stickers, ads, or supertopics.
 5. 🆓 **Everything is Free** - No paid features.
-6. 📷 **Take a shot** - Export Weibo as an image.
+6. 📷 **Take a shot** - Export Weibo as an image with multiple card templates.
+7. 🔤 **Custom Font** - Choose from system fonts or downloadable open-source
+   fonts.
 
 ## Supported Pages
 
@@ -42,5 +44,6 @@ xb currently enhances the following pages:
 
 ## Credits
 
-- Inspired by [BewlyBewly](https://github.com/BewlyBewly/BewlyBewly)
+- Inspired by [BewlyBewly](https://github.com/BewlyBewly/BewlyBewly) and
+  [BewlyCat](https://github.com/keleus/BewlyCat)
 - [Linux Do](https://linux.do/) a friendly community

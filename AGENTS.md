@@ -32,21 +32,30 @@ src/
 │   ├── weibo.content.tsx      # Main content script (weibo.com)
 │   ├── weibo-main-world.ts    # Runs in page context, installs history bridge
 │   ├── weibo-hide.content.ts  # Hides original Weibo UI
-│   └── options/          # Options page
-│       └── theme.ts      # Theme settings
-├── lib/             # Core: utils, settings store (Zustand)
-│   └── weibo/            # Core weibo feature code
-│        ├── app/              # App shell, root, layout components
-│        ├── components/       # Feature-specific components
-│        ├── pages/            # Page-level components (home, profile, status)
-│        ├── services/         # API clients, adapters, repositories
-│        ├── models/           # Data models
-│        ├── route/            # Router sync, page descriptors, URL parsing
-│        ├── content/          # Host selectors, shell state, page takeover
-│        ├── inject/           # Script injection (history bridge)
-│        ├── platform/         # Platform-specific code (messages, current user)
-│        └── utils/            # Utility functions (transform, date, etc.)
-└── components/ui/        # shadcn/ui components
+│   ├── weibo-search.pending.ts # Search pending handler
+│   └── options/              # Options page
+├── lib/                  # Core library (moved from features/weibo/)
+│   ├── app-settings-store.ts  # Zustand settings store (hydrate before use)
+│   ├── app-settings.ts        # Settings types and defaults
+│   ├── font-loader.ts         # Font loading utility
+│   ├── weibo/                 # Core weibo feature code
+│   │   ├── app/               # App shell, root, layout components
+│   │   ├── components/        # Feature-specific components
+│   │   │   └── gen-image/     # Share card generation (11 templates)
+│   │   ├── pages/             # Page-level components
+│   │   ├── services/          # API clients, adapters, repositories
+│   │   │   ├── client.ts       # Axios-based API client
+│   │   │   └── auth-events.ts # Auth event handling
+│   │   ├── models/            # Data models
+│   │   ├── queries/           # TanStack Query definitions
+│   │   ├── route/             # Router sync, page descriptors, URL parsing
+│   │   ├── content/           # Host selectors, shell state, page takeover
+│   │   ├── inject/            # Script injection (history bridge, API bridge)
+│   │   ├── platform/          # Platform-specific code (messages, current user)
+│   │   └── utils/             # Utility functions (transform, date, etc.)
+├── components/ui/        # shadcn/ui components
+├── hooks/                # Shared React hooks
+└── test/                 # Test setup (vitest + jsdom)
 ```
 
 ## Architecture Notes
@@ -58,29 +67,26 @@ src/
   context (not a content script), installs a history bridge for router sync.
 - **Settings Store**: Zustand store (`src/lib/app-settings-store.ts`) that
   persists to `chrome.storage`. Must call `hydrate()` before use.
-- **API Layer**: Axios-based client with adapters in
-  `lib/weibo/services/adapters/` that transform Weibo's API responses into
-
-  `li/weibo/services/adapters/` that transform Weibo's API responses into
-  internal models.
+- **API Layer**: Axios-based client (`lib/weibo/services/client.ts`) with
+  adapters in `lib/weibo/services/adapters/` that transform Weibo's API
+  responses into internal models.
+- **Query Layer**: TanStack Query definitions in
+  `lib/weibo/queries/weibo-queries.ts` wrapping repository functions.
 
 ## Key Patterns
 
-- **Host selectors** in `lib/weibo/content/host-selectors.ts` wait for
-- **Host selecs tors** in `li/weibo/content/host-selectors.ts` wait for Weibo
-  DOM elements before mounting
+- **Host selectors** in `lib/weibo/content/host-selectors.ts` wait for Weibo DOM
+  elements before mounting
 - **Shell state** (`lib/weibo/content/shell-state.ts`) binds React app to
-- \**Shell state*r \* (`li/weibo/content/shell-state.ts`) binds React app to
   Weibo's existing DOM structure
 - **Page takeover** (`lib/weibo/content/page-takeover.ts`) marks pages as
-- \*_Page takeover_( \* (`li/weibo/content/page-takeover.ts`) marks pages as
   handled
-- **Router sync** (`lib/weibo/route/router-sync.ts`) keeps extension in
-- \**Router sync*r \* (`li/weibo/route/router-sync.ts`) keeps extension in sync
+- **Router sync** (`lib/weibo/route/router-sync.ts`) keeps extension in sync
   with Weibo's navigation
-- **URL parsing** (`lib/weibo/route/parse-weibo-url.ts`) parses Weibo URLs
-- **URL parsing** \* (`li/weibo/route/parse-weibo-url.ts`) parses Weibo URLs
-  into page descriptors
+- **URL parsing** (`lib/weibo/route/parse-weibo-url.ts`) parses Weibo URLs into
+  page descriptors
+- **API bridge** (`lib/weibo/inject/install-api-bridge.ts`) injects API bridge
+  into page context
 
 ## Component Patterns
 
@@ -112,21 +118,25 @@ const followMutation = useMutation({
 
 ### Profile Components
 
-Profile 页面共享组件在
-`lib/weibo/components/profile-shared.tsx`：Profile 页面共享组n 件在
-`li/weibo/components/profile-shared.tsx`：
+Profile 页面共享组件在 `lib/weibo/components/profile-shared.tsx`：
 
 - `ProfileBanner` - 横幅图片或备用背景
 - `ProfileMutualFollowers` - 共同关注者头像列表
 - `formatProfileCount` - 数字格式化（支持万为单位的中文格式，如 `1.2万`）
 
-### Chinese Number Formatting
+### Font Settings
 
-```typescript
-formatProfileCount('12345') // '1.2万'
-formatProfileCount('9999') // '9999'
-formatProfileCount(null) // '0'
-```
+字体系统由 `font-loader.ts` 和 `use-font-settings.ts` 组成，支持：
+
+- 预装字体（宋体、仿宋、黑体、楷体）
+- 可下载开源字体（霞鹜文楷、得意黑、朱雀仿宋、思源宋体、思源黑体、方正楷体、仓耳今楷）
+
+### Reply Chain Rendering
+
+转发链渲染通过 `app-settings.ts` 中的 `renderReplyChainEnabled` 配置控制：
+
+- 开启时：`//@ 用户名:` 渲染为引用样式（blockquote）
+- 关闭时：保持原文本格式
 
 ## Testing
 
@@ -139,7 +149,7 @@ formatProfileCount(null) // '0'
 
 - **Linter**: oxlint (strict mode, TypeScript/React/unicorn plugins)
 - **Formatter**: oxfmt (semicolon: false, single quotes, sorted imports)
-- **TypeScript**: Extends `.wxt/tsconfig.json`; `baseUrl: './.wxt'`
+- **TypeScript**: Extends `.wxt/tsconfig.json`
 
 ## Browser Extension Notes
 
