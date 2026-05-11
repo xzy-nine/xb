@@ -8,7 +8,7 @@ import {
 } from '@/lib/weibo/platform/messages'
 
 const DEFAULT_TIMEOUT_MS = 10000
-const WEIBO_API_BASE = 'https://weibo.com'
+const WEIBO_API_BASE = ''
 
 function readXsrfTokenFromCookie(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
