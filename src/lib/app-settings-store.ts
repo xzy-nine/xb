@@ -30,6 +30,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setFontFamilyClass: (fontFamilyClass: FontFamilyClass) => Promise<void>
   setShowHotSearchCard: (show: boolean) => Promise<void>
   setCollapseRepliesEnabled: (enabled: boolean) => Promise<void>
+  setRenderReplyChainEnabled: (enabled: boolean) => Promise<void>
   setDarkModeImageDim: (enabled: boolean) => Promise<void>
   setImageGenEnabled: (enabled: boolean) => Promise<void>
   setImageGenShowDataArea: (show: boolean) => Promise<void>
@@ -53,6 +54,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     fontFamilyClass: state.fontFamilyClass,
     showHotSearchCard: state.showHotSearchCard,
     collapseRepliesEnabled: state.collapseRepliesEnabled,
+    renderReplyChainEnabled: state.renderReplyChainEnabled,
     darkModeImageDim: state.darkModeImageDim,
     imageGenEnabled: state.imageGenEnabled,
     imageGenShowDataArea: state.imageGenShowDataArea,
@@ -115,6 +117,9 @@ export function createAppSettingsStore(
       },
       async setCollapseRepliesEnabled(collapseRepliesEnabled) {
         await updateAndPersist({ collapseRepliesEnabled })
+      },
+      async setRenderReplyChainEnabled(renderReplyChainEnabled) {
+        await updateAndPersist({ renderReplyChainEnabled })
       },
       async setDarkModeImageDim(darkModeImageDim) {
         await updateAndPersist({ darkModeImageDim })

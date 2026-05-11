@@ -136,6 +136,7 @@ export function StatusDetailPage() {
           <FeedCard
             item={detail.status}
             surface="detail"
+            onNavigate={ctx.navigateToStatusDetail}
             onCommentClick={(item) =>
               ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
             }

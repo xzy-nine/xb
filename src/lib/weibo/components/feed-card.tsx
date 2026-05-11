@@ -38,9 +38,9 @@ import {
 } from '@/lib/weibo/services/weibo-repository'
 import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
 
-import { AudioPlayerComponent } from './audio-player'
-import { LivePlayer } from './live-player'
-import { VideoPlayer } from './video-player'
+import { AudioPlayerComponent } from './media-player/audio-player'
+import { LivePlayer } from './media-player/live-player'
+import { VideoPlayer } from './media-player/video-player'
 
 function hasTextSelectionWithin(container: HTMLElement) {
   const selection = window.getSelection()
@@ -529,20 +529,73 @@ export const FeedCard = memo(function FeedCard({
   })
 
   const favoriteMutation = useMutation({
-    mutationFn: async () => {
-      if (resolvedItem.favorited) {
-        await destroyFavorite(resolvedItem.id)
-        toast.success('取消收藏成功')
+    mutationFn: async (target: FeedItem) => {
+      if (target.favorited) {
+        await destroyFavorite(target.id)
       } else {
-        await createFavorite(resolvedItem.id)
-        toast.success('收藏成功')
+        await createFavorite(target.id)
       }
     },
-    meta: {
-      invalidates: [['weibo']],
+    onMutate: (target: FeedItem) => {
+      queryClient.cancelQueries({ queryKey: ['weibo'] })
+
+      const previousItems = queryClient.getQueriesData({ queryKey: ['weibo'] })
+
+      queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
+        if (!old || typeof old !== 'object' || !('pages' in old)) return old
+        const data = old as { pages: { items: FeedItem[] }[] }
+        return {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            items: page.items.map((item) => {
+              if (item.id === target.id) {
+                return { ...item, favorited: !item.favorited }
+              }
+              if (item.retweetedStatus?.id === target.id) {
+                return {
+                  ...item,
+                  retweetedStatus: {
+                    ...item.retweetedStatus,
+                    favorited: !item.retweetedStatus.favorited,
+                  },
+                }
+              }
+              return item
+            }),
+          })),
+        }
+      })
+
+      for (const key of queryClient
+        .getQueryCache()
+        .getAll()
+        .map((q) => q.queryKey)) {
+        if (!Array.isArray(key)) continue
+        if (key[0] !== 'weibo' || key[1] !== 'status') continue
+        const cached = queryClient.getQueryData(key)
+        if (!cached || typeof cached !== 'object') continue
+        const detail = cached as { status?: FeedItem }
+        if (detail.status && detail.status.id === target.id) {
+          queryClient.setQueryData(key, {
+            ...detail,
+            status: { ...detail.status, favorited: !detail.status.favorited },
+          })
+        }
+      }
+
+      return { previousItems }
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '操作失败')
+    onSuccess: (_data, target) => {
+      toast.success(target.favorited ? '取消收藏成功' : '收藏成功')
+    },
+    onError: (_error, target, context) => {
+      if (context?.previousItems) {
+        for (const [queryKey, data] of context.previousItems) {
+          queryClient.setQueryData(queryKey, data)
+        }
+      }
+      toast.error(_error instanceof Error ? _error.message : '操作失败')
     },
   })
 
@@ -610,7 +663,7 @@ export const FeedCard = memo(function FeedCard({
         isOwner={showOwnerMenu}
         item={resolvedItem}
         favorited={resolvedItem.favorited}
-        onFavorite={() => favoriteMutation.mutateAsync()}
+        onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
         contentLabel="这条微博"
         isDeleting={deleteMutation.isPending}
         onDelete={() => deleteMutation.mutateAsync()}

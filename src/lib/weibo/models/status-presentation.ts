@@ -24,5 +24,5 @@ export function statusAllowsCardNavigate(
   surface: StatusFeedSurface,
   role: StatusCardRole,
 ): boolean {
-  return role === 'root' && (surface === 'timeline' || surface === 'detail')
+  return role === 'root' && surface === 'timeline'
 }

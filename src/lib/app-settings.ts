@@ -53,6 +53,7 @@ export interface AppSettings {
   fontFamilyClass: FontFamilyClass
   showHotSearchCard: boolean
   collapseRepliesEnabled: boolean
+  renderReplyChainEnabled: boolean
   darkModeImageDim: boolean
   imageGenEnabled: boolean
   imageGenShowDataArea: boolean
@@ -93,6 +94,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   fontFamilyClass: 'font-sans',
   showHotSearchCard: true,
   collapseRepliesEnabled: false,
+  renderReplyChainEnabled: true,
   darkModeImageDim: false,
   imageGenEnabled: true,
   imageGenShowDataArea: true,
@@ -206,6 +208,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.collapseRepliesEnabled === 'boolean'
         ? candidate.collapseRepliesEnabled
         : DEFAULT_APP_SETTINGS.collapseRepliesEnabled,
+    renderReplyChainEnabled:
+      typeof candidate.renderReplyChainEnabled === 'boolean'
+        ? candidate.renderReplyChainEnabled
+        : DEFAULT_APP_SETTINGS.renderReplyChainEnabled,
     darkModeImageDim:
       typeof candidate.darkModeImageDim === 'boolean'
         ? candidate.darkModeImageDim
