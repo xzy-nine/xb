@@ -16,6 +16,7 @@ import {
   type LineHeightClass,
   type GenImageCardTheme,
   type HotSearchType,
+  type StatusDetailPopupPosition,
 } from '@/lib/app-settings'
 
 export interface AppSettingsStoreState extends AppSettings {
@@ -39,6 +40,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setImageGenCardStyle: (style: CardStyle) => Promise<void>
   setHotSearchType: (type: HotSearchType) => Promise<void>
   setStatusDetailPopupEnabled: (enabled: boolean) => Promise<void>
+  setStatusDetailPopupPosition: (position: StatusDetailPopupPosition) => Promise<void>
   setBackgroundEnabled: (enabled: boolean) => Promise<void>
   setBackgroundColor: (color: string) => Promise<void>
   setGlassOpacity: (opacity: number) => Promise<void>
@@ -68,6 +70,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     imageGenCardStyle: state.imageGenCardStyle,
     hotSearchType: state.hotSearchType,
     statusDetailPopupEnabled: state.statusDetailPopupEnabled,
+    statusDetailPopupPosition: state.statusDetailPopupPosition,
     backgroundEnabled: state.backgroundEnabled,
     backgroundColor: state.backgroundColor,
     backgroundImageUrl: state.backgroundImageUrl,
@@ -154,6 +157,9 @@ export function createAppSettingsStore(
       },
       async setStatusDetailPopupEnabled(statusDetailPopupEnabled) {
         await updateAndPersist({ statusDetailPopupEnabled })
+      },
+      async setStatusDetailPopupPosition(statusDetailPopupPosition) {
+        await updateAndPersist({ statusDetailPopupPosition })
       },
       async setBackgroundEnabled(backgroundEnabled) {
         await updateAndPersist({ backgroundEnabled })

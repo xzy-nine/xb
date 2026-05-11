@@ -32,6 +32,7 @@ import type {
   FontWeightClass,
   LetterSpacingClass,
   LineHeightClass,
+  StatusDetailPopupPosition,
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
@@ -73,6 +74,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
   const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const statusDetailPopupPosition = useAppSettings((s) => s.statusDetailPopupPosition)
   const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
   const backgroundColor = useAppSettings((s) => s.backgroundColor)
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
@@ -87,6 +89,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
   const setStatusDetailPopupEnabled = useAppSettings((s) => s.setStatusDetailPopupEnabled)
+  const setStatusDetailPopupPosition = useAppSettings((s) => s.setStatusDetailPopupPosition)
   const setBackgroundEnabled = useAppSettings((s) => s.setBackgroundEnabled)
   const setBackgroundColor = useAppSettings((s) => s.setBackgroundColor)
   const setGlassOpacity = useAppSettings((s) => s.setGlassOpacity)
@@ -190,6 +193,26 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
               />
             </Field>
+
+            {statusDetailPopupEnabled && (
+              <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
+                <Select
+                  value={statusDetailPopupPosition}
+                  onValueChange={(value) =>
+                    setStatusDetailPopupPosition(value as StatusDetailPopupPosition)
+                  }
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">左</SelectItem>
+                    <SelectItem value="center">中</SelectItem>
+                    <SelectItem value="right">右</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
           </TabsContent>
 
           <TabsContent value="appearance" className="flex flex-col gap-6 py-4">

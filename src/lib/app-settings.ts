@@ -43,6 +43,8 @@ export type LineHeightClass =
   | 'leading-relaxed'
   | 'leading-loose'
 
+export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
+
 export interface AppSettings {
   theme: AppTheme
   rewriteEnabled: boolean
@@ -62,6 +64,7 @@ export interface AppSettings {
   imageGenCardStyle: CardStyle
   hotSearchType: HotSearchType
   statusDetailPopupEnabled: boolean
+  statusDetailPopupPosition: StatusDetailPopupPosition
   backgroundEnabled: boolean
   backgroundColor: string
   backgroundImageUrl: string
@@ -108,6 +111,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
   statusDetailPopupEnabled: true,
+  statusDetailPopupPosition: 'right',
   backgroundEnabled: true,
   backgroundColor: '#1e40af',
   backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
@@ -182,6 +186,10 @@ function isLineHeightClass(value: unknown): value is LineHeightClass {
   )
 }
 
+function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopupPosition {
+  return value === 'left' || value === 'center' || value === 'right'
+}
+
 export function normalizeAppSettings(value: unknown): AppSettings {
   if (!value || typeof value !== 'object') {
     return { ...DEFAULT_APP_SETTINGS }
@@ -253,6 +261,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.statusDetailPopupEnabled === 'boolean'
         ? candidate.statusDetailPopupEnabled
         : DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
+    statusDetailPopupPosition: isStatusDetailPopupPosition(candidate.statusDetailPopupPosition)
+      ? candidate.statusDetailPopupPosition
+      : DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
     backgroundEnabled:
       typeof candidate.backgroundEnabled === 'boolean'
         ? candidate.backgroundEnabled

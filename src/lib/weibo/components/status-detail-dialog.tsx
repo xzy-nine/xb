@@ -4,7 +4,9 @@ import { useMemo } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import type { StatusDetailPopupPosition } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { cn } from '@/lib/utils'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
@@ -16,6 +18,7 @@ import { loadStatusDetail } from '@/lib/weibo/services/weibo-repository'
 interface StatusDetailDialogProps {
   open: boolean
   item: StatusDetailNavigationItem | null
+  position: StatusDetailPopupPosition
   onOpenChange: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
   onNavigate?: (item: FeedItem) => void
@@ -24,6 +27,7 @@ interface StatusDetailDialogProps {
 export function StatusDetailDialog({
   open,
   item,
+  position,
   onOpenChange,
   setComposeTarget,
   onNavigate,
@@ -54,6 +58,15 @@ export function StatusDetailDialog({
     [glassOpacity],
   )
 
+  const isGlassEffect = glassBlur > 0 || glassOpacity < 100
+
+  const panelClasses = cn(
+    'bg-background relative w-[calc(100%-80px)] max-w-[700px] overflow-y-auto shadow-2xl',
+    position === 'left' && 'mr-auto h-full rounded-r-2xl',
+    position === 'center' && 'mx-auto my-2 h-[calc(100vh-1rem)] rounded-2xl',
+    position === 'right' && 'ml-auto h-full rounded-l-2xl',
+  )
+
   const detailQuery = useQuery({
     queryKey: ['weibo', 'status', statusId],
     queryFn: () => loadStatusDetail(statusId),
@@ -62,6 +75,13 @@ export function StatusDetailDialog({
 
   const detail = detailQuery.data
 
+  const headerClasses = cn(
+    'bg-background/95 sticky top-0 z-10 flex h-14 items-center justify-between border-b px-4 backdrop-blur',
+    position === 'left' && 'rounded-tr-2xl',
+    position === 'center' && 'rounded-t-2xl',
+    position === 'right' && 'rounded-tl-2xl',
+  )
+
   return (
     <div className="fixed inset-0 z-[1500] flex">
       <div
@@ -69,11 +89,8 @@ export function StatusDetailDialog({
         style={glassOverlayStyle}
         onClick={() => onOpenChange(false)}
       />
-      <div
-        className="bg-background relative ml-auto h-full w-[calc(100%-80px)] max-w-[700px] overflow-y-auto shadow-2xl"
-        style={glassBlur > 0 || glassOpacity < 100 ? glassPanelStyle : undefined}
-      >
-        <div className="bg-background/95 sticky top-0 z-10 flex h-14 items-center justify-between border-b px-4 backdrop-blur">
+      <div className={panelClasses} style={isGlassEffect ? glassPanelStyle : undefined}>
+        <div className={headerClasses}>
           <Button variant="ghost" size="sm" className="gap-2" onClick={() => onOpenChange(false)}>
             <ArrowLeft className="size-4" />
             返回

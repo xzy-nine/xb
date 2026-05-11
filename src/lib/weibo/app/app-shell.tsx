@@ -45,6 +45,7 @@ export function AppShell() {
   const theme = useAppSettings((state) => state.theme)
   const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
   const statusDetailPopupEnabled = useAppSettings((state) => state.statusDetailPopupEnabled)
+  const statusDetailPopupPosition = useAppSettings((state) => state.statusDetailPopupPosition)
   const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
   const setTheme = useAppSettings((state) => state.setTheme)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
@@ -140,6 +141,7 @@ export function AppShell() {
         <StatusDetailDialog
           open={statusDetailDialogOpen}
           item={statusDetailItem}
+          position={statusDetailPopupPosition}
           onOpenChange={setStatusDetailDialogOpen}
           setComposeTarget={setComposeTarget}
           onNavigate={navigateToStatusDetail}
@@ -183,6 +185,7 @@ export function AppShell() {
         <StatusDetailDialog
           open={statusDetailDialogOpen}
           item={statusDetailItem}
+          position={statusDetailPopupPosition}
           onOpenChange={setStatusDetailDialogOpen}
           setComposeTarget={setComposeTarget}
           onNavigate={navigateToStatusDetail}
