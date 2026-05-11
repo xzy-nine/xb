@@ -1,6 +1,6 @@
 # xb
 
-🥷 xb - Make Weibo more like X and simpler..
+🥷 xb - Make Weibo more like X and simpler.
 
 [中文](./README.cn.md)
 

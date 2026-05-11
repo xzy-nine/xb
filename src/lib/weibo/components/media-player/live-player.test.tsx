@@ -1,7 +1,7 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { LivePlayer } from './live-player'
+import { LivePlayer } from './gen-image/live-player'
 
 describe('LivePlayer', () => {
   afterEach(() => {

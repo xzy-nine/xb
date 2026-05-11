@@ -1,6 +1,6 @@
 'use client'
-
-import { selectPlaybackRate } from '@videojs/core/dom'
+import { useInterval } from '@reactuses/core'
+import { selectPlaybackRate, selectPlayback } from '@videojs/core/dom'
 import {
   AlertDialog,
   BufferingIndicator,
@@ -54,7 +54,10 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
 
+import { getPlaybackPositionStore } from './video-playback-position-store'
+
 import '@videojs/react/video/skin.css'
+import './video-player.css'
 
 const { Provider: PlayerProvider, Container: PlayerContainer } = createPlayer({
   features: [...videoFeatures],
@@ -208,6 +211,23 @@ interface QualityControlProps {
   qualities: QualityOption[]
   disabled?: boolean
   onValueChange: (value: string) => void
+}
+
+function CenterPlayButton() {
+  const playback = usePlayer(selectPlayback)
+
+  return (
+    <div className="video-center-play opacity-70">
+      <button
+        type="button"
+        className="video-center-play__button"
+        onClick={() => playback?.togglePaused()}
+        aria-label="播放"
+      >
+        <Play className="ml-0.5 size-7 fill-current" />
+      </button>
+    </div>
+  )
 }
 
 function QualityControl({
@@ -450,6 +470,51 @@ export function VideoPlayer({
     setShouldLoad(false)
   }, [sourceKey])
 
+  // Save playback position on pause
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handlePause = () => {
+      const store = getPlaybackPositionStore()
+      if (video.currentTime > 1 && Number.isFinite(video.duration) && video.duration > 0) {
+        store.getState().savePosition(sourceKey, video.currentTime, video.duration)
+      }
+    }
+
+    video.addEventListener('pause', handlePause)
+    return () => {
+      video.removeEventListener('pause', handlePause)
+    }
+  }, [sourceKey])
+
+  // Save playback position periodically during playback (every 5 seconds)
+  useInterval(() => {
+    const video = videoRef.current
+    if (video && !video.paused && !video.ended) {
+      const store = getPlaybackPositionStore()
+      if (video.currentTime > 1 && Number.isFinite(video.duration) && video.duration > 0) {
+        store.getState().savePosition(sourceKey, video.currentTime, video.duration)
+      }
+    }
+  }, 5000)
+
+  // Remove saved position when video ends naturally
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleEnded = () => {
+      const store = getPlaybackPositionStore()
+      store.getState().removePosition(sourceKey)
+    }
+
+    video.addEventListener('ended', handleEnded)
+    return () => {
+      video.removeEventListener('ended', handleEnded)
+    }
+  }, [sourceKey])
+
   useEffect(() => {
     if (!isMpd || !shouldLoad || !manifestXml) {
       streamInitRef.current = false
@@ -580,7 +645,24 @@ export function VideoPlayer({
     const pendingPlayback = pendingPlaybackRef.current
     const video = videoRef.current
 
-    if (!pendingPlayback || !video) {
+    if (!video) {
+      return
+    }
+
+    // Restore playback position from store (only when NOT a quality switch)
+    if (!pendingPlayback) {
+      const store = getPlaybackPositionStore()
+      const saved = store.getState().getPosition(sourceKey)
+      if (saved && saved.currentTime > 1 && Number.isFinite(video.duration)) {
+        const seekTo = Math.min(saved.currentTime, video.duration - 0.5)
+        if (seekTo > 1) {
+          video.currentTime = seekTo
+        }
+      }
+    }
+
+    // Existing: restore after quality switch
+    if (!pendingPlayback) {
       return
     }
 
@@ -598,7 +680,7 @@ export function VideoPlayer({
     }
 
     pendingPlaybackRef.current = null
-  }, [])
+  }, [sourceKey])
 
   return (
     <PlayerProvider>
@@ -629,19 +711,27 @@ export function VideoPlayer({
           <AlertDialog.Popup className="media-error">
             <div className="media-error__dialog media-surface">
               <div className="media-error__content">
-                <AlertDialog.Title className="media-error__title">
-                  Something went wrong.
-                </AlertDialog.Title>
+                <AlertDialog.Title className="media-error__title">播放出错</AlertDialog.Title>
                 <ErrorDialog.Description className="media-error__description" />
               </div>
               <div className="media-error__actions">
-                <AlertDialog.Close className="media-button media-button--primary">
-                  OK
+                <AlertDialog.Close
+                  className="media-button media-button--primary"
+                  onClick={() => {
+                    const video = videoRef.current
+                    if (video) {
+                      video.load()
+                    }
+                  }}
+                >
+                  重试
                 </AlertDialog.Close>
               </div>
             </div>
           </AlertDialog.Popup>
         </ErrorDialog.Root>
+
+        <CenterPlayButton />
 
         <Controls.Root className="media-surface media-controls">
           <Tooltip.Provider>
@@ -707,6 +797,9 @@ export function VideoPlayer({
                   <TimeSlider.Buffer className="media-slider__buffer" />
                 </TimeSlider.Track>
                 <TimeSlider.Thumb className="media-slider__thumb" />
+                <TimeSlider.Preview className="media-surface media-slider__preview">
+                  <TimeSlider.Value type="pointer" className="video-time-preview" />
+                </TimeSlider.Preview>
               </TimeSlider.Root>
               <Time.Value type="duration" className="media-time" />
             </div>

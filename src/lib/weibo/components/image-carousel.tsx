@@ -8,7 +8,7 @@ import { getUiPortalContainer } from '@/components/ui/portal'
 import { useAppSettings } from '@/lib/app-settings-store'
 import type { FeedMixMediaItem } from '@/lib/weibo/models/feed'
 
-import { VideoPlayer } from './video-player'
+import { VideoPlayer } from './media-player/video-player'
 
 interface ImageCarouselProps {
   images: { id: string; thumbnailUrl: string; largeUrl: string }[]
