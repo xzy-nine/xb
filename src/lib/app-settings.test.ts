@@ -63,6 +63,7 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'hot',
+      statusDetailPopupEnabled: true,
     })
 
     await persistAppSettings(
@@ -84,6 +85,7 @@ describe('app-settings', () => {
         imageGenTheme: 'light',
         imageGenCardStyle: 'default',
         hotSearchType: 'mine',
+        statusDetailPopupEnabled: false,
       },
       storage,
     )
@@ -106,6 +108,7 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'mine',
+      statusDetailPopupEnabled: false,
     })
   })
 

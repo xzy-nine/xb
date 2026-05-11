@@ -68,6 +68,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const showHotSearchCard = useAppSettings((s) => s.showHotSearchCard)
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -76,6 +77,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
+  const setStatusDetailPopupEnabled = useAppSettings((s) => s.setStatusDetailPopupEnabled)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -122,6 +124,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Switch
                 checked={darkModeImageDim}
                 onCheckedChange={(checked) => setDarkModeImageDim(checked)}
+              />
+            </Field>
+
+            <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
+              <Switch
+                checked={statusDetailPopupEnabled}
+                onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
               />
             </Field>
           </TabsContent>

@@ -61,6 +61,7 @@ export interface AppSettings {
   imageGenTheme: GenImageCardTheme
   imageGenCardStyle: CardStyle
   hotSearchType: HotSearchType
+  statusDetailPopupEnabled: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -101,6 +102,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenTheme: 'light' as GenImageCardTheme,
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
+  statusDetailPopupEnabled: true,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -237,6 +239,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     hotSearchType: isHotSearchType(candidate.hotSearchType)
       ? candidate.hotSearchType
       : DEFAULT_APP_SETTINGS.hotSearchType,
+    statusDetailPopupEnabled:
+      typeof candidate.statusDetailPopupEnabled === 'boolean'
+        ? candidate.statusDetailPopupEnabled
+        : DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
   }
 }
 
