@@ -76,8 +76,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
         onClick={(event) => {
           event.stopPropagation()
         }}
-        className="overflow-hidden"
-        style={{ maxHeight: 'min(60vh, 540px)' }}
       >
         <AspectRatio ratio={16 / 9}>
           <LivePlayer
@@ -96,8 +94,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
       onClick={(event) => {
         event.stopPropagation()
       }}
-      className="overflow-hidden"
-      style={{ maxHeight: 'min(60vh, 540px)' }}
     >
       <AspectRatio ratio={item.media.videoOrientation === 'vertical' ? 4 / 3 : 16 / 9}>
         <VideoPlayer
