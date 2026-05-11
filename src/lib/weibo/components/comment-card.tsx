@@ -65,7 +65,7 @@ export const CommentCard = memo(function CommentCard({
               likeCount: comment.likeCount + (comment.liked ? -1 : 1),
             }
           }
-          if (comment.comments.length > 0) {
+          if (Array.isArray(comment.comments) && comment.comments.length > 0) {
             return {
               ...comment,
               comments: comment.comments.map(updateCommentInTree),
@@ -176,7 +176,7 @@ export const CommentCard = memo(function CommentCard({
         </div>
         <ImageCarousel images={item.images} />
 
-        {item.comments.length > 0 ? (
+        {Array.isArray(item.comments) && item.comments.length > 0 ? (
           <div className="flex flex-col gap-2">
             {item.comments.map((child) => (
               <CommentCard
