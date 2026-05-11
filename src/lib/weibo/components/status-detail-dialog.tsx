@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, X } from 'lucide-react'
+import { useMemo } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
@@ -33,6 +35,25 @@ export function StatusDetailDialog({
   const statusId = item.mblogId ?? item.id
   const authorId = item.author.id
 
+  const glassOpacity = useAppSettings((s) => s.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.glassBlur)
+
+  const glassPanelStyle = useMemo<React.CSSProperties>(
+    () => ({
+      backgroundColor: `color-mix(in srgb, var(--background) ${glassOpacity}%, transparent)`,
+      backdropFilter: `blur(${glassBlur}px)`,
+      borderColor: `color-mix(in srgb, var(--border) ${glassOpacity}%, transparent)`,
+    }),
+    [glassOpacity, glassBlur],
+  )
+
+  const glassOverlayStyle = useMemo<React.CSSProperties>(
+    () => ({
+      backgroundColor: `rgba(0,0,0,${0.5 * (1 - glassOpacity / 100) + 0.15})`,
+    }),
+    [glassOpacity],
+  )
+
   const detailQuery = useQuery({
     queryKey: ['weibo', 'status', statusId],
     queryFn: () => loadStatusDetail(statusId),
@@ -43,8 +64,15 @@ export function StatusDetailDialog({
 
   return (
     <div className="fixed inset-0 z-[1500] flex">
-      <div className="absolute inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
-      <div className="bg-background relative ml-auto h-full w-[calc(100%-80px)] max-w-[700px] overflow-y-auto shadow-2xl">
+      <div
+        className="absolute inset-0 bg-black/50"
+        style={glassOverlayStyle}
+        onClick={() => onOpenChange(false)}
+      />
+      <div
+        className="bg-background relative ml-auto h-full w-[calc(100%-80px)] max-w-[700px] overflow-y-auto shadow-2xl"
+        style={glassBlur > 0 || glassOpacity < 100 ? glassPanelStyle : undefined}
+      >
         <div className="bg-background/95 sticky top-0 z-10 flex h-14 items-center justify-between border-b px-4 backdrop-blur">
           <Button variant="ghost" size="sm" className="gap-2" onClick={() => onOpenChange(false)}>
             <ArrowLeft className="size-4" />

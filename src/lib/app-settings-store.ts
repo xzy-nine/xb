@@ -39,6 +39,11 @@ export interface AppSettingsStoreState extends AppSettings {
   setImageGenCardStyle: (style: CardStyle) => Promise<void>
   setHotSearchType: (type: HotSearchType) => Promise<void>
   setStatusDetailPopupEnabled: (enabled: boolean) => Promise<void>
+  setBackgroundEnabled: (enabled: boolean) => Promise<void>
+  setBackgroundColor: (color: string) => Promise<void>
+  setGlassOpacity: (opacity: number) => Promise<void>
+  setGlassBlur: (blur: number) => Promise<void>
+  setBackgroundImageUrl: (url: string) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -63,6 +68,11 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     imageGenCardStyle: state.imageGenCardStyle,
     hotSearchType: state.hotSearchType,
     statusDetailPopupEnabled: state.statusDetailPopupEnabled,
+    backgroundEnabled: state.backgroundEnabled,
+    backgroundColor: state.backgroundColor,
+    backgroundImageUrl: state.backgroundImageUrl,
+    glassOpacity: state.glassOpacity,
+    glassBlur: state.glassBlur,
   }
 }
 
@@ -144,6 +154,21 @@ export function createAppSettingsStore(
       },
       async setStatusDetailPopupEnabled(statusDetailPopupEnabled) {
         await updateAndPersist({ statusDetailPopupEnabled })
+      },
+      async setBackgroundEnabled(backgroundEnabled) {
+        await updateAndPersist({ backgroundEnabled })
+      },
+      async setBackgroundColor(backgroundColor) {
+        await updateAndPersist({ backgroundColor })
+      },
+      async setGlassOpacity(glassOpacity) {
+        await updateAndPersist({ glassOpacity })
+      },
+      async setGlassBlur(glassBlur) {
+        await updateAndPersist({ glassBlur })
+      },
+      async setBackgroundImageUrl(backgroundImageUrl) {
+        await updateAndPersist({ backgroundImageUrl })
       },
     }
   })

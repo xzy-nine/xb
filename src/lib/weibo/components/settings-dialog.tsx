@@ -1,5 +1,6 @@
 import React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +11,7 @@ import {
   DialogTitle,
   VisuallyHidden,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -20,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
@@ -31,6 +34,7 @@ import type {
   LineHeightClass,
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { cn } from '@/lib/utils'
 
 function Field({
   label,
@@ -69,6 +73,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
   const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
+  const backgroundColor = useAppSettings((s) => s.backgroundColor)
+  const glassOpacity = useAppSettings((s) => s.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.glassBlur)
+  const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -78,10 +87,55 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
   const setStatusDetailPopupEnabled = useAppSettings((s) => s.setStatusDetailPopupEnabled)
+  const setBackgroundEnabled = useAppSettings((s) => s.setBackgroundEnabled)
+  const setBackgroundColor = useAppSettings((s) => s.setBackgroundColor)
+  const setGlassOpacity = useAppSettings((s) => s.setGlassOpacity)
+  const setGlassBlur = useAppSettings((s) => s.setGlassBlur)
+  const setBackgroundImageUrl = useAppSettings((s) => s.setBackgroundImageUrl)
+
+  const [imagePreviewError, setImagePreviewError] = useState(false)
+  const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const validateImageUrl = useCallback((url: string) => {
+    if (validateTimerRef.current) {
+      clearTimeout(validateTimerRef.current)
+    }
+    setImagePreviewError(false)
+
+    if (!url) return
+
+    validateTimerRef.current = setTimeout(async () => {
+      try {
+        const resp = await fetch(url, { method: 'HEAD', mode: 'no-cors' })
+        if (resp.type === 'opaque') return
+        if (!resp.ok) {
+          toast.warning(`背景图片加载失败 (HTTP ${resp.status})`, {
+            description: '请检查 URL 是否正确',
+          })
+          setImagePreviewError(true)
+        }
+      } catch {
+        // fetch may fail due to CORS; rely on <img> onError instead
+      }
+    }, 800)
+  }, [])
+
+  const handleBackgroundImageUrlChange = useCallback(
+    (url: string) => {
+      setBackgroundImageUrl(url)
+      validateImageUrl(url)
+    },
+    [setBackgroundImageUrl, validateImageUrl],
+  )
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
       setVersion(browser.runtime.getManifest().version)
+    }
+    return () => {
+      if (validateTimerRef.current) {
+        clearTimeout(validateTimerRef.current)
+      }
     }
   }, [])
 
@@ -99,6 +153,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <TabsList className="w-full">
             <TabsTrigger value="personalize" className="flex-1">
               个性化
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="flex-1">
+              外观
             </TabsTrigger>
             <TabsTrigger value="font" className="flex-1">
               微博字体
@@ -133,6 +190,103 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
               />
             </Field>
+          </TabsContent>
+
+          <TabsContent value="appearance" className="flex flex-col gap-6 py-4">
+            <Field label="自定义背景" description="为页面添加自定义背景颜色">
+              <Switch
+                checked={backgroundEnabled}
+                onCheckedChange={(checked) => setBackgroundEnabled(checked)}
+              />
+            </Field>
+
+            {backgroundEnabled && (
+              <>
+                <Field label="背景颜色" description="选择自定义背景色">
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-md border" style={{ backgroundColor }} />
+                    <Input
+                      type="color"
+                      value={backgroundColor}
+                      onChange={(e) => setBackgroundColor(e.target.value)}
+                      className="h-8 w-12 cursor-pointer p-0"
+                    />
+                  </div>
+                </Field>
+
+                <Field label="背景图片" description="输入图片 URL 作为背景（优先于颜色）">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/bg.jpg"
+                      value={backgroundImageUrl}
+                      onChange={(e) => handleBackgroundImageUrlChange(e.target.value)}
+                      className="h-8 w-[180px]"
+                    />
+                    {backgroundImageUrl ? (
+                      <div
+                        className={cn(
+                          'size-8 shrink-0 overflow-hidden rounded-md border',
+                          imagePreviewError && 'border-destructive',
+                        )}
+                      >
+                        <img
+                          src={backgroundImageUrl}
+                          alt="背景预览"
+                          className="size-full object-cover"
+                          onError={() => setImagePreviewError(true)}
+                          onLoad={() => setImagePreviewError(false)}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </Field>
+              </>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <Label>玻璃透明度</Label>
+              <p className="text-muted-foreground text-xs">
+                卡片和弹窗的半透明程度 ({glassOpacity}%)
+              </p>
+              <Slider
+                value={[glassOpacity]}
+                min={0}
+                max={100}
+                step={5}
+                onValueChange={([v]) => setGlassOpacity(v as number)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label>玻璃模糊</Label>
+              <p className="text-muted-foreground text-xs">
+                卡片和弹窗的背景模糊程度 ({glassBlur}px)
+              </p>
+              <Slider
+                value={[glassBlur]}
+                min={0}
+                max={20}
+                step={1}
+                onValueChange={([v]) => setGlassBlur(v as number)}
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setBackgroundEnabled(DEFAULT_APP_SETTINGS.backgroundEnabled)
+                  setBackgroundColor(DEFAULT_APP_SETTINGS.backgroundColor)
+                  setBackgroundImageUrl(DEFAULT_APP_SETTINGS.backgroundImageUrl)
+                  setGlassOpacity(DEFAULT_APP_SETTINGS.glassOpacity)
+                  setGlassBlur(DEFAULT_APP_SETTINGS.glassBlur)
+                }}
+              >
+                恢复默认
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="font" className="flex flex-col gap-6 py-4">

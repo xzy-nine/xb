@@ -1,11 +1,13 @@
 import { Sparkles, Zap } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useLocation, useOutletContext } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { getUiPortalContainer } from '@/components/ui/portal'
 import type { AppTheme } from '@/lib/app-settings'
+import { useAppSettings } from '@/lib/app-settings-store'
 import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
 import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
@@ -91,6 +93,37 @@ export function ShellFrame({
   const locationRef = useRef(location)
   locationRef.current = location
 
+  const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
+  const backgroundColor = useAppSettings((s) => s.backgroundColor)
+  const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
+  const glassOpacity = useAppSettings((s) => s.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.glassBlur)
+
+  const glassStyle = useMemo<React.CSSProperties>(
+    () =>
+      ({
+        '--xb-glass-opacity': glassOpacity / 100,
+        '--xb-glass-blur': `${glassBlur}px`,
+        '--xb-custom-bg': backgroundColor,
+      }) as React.CSSProperties,
+    [glassOpacity, glassBlur, backgroundColor],
+  )
+
+  const isGlassActive = glassBlur > 0 || glassOpacity < 100
+
+  useEffect(() => {
+    const portal = getUiPortalContainer()
+    if (!portal) return
+    if (isGlassActive) {
+      portal.setAttribute('data-glass', '')
+    } else {
+      portal.removeAttribute('data-glass')
+    }
+    portal.style.setProperty('--xb-glass-opacity', `${glassOpacity / 100}`)
+    portal.style.setProperty('--xb-glass-blur', `${glassBlur}px`)
+    portal.style.setProperty('--xb-custom-bg', backgroundColor)
+  }, [isGlassActive, glassOpacity, glassBlur, backgroundColor])
+
   useEffect(() => {
     const main = mainRef.current
     if (!main) {
@@ -118,7 +151,24 @@ export function ShellFrame({
   }, [location.pathname, location.search, mainRef])
 
   return (
-    <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden">
+    <div
+      className="bg-background text-foreground flex h-screen flex-col overflow-hidden"
+      style={{
+        ...glassStyle,
+        ...(backgroundEnabled
+          ? backgroundImageUrl
+            ? {
+                backgroundImage: `url(${backgroundImageUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundAttachment: 'fixed',
+              }
+            : { backgroundColor }
+          : {}),
+      }}
+      data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
+    >
       <div className="relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4 lg:max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-none">
         <div className="flex h-full shrink-0 flex-col">
           <NavigationRail
