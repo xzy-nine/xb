@@ -142,6 +142,7 @@ export function AppShell() {
           item={statusDetailItem}
           onOpenChange={setStatusDetailDialogOpen}
           setComposeTarget={setComposeTarget}
+          onNavigate={navigateToStatusDetail}
         />
       </>
     )
@@ -184,6 +185,7 @@ export function AppShell() {
           item={statusDetailItem}
           onOpenChange={setStatusDetailDialogOpen}
           setComposeTarget={setComposeTarget}
+          onNavigate={navigateToStatusDetail}
         />
       </ShellFrame>
     </GenImageDialogProvider>

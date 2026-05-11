@@ -7,7 +7,7 @@ import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
+import type { FeedItem, StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { StatusCommentsSection } from '@/lib/weibo/pages/status-detail-page'
 import { loadStatusDetail } from '@/lib/weibo/services/weibo-repository'
 
@@ -16,6 +16,7 @@ interface StatusDetailDialogProps {
   item: StatusDetailNavigationItem | null
   onOpenChange: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
+  onNavigate?: (item: FeedItem) => void
 }
 
 export function StatusDetailDialog({
@@ -23,6 +24,7 @@ export function StatusDetailDialog({
   item,
   onOpenChange,
   setComposeTarget,
+  onNavigate,
 }: StatusDetailDialogProps) {
   if (!open || !item) {
     return null
@@ -40,7 +42,7 @@ export function StatusDetailDialog({
   const detail = detailQuery.data
 
   return (
-    <div className="fixed inset-0 z-[9999] flex">
+    <div className="fixed inset-0 z-[1500] flex">
       <div className="absolute inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
       <div className="bg-background relative ml-auto h-full w-[calc(100%-80px)] max-w-[700px] overflow-y-auto shadow-2xl">
         <div className="bg-background/95 sticky top-0 z-10 flex h-14 items-center justify-between border-b px-4 backdrop-blur">
@@ -67,6 +69,7 @@ export function StatusDetailDialog({
               <FeedCard
                 item={detail.status}
                 surface="detail"
+                onNavigate={onNavigate}
                 onCommentClick={(item) =>
                   setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
                 }
