@@ -118,9 +118,12 @@ export function ShellFrame({
   }, [location.pathname, location.search, mainRef])
 
   return (
-    <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden">
-      <div className="relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4 lg:max-w-[1000px] xl:max-w-[1200px]">
-        <div className="flex h-full shrink-0 flex-col">
+    <div
+      className="bg-background text-foreground flex h-screen flex-col overflow-y-auto"
+      ref={mainRef}
+    >
+      <div className="relative mx-auto flex w-full gap-3 px-3 md:gap-4 md:px-4 lg:max-w-[1000px] xl:max-w-[1200px]">
+        <div className="sticky top-0 h-screen shrink-0">
           <NavigationRail
             pageKind={pageKind}
             viewingProfileUserId={viewingProfileUserId}
@@ -132,10 +135,8 @@ export function ShellFrame({
             onComposeOpen={onComposeOpen}
           />
         </div>
-        <main className="no-scrollbar min-w-0 flex-1 overflow-y-auto pb-8" ref={mainRef}>
-          {children}
-        </main>
-        <div className="hidden shrink-0 pt-4 md:flex md:w-[240px] xl:w-[300px]">
+        <main className="min-w-0 flex-1 pb-8">{children}</main>
+        <div className="sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]">
           <RightRail />
         </div>
         <BackToTop containerRef={mainRef} />

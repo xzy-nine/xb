@@ -40,7 +40,7 @@ export function BackToTop({ containerRef, threshold = 200 }: BackToTopProps) {
       onClick={scrollToTop}
       title="返回顶部"
       className={cn(
-        'absolute right-4 bottom-4 z-50 rounded-full border-border/70 bg-background/85 shadow-lg shadow-black/10 backdrop-blur transition-[opacity,transform,background-color] duration-200 motion-reduce:transition-none hover:bg-accent',
+        'fixed right-4 bottom-4 z-50 rounded-full border-border/70 bg-background/85 shadow-lg shadow-black/10 backdrop-blur transition-[opacity,transform,background-color] duration-200 motion-reduce:transition-none hover:bg-accent',
         isVisible
           ? 'pointer-events-auto translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-2 opacity-0',
