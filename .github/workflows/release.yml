@@ -1,23 +1,19 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
-      release_tag:
-        description: Existing release tag to publish to stores, for example v0.1.0
-        required: false
-        type: string
+      dry_run:
+        description: 'Dry run（只预览版本和 changelog，不实际发布）'
+        type: boolean
+        default: false
 
 concurrency:
-  group: release-main
+  group: release
   cancel-in-progress: false
 
 jobs:
   release:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -61,7 +57,12 @@ jobs:
 
       - name: Release
         id: semantic_release
-        run: bunx semantic-release
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            bunx semantic-release --dry-run
+          else
+            bunx semantic-release
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIT_AUTHOR_NAME: github-actions[bot]
@@ -70,6 +71,7 @@ jobs:
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
       - name: Capture release metadata
+        if: ${{ !inputs.dry_run }}
         id: release_meta
         run: |
           before_tag="${{ steps.release_base.outputs.latest_tag }}"
@@ -83,46 +85,16 @@ jobs:
             echo "new_release=false" >> "$GITHUB_OUTPUT"
           fi
 
-  resolve-release:
-    needs: release
-    if: always()
-    runs-on: ubuntu-latest
-    outputs:
-      should_publish: ${{ steps.resolve.outputs.should_publish || 'false' }}
-      release_version: ${{ steps.resolve.outputs.release_version }}
-      release_git_tag: ${{ steps.resolve.outputs.release_git_tag }}
-    steps:
-      - name: Resolve release target
-        id: resolve
-        run: |
-          manual_tag="${{ github.event.inputs.release_tag }}"
-
-          if [ -n "$manual_tag" ]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "release_git_tag=$manual_tag" >> "$GITHUB_OUTPUT"
-            echo "release_version=${manual_tag#v}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "${{ needs.release.result }}" = "success" ] && [ "${{ needs.release.outputs.new_release }}" = "true" ]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "release_git_tag=${{ needs.release.outputs.release_git_tag }}" >> "$GITHUB_OUTPUT"
-            echo "release_version=${{ needs.release.outputs.release_version }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "should_publish=false" >> "$GITHUB_OUTPUT"
-
   publish-stores:
-    needs: resolve-release
-    if: needs.resolve-release.outputs.should_publish == 'true'
+    needs: release
+    if: needs.release.outputs.new_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.resolve-release.outputs.release_git_tag }}
+          ref: ${{ needs.release.outputs.release_git_tag }}
 
       - uses: actions/setup-node@v6
         with:
@@ -137,14 +109,14 @@ jobs:
 
       - name: Zip extensions
         env:
-          EXTENSION_VERSION: ${{ needs.resolve-release.outputs.release_version }}
+          EXTENSION_VERSION: ${{ needs.release.outputs.release_version }}
         run: |
           bun run zip
           bun run zip:firefox
 
       - name: Submit to stores
         env:
-          EXTENSION_VERSION: ${{ needs.resolve-release.outputs.release_version }}
+          EXTENSION_VERSION: ${{ needs.release.outputs.release_version }}
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}

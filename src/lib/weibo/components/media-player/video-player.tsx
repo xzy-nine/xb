@@ -217,7 +217,7 @@ function CenterPlayButton() {
   const playback = usePlayer(selectPlayback)
 
   return (
-    <div className="video-center-play opacity-70">
+    <div className="video-center-play">
       <button
         type="button"
         className="video-center-play__button"

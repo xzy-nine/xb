@@ -28,10 +28,12 @@
   color: oklch(0 0 0);
   box-shadow: 0 2px 8px oklch(0 0 0 / 0.3);
   transition: scale 150ms ease-out;
+  opacity: 70%;
 }
 
 .video-center-play__button:hover {
   scale: 1.05;
+  opacity: 1;
 }
 
 .video-center-play__button:active {
