@@ -8,7 +8,19 @@ import {
 } from '@/lib/weibo/platform/messages'
 
 const DEFAULT_TIMEOUT_MS = 10000
-const WEIBO_API_BASE = 'https://weibo.com'
+
+function getWeiboApiBase(): string {
+  if (import.meta.env.FIREFOX) {
+    const host = window.location.host
+    if (host === 'weibo.com' || host === 'www.weibo.com') {
+      return `https://${host}`
+    }
+    return 'https://weibo.com'
+  }
+  return ''
+}
+
+const WEIBO_API_BASE = getWeiboApiBase()
 
 function readXsrfTokenFromCookie(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
