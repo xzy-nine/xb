@@ -272,8 +272,8 @@ function stripEntityTokens(text: string, tokens: string[]) {
     .reduce((result, token) => {
       return result.replaceAll(token, '').replace(/[ \t]{2,}/g, ' ')
     }, text)
-    .replace(/\s+\n/g, '\n')
-    .replace(/\n\s+/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
     .trim()
 }
 
