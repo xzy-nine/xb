@@ -86,13 +86,25 @@ export function HomeTimelinePage() {
   const page = useWeiboPage()
   const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const activeTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && page.kind === 'home'
 
+  const [selectedGroupGid, setSelectedGroupGid] = useState<string>('default')
+
+  const showGroupSelect = followGroupsEnabled && activeTab === 'following'
+
+  const groupsQuery = useQuery({
+    ...followGroupsQueryOptions,
+    enabled: showGroupSelect,
+  })
+
+  const groupListId = showGroupSelect && selectedGroupGid !== 'default' ? selectedGroupGid : null
+
   const timelineQuery = useInfiniteQuery({
-    ...homeTimelineInfiniteOptions(activeTab),
+    ...homeTimelineInfiniteOptions(activeTab, groupListId),
     enabled: isEnabled,
   })
 

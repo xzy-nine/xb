@@ -45,6 +45,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setHotSearchType: (type: HotSearchType) => Promise<void>
   setXLayoutEnabled: (enabled: boolean) => Promise<void>
   setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
+  setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -73,6 +74,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     hotSearchType: state.hotSearchType,
     xLayoutEnabled: state.xLayoutEnabled,
     browsingHistoryEnabled: state.browsingHistoryEnabled,
+    followGroupsEnabled: state.followGroupsEnabled,
   }
 }
 
@@ -166,6 +168,9 @@ export function createAppSettingsStore(
       },
       async setBrowsingHistoryEnabled(browsingHistoryEnabled) {
         await updateAndPersist({ browsingHistoryEnabled })
+      },
+      async setFollowGroupsEnabled(followGroupsEnabled) {
+        await updateAndPersist({ followGroupsEnabled })
       },
     }
   })

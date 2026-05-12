@@ -78,6 +78,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
   const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
+  const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -93,6 +94,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
   const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
   const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
+  const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -200,6 +202,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Switch
                 checked={browsingHistoryEnabled}
                 onCheckedChange={(checked) => setBrowsingHistoryEnabled(checked)}
+              />
+            </Field>
+
+            <Field label="关注分组" description="在信息流中按分组筛选关注人">
+              <Switch
+                checked={followGroupsEnabled}
+                onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
               />
             </Field>
           </TabsContent>

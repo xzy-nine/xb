@@ -113,6 +113,7 @@ export interface AppSettings {
   hotSearchType: HotSearchType
   xLayoutEnabled: boolean
   browsingHistoryEnabled: boolean
+  followGroupsEnabled: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -158,6 +159,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   hotSearchType: 'hot' as HotSearchType,
   xLayoutEnabled: false,
   browsingHistoryEnabled: true,
+  followGroupsEnabled: false,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -322,6 +324,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.browsingHistoryEnabled === 'boolean'
         ? candidate.browsingHistoryEnabled
         : DEFAULT_APP_SETTINGS.browsingHistoryEnabled,
+    followGroupsEnabled:
+      typeof candidate.followGroupsEnabled === 'boolean'
+        ? candidate.followGroupsEnabled
+        : DEFAULT_APP_SETTINGS.followGroupsEnabled,
   }
 }
 

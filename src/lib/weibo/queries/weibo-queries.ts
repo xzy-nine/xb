@@ -6,6 +6,8 @@ import {
   loadExploreGroups,
   loadExploreHot,
   loadFavorites,
+  loadFollowGroups,
+  loadGroupTimeline,
   loadHotSearchByType,
   loadHomeTimeline,
   loadProfilePosts,
@@ -71,11 +73,17 @@ export function followingNewPostsCheckOptions(seenFirstItemId: string | null) {
   }
 }
 
-export function homeTimelineInfiniteOptions(activeTimelineTab: HomeTimelineTab) {
+export function homeTimelineInfiniteOptions(
+  activeTimelineTab: HomeTimelineTab,
+  groupListId?: string | null,
+) {
+  const useGroupTimeline = activeTimelineTab === 'following' && groupListId
   return {
-    queryKey: ['weibo', 'timeline', activeTimelineTab] as const,
+    queryKey: ['weibo', 'timeline', activeTimelineTab, groupListId ?? 'default'] as const,
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
-      loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
+      useGroupTimeline
+        ? loadGroupTimeline(groupListId!, { cursor: pageParam })
+        : loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: Infinity,
@@ -156,5 +164,11 @@ export function friendsInfiniteOptions(uid: string, tab: 'following' | 'fans') {
 export const exploreGroupsQueryOptions = {
   queryKey: ['weibo', 'explore', 'groups'] as const,
   queryFn: () => loadExploreGroups(),
-  staleTime: 5 * 60 * 1000,
+  staleTime: 60 * 60 * 1000,
+}
+
+export const followGroupsQueryOptions = {
+  queryKey: ['weibo', 'follow-groups'] as const,
+  queryFn: () => loadFollowGroups(),
+  staleTime: 60 * 60 * 1000,
 }

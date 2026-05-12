@@ -1,6 +1,7 @@
 export const WEIBO_ENDPOINTS = {
   forYou: '/ajax/feed/unreadfriendstimeline',
   following: '/ajax/feed/friendstimeline',
+  groupTimeline: '/ajax/feed/groupstimeline',
   exploreHot: '/ajax/feed/hottimeline',
   exploreGroups: '/ajax/feed/allGroups',
   sideCards: '/ajax/side/cards',

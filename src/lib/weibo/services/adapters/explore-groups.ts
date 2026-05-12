@@ -4,6 +4,11 @@ export interface ExploreGroup {
   containerid: string
 }
 
+export interface FollowGroup {
+  gid: string
+  title: string
+}
+
 interface ExploreGroupRaw {
   gid?: string
   title?: string
@@ -33,4 +38,13 @@ export function adaptExploreGroupsResponse(payload: ExploreGroupsPayload): Explo
   }
 
   return groups.slice(0, 5) as ExploreGroup[]
+}
+
+export function adaptFollowGroupsResponse(payload: ExploreGroupsPayload): FollowGroup[] {
+  const list = payload.groups ?? []
+  const myGroups = list.find((item) => item.title === '我的分组')
+  if (!myGroups?.group) return []
+  return myGroups.group
+    .filter((g): g is ExploreGroupRaw & { gid: string; title: string } => Boolean(g.gid && g.title))
+    .map(({ gid, title }) => ({ gid, title }))
 }
