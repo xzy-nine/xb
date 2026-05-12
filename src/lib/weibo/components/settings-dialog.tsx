@@ -88,6 +88,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
   const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
+  const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -107,6 +108,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setGlassOpacity = useAppSettings((s) => s.setGlassOpacity)
   const setGlassBlur = useAppSettings((s) => s.setGlassBlur)
   const setBackgroundImageUrl = useAppSettings((s) => s.setBackgroundImageUrl)
+  const setMainColumnMaxWidth = useAppSettings((s) => s.setMainColumnMaxWidth)
 
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -218,6 +220,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </Field>
 
+            <div className="flex flex-col gap-2">
+              <Label>主栏最大宽度</Label>
+              <p className="text-muted-foreground text-xs">
+                限制主栏最大宽度以获得更好的阅读体验 ({mainColumnMaxWidth}px)
+              </p>
+              <Slider
+                value={[mainColumnMaxWidth]}
+                min={1200}
+                max={2000}
+                step={100}
+                onValueChange={([value]) => setMainColumnMaxWidth(value)}
+              />
+            </div>
+
             <Field label="自定义背景" description="为页面添加自定义背景图片">
               <Switch
                 checked={backgroundEnabled}
@@ -292,6 +308,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   setBackgroundImageUrl(DEFAULT_APP_SETTINGS.backgroundImageUrl)
                   setGlassOpacity(DEFAULT_APP_SETTINGS.glassOpacity)
                   setGlassBlur(DEFAULT_APP_SETTINGS.glassBlur)
+                  setMainColumnMaxWidth(DEFAULT_APP_SETTINGS.mainColumnMaxWidth)
                 }}
               >
                 恢复默认

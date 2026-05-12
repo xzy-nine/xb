@@ -51,6 +51,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setGlassOpacity: (opacity: number) => Promise<void>
   setGlassBlur: (blur: number) => Promise<void>
   setBackgroundImageUrl: (url: string) => Promise<void>
+  setMainColumnMaxWidth: (maxWidth: number) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -84,6 +85,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     backgroundImageUrl: state.backgroundImageUrl,
     glassOpacity: state.glassOpacity,
     glassBlur: state.glassBlur,
+    mainColumnMaxWidth: state.mainColumnMaxWidth,
   }
 }
 
@@ -192,6 +194,9 @@ export function createAppSettingsStore(
       },
       async setBackgroundImageUrl(backgroundImageUrl) {
         await updateAndPersist({ backgroundImageUrl })
+      },
+      async setMainColumnMaxWidth(mainColumnMaxWidth) {
+        await updateAndPersist({ mainColumnMaxWidth })
       },
     }
   })

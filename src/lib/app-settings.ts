@@ -120,6 +120,7 @@ export interface AppSettings {
   backgroundImageUrl: string
   glassOpacity: number
   glassBlur: number
+  mainColumnMaxWidth: number
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -170,6 +171,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
   glassOpacity: 80,
   glassBlur: 12,
+  mainColumnMaxWidth: 1200,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -361,6 +363,12 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       candidate.glassBlur <= 20
         ? candidate.glassBlur
         : DEFAULT_APP_SETTINGS.glassBlur,
+    mainColumnMaxWidth:
+      typeof candidate.mainColumnMaxWidth === 'number' &&
+      candidate.mainColumnMaxWidth >= 1200 &&
+      candidate.mainColumnMaxWidth <= 2000
+        ? candidate.mainColumnMaxWidth
+        : DEFAULT_APP_SETTINGS.mainColumnMaxWidth,
   }
 }
 

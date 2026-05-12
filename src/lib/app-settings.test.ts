@@ -73,6 +73,7 @@ describe('app-settings', () => {
       backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
       glassOpacity: 80,
       glassBlur: 12,
+      mainColumnMaxWidth: 1200,
     })
 
     await persistAppSettings(
@@ -104,6 +105,7 @@ describe('app-settings', () => {
         backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
         glassOpacity: 80,
         glassBlur: 12,
+        mainColumnMaxWidth: 1200,
       },
       storage,
     )
@@ -136,6 +138,7 @@ describe('app-settings', () => {
       backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
       glassOpacity: 80,
       glassBlur: 12,
+      mainColumnMaxWidth: 1200,
     })
   })
 

@@ -98,6 +98,7 @@ export function ShellFrame({
   const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
+  const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
 
   const glassStyle = useMemo<React.CSSProperties>(
     () =>
@@ -169,7 +170,10 @@ export function ShellFrame({
       }}
       data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
     >
-      <div className="relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4 lg:max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-none">
+      <div
+        className="relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4"
+        style={{ maxWidth: `${mainColumnMaxWidth}px` }}
+      >
         <div className="flex h-full shrink-0 flex-col">
           <NavigationRail
             pageKind={pageKind}
