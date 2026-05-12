@@ -2,6 +2,53 @@ import { FONT_FAMILY_CLASSES, RemoteFontFamily, SystemFontFamily } from './font-
 
 export type AppTheme = 'system' | 'light' | 'dark'
 
+export type LightBgColorPreset = 'white' | 'paper' | 'sepia' | 'light-gray'
+
+export type DarkBgColorPreset = 'near-black' | 'black' | 'dark-gray' | 'warm-dark'
+
+export type BackgroundColorPreset = LightBgColorPreset | DarkBgColorPreset
+
+export interface BgColorPresetDef {
+  key: BackgroundColorPreset
+  name: string
+  background: string
+  card: string
+}
+
+export const LIGHT_BG_PRESETS: BgColorPresetDef[] = [
+  { key: 'white', name: '纯白', background: 'oklch(1 0 0)', card: 'oklch(1 0 0)' },
+  {
+    key: 'paper',
+    name: '纸张',
+    background: 'oklch(0.966 0.0093 99.98)',
+    card: 'oklch(0.9818 0.0054 95.1)',
+  },
+  {
+    key: 'sepia',
+    name: '护眼黄',
+    background: 'oklch(0.97 0.012 75)',
+    card: 'oklch(0.98 0.009 75)',
+  },
+  { key: 'light-gray', name: '浅灰', background: 'oklch(0.965 0 0)', card: 'oklch(0.98 0 0)' },
+]
+
+export const DARK_BG_PRESETS: BgColorPresetDef[] = [
+  {
+    key: 'near-black',
+    name: '深灰',
+    background: 'oklch(0.1908 0.002 106.59)',
+    card: 'oklch(0.205 0 0)',
+  },
+  { key: 'black', name: '纯黑', background: 'oklch(0 0 0)', card: 'oklch(0.1 0 0)' },
+  { key: 'dark-gray', name: '暗灰', background: 'oklch(0.2 0 0)', card: 'oklch(0.25 0 0)' },
+  {
+    key: 'warm-dark',
+    name: '暖黑',
+    background: 'oklch(0.16 0.008 60)',
+    card: 'oklch(0.21 0.006 60)',
+  },
+]
+
 export type FontFamilyClass = SystemFontFamily | RemoteFontFamily
 
 export type HotSearchType = 'hot' | 'mine' | 'entertainment' | 'life' | 'social'
@@ -55,6 +102,8 @@ export interface AppSettings {
   collapseRepliesEnabled: boolean
   renderReplyChainEnabled: boolean
   darkModeImageDim: boolean
+  lightModeBgColor: LightBgColorPreset
+  darkModeBgColor: DarkBgColorPreset
   imageGenEnabled: boolean
   imageGenShowDataArea: boolean
   imageGenShowFullImages: boolean
@@ -96,6 +145,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   collapseRepliesEnabled: false,
   renderReplyChainEnabled: true,
   darkModeImageDim: false,
+  lightModeBgColor: 'white' as LightBgColorPreset,
+  darkModeBgColor: 'near-black' as DarkBgColorPreset,
   imageGenEnabled: true,
   imageGenShowDataArea: true,
   imageGenShowFullImages: false,
@@ -120,6 +171,16 @@ function isHotSearchType(value: unknown): value is HotSearchType {
     value === 'entertainment' ||
     value === 'life' ||
     value === 'social'
+  )
+}
+
+function isLightBgColorPreset(value: unknown): value is LightBgColorPreset {
+  return value === 'white' || value === 'paper' || value === 'sepia' || value === 'light-gray'
+}
+
+function isDarkBgColorPreset(value: unknown): value is DarkBgColorPreset {
+  return (
+    value === 'near-black' || value === 'black' || value === 'dark-gray' || value === 'warm-dark'
   )
 }
 
@@ -216,6 +277,12 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.darkModeImageDim === 'boolean'
         ? candidate.darkModeImageDim
         : DEFAULT_APP_SETTINGS.darkModeImageDim,
+    lightModeBgColor: isLightBgColorPreset(candidate.lightModeBgColor)
+      ? candidate.lightModeBgColor
+      : DEFAULT_APP_SETTINGS.lightModeBgColor,
+    darkModeBgColor: isDarkBgColorPreset(candidate.darkModeBgColor)
+      ? candidate.darkModeBgColor
+      : DEFAULT_APP_SETTINGS.darkModeBgColor,
     imageGenEnabled:
       typeof candidate.imageGenEnabled === 'boolean'
         ? candidate.imageGenEnabled

@@ -22,15 +22,19 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
+import { DARK_BG_PRESETS, DEFAULT_APP_SETTINGS, LIGHT_BG_PRESETS } from '@/lib/app-settings'
 import type {
+  AppTheme,
+  DarkBgColorPreset,
   FontFamilyClass,
   FontSizeClass,
   FontWeightClass,
   LetterSpacingClass,
+  LightBgColorPreset,
   LineHeightClass,
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { BgColorPicker } from '@/lib/weibo/components/bg-color-picker'
 
 function Field({
   label,
@@ -69,6 +73,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
+  const theme = useAppSettings((s) => s.theme)
+  const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
+  const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -78,12 +85,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
+  const setTheme = useAppSettings((s) => s.setTheme)
+  const setLightModeBgColor = useAppSettings((s) => s.setLightModeBgColor)
+  const setDarkModeBgColor = useAppSettings((s) => s.setDarkModeBgColor)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
       setVersion(browser.runtime.getManifest().version)
     }
   }, [])
+
+  const [activeTab, setActiveTab] = useState<'appearance' | 'personalize' | 'font'>('appearance')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,8 +107,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           </VisuallyHidden>
         </DialogHeader>
 
-        <Tabs defaultValue="font">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
           <TabsList className="w-full">
+            <TabsTrigger value="appearance" className="flex-1">
+              外观
+            </TabsTrigger>
             <TabsTrigger value="personalize" className="flex-1">
               个性化
             </TabsTrigger>
@@ -104,6 +119,46 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               微博字体
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="appearance" className="flex flex-col gap-6 py-4">
+            <Field label="深色模式" description="选择应用的配色方案">
+              <Select value={theme} onValueChange={(value) => setTheme(value as AppTheme)}>
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">跟随系统</SelectItem>
+                  <SelectItem value="light">浅色</SelectItem>
+                  <SelectItem value="dark">深色</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <div className="flex flex-col gap-2">
+              <Label>浅色模式背景</Label>
+              <BgColorPicker
+                presets={LIGHT_BG_PRESETS}
+                value={lightModeBgColor}
+                onChange={(v) => setLightModeBgColor(v as LightBgColorPreset)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label>深色模式背景</Label>
+              <BgColorPicker
+                presets={DARK_BG_PRESETS}
+                value={darkModeBgColor}
+                onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
+              />
+            </div>
+
+            <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
+              <Switch
+                checked={darkModeImageDim}
+                onCheckedChange={(checked) => setDarkModeImageDim(checked)}
+              />
+            </Field>
+          </TabsContent>
 
           <TabsContent value="personalize" className="flex flex-col gap-6 py-4">
             <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
@@ -113,7 +168,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </Field>
 
-            <Field label="QuoteChains 渲染" description="将“//@ 用户名: 格式”渲染成 QuoteChains">
+            <Field label="QuoteChains 渲染" description={'将"//@ 用户名: 格式"渲染成 QuoteChains'}>
               <Switch
                 checked={renderReplyChainEnabled}
                 onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
@@ -128,13 +183,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 />
               </Field>
             )}
-
-            <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
-              <Switch
-                checked={darkModeImageDim}
-                onCheckedChange={(checked) => setDarkModeImageDim(checked)}
-              />
-            </Field>
           </TabsContent>
 
           <TabsContent value="font" className="flex flex-col gap-6 py-4">

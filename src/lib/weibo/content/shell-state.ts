@@ -1,4 +1,4 @@
-import { resolveIsDarkMode } from '@/lib/app-settings'
+import { DARK_BG_PRESETS, LIGHT_BG_PRESETS, resolveIsDarkMode } from '@/lib/app-settings'
 import type { AppSettingsStore } from '@/lib/app-settings-store'
 import {
   applyPageTakeover,
@@ -24,6 +24,16 @@ export function bindShellState({
     const isDark = resolveIsDarkMode(settings.theme, mediaQuery.matches)
 
     container.classList.toggle('dark', isDark)
+
+    // Apply background color preset CSS variables
+    const preset = isDark
+      ? DARK_BG_PRESETS.find((p) => p.key === settings.darkModeBgColor)
+      : LIGHT_BG_PRESETS.find((p) => p.key === settings.lightModeBgColor)
+
+    if (preset) {
+      container.style.setProperty('--background', preset.background)
+      container.style.setProperty('--card', preset.card)
+    }
 
     if (settings.rewriteEnabled) {
       if (!document.documentElement.hasAttribute(OVERFLOW_STORAGE_KEY)) {
