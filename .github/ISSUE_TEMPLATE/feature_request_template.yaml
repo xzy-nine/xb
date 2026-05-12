@@ -1,7 +1,7 @@
 name: Feature Request
 description: Submit a new feature request
-title: '[Feature Request] '
-labels: [Feature Request]
+title: '[Feature] '
+labels: [Feature]
 
 body:
   - type: input
@@ -15,18 +15,10 @@ body:
   - type: textarea
     attributes:
       label: 需求描述
-      description: 请详细描述你希望添加的功能
-      placeholder: 请描述你的功能需求，包括期望的行为、使用场景等
+      description: 描述你希望添加的功能，与UI相关的最好能附图说明
+      placeholder: 请描述你的功能需求，包括期望的行为、使用场景等，如果有参考的插件或脚本，请提供链接
     validations:
       required: true
-
-  - type: textarea
-    attributes:
-      label: 参考信息
-      description: 如果你知道其他插件/脚本已经实现了类似功能，请提供参考说明
-      placeholder: '例如：插件名称或脚本名称和说明'
-    validations:
-      required: false
 
   - type: checkboxes
     attributes:

@@ -9,10 +9,12 @@ import {
   type AppSettingsStorageArea,
   type AppTheme,
   type CardStyle,
+  type DarkBgColorPreset,
   type FontFamilyClass,
   type FontSizeClass,
   type FontWeightClass,
   type LetterSpacingClass,
+  type LightBgColorPreset,
   type LineHeightClass,
   type GenImageCardTheme,
   type HotSearchType,
@@ -33,6 +35,8 @@ export interface AppSettingsStoreState extends AppSettings {
   setCollapseRepliesEnabled: (enabled: boolean) => Promise<void>
   setRenderReplyChainEnabled: (enabled: boolean) => Promise<void>
   setDarkModeImageDim: (enabled: boolean) => Promise<void>
+  setLightModeBgColor: (color: LightBgColorPreset) => Promise<void>
+  setDarkModeBgColor: (color: DarkBgColorPreset) => Promise<void>
   setImageGenEnabled: (enabled: boolean) => Promise<void>
   setImageGenShowDataArea: (show: boolean) => Promise<void>
   setImageGenShowFullImages: (show: boolean) => Promise<void>
@@ -64,6 +68,8 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     collapseRepliesEnabled: state.collapseRepliesEnabled,
     renderReplyChainEnabled: state.renderReplyChainEnabled,
     darkModeImageDim: state.darkModeImageDim,
+    lightModeBgColor: state.lightModeBgColor,
+    darkModeBgColor: state.darkModeBgColor,
     imageGenEnabled: state.imageGenEnabled,
     imageGenShowDataArea: state.imageGenShowDataArea,
     imageGenShowFullImages: state.imageGenShowFullImages,
@@ -138,6 +144,12 @@ export function createAppSettingsStore(
       },
       async setDarkModeImageDim(darkModeImageDim) {
         await updateAndPersist({ darkModeImageDim })
+      },
+      async setLightModeBgColor(lightModeBgColor) {
+        await updateAndPersist({ lightModeBgColor })
+      },
+      async setDarkModeBgColor(darkModeBgColor) {
+        await updateAndPersist({ darkModeBgColor })
       },
       async setImageGenEnabled(imageGenEnabled) {
         await updateAndPersist({ imageGenEnabled })
