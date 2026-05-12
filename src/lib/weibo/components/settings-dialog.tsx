@@ -154,7 +154,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           </VisuallyHidden>
         </DialogHeader>
 
-        <Tabs defaultValue="personalize">
+        <Tabs defaultValue="font">
           <TabsList className="w-full">
             <TabsTrigger value="personalize" className="flex-1">
               个性化
