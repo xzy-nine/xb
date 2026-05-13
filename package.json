@@ -33,7 +33,7 @@
     "zip:firefox": "wxt zip -b firefox",
     "preinstall": "npx only-allow bun",
     "prepare": "husky",
-    "lint": "oxfmt --no-error-on-unmatched-pattern && oxlint ."
+    "lint": "oxfmt --no-error-on-unmatched-pattern && oxlint --fix"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

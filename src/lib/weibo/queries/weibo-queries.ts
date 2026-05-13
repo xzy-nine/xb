@@ -38,7 +38,8 @@ export function homeTimelineInfiniteOptions(activeTimelineTab: HomeTimelineTab) 
       loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
-    staleTime: 0,
+    staleTime: Infinity,
+    gcTime: Infinity,
   }
 }
 
@@ -107,7 +108,8 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
       loadExploreHot({ cursor: pageParam, groupId: group.gid, containerid: group.containerid }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
-    staleTime: 0,
+    staleTime: Infinity,
+    gcTime: Infinity,
   }
 }
 
