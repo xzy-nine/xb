@@ -1,5 +1,5 @@
 'use client'
-import { useInterval } from '@reactuses/core'
+import { useIntersectionObserver, useInterval } from '@reactuses/core'
 import { selectPlaybackRate, selectPlayback } from '@videojs/core/dom'
 import {
   AlertDialog,
@@ -469,6 +469,18 @@ export function VideoPlayer({
     setQualityId(AUTO_QUALITY_ID)
     setShouldLoad(false)
   }, [sourceKey])
+
+  // Pause video when it leaves the viewport
+  useIntersectionObserver(
+    videoRef,
+    ([entry]) => {
+      const video = videoRef.current
+      if (video && !entry.isIntersecting && !video.paused && !video.ended) {
+        video.pause()
+      }
+    },
+    { threshold: 0 },
+  )
 
   // Save playback position on pause
   useEffect(() => {
