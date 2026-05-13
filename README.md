@@ -36,6 +36,7 @@ Visit [Landing Page](https://xb-extension.vercel.app/) for more.
 ## Install
 
 [Chrome Web Store](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
+
 [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb)
 
 ## Features
