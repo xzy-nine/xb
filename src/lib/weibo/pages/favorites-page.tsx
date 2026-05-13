@@ -1,5 +1,6 @@
+import { useIntersectionObserver } from '@reactuses/core'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -39,21 +40,15 @@ export function FavoritesPage() {
   const fetchNextPageRef = useRef(favoritesQuery.fetchNextPage)
   fetchNextPageRef.current = favoritesQuery.fetchNextPage
 
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
-      return
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchNextPageRef.current()
-        }
-      },
-      { threshold: 0.2 },
-    )
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage])
+  useIntersectionObserver(
+    loadMoreRef,
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        void fetchNextPageRef.current()
+      }
+    },
+    { threshold: 0.2 },
+  )
 
   return (
     <div className="flex flex-col gap-3 pt-4">

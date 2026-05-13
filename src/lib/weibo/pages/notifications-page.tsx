@@ -1,5 +1,6 @@
+import { useIntersectionObserver } from '@reactuses/core'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/button'
@@ -39,21 +40,15 @@ function NotificationTabContent({
 }) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
-      return
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          onFetchNextPage()
-        }
-      },
-      { threshold: 0.2 },
-    )
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, onFetchNextPage])
+  useIntersectionObserver(
+    loadMoreRef,
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        onFetchNextPage()
+      }
+    },
+    { threshold: 0.2 },
+  )
 
   if (isLoading) {
     return <PageLoadingState label="正在加载..." />
