@@ -76,6 +76,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const theme = useAppSettings((s) => s.theme)
   const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
   const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
+  const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -88,6 +89,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setTheme = useAppSettings((s) => s.setTheme)
   const setLightModeBgColor = useAppSettings((s) => s.setLightModeBgColor)
   const setDarkModeBgColor = useAppSettings((s) => s.setDarkModeBgColor)
+  const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -183,6 +185,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 />
               </Field>
             )}
+
+            <Field label="X 操作栏布局" description="使用 X 风格的操作栏（含收藏和分享按钮）">
+              <Switch
+                checked={xLayoutEnabled}
+                onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+              />
+            </Field>
           </TabsContent>
 
           <TabsContent value="font" className="flex flex-col gap-6 py-4">
@@ -318,12 +327,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </Tabs>
 
         {version && (
-          <div className="flex items-center justify-between border-t pt-4">
+          <div className="text-muted-foreground flex items-center justify-between border-t pt-4 font-mono text-xs transition-colors">
             <a
               href="https://xb-extension.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+              className="hover:text-foreground"
             >
               xb v{version}
             </a>
@@ -331,9 +340,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               href="https://github.com/nnecec"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+              className="hover:text-foreground"
             >
-              by nnecec
+              nnecec
+            </a>
+            <a
+              href="https://github.com/nnecec/xb"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground"
+            >
+              built with ❤️
             </a>
           </div>
         )}

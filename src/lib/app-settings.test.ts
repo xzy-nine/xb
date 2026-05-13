@@ -66,6 +66,7 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'hot',
+      xLayoutEnabled: false,
     })
 
     await persistAppSettings(
@@ -90,6 +91,7 @@ describe('app-settings', () => {
         imageGenTheme: 'light',
         imageGenCardStyle: 'default',
         hotSearchType: 'mine',
+        xLayoutEnabled: true,
       },
       storage,
     )
@@ -115,6 +117,7 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'mine',
+      xLayoutEnabled: true,
     })
   })
 

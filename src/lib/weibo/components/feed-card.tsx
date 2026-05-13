@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Heart, MessageCircle, Repeat2 } from 'lucide-react'
+import { Bookmark, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import { memo, type MouseEvent, type ReactNode, useRef } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
@@ -15,6 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
@@ -256,74 +263,151 @@ function FeedActions({
   onRepostClick,
   onLikeClick,
   likePending,
+  xLayoutEnabled,
+  favorited,
+  onFavorite,
+  favoritePending,
 }: {
   item: FeedItem
   onCommentClick?: (item: FeedItem) => void
   onRepostClick?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePending?: boolean
+  xLayoutEnabled: boolean
+  favorited?: boolean
+  onFavorite?: () => void | Promise<void>
+  favoritePending?: boolean
 }) {
   const liked = item.liked === true
+  const isBookmarked = favorited === true
+
+  const weiboUrl = `https://weibo.com/${item.author.id}/${item.mblogId}`
+
+  const handleCopyLink = () => {
+    void navigator.clipboard.writeText(weiboUrl).then(() => {
+      toast.success('已复制链接')
+    })
+  }
+  const CommentButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      aria-label="回复微博"
+      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
+      onClick={(event) => {
+        event.stopPropagation()
+        onCommentClick?.(item)
+      }}
+    >
+      <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
+      <span className="tabular-nums transition-colors group-hover:text-sky-500">
+        {formatWeiboCount(item.stats.comments)}
+      </span>
+    </Button>
+  )
+  const RepostButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      aria-label="转发微博"
+      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
+      onClick={(event) => {
+        event.stopPropagation()
+        onRepostClick?.(item)
+      }}
+    >
+      <Repeat2 className="size-3.5 transition-colors group-hover:text-emerald-500" />
+      <span className="tabular-nums transition-colors group-hover:text-emerald-500">
+        {formatWeiboCount(item.stats.reposts)}
+      </span>
+    </Button>
+  )
+  const LikeButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      aria-label={liked ? '取消点赞' : '点赞微博'}
+      aria-pressed={liked}
+      disabled={likePending}
+      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
+      onClick={(event) => {
+        event.stopPropagation()
+        onLikeClick?.(item)
+      }}
+    >
+      <Heart
+        className={cn(
+          'size-3.5 transition-colors group-hover:text-rose-500',
+          liked && 'fill-rose-500 text-rose-500',
+        )}
+      />
+      <span
+        className={cn(
+          'tabular-nums transition-colors group-hover:text-rose-500',
+          liked && 'text-rose-500',
+        )}
+      >
+        {formatWeiboCount(item.stats.likes)}
+      </span>
+    </Button>
+  )
+
+  if (xLayoutEnabled) {
+    return (
+      <div className="text-muted-foreground grid w-full grid-cols-4 gap-2 text-xs">
+        {CommentButton}
+        {RepostButton}
+        {LikeButton}
+        <div className="flex h-full items-center justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label={isBookmarked ? '取消收藏' : '收藏'}
+            aria-pressed={isBookmarked}
+            disabled={favoritePending}
+            className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
+            onClick={(event) => {
+              event.stopPropagation()
+              onFavorite?.()
+            }}
+          >
+            <Bookmark
+              className={cn(
+                'size-3.5 transition-colors group-hover:text-amber-500',
+                isBookmarked && 'fill-amber-500 text-amber-500',
+              )}
+            />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label="分享"
+                className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Share className="size-3.5 transition-colors group-hover:text-violet-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onCloseAutoFocus={(event) => event.preventDefault()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem onSelect={handleCopyLink}>复制链接</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="text-muted-foreground grid w-full grid-cols-3 gap-2 text-xs">
-      <Button
-        type="button"
-        variant="ghost"
-        aria-label="回复微博"
-        className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
-        onClick={(event) => {
-          event.stopPropagation()
-          onCommentClick?.(item)
-        }}
-      >
-        <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
-        <span className="tabular-nums transition-colors group-hover:text-sky-500">
-          {formatWeiboCount(item.stats.comments)}
-        </span>
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        aria-label="转发微博"
-        className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
-        onClick={(event) => {
-          event.stopPropagation()
-          onRepostClick?.(item)
-        }}
-      >
-        <Repeat2 className="size-3.5 transition-colors group-hover:text-emerald-500" />
-        <span className="tabular-nums transition-colors group-hover:text-emerald-500">
-          {formatWeiboCount(item.stats.reposts)}
-        </span>
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        aria-label={liked ? '取消点赞' : '点赞微博'}
-        aria-pressed={liked}
-        disabled={likePending}
-        className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
-        onClick={(event) => {
-          event.stopPropagation()
-          onLikeClick?.(item)
-        }}
-      >
-        <Heart
-          className={cn(
-            'size-3.5 transition-colors group-hover:text-rose-500',
-            liked && 'fill-rose-500 text-rose-500',
-          )}
-        />
-        <span
-          className={cn(
-            'tabular-nums transition-colors group-hover:text-rose-500',
-            liked && 'text-rose-500',
-          )}
-        >
-          {formatWeiboCount(item.stats.likes)}
-        </span>
-      </Button>
+      {RepostButton}
+      {CommentButton}
+      {LikeButton}
     </div>
   )
 }
@@ -333,11 +417,17 @@ function RetweetedFeedBlock({
   onNavigate,
   onLikeClick,
   likePendingForId,
+  xLayoutEnabled,
+  onFavorite,
+  favoritePendingForId,
 }: {
   item: NonNullable<FeedItem['retweetedStatus']>
   onNavigate?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePendingForId: string | null
+  xLayoutEnabled: boolean
+  onFavorite?: (target: FeedItem) => void | Promise<void>
+  favoritePendingForId: string | null
 }) {
   const {
     resolvedItem,
@@ -386,6 +476,10 @@ function RetweetedFeedBlock({
             item={resolvedItem}
             onLikeClick={onLikeClick}
             likePending={likePendingForId === resolvedItem.id}
+            xLayoutEnabled={xLayoutEnabled}
+            favorited={resolvedItem.favorited}
+            onFavorite={onFavorite ? () => onFavorite(resolvedItem) : undefined}
+            favoritePending={favoritePendingForId === resolvedItem.id}
           />
         )}
       </CardContent>
@@ -411,6 +505,7 @@ export const FeedCard = memo(function FeedCard({
   onStatusDeleted?: () => void
   className?: string
 }) {
+  const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
   const {
@@ -668,6 +763,7 @@ export const FeedCard = memo(function FeedCard({
         isDeleting={deleteMutation.isPending}
         onDelete={() => deleteMutation.mutateAsync()}
         className="absolute top-4 right-4"
+        xLayoutEnabled={xLayoutEnabled}
       />
       {resolvedItem.title ? (
         <div className="px-4">
@@ -698,6 +794,11 @@ export const FeedCard = memo(function FeedCard({
             onNavigate={onNavigate}
             onLikeClick={(target) => likeMutation.mutate(target)}
             likePendingForId={likePendingId}
+            xLayoutEnabled={xLayoutEnabled}
+            onFavorite={(target) => favoriteMutation.mutate(target)}
+            favoritePendingForId={
+              favoriteMutation.isPending ? resolvedItem.retweetedStatus.id : null
+            }
           />
         ) : null}
       </CardContent>
@@ -708,6 +809,10 @@ export const FeedCard = memo(function FeedCard({
           onRepostClick={onRepostClick}
           onLikeClick={(target) => likeMutation.mutate(target)}
           likePending={likePendingId === resolvedItem.id}
+          xLayoutEnabled={xLayoutEnabled}
+          favorited={resolvedItem.favorited}
+          onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
+          favoritePending={favoriteMutation.isPending}
         />
       </CardFooter>
     </Card>

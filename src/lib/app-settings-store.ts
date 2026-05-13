@@ -43,6 +43,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setImageGenTheme: (theme: GenImageCardTheme) => Promise<void>
   setImageGenCardStyle: (style: CardStyle) => Promise<void>
   setHotSearchType: (type: HotSearchType) => Promise<void>
+  setXLayoutEnabled: (enabled: boolean) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -69,6 +70,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     imageGenTheme: state.imageGenTheme,
     imageGenCardStyle: state.imageGenCardStyle,
     hotSearchType: state.hotSearchType,
+    xLayoutEnabled: state.xLayoutEnabled,
   }
 }
 
@@ -156,6 +158,9 @@ export function createAppSettingsStore(
       },
       async setHotSearchType(hotSearchType) {
         await updateAndPersist({ hotSearchType })
+      },
+      async setXLayoutEnabled(xLayoutEnabled) {
+        await updateAndPersist({ xLayoutEnabled })
       },
     }
   })
