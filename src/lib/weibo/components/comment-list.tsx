@@ -21,7 +21,7 @@ export function CommentList({
   }
 
   return (
-    <div className="divide-border flex flex-col divide-y">
+    <div className="flex flex-col">
       {comments.map((item) => (
         <div key={item.id} className="py-3 first:pt-0 last:pb-0">
           <CommentCard

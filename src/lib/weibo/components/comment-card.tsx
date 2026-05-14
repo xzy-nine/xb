@@ -170,7 +170,9 @@ export const CommentCard = memo(function CommentCard({
           <StatusText item={item} text={item.text || ''} />
         </div>
 
-        <ImageCarousel images={item.images} />
+        <div className="mt-0.5">
+          <ImageCarousel images={item.images} />
+        </div>
 
         <div className="text-muted-foreground mt-1 flex items-center gap-3">
           <Button
@@ -178,7 +180,7 @@ export const CommentCard = memo(function CommentCard({
             variant="ghost"
             size="icon-xs"
             aria-label="回复评论"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-sky-500"
             onClick={() => onCommentReply?.(composeTargetFromComment(rootStatusId, item))}
           >
             <MessageCircleIcon className="size-3" />
@@ -190,7 +192,7 @@ export const CommentCard = memo(function CommentCard({
             aria-label={liked ? '取消点赞' : '点赞评论'}
             aria-pressed={liked}
             disabled={likeMutation.isPending}
-            className="text-muted-foreground hover:text-foreground gap-1"
+            className="text-muted-foreground gap-1 hover:text-rose-500"
             onClick={() => likeMutation.mutate(item)}
           >
             <Heart
@@ -206,7 +208,7 @@ export const CommentCard = memo(function CommentCard({
         </div>
 
         {Array.isArray(item.comments) && item.comments.length > 0 ? (
-          <div className="border-muted mt-2 flex flex-col gap-2 pl-3">
+          <div className="bg-muted/40 mt-2 flex flex-col gap-2 rounded-lg p-3">
             {item.comments.map((child) => (
               <CommentCard
                 key={child.id}
@@ -219,8 +221,9 @@ export const CommentCard = memo(function CommentCard({
             {item.moreInfoText && authorUid ? (
               <Button
                 type="button"
-                variant="secondary"
+                variant="link"
                 size="xs"
+                className="text-muted-foreground hover:text-foreground"
                 onClick={() => setShowNestedCommentsDialog(true)}
               >
                 {item.moreInfoText}
