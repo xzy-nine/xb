@@ -19,13 +19,17 @@ export function FeedList({
     return <PageEmptyState label={emptyLabel} />
   }
 
-  return items.map((item) => (
-    <FeedCard
-      key={item.id}
-      item={item}
-      onNavigate={onNavigate}
-      onCommentClick={onCommentClick}
-      onRepostClick={onRepostClick}
-    />
-  ))
+  return (
+    <div className="flex flex-col gap-4">
+      {items.map((item) => (
+        <FeedCard
+          key={item.id}
+          item={item}
+          onNavigate={onNavigate}
+          onCommentClick={onCommentClick}
+          onRepostClick={onRepostClick}
+        />
+      ))}
+    </div>
+  )
 }

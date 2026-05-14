@@ -114,7 +114,7 @@ export const CommentCard = memo(function CommentCard({
   const liked = item.liked === true
 
   return (
-    <div className="flex gap-3">
+    <div className="group flex gap-3">
       <UserHoverCard uid={item.author.id}>
         <Link
           to={`/n/${encodeURIComponent(item.author.name)}`}
@@ -127,7 +127,7 @@ export const CommentCard = memo(function CommentCard({
           />
         </Link>
       </UserHoverCard>
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <UserHoverCard uid={item.author.id}>
@@ -159,7 +159,7 @@ export const CommentCard = memo(function CommentCard({
 
         <div
           className={cn(
-            'mt-1 whitespace-pre-wrap text-foreground',
+            'whitespace-pre-wrap text-foreground',
             fontSizeClass,
             fontWeightClass,
             letterSpacingClass,
@@ -174,13 +174,13 @@ export const CommentCard = memo(function CommentCard({
           <ImageCarousel images={item.images} />
         </div>
 
-        <div className="text-muted-foreground mt-1 flex items-center gap-3">
+        <div className="text-muted-foreground flex items-center gap-3">
           <Button
             type="button"
             variant="ghost"
             size="icon-xs"
             aria-label="回复评论"
-            className="text-muted-foreground hover:text-sky-500"
+            className="text-muted-foreground transition-transform duration-200 hover:text-sky-500 active:scale-[0.96]"
             onClick={() => onCommentReply?.(composeTargetFromComment(rootStatusId, item))}
           >
             <MessageCircleIcon className="size-3" />
@@ -192,12 +192,12 @@ export const CommentCard = memo(function CommentCard({
             aria-label={liked ? '取消点赞' : '点赞评论'}
             aria-pressed={liked}
             disabled={likeMutation.isPending}
-            className="text-muted-foreground gap-1 hover:text-rose-500"
+            className="text-muted-foreground gap-1 transition-transform duration-200 hover:text-rose-500 active:scale-[0.96]"
             onClick={() => likeMutation.mutate(item)}
           >
             <Heart
               className={cn(
-                'size-3 transition-colors',
+                'size-3 transition-all duration-200',
                 liked ? 'fill-rose-500 text-rose-500' : 'hover:text-rose-500',
               )}
             />
@@ -208,7 +208,7 @@ export const CommentCard = memo(function CommentCard({
         </div>
 
         {Array.isArray(item.comments) && item.comments.length > 0 ? (
-          <div className="bg-muted/40 mt-2 flex flex-col gap-2 rounded-lg p-3">
+          <div className="mt-2 flex flex-col gap-2 pl-3">
             {item.comments.map((child) => (
               <CommentCard
                 key={child.id}

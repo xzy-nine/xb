@@ -142,7 +142,7 @@ export function HomeTimelinePage() {
         onValueChange={(value) => ctx.onHomeTabChange(value as 'for-you' | 'following')}
       >
         <TabsList
-          className="bg-muted/60 sticky top-0 z-10 grid w-full grid-cols-2 backdrop-blur"
+          className="bg-background/80 border-border/40 sticky top-0 z-10 grid w-full grid-cols-2 border-b backdrop-blur-lg"
           variant="line"
         >
           <RefreshTabTrigger
@@ -161,7 +161,7 @@ export function HomeTimelinePage() {
           />
         </TabsList>
 
-        <TabsContent value={activeTab} className="flex flex-col gap-3">
+        <TabsContent value={activeTab} className="flex flex-col">
           <div ref={scrollRef} />
           {isLoading ? <PageLoadingState label="正在加载微博时间线..." /> : null}
           {!isLoading && errorMessage ? (

@@ -46,7 +46,7 @@ function Field({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="border-border/40 bg-muted/30 flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
       <div className="flex flex-col gap-1">
         <Label>{label}</Label>
         {description && <p className="text-muted-foreground text-xs">{description}</p>}
@@ -101,16 +101,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="gap-0 p-0 sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>设置</DialogTitle>
+          <DialogTitle className="px-6 pt-6 text-lg tracking-tight">设置</DialogTitle>
           <VisuallyHidden>
             <DialogDescription>配置字体大小、字体样式和显示偏好</DialogDescription>
           </VisuallyHidden>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
-          <TabsList className="w-full">
+          <TabsList className="border-border/40 w-full rounded-none border-b bg-transparent px-6">
             <TabsTrigger value="appearance" className="flex-1">
               外观
             </TabsTrigger>
@@ -122,7 +122,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="appearance" className="flex flex-col gap-6 py-4">
+          <TabsContent value="appearance" className="flex flex-col gap-5 px-6 py-4">
             <Field label="深色模式" description="选择应用的配色方案">
               <Select value={theme} onValueChange={(value) => setTheme(value as AppTheme)}>
                 <SelectTrigger className="w-[100px]">
@@ -162,7 +162,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </Field>
           </TabsContent>
 
-          <TabsContent value="personalize" className="flex flex-col gap-6 py-4">
+          <TabsContent value="personalize" className="flex flex-col gap-5 px-6 py-4">
             <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
               <Switch
                 checked={showHotSearchCard}
@@ -194,7 +194,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </Field>
           </TabsContent>
 
-          <TabsContent value="font" className="flex flex-col gap-6 py-4">
+          <TabsContent value="font" className="flex flex-col gap-5 px-6 py-4">
             <Field label="字体大小" description="微博正文和评论的字体大小">
               <Select
                 value={fontSizeClass}
@@ -327,7 +327,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </Tabs>
 
         {version && (
-          <div className="text-muted-foreground flex items-center justify-between border-t pt-4 font-mono text-xs transition-colors">
+          <div className="text-muted-foreground border-border/40 flex items-center justify-between border-t px-6 py-4 font-mono text-xs transition-colors">
             <a
               href="https://xb-extension.vercel.app/"
               target="_blank"
@@ -342,7 +342,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               rel="noopener noreferrer"
               className="hover:text-foreground"
             >
-              nnecec
+              @nnecec
             </a>
             <a
               href="https://github.com/nnecec/xb"
@@ -350,7 +350,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               rel="noopener noreferrer"
               className="hover:text-foreground"
             >
-              built with ❤️
+              Github
             </a>
           </div>
         )}
