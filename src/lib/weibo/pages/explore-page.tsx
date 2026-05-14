@@ -121,15 +121,14 @@ export function ExplorePage() {
   const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
   fetchNextPageRef.current = timelineQuery.fetchNextPage
 
-  const scrollRef = useRef<HTMLDivElement | null>(null)
   const wasRefreshingRef = useRef(false)
 
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      ctx.scrollMainToTop()
     }
     wasRefreshingRef.current = isRefreshing
-  }, [isRefreshing])
+  }, [isRefreshing, ctx])
 
   useIntersectionObserver(
     loadMoreRef,
@@ -184,7 +183,6 @@ export function ExplorePage() {
       </div>
 
       <TabsContent value={groupId} className="flex flex-col gap-3">
-        <div ref={scrollRef} />
         {isLoading ? <PageLoadingState label="正在加载探索内容..." /> : null}
         {!isLoading && errorMessage ? (
           <PageErrorState description={errorMessage} onRetry={() => void timelineQuery.refetch()} />

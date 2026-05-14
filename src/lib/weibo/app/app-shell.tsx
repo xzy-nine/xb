@@ -26,6 +26,7 @@ export interface AppShellContext {
   page: ReturnType<typeof useWeiboPage>
   navigateToStatusDetail: (item: StatusDetailNavigationItem) => void
   resetMainScroll: () => void
+  scrollMainToTop: () => void
   composeTarget: ComposeTarget | null
   setComposeTarget: (target: ComposeTarget | null) => void
   viewingProfileUserId: string | null
@@ -58,6 +59,10 @@ export function AppShell() {
     }
   }, [])
 
+  const scrollMainToTop = useCallback(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
   const navigateToStatusDetail = useCallback(
     (item: StatusDetailNavigationItem) => {
       const statusId = item.mblogId ?? item.id
@@ -83,6 +88,7 @@ export function AppShell() {
       page,
       navigateToStatusDetail,
       resetMainScroll,
+      scrollMainToTop,
       composeTarget,
       setComposeTarget,
       viewingProfileUserId,
@@ -94,6 +100,7 @@ export function AppShell() {
       page,
       navigateToStatusDetail,
       resetMainScroll,
+      scrollMainToTop,
       composeTarget,
       viewingProfileUserId,
       onHomeTabChange,

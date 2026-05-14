@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { getUiPortalContainer } from '@/components/ui/portal'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -107,15 +106,14 @@ export function HomeTimelinePage() {
   const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
   fetchNextPageRef.current = timelineQuery.fetchNextPage
 
-  const scrollRef = useRef<HTMLDivElement | null>(null)
   const wasRefreshingRef = useRef(false)
 
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      getUiPortalContainer()?.scrollTo({ top: 0, behavior: 'smooth' })
+      ctx.scrollMainToTop()
     }
     wasRefreshingRef.current = isRefreshing
-  }, [isRefreshing])
+  }, [isRefreshing, ctx])
 
   useEffect(() => {
     const el = loadMoreRef.current
@@ -162,7 +160,6 @@ export function HomeTimelinePage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="flex flex-col">
-          <div ref={scrollRef} />
           {isLoading ? <PageLoadingState label="正在加载微博时间线..." /> : null}
           {!isLoading && errorMessage ? (
             <PageErrorState
