@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
 
 import { getPlaybackPositionStore } from './video-playback-position-store'
+import { registerPlayingVideo, unregisterPlayingVideo } from './video-playback-registry'
 
 import '@videojs/react/video/skin.css'
 import './video-player.css'
@@ -371,6 +372,8 @@ export function VideoPlayer({
   const streamInitRef = useRef(false)
   const qualityRef = useRef(AUTO_QUALITY_ID)
 
+  const isInPiPRef = useRef(false)
+
   const [qualityId, setQualityId] = useState(AUTO_QUALITY_ID)
   const [shouldLoad, setShouldLoad] = useState(false)
   const [inlineFullscreen, setInlineFullscreen] = useState(false)
@@ -470,12 +473,12 @@ export function VideoPlayer({
     setShouldLoad(false)
   }, [sourceKey])
 
-  // Pause video when it leaves the viewport
+  // Pause video when it leaves the viewport (unless in Picture-in-Picture)
   useIntersectionObserver(
     videoRef,
     ([entry]) => {
       const video = videoRef.current
-      if (video && !entry.isIntersecting && !video.paused && !video.ended) {
+      if (video && !entry.isIntersecting && !video.paused && !video.ended && !isInPiPRef.current) {
         video.pause()
       }
     },
@@ -524,6 +527,46 @@ export function VideoPlayer({
     video.addEventListener('ended', handleEnded)
     return () => {
       video.removeEventListener('ended', handleEnded)
+    }
+  }, [sourceKey])
+
+  // Global singleton: when this video starts playing, pause any other
+  // video that is already playing (and exit its Picture-in-Picture mode).
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handlePlay = () => {
+      registerPlayingVideo(video)
+    }
+
+    const handleStop = () => {
+      unregisterPlayingVideo(video)
+    }
+
+    // Track PiP state via native events (document.pictureInPictureElement is
+    // unavailable when the video lives inside a shadow root).
+    const handleEnterPiP = () => {
+      isInPiPRef.current = true
+    }
+    const handleLeavePiP = () => {
+      isInPiPRef.current = false
+    }
+
+    video.addEventListener('play', handlePlay)
+    video.addEventListener('pause', handleStop)
+    video.addEventListener('ended', handleStop)
+    video.addEventListener('enterpictureinpicture', handleEnterPiP)
+    video.addEventListener('leavepictureinpicture', handleLeavePiP)
+
+    return () => {
+      unregisterPlayingVideo(video)
+      isInPiPRef.current = false
+      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('pause', handleStop)
+      video.removeEventListener('ended', handleStop)
+      video.removeEventListener('enterpictureinpicture', handleEnterPiP)
+      video.removeEventListener('leavepictureinpicture', handleLeavePiP)
     }
   }, [sourceKey])
 
