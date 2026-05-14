@@ -13,7 +13,7 @@ import { formatCreatedAt } from '../services/utils/date'
 
 // ─── Shared payload types ────────────────────────────────────────────────────
 
-interface WeiboStatusUser {
+export interface WeiboStatusUser {
   avatar_hd?: string
   id?: number | string
   idstr?: string
@@ -76,7 +76,7 @@ export interface WeiboMediaInfo {
   }
 }
 
-interface WeiboPageInfo {
+export interface WeiboPageInfo {
   author_mid?: string | number
   media_info?: WeiboMediaInfo
   object_type?: string
@@ -98,7 +98,7 @@ interface WeiboTopicStruct {
   topic_title?: string
 }
 
-interface WeiboPicInfo {
+export interface WeiboPicInfo {
   largest?: { url?: string }
   bmiddle?: { url?: string }
   large?: { url?: string }
@@ -502,7 +502,7 @@ export function toMedia(status: WeiboStatus) {
       type: 'audio' as const,
       streamUrl: progressiveUrl,
       title: mediaInfo.video_title ?? '',
-      coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
+      coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
     }
   }
 
@@ -517,7 +517,7 @@ export function toMedia(status: WeiboStatus) {
           type: 'video' as const,
           streamUrl: progressiveUrl ?? '',
           title: mediaInfo.video_title ?? '',
-          coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
+          coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
           videoOrientation: mediaInfo.video_orientation,
           downloadUrl: dlUrl,
           dash: {
@@ -536,7 +536,7 @@ export function toMedia(status: WeiboStatus) {
       type: 'video' as const,
       streamUrl: progressiveUrl,
       title: mediaInfo.video_title ?? '',
-      coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
+      coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
       videoOrientation: mediaInfo.video_orientation,
       downloadUrl: dlUrl,
     }
@@ -548,7 +548,7 @@ export function toMedia(status: WeiboStatus) {
       type: 'video' as const,
       streamUrl: sources[0].url,
       title: mediaInfo.video_title ?? '',
-      coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
+      coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
       videoOrientation: mediaInfo.video_orientation,
       downloadUrl: dlUrl,
       dash: {
@@ -567,7 +567,7 @@ export function toMedia(status: WeiboStatus) {
     type: 'video' as const,
     streamUrl: progressiveUrl,
     title: mediaInfo.video_title ?? '',
-    coverUrl: mediaInfo.big_pic_info?.pic_big?.url ?? null,
+    coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
     videoOrientation: mediaInfo.video_orientation,
     downloadUrl: dlUrl,
   }
@@ -659,7 +659,7 @@ function toTopicEntities(status: WeiboStatus) {
 
       return {
         title,
-        url: `https://s.weibo.com/weibo?q=${encodeURIComponent(token)}`,
+        url: `/topic?q=${encodeURIComponent(title)}`,
       }
     })
     .filter((entity): entity is { title: string; url: string } => entity !== null)

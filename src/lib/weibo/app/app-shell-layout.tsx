@@ -25,6 +25,7 @@ const PAGE_LABELS: Record<WeiboPageDescriptor['kind'], string> = {
   notifications: '通知',
   explore: '探索',
   history: '历史',
+  topic: '话题',
   unsupported: '不支持的页面',
 }
 
@@ -46,6 +47,8 @@ function describePage(page: WeiboPageDescriptor): string {
       return `探索 - ${page.groupId}`
     case 'history':
       return '历史'
+    case 'topic':
+      return `#${page.topic}#`
     case 'unsupported':
       return `原因: ${page.reason}`
   }

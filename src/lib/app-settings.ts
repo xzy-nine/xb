@@ -114,6 +114,7 @@ export interface AppSettings {
   xLayoutEnabled: boolean
   browsingHistoryEnabled: boolean
   followGroupsEnabled: boolean
+  xbTopicPage: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -160,6 +161,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   xLayoutEnabled: false,
   browsingHistoryEnabled: true,
   followGroupsEnabled: false,
+  xbTopicPage: true,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -328,6 +330,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.followGroupsEnabled === 'boolean'
         ? candidate.followGroupsEnabled
         : DEFAULT_APP_SETTINGS.followGroupsEnabled,
+    xbTopicPage:
+      typeof candidate.xbTopicPage === 'boolean'
+        ? candidate.xbTopicPage
+        : DEFAULT_APP_SETTINGS.xbTopicPage,
   }
 }
 

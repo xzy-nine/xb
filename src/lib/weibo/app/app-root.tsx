@@ -40,6 +40,9 @@ const StatusDetailPage = lazy(() =>
 const HistoryPage = lazy(() =>
   import('@/lib/weibo/pages/history-page').then((m) => ({ default: m.HistoryPage })),
 )
+const TopicPage = lazy(() =>
+  import('@/lib/weibo/pages/topic-page').then((m) => ({ default: m.TopicPage })),
+)
 
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
@@ -88,6 +91,7 @@ function AppRootBootstrap() {
             <Route path="u/:uid" element={<ProfilePage />} />
             <Route path="u/page/fav/:uid" element={<FavoritesPage />} />
             <Route path="n/:uname" element={<ProfilePage />} />
+            <Route path="topic" element={<TopicPage />} />
             <Route path="unsupported" element={<UnsupportedPageContent />} />
             <Route path="u/page/follow/:uid" element={<FollowFansPage />} />
             <Route path="at/weibo" element={<NotificationsPage />} />

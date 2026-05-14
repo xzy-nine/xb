@@ -14,8 +14,9 @@ export type WeiboPageDescriptor =
   | { kind: 'notifications'; tab: NotificationTab }
   | { kind: 'explore'; groupId: string }
   | { kind: 'history' }
+  | { kind: 'topic'; topic: string }
   | { kind: 'unsupported'; reason: 'invalid-url' | 'unmatched-path' }
 
 export const PAGE_KINDS_WITH_SCROLL_RESTORATION: ReadonlySet<WeiboPageDescriptor['kind']> = new Set(
-  ['home', 'profile', 'follow', 'favorites', 'notifications', 'explore', 'history'],
+  ['home', 'profile', 'follow', 'favorites', 'notifications', 'explore', 'history', 'topic'],
 )
