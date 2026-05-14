@@ -5,7 +5,6 @@ import { RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -207,11 +206,6 @@ export function ExplorePage() {
           <div ref={loadMoreRef} className="flex justify-center py-3">
             {isFetchingNextPage ? <Spinner size="sm" /> : null}
           </div>
-        ) : null}
-        {hasNextPage && !isFetchingNextPage ? (
-          <Button variant="outline" onClick={() => void timelineQuery.fetchNextPage()}>
-            加载下一页
-          </Button>
         ) : null}
       </TabsContent>
     </Tabs>

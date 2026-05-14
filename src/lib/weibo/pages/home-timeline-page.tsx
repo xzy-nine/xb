@@ -1,10 +1,9 @@
-import { useIntersectionObserver } from '@reactuses/core'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
+import { getUiPortalContainer } from '@/components/ui/portal'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -113,20 +112,27 @@ export function HomeTimelinePage() {
 
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      getUiPortalContainer()?.scrollTo({ top: 0, behavior: 'smooth' })
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing])
 
-  useIntersectionObserver(
-    loadMoreRef,
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        void fetchNextPageRef.current()
-      }
-    },
-    { threshold: 0.2 },
-  )
+  useEffect(() => {
+    const el = loadMoreRef.current
+    if (!el || !hasNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchNextPageRef.current()
+        }
+      },
+      { threshold: 0.2 },
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage])
 
   return (
     <div>
@@ -181,11 +187,6 @@ export function HomeTimelinePage() {
             <div ref={loadMoreRef} className="flex justify-center py-3">
               {isFetchingNextPage ? <Spinner size="sm" /> : null}
             </div>
-          ) : null}
-          {hasNextPage && !isFetchingNextPage ? (
-            <Button variant="outline" onClick={() => void timelineQuery.fetchNextPage()}>
-              加载下一页
-            </Button>
           ) : null}
         </TabsContent>
       </Tabs>
