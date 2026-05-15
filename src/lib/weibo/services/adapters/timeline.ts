@@ -2,8 +2,6 @@ import type { TimelinePage } from '@/lib/weibo/models/feed'
 
 import { type WeiboStatus, toFeedItem } from '../../utils/transform'
 
-export interface WeiboTimelineStatus extends WeiboStatus {}
-
 export interface WeiboTimelinePayload {
   data?: {
     list?: Array<WeiboStatus | null | undefined>

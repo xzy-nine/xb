@@ -424,7 +424,7 @@ export async function submitComposeAction(input: SubmitComposeInput): Promise<vo
   }
 }
 
-export interface PublishStatusResponse {
+interface PublishStatusResponse {
   ok?: number
   msg?: string
   message?: string
@@ -445,13 +445,6 @@ export async function publishWeiboStatus(content: string): Promise<void> {
   if (response.ok !== 1) {
     throw new Error(response.msg || response.message || '发布失败，请稍后重试')
   }
-}
-
-export async function loadHotSearch(): Promise<HotSearchPage> {
-  const payload = await wbGet<HotSearchPayload>(WEIBO_ENDPOINTS.searchBand, {
-    last_tab: 'hot',
-  })
-  return adaptHotSearchResponse(payload)
 }
 
 export async function loadHotSearchByType(type: HotSearchType = 'hot'): Promise<HotSearchPage> {
@@ -483,8 +476,6 @@ export async function loadHotSearchByType(type: HotSearchType = 'hot'): Promise<
       )
   }
 }
-
-export type ExploreTab = 'hot' | 'local' | 'realtime' | 'rank'
 
 export interface LoadExploreHotOptions {
   cursor?: string | null

@@ -6,8 +6,6 @@ import type {
 
 import { type WeiboStatus, toCommentItem, toFeedItem } from '../../utils/transform'
 
-export type { WeiboStatus }
-
 interface StatusCommentsPayload {
   data?: WeiboStatus[]
   max_id?: string | number

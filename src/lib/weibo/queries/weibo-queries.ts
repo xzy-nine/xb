@@ -1,17 +1,13 @@
 import type { HotSearchType } from '@/lib/app-settings'
 import type { FeedAuthor, TimelinePage } from '@/lib/weibo/models/feed'
-import type { NotificationsPage } from '@/lib/weibo/models/notification'
-import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 import {
-  loadComments,
   loadExploreGroups,
   loadExploreHot,
   loadFavorites,
   loadHotSearchByType,
   loadHomeTimeline,
-  loadMentions,
   loadProfilePosts,
   loadSearch,
   type HomeTimelineTab,
@@ -32,7 +28,7 @@ export function profileLookupFromPage(page: WeiboPageDescriptor) {
 }
 
 /** Result of checking for new posts on the "following" timeline. */
-export interface FollowingNewPostsCheck {
+interface FollowingNewPostsCheck {
   /** Authors of the new posts (deduplicated, up to 5). */
   authors: FeedAuthor[]
   /** Total count of new posts found. */
@@ -105,24 +101,6 @@ export function favoritesInfiniteOptions(uid: string) {
       loadFavorites(uid, { page: pageParam ? Number(pageParam) : 1 }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
-    staleTime: 30 * 60 * 1000,
-  }
-}
-
-export function notificationsInfiniteOptions(_tab: NotificationTab) {
-  return {
-    queryKey: ['weibo', 'notifications', _tab] as const,
-    queryFn: ({ pageParam }: { pageParam: string | null }) => {
-      if (_tab === 'mentions') {
-        return loadMentions(pageParam)
-      }
-      if (_tab === 'comments') {
-        return loadComments(pageParam)
-      }
-      return Promise.resolve({ items: [], nextCursor: null } as NotificationsPage)
-    },
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage: NotificationsPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30 * 60 * 1000,
   }
 }

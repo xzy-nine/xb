@@ -24,7 +24,7 @@ const HOT_SEARCH_TYPES: { value: HotSearchType; label: string }[] = [
   { value: 'social', label: '社会' },
 ]
 
-export interface HotSearchListData {
+interface HotSearchListData {
   type: HotSearchType
   word: string
   num: number

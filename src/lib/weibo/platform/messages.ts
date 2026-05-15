@@ -33,12 +33,6 @@ export interface ApiUnauthorizedMessage {
   type: typeof API_UNAUTHORIZED_EVENT
 }
 
-export type XbMessage =
-  | RouteChangeMessage
-  | ApiRequestMessage
-  | ApiResponseMessage
-  | ApiUnauthorizedMessage
-
 export function isRouteChangeMessage(value: unknown): value is RouteChangeMessage {
   return (
     typeof value === 'object' &&

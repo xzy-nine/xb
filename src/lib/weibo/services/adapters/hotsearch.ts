@@ -1,6 +1,6 @@
 import type { HotSearchType } from '@/lib/app-settings'
 
-export interface HotSearchItem {
+interface HotSearchItem {
   type: HotSearchType
   word: string
   num: number
@@ -24,7 +24,7 @@ export interface HotSearchPage {
 }
 
 // 我的热搜 (mineBand) 类型
-export interface MineBandItem {
+interface MineBandItem {
   word: string
   word_scheme: string
   icon_url: string
@@ -45,7 +45,7 @@ export interface MineBandPayload {
 }
 
 // 文娱热搜 (entertainmentBand) 类型
-export interface EntertainmentBandItem {
+interface EntertainmentBandItem {
   icon_desc: string
   muse_mark: string
   icon_desc_color: string
@@ -92,7 +92,7 @@ export interface EntertainmentBandPayload {
 }
 
 // 生活热搜 (lifeBand) 类型
-export interface LifeBandItem {
+interface LifeBandItem {
   icon_desc: string
   icon_desc_color: string
   icon: string
@@ -119,7 +119,7 @@ export interface LifeBandPayload {
 }
 
 // 社会热搜 (socialBand) 类型
-export interface SocialBandItem {
+interface SocialBandItem {
   loc_page: number
   topic_flag: number
   word_scheme: string

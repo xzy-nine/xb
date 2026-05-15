@@ -3,7 +3,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla'
 
 import type { AppSettingsStorageArea } from '@/lib/app-settings'
 
-export interface RecentEmoticonEntry {
+interface RecentEmoticonEntry {
   phrase: string
   url: string
 }
@@ -68,7 +68,7 @@ export function createRecentEmoticonsStore(
 
 let recentEmoticonsStore: StoreApi<RecentEmoticonsState> | null = null
 
-export function getRecentEmoticonsStore(storageArea?: AppSettingsStorageArea) {
+function getRecentEmoticonsStore(storageArea?: AppSettingsStorageArea) {
   if (!recentEmoticonsStore) {
     recentEmoticonsStore = createRecentEmoticonsStore(storageArea)
   }

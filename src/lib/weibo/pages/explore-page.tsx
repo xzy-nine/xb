@@ -1,7 +1,7 @@
 import { useIntersectionObserver } from '@reactuses/core'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 

@@ -1,7 +1,7 @@
 import type { FeedAuthor, FeedEmoticon, FeedImage, FeedUrlEntity } from '@/lib/weibo/models/feed'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
-export interface CommentPreviewItem {
+interface CommentPreviewItem {
   id: string
   text: string
   author: FeedAuthor

@@ -1,4 +1,4 @@
-export interface SearchHotQueryItem {
+interface SearchHotQueryItem {
   suggestion: string
   count: number
   discuss: number
@@ -9,7 +9,7 @@ export interface SearchHotQueryItem {
   type: number
 }
 
-export interface SearchUserItem {
+interface SearchUserItem {
   uid: string
   idstr: string
   screen_name: string

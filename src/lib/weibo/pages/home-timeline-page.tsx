@@ -1,7 +1,7 @@
 import { usePrevious } from '@reactuses/core'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Spinner } from '@/components/ui/spinner'
