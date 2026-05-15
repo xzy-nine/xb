@@ -52,6 +52,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setGlassBlur: (blur: number) => Promise<void>
   setBackgroundImageUrl: (url: string) => Promise<void>
   setMainColumnMaxWidth: (maxWidth: number) => Promise<void>
+  setXLayoutEnabled: (enabled: boolean) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -86,6 +87,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     glassOpacity: state.glassOpacity,
     glassBlur: state.glassBlur,
     mainColumnMaxWidth: state.mainColumnMaxWidth,
+    xLayoutEnabled: state.xLayoutEnabled,
   }
 }
 
@@ -197,6 +199,9 @@ export function createAppSettingsStore(
       },
       async setMainColumnMaxWidth(mainColumnMaxWidth) {
         await updateAndPersist({ mainColumnMaxWidth })
+      },
+      async setXLayoutEnabled(xLayoutEnabled) {
+        await updateAndPersist({ xLayoutEnabled })
       },
     }
   })

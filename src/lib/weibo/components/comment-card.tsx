@@ -5,7 +5,6 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { CommentsDialog } from '@/lib/weibo/components/comments-dialog'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
@@ -115,66 +114,102 @@ export const CommentCard = memo(function CommentCard({
   const liked = item.liked === true
 
   return (
-    <Card className="py-3">
-      <CardContent className="flex flex-col gap-2 px-4">
-        <div className="flex flex-row gap-3">
-          <UserHoverCard uid={item.author.id}>
-            <Link
-              to={`/n/${encodeURIComponent(item.author.name)}`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <UserAvatar
-                author={item.author}
-                sizeClassName="size-9"
-                fallbackClassName="text-xs font-semibold"
-              />
-            </Link>
-          </UserHoverCard>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <UserHoverCard uid={item.author.id}>
-                  <Link
-                    to={`/n/${encodeURIComponent(item.author.name)}`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <span className="truncate text-sm font-medium hover:underline">
-                      {item.author.name}
-                    </span>
-                  </Link>
-                </UserHoverCard>
-                <span className="text-muted-foreground text-[11px]">{item.createdAtLabel}</span>
-              </div>
-              {showOwnerMenu ? (
-                <FeedCardMoreMenu
-                  type="comment"
-                  isOwner={showOwnerMenu}
-                  contentLabel="这条评论"
-                  isDeleting={deleteMutation.isPending}
-                  onDelete={() => deleteMutation.mutateAsync()}
-                />
-              ) : null}
-            </div>
-            <div
-              className={cn(
-                'whitespace-pre-wrap text-foreground mt-1',
-                fontSizeClass,
-                fontWeightClass,
-                letterSpacingClass,
-                lineHeightClass,
-                fontFamilyClass,
-              )}
-            >
-              <StatusText item={item} text={item.text || ''} />
-            </div>
+    <div className="group flex gap-3">
+      <UserHoverCard uid={item.author.id}>
+        <Link
+          to={`/n/${encodeURIComponent(item.author.name)}`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <UserAvatar
+            author={item.author}
+            sizeClassName="size-8"
+            fallbackClassName="text-[10px] font-semibold"
+          />
+        </Link>
+      </UserHoverCard>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <UserHoverCard uid={item.author.id}>
+              <Link
+                to={`/n/${encodeURIComponent(item.author.name)}`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <span className="text-foreground truncate text-sm font-semibold hover:underline">
+                  {item.author.name}
+                </span>
+              </Link>
+            </UserHoverCard>
+            <CreatedAtBadge label={item.createdAtLabel} className="px-1.5 py-0 text-[10px]" />
           </div>
+          {showOwnerMenu ? (
+            <FeedCardMoreMenu
+              type="comment"
+              isOwner={showOwnerMenu}
+              contentLabel="这条评论"
+              isDeleting={deleteMutation.isPending}
+              onDelete={() => deleteMutation.mutateAsync()}
+            />
+          ) : null}
         </div>
 
-        <ImageCarousel images={item.images} />
+        {item.source ? (
+          <p className="text-muted-foreground truncate text-xs">{item.source}</p>
+        ) : null}
 
-        {(item.comments?.length ?? 0) > 0 ? (
-          <div className="flex flex-col gap-2">
-            {item.comments!.map((child) => (
+        <div
+          className={cn(
+            'whitespace-pre-wrap text-foreground',
+            fontSizeClass,
+            fontWeightClass,
+            letterSpacingClass,
+            lineHeightClass,
+            fontFamilyClass,
+          )}
+        >
+          <StatusText item={item} text={item.text || ''} />
+        </div>
+
+        <div className="mt-0.5">
+          <ImageCarousel images={item.images} />
+        </div>
+
+        <div className="text-muted-foreground flex items-center gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="回复评论"
+            className="text-muted-foreground transition-transform duration-200 hover:text-sky-500 active:scale-[0.96]"
+            onClick={() => onCommentReply?.(composeTargetFromComment(rootStatusId, item))}
+          >
+            <MessageCircleIcon className="size-3" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            aria-label={liked ? '取消点赞' : '点赞评论'}
+            aria-pressed={liked}
+            disabled={likeMutation.isPending}
+            className="text-muted-foreground gap-1 transition-transform duration-200 hover:text-rose-500 active:scale-[0.96]"
+            onClick={() => likeMutation.mutate(item)}
+          >
+            <Heart
+              className={cn(
+                'size-3 transition-all duration-200',
+                liked ? 'fill-rose-500 text-rose-500' : 'hover:text-rose-500',
+              )}
+            />
+            {item.likeCount > 0 && (
+              <span className={cn(liked && 'text-rose-500')}>{item.likeCount}</span>
+            )}
+          </Button>
+        </div>
+
+        {Array.isArray(item.comments) && item.comments.length > 0 ? (
+          <div className="mt-2 flex flex-col gap-2 pl-3">
+            {item.comments.map((child) => (
               <CommentCard
                 key={child.id}
                 item={child}
@@ -186,8 +221,9 @@ export const CommentCard = memo(function CommentCard({
             {item.moreInfoText && authorUid ? (
               <Button
                 type="button"
-                className="mt-1"
-                variant="secondary"
+                variant="link"
+                size="xs"
+                className="text-muted-foreground hover:text-foreground"
                 onClick={() => setShowNestedCommentsDialog(true)}
               >
                 {item.moreInfoText}
@@ -203,38 +239,7 @@ export const CommentCard = memo(function CommentCard({
           onOpenChange={setShowNestedCommentsDialog}
           onCommentReply={onCommentReply}
         />
-
-        <div className="text-muted-foreground flex items-center gap-4 pt-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="回复评论"
-            onClick={() => onCommentReply?.(composeTargetFromComment(rootStatusId, item))}
-          >
-            <MessageCircleIcon className="size-3" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="gap-1 text-xs"
-            size="sm"
-            aria-label={liked ? '取消点赞' : '点赞评论'}
-            aria-pressed={liked}
-            disabled={likeMutation.isPending}
-            onClick={() => likeMutation.mutate(item)}
-          >
-            <Heart
-              className={cn(
-                'size-3 transition-colors hover:text-rose-500',
-                liked && 'fill-rose-500 text-rose-500',
-              )}
-            />
-            <span className={cn(liked && 'text-rose-500')}>{item.likeCount}</span>
-          </Button>
-          {item.source ? <span className="text-[11px]">{item.source}</span> : null}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 })

@@ -21,15 +21,16 @@ export function CommentList({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       {comments.map((item) => (
-        <CommentCard
-          item={item}
-          rootStatusId={rootStatusId}
-          authorUid={authorUid}
-          onCommentReply={onCommentReply}
-          key={item.id}
-        />
+        <div key={item.id} className="py-3 first:pt-0 last:pb-0">
+          <CommentCard
+            item={item}
+            rootStatusId={rootStatusId}
+            authorUid={authorUid}
+            onCommentReply={onCommentReply}
+          />
+        </div>
       ))}
     </div>
   )

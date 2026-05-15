@@ -74,6 +74,7 @@ describe('app-settings', () => {
       glassOpacity: 80,
       glassBlur: 12,
       mainColumnMaxWidth: 1200,
+      xLayoutEnabled: false,
     })
 
     await persistAppSettings(
@@ -106,6 +107,7 @@ describe('app-settings', () => {
         glassOpacity: 80,
         glassBlur: 12,
         mainColumnMaxWidth: 1200,
+        xLayoutEnabled: true,
       },
       storage,
     )
@@ -139,6 +141,7 @@ describe('app-settings', () => {
       glassOpacity: 80,
       glassBlur: 12,
       mainColumnMaxWidth: 1200,
+      xLayoutEnabled: true,
     })
   })
 

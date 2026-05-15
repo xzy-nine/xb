@@ -40,9 +40,9 @@ export function FavoritesPage() {
   fetchNextPageRef.current = favoritesQuery.fetchNextPage
 
   useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
-      return
-    }
+    const el = loadMoreRef.current
+    if (!el || !hasNextPage) return
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -51,9 +51,10 @@ export function FavoritesPage() {
       },
       { threshold: 0.2 },
     )
-    observer.observe(loadMoreRef.current)
+
+    observer.observe(el)
     return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage])
+  }, [hasNextPage])
 
   return (
     <div className="flex flex-col gap-3 pt-4">

@@ -11,7 +11,6 @@ import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import { StatusDetailDialog } from '@/lib/weibo/components/status-detail-dialog'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
@@ -29,6 +28,7 @@ export interface AppShellContext {
   navigateToStatusDetail: (item: StatusDetailNavigationItem) => void
   openStatusDetailDialog: (item: StatusDetailNavigationItem) => void
   resetMainScroll: () => void
+  scrollMainToTop: () => void
   composeTarget: ComposeTarget | null
   setComposeTarget: (target: ComposeTarget | null) => void
   viewingProfileUserId: string | null
@@ -63,6 +63,10 @@ export function AppShell() {
     if (mainRef.current) {
       mainRef.current.scrollTop = 0
     }
+  }, [])
+
+  const scrollMainToTop = useCallback(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   const navigateToStatusDetail = useCallback(
@@ -101,6 +105,7 @@ export function AppShell() {
       navigateToStatusDetail,
       openStatusDetailDialog,
       resetMainScroll,
+      scrollMainToTop,
       composeTarget,
       setComposeTarget,
       viewingProfileUserId,
@@ -113,6 +118,7 @@ export function AppShell() {
       navigateToStatusDetail,
       openStatusDetailDialog,
       resetMainScroll,
+      scrollMainToTop,
       composeTarget,
       viewingProfileUserId,
       onHomeTabChange,

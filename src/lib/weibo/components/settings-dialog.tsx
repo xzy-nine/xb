@@ -51,7 +51,7 @@ function Field({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="border-border/40 bg-muted/30 flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
       <div className="flex flex-col gap-1">
         <Label>{label}</Label>
         {description && <p className="text-muted-foreground text-xs">{description}</p>}
@@ -84,11 +84,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
   const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
   const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
-  const backgroundColor = useAppSettings((s) => s.backgroundColor)
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
   const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
   const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
+  const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -104,11 +104,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setStatusDetailPopupEnabled = useAppSettings((s) => s.setStatusDetailPopupEnabled)
   const setStatusDetailPopupPosition = useAppSettings((s) => s.setStatusDetailPopupPosition)
   const setBackgroundEnabled = useAppSettings((s) => s.setBackgroundEnabled)
-  const setBackgroundColor = useAppSettings((s) => s.setBackgroundColor)
   const setGlassOpacity = useAppSettings((s) => s.setGlassOpacity)
   const setGlassBlur = useAppSettings((s) => s.setGlassBlur)
   const setBackgroundImageUrl = useAppSettings((s) => s.setBackgroundImageUrl)
   const setMainColumnMaxWidth = useAppSettings((s) => s.setMainColumnMaxWidth)
+  const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
 
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -160,16 +160,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="gap-0 p-0 sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>设置</DialogTitle>
+          <DialogTitle className="px-6 pt-6 text-lg tracking-tight">设置</DialogTitle>
           <VisuallyHidden>
             <DialogDescription>配置字体大小、字体样式和显示偏好</DialogDescription>
           </VisuallyHidden>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
-          <TabsList className="w-full">
+          <TabsList className="border-border/40 w-full rounded-none border-b bg-transparent px-6">
             <TabsTrigger value="appearance" className="flex-1">
               外观
             </TabsTrigger>
@@ -181,7 +181,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="appearance" className="flex flex-col gap-6 py-4">
+          <TabsContent value="appearance" className="flex flex-col gap-5 px-6 py-4">
             <Field label="深色模式" description="选择应用的配色方案">
               <Select value={theme} onValueChange={(value) => setTheme(value as AppTheme)}>
                 <SelectTrigger className="w-[100px]">
@@ -316,7 +316,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="personalize" className="flex flex-col gap-6 py-4">
+          <TabsContent value="personalize" className="flex flex-col gap-5 px-6 py-4">
             <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
               <Switch
                 checked={showHotSearchCard}
@@ -366,9 +366,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </Select>
               </Field>
             )}
+
+            <Field label="X 操作栏布局" description="使用 X 风格的操作栏（含收藏和分享按钮）">
+              <Switch
+                checked={xLayoutEnabled}
+                onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+              />
+            </Field>
           </TabsContent>
 
-          <TabsContent value="font" className="flex flex-col gap-6 py-4">
+          <TabsContent value="font" className="flex flex-col gap-5 px-6 py-4">
             <Field label="字体大小" description="微博正文和评论的字体大小">
               <Select
                 value={fontSizeClass}
@@ -501,12 +508,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </Tabs>
 
         {version && (
-          <div className="flex items-center justify-between border-t pt-4">
+          <div className="text-muted-foreground border-border/40 flex items-center justify-between border-t px-6 py-4 font-mono text-xs transition-colors">
             <a
               href="https://xb-extension.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+              className="hover:text-foreground"
             >
               xb v{version}
             </a>
@@ -514,9 +521,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               href="https://github.com/nnecec"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+              className="hover:text-foreground"
             >
-              by nnecec
+              @nnecec
+            </a>
+            <a
+              href="https://github.com/nnecec/xb"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground"
+            >
+              Github
             </a>
           </div>
         )}

@@ -1,3 +1,4 @@
+import { useIntersectionObserver } from '@reactuses/core'
 import { skipToken, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 
@@ -47,21 +48,15 @@ function ProfilePostsTabs({
   const isFetchingNextPage = postsQuery.isFetchingNextPage
   const fetchNextPage = postsQuery.fetchNextPage
 
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
-      return
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchNextPage()
-        }
-      },
-      { threshold: 0.2 },
-    )
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+  useIntersectionObserver(
+    loadMoreRef,
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        void fetchNextPage()
+      }
+    },
+    { threshold: 0.2 },
+  )
 
   if (postsQuery.isLoading) {
     return <PageLoadingState label="正在加载此用户微博..." />

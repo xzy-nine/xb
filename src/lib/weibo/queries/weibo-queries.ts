@@ -1,5 +1,5 @@
 import type { HotSearchType } from '@/lib/app-settings'
-import type { TimelinePage } from '@/lib/weibo/models/feed'
+import type { FeedAuthor, TimelinePage } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
@@ -31,6 +31,50 @@ export function profileLookupFromPage(page: WeiboPageDescriptor) {
     : ({ screenName: page.profileId } as const)
 }
 
+/** Result of checking for new posts on the "following" timeline. */
+export interface FollowingNewPostsCheck {
+  /** Authors of the new posts (deduplicated, up to 5). */
+  authors: FeedAuthor[]
+  /** Total count of new posts found. */
+  count: number
+}
+
+export function followingNewPostsCheckOptions(seenFirstItemId: string | null) {
+  return {
+    queryKey: ['weibo', 'timeline', 'following', 'new-check'] as const,
+    queryFn: async () => {
+      const page = await loadHomeTimeline('following')
+      if (page.items.length === 0) {
+        return null as FollowingNewPostsCheck | null
+      }
+
+      const newItems: typeof page.items = []
+      for (const item of page.items) {
+        if (item.id === seenFirstItemId) break
+        newItems.push(item)
+      }
+
+      if (newItems.length === 0) {
+        return null as FollowingNewPostsCheck | null
+      }
+
+      const seenAuthorIds = new Set<string>()
+      const authors: FeedAuthor[] = []
+      for (const item of newItems) {
+        if (seenAuthorIds.has(item.author.id)) continue
+        seenAuthorIds.add(item.author.id)
+        authors.push(item.author)
+        if (authors.length >= 5) break
+      }
+
+      return { authors, count: newItems.length } as FollowingNewPostsCheck
+    },
+    staleTime: 0,
+    refetchInterval: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  }
+}
+
 export function homeTimelineInfiniteOptions(activeTimelineTab: HomeTimelineTab) {
   return {
     queryKey: ['weibo', 'timeline', activeTimelineTab] as const,
@@ -38,7 +82,8 @@ export function homeTimelineInfiniteOptions(activeTimelineTab: HomeTimelineTab) 
       loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
-    staleTime: 0,
+    staleTime: Infinity,
+    gcTime: Infinity,
   }
 }
 
@@ -107,7 +152,8 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
       loadExploreHot({ cursor: pageParam, groupId: group.gid, containerid: group.containerid }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
-    staleTime: 0,
+    staleTime: Infinity,
+    gcTime: Infinity,
   }
 }
 

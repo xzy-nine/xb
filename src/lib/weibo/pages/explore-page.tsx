@@ -1,10 +1,10 @@
+import { useIntersectionObserver } from '@reactuses/core'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -121,31 +121,24 @@ export function ExplorePage() {
   const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
   fetchNextPageRef.current = timelineQuery.fetchNextPage
 
-  const scrollRef = useRef<HTMLDivElement | null>(null)
   const wasRefreshingRef = useRef(false)
 
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      ctx.scrollMainToTop()
     }
     wasRefreshingRef.current = isRefreshing
-  }, [isRefreshing])
+  }, [isRefreshing, ctx])
 
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
-      return
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchNextPageRef.current()
-        }
-      },
-      { threshold: 0.2 },
-    )
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage])
+  useIntersectionObserver(
+    loadMoreRef,
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        void fetchNextPageRef.current()
+      }
+    },
+    { threshold: 0.2 },
+  )
 
   const handleGroupClick = (group: ExploreGroup) => {
     navigate(`/hot/weibo/${group.gid}`)
@@ -190,7 +183,6 @@ export function ExplorePage() {
       </div>
 
       <TabsContent value={groupId} className="flex flex-col gap-3">
-        <div ref={scrollRef} />
         {isLoading ? <PageLoadingState label="正在加载探索内容..." /> : null}
         {!isLoading && errorMessage ? (
           <PageErrorState description={errorMessage} onRetry={() => void timelineQuery.refetch()} />
@@ -212,11 +204,6 @@ export function ExplorePage() {
           <div ref={loadMoreRef} className="flex justify-center py-3">
             {isFetchingNextPage ? <Spinner size="sm" /> : null}
           </div>
-        ) : null}
-        {hasNextPage && !isFetchingNextPage ? (
-          <Button variant="outline" onClick={() => void timelineQuery.fetchNextPage()}>
-            加载下一页
-          </Button>
         ) : null}
       </TabsContent>
     </Tabs>

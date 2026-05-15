@@ -4,7 +4,7 @@
 
 xb is a browser extension that rewrites weibo.com into a cleaner X-like reading
 experience. Built with WXT, React 19, TypeScript, Tailwind CSS 4, shadcn/ui,
-Zustand, and TanStack Query.
+Zustand, TanStack Query, and `@reactuses/core`.
 
 ## Developer Commands
 
@@ -20,6 +20,8 @@ npm run zip          # Package as .zip (Chrome)
 npm run zip:firefox  # Package as .zip (Firefox)
 ```
 
+- 包管理器使用 **bun**（项目已配置 `only-allow bun`）
+
 ## Verification Order
 
 lint → typecheck → test → build
@@ -33,19 +35,25 @@ src/
 │   ├── weibo-main-world.ts    # Runs in page context, installs history bridge
 │   ├── weibo-hide.content.ts  # Hides original Weibo UI
 │   ├── weibo-search.pending.ts # Search pending handler
-│   └── options/              # Options page
-├── lib/                  # Core library (moved from features/weibo/)
+│   └── options/               # Options page (theme.ts)
+├── lib/                  # Core library
 │   ├── app-settings-store.ts  # Zustand settings store (hydrate before use)
 │   ├── app-settings.ts        # Settings types and defaults
 │   ├── font-loader.ts         # Font loading utility
+│   ├── utils.ts               # Shared utilities (cn helper, etc.)
 │   ├── weibo/                 # Core weibo feature code
 │   │   ├── app/               # App shell, root, layout components
 │   │   ├── components/        # Feature-specific components
-│   │   │   └── gen-image/     # Share card generation (11 templates)
+│   │   │   ├── gen-image/     # Share card generation (9 templates)
+│   │   │   └── media-player/  # Audio/video/live players
+│   │   ├── hooks/             # Feature-specific hooks (useFontSettings, etc.)
 │   │   ├── pages/             # Page-level components
 │   │   ├── services/          # API clients, adapters, repositories
-│   │   │   ├── client.ts       # Axios-based API client
-│   │   │   └── auth-events.ts # Auth event handling
+│   │   │   ├── client.ts           # Axios-based API client
+│   │   │   ├── endpoints.ts       # API endpoint definitions
+│   │   │   ├── weibo-repository.ts # Repository layer
+│   │   │   ├── adapters/          # Response adapters
+│   │   │   └── auth-events.ts     # Auth event handling
 │   │   ├── models/            # Data models
 │   │   ├── queries/           # TanStack Query definitions
 │   │   ├── route/             # Router sync, page descriptors, URL parsing
@@ -65,7 +73,7 @@ src/
   isolated from Weibo's global CSS.
 - **weibo-main-world.ts**: Runs as an **unlisted script** directly in the page
   context (not a content script), installs a history bridge for router sync.
-- **Settings Store**: Zustand store (`src/lib/app-settings-store.ts`) that
+- **Settings Store**: Zustand store (`lib/app-settings-store.ts`) that
   persists to `chrome.storage`. Must call `hydrate()` before use.
 - **API Layer**: Axios-based client (`lib/weibo/services/client.ts`) with
   adapters in `lib/weibo/services/adapters/` that transform Weibo's API
@@ -75,6 +83,7 @@ src/
 
 ## Key Patterns
 
+- **Hooks 优先级**: 开发中需要常规 hooks（如 useDebounce、useLocalStorage、useWindowSize 等）时，先检查 `@reactuses/core` 是否提供，优先使用已有的，避免自行重复实现
 - **Host selectors** in `lib/weibo/content/host-selectors.ts` wait for Weibo DOM
   elements before mounting
 - **Shell state** (`lib/weibo/content/shell-state.ts`) binds React app to
@@ -131,6 +140,15 @@ Profile 页面共享组件在 `lib/weibo/components/profile-shared.tsx`：
 - 预装字体（宋体、仿宋、黑体、楷体）
 - 可下载开源字体（霞鹜文楷、得意黑、朱雀仿宋、思源宋体、思源黑体、方正楷体、仓耳今楷）
 
+### Theme & Background
+
+应用支持三种主题模式（light / dark / system）和多种背景色预设，配置在 `app-settings.ts`：
+
+- 亮色预设：纯白、纸张、护眼黄、浅灰
+- 暗色预设：深灰、纯黑、暗灰、暖黑
+
+组件通过 `useAppSettings` 读取 `appTheme` / `bgColorPreset` 应用样式。
+
 ### Reply Chain Rendering
 
 转发链渲染通过 `app-settings.ts` 中的 `renderReplyChainEnabled` 配置控制：
@@ -155,5 +173,5 @@ Profile 页面共享组件在 `lib/weibo/components/profile-shared.tsx`：
 
 - Manifest v3 (WXT default)
 - Permissions: `storage`
-- Host permissions: `https://weibo.com/*`, `https://www.weibo.com/*`
+- Host permissions: `https://weibo.com/*`, `https://www.weibo.com/*`, `https://*.sinaimg.cn/*`, `https://*.sinajs.cn/*`, `https://*.weibocdn.com/*`
 - Web accessible resource: `weibo-main-world.js` (injected at runtime)

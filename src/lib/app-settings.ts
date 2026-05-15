@@ -121,6 +121,7 @@ export interface AppSettings {
   glassOpacity: number
   glassBlur: number
   mainColumnMaxWidth: number
+  xLayoutEnabled: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -172,6 +173,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   glassOpacity: 80,
   glassBlur: 12,
   mainColumnMaxWidth: 1200,
+  xLayoutEnabled: false,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -369,6 +371,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       candidate.mainColumnMaxWidth <= 2000
         ? candidate.mainColumnMaxWidth
         : DEFAULT_APP_SETTINGS.mainColumnMaxWidth,
+    xLayoutEnabled:
+      typeof candidate.xLayoutEnabled === 'boolean'
+        ? candidate.xLayoutEnabled
+        : DEFAULT_APP_SETTINGS.xLayoutEnabled,
   }
 }
 

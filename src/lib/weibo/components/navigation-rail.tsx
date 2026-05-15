@@ -46,7 +46,10 @@ function NavButton({
   const button = href ? (
     <Button
       asChild
-      className={cn('flex items-center gap-2', showLabel ? 'justify-start' : 'justify-center')}
+      className={cn(
+        'flex items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
+        showLabel ? 'justify-start' : 'justify-center',
+      )}
       variant={buttonVariant}
       onClick={onClick}
       size={showLabel ? 'default' : 'icon'}
@@ -67,7 +70,10 @@ function NavButton({
       variant={buttonVariant}
       aria-label={showLabel ? undefined : String(label)}
       aria-current={isActive ? 'page' : undefined}
-      className={cn('w-full items-center gap-2', showLabel ? 'justify-start' : 'justify-center')}
+      className={cn(
+        'w-full items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
+        showLabel ? 'justify-start' : 'justify-center',
+      )}
       onClick={onClick}
       size={showLabel ? 'default' : 'icon'}
     >
@@ -128,12 +134,12 @@ export function NavigationRail({
 
   return (
     <TooltipProvider>
-      <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
-        <div className="mb-3 flex justify-start md:mb-4 xl:mb-5">
+      <aside className="border-border/40 flex h-full min-h-0 flex-col border-r px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
+        <div className="mb-5 flex justify-start md:mb-6 xl:mb-7">
           <img
             src={WeiboLogo}
             alt="微博 Logo"
-            className="h-9 w-9 translate-y-[1px] fill-current object-contain"
+            className="h-8 w-8 translate-y-[1px] fill-current object-contain opacity-80 transition-opacity duration-200 hover:opacity-100"
           />
         </div>
 
@@ -203,7 +209,7 @@ export function NavigationRail({
             </NavButton>
           </div>
 
-          <div className="border-border/60 mt-auto space-y-3 border-t pt-3 xl:w-[180px] xl:space-y-3.5 xl:pt-4">
+          <div className="border-border/40 mt-auto space-y-3 border-t pt-3 xl:w-[180px] xl:space-y-3.5 xl:pt-4">
             <div className="flex items-center justify-center xl:justify-between">
               <p className="text-muted-foreground hidden text-xs font-medium xl:block">设置</p>
               {isXl ? (

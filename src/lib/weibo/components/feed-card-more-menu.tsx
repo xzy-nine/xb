@@ -1,5 +1,6 @@
-import { Image, MoreHorizontal, Star } from 'lucide-react'
+import { Image, Link, MoreHorizontal, Star } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +33,7 @@ export interface FeedCardMoreMenuProps {
   isDeleting?: boolean
   contentLabel?: string
   className?: string
+  xLayoutEnabled?: boolean
 }
 
 export function FeedCardMoreMenu({
@@ -44,14 +46,16 @@ export function FeedCardMoreMenu({
   isDeleting,
   contentLabel = '这条内容',
   className,
+  xLayoutEnabled = false,
 }: FeedCardMoreMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const { openGenImage } = useGenImageDialog()
 
-  const showFavorite = type === 'status' && onFavorite !== undefined
+  const showFavorite = type === 'status' && onFavorite !== undefined && !xLayoutEnabled
   const showGenImage = item && type === 'status'
+  const showCopyLink = type === 'status' && !xLayoutEnabled && item?.mblogId
 
   return (
     <>
@@ -103,6 +107,19 @@ export function FeedCardMoreMenu({
             >
               <Star className="mr-2 size-4" fill={favorited ? 'currentColor' : 'none'} />
               {favorited ? '取消收藏' : '收藏'}
+            </DropdownMenuItem>
+          )}
+          {showCopyLink && (
+            <DropdownMenuItem
+              onSelect={() => {
+                const url = `https://weibo.com/${item!.author.id}/${item!.mblogId}`
+                void navigator.clipboard.writeText(url).then(() => {
+                  toast.success('已复制链接')
+                })
+              }}
+            >
+              <Link className="mr-2 size-4" />
+              复制链接
             </DropdownMenuItem>
           )}
           {isOwner && (
