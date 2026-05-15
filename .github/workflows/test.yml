@@ -4,11 +4,29 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - '.oxfmtrc.json'
+      - '.oxlintrc.json'
+      - 'package.json'
+      - 'vitest.config.ts'
+      - 'tsconfig.json'
+      - 'wxt.config.ts'
   pull_request:
     types:
       - opened
       - synchronize
       - reopened
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - '.oxfmtrc.json'
+      - '.oxlintrc.json'
+      - 'package.json'
+      - 'vitest.config.ts'
+      - 'tsconfig.json'
+      - 'wxt.config.ts'
 
 concurrency:
   group: test-${{ github.ref }}

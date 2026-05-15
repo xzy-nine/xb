@@ -66,8 +66,8 @@ function createImageExtractor(imageEntities: Record<string, FeedImage[]>): Image
 
     stripped = stripped
       .replace(/[ \t]{2,}/g, ' ')
-      .replace(/\s+\n/g, '\n')
-      .replace(/\n\s+/g, '\n')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n[ \t]+/g, '\n')
       .trim()
 
     return { strippedText: stripped, images: matchedImages }
