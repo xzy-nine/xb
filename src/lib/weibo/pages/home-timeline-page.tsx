@@ -1,7 +1,8 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { usePrevious } from '@reactuses/core'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -9,11 +10,13 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { FeedList } from '@/lib/weibo/components/feed-list'
+import { NewPostsBubble } from '@/lib/weibo/components/new-posts-bubble'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import {
   flattenInfiniteItems,
+  followingNewPostsCheckOptions,
   homeTimelineInfiniteOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
@@ -81,6 +84,7 @@ function RefreshTabTrigger({
 export function HomeTimelinePage() {
   const ctx = useAppShellContext()
   const page = useWeiboPage()
+  const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -103,18 +107,16 @@ export function HomeTimelinePage() {
   const isLoading = timelineQuery.isLoading
   const isRefreshing = timelineQuery.isFetching && !isFetchingNextPage && !isLoading
 
-  const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
-  fetchNextPageRef.current = timelineQuery.fetchNextPage
-
-  const wasRefreshingRef = useRef(false)
+  // ─── Scroll to top after refresh completes ───
+  const prevIsRefreshing = usePrevious(isRefreshing)
 
   useEffect(() => {
-    if (wasRefreshingRef.current && !isRefreshing) {
+    if (prevIsRefreshing && !isRefreshing) {
       ctx.scrollMainToTop()
     }
-    wasRefreshingRef.current = isRefreshing
-  }, [isRefreshing, ctx])
+  }, [prevIsRefreshing, isRefreshing, ctx])
 
+  // ─── IntersectionObserver for infinite scroll ───
   useEffect(() => {
     const el = loadMoreRef.current
     if (!el || !hasNextPage) return
@@ -122,7 +124,7 @@ export function HomeTimelinePage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          void fetchNextPageRef.current()
+          void timelineQuery.fetchNextPage()
         }
       },
       { threshold: 0.2 },
@@ -130,10 +132,34 @@ export function HomeTimelinePage() {
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasNextPage])
+  }, [hasNextPage, timelineQuery])
+
+  // ─── New posts check (following tab only) ───
+  const followingFirstItemId = items.length > 0 && activeTab === 'following' ? items[0].id : null
+
+  const newPostsCheckQuery = useQuery({
+    ...followingNewPostsCheckOptions(followingFirstItemId),
+    enabled: isEnabled && activeTab === 'following' && followingFirstItemId !== null,
+  })
+
+  const [hasNewPosts, setHasNewPosts] = useState(false)
+
+  useEffect(() => {
+    if (!newPostsCheckQuery.data || hasNewPosts || newPostsCheckQuery.isFetching) return
+    setHasNewPosts(true)
+  }, [hasNewPosts, newPostsCheckQuery.data, newPostsCheckQuery.isFetching])
+
+  const handleNewPostsClick = useCallback(() => {
+    setHasNewPosts(false)
+    queryClient.setQueryData(['weibo', 'timeline', 'following', 'new-check'], null)
+    void queryClient.invalidateQueries({
+      queryKey: ['weibo', 'timeline', 'following'],
+      exact: true,
+    })
+  }, [queryClient])
 
   return (
-    <div>
+    <div className="relative">
       <Tabs
         value={activeTab}
         className="flex flex-col"
@@ -157,6 +183,15 @@ export function HomeTimelinePage() {
             onRefresh={() => void timelineQuery.refetch()}
             isRefreshing={activeTab === 'following' && isRefreshing}
           />
+          {hasNewPosts ? (
+            <div className="absolute top-20 left-1/2 z-20 -translate-x-1/2">
+              <NewPostsBubble
+                authors={newPostsCheckQuery.data?.authors ?? []}
+                count={newPostsCheckQuery.data?.count ?? 0}
+                onClick={handleNewPostsClick}
+              />
+            </div>
+          ) : null}
         </TabsList>
 
         <TabsContent value={activeTab} className="flex flex-col">
