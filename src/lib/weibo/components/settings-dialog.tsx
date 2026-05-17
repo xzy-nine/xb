@@ -158,7 +158,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     }
   }, [])
 
-  const [activeTab, setActiveTab] = useState<'appearance' | 'personalize' | 'font'>('appearance')
+  const [activeTab, setActiveTab] = useState<
+    'appearance' | 'personalize' | 'font' | 'branch-features'
+  >('appearance')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,6 +182,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </TabsTrigger>
             <TabsTrigger value="font" className="flex-1">
               微博字体
+            </TabsTrigger>
+            <TabsTrigger value="branch-features" className="flex-1">
+              分支特色
             </TabsTrigger>
           </TabsList>
 
@@ -221,6 +226,81 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 onCheckedChange={(checked) => setDarkModeImageDim(checked)}
               />
             </Field>
+          </TabsContent>
+
+          <TabsContent value="personalize" className="flex flex-col gap-3 px-6 py-4">
+            <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
+              <Switch
+                checked={showHotSearchCard}
+                onCheckedChange={(checked) => setShowHotSearchCard(checked)}
+              />
+            </Field>
+
+            <Field label="QuoteChains 渲染" description={'将"//@ 用户名: 格式"渲染成 QuoteChains'}>
+              <Switch
+                checked={renderReplyChainEnabled}
+                onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
+              />
+            </Field>
+
+            {renderReplyChainEnabled && (
+              <Field label="QuoteChains 折叠" description="QuoteChains 超过2条时折叠中间的引用">
+                <Switch
+                  checked={collapseRepliesEnabled}
+                  onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
+                />
+              </Field>
+            )}
+
+            <Field label="X 操作栏布局" description="使用 X 风格的操作栏（含收藏和分享按钮）">
+              <Switch
+                checked={xLayoutEnabled}
+                onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+              />
+            </Field>
+          </TabsContent>
+
+          <TabsContent value="branch-features" className="flex flex-col gap-3 px-6 py-4">
+            <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
+              <Switch
+                checked={statusDetailPopupEnabled}
+                onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
+              />
+            </Field>
+
+            {statusDetailPopupEnabled && (
+              <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
+                <Select
+                  value={statusDetailPopupPosition}
+                  onValueChange={(value) =>
+                    setStatusDetailPopupPosition(value as StatusDetailPopupPosition)
+                  }
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">左</SelectItem>
+                    <SelectItem value="center">中</SelectItem>
+                    <SelectItem value="right">右</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <Label>瀑布流栏数</Label>
+              <p className="text-muted-foreground text-xs">
+                设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于 300px
+              </p>
+              <Slider
+                value={[waterfallColumnCount]}
+                min={1}
+                max={5}
+                step={1}
+                onValueChange={([value]) => setWaterfallColumnCount(value)}
+              />
+            </div>
 
             {waterfallColumnCount <= 1 && (
               <div className="flex flex-col gap-2">
@@ -237,20 +317,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 />
               </div>
             )}
-
-            <div className="flex flex-col gap-2">
-              <Label>瀑布流栏数</Label>
-              <p className="text-muted-foreground text-xs">
-                设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于 300px
-              </p>
-              <Slider
-                value={[waterfallColumnCount]}
-                min={1}
-                max={5}
-                step={1}
-                onValueChange={([value]) => setWaterfallColumnCount(value)}
-              />
-            </div>
 
             <Field label="自定义背景" description="为页面添加自定义背景图片">
               <Switch
@@ -322,6 +388,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
+                  setStatusDetailPopupEnabled(DEFAULT_APP_SETTINGS.statusDetailPopupEnabled)
+                  setStatusDetailPopupPosition(DEFAULT_APP_SETTINGS.statusDetailPopupPosition)
+                  setWaterfallColumnCount(DEFAULT_APP_SETTINGS.waterfallColumnCount)
                   setBackgroundEnabled(DEFAULT_APP_SETTINGS.backgroundEnabled)
                   setBackgroundImageUrl(DEFAULT_APP_SETTINGS.backgroundImageUrl)
                   setGlassOpacity(DEFAULT_APP_SETTINGS.glassOpacity)
@@ -332,65 +401,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 恢复默认
               </Button>
             </div>
-          </TabsContent>
-
-          <TabsContent value="personalize" className="flex flex-col gap-3 px-6 py-4">
-            <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
-              <Switch
-                checked={showHotSearchCard}
-                onCheckedChange={(checked) => setShowHotSearchCard(checked)}
-              />
-            </Field>
-
-            <Field label="QuoteChains 渲染" description={'将"//@ 用户名: 格式"渲染成 QuoteChains'}>
-              <Switch
-                checked={renderReplyChainEnabled}
-                onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
-              />
-            </Field>
-
-            {renderReplyChainEnabled && (
-              <Field label="QuoteChains 折叠" description="QuoteChains 超过2条时折叠中间的引用">
-                <Switch
-                  checked={collapseRepliesEnabled}
-                  onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
-                />
-              </Field>
-            )}
-
-            <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
-              <Switch
-                checked={statusDetailPopupEnabled}
-                onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
-              />
-            </Field>
-
-            {statusDetailPopupEnabled && (
-              <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
-                <Select
-                  value={statusDetailPopupPosition}
-                  onValueChange={(value) =>
-                    setStatusDetailPopupPosition(value as StatusDetailPopupPosition)
-                  }
-                >
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">左</SelectItem>
-                    <SelectItem value="center">中</SelectItem>
-                    <SelectItem value="right">右</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-            )}
-
-            <Field label="X 操作栏布局" description="使用 X 风格的操作栏（含收藏和分享按钮）">
-              <Switch
-                checked={xLayoutEnabled}
-                onCheckedChange={(checked) => setXLayoutEnabled(checked)}
-              />
-            </Field>
           </TabsContent>
 
           <TabsContent value="font" className="flex flex-col gap-3 px-6 py-4">
