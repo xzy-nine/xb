@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -48,18 +49,31 @@ function StatusCommentsSection({
   return (
     <>
       {filterGroup && filterGroup.length > 0 && selectedFilter ? (
-        <Select value={selectedFilter.param} onValueChange={(value) => setFilter(value)}>
-          <SelectTrigger size="sm" className="min-w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {filterGroup.map((item) => (
-              <SelectItem key={item.param} value={item.param}>
-                {item.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={selectedFilter.param} onValueChange={(value) => setFilter(value)}>
+            <SelectTrigger size="sm" className="min-w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {filterGroup.map((item) => (
+                <SelectItem key={item.param} value={item.param}>
+                  {item.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async () => {
+              await commentsQuery.refetch()
+              toast.success('评论刷新成功')
+            }}
+            disabled={commentsQuery.isFetching}
+          >
+            <RefreshCw className={`size-3 ${commentsQuery.isFetching ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       ) : null}
 
       {commentsQuery.isLoading ? <PageLoadingState label="正在加载评论..." /> : null}

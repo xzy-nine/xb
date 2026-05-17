@@ -134,7 +134,7 @@ export function NavigationRail({
 
   return (
     <TooltipProvider>
-      <aside className="border-border/40 flex h-full min-h-0 flex-col border-r px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
+      <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
         <div className="mb-5 flex justify-start md:mb-6 xl:mb-7">
           <img
             src={WeiboLogo}
