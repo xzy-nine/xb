@@ -1,3 +1,5 @@
+import type { InfiniteData, QueryClient } from '@tanstack/react-query'
+
 import type { HotSearchType } from '@/lib/app-settings'
 import type { FeedAuthor, TimelinePage } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
@@ -75,11 +77,24 @@ export function followingNewPostsCheckOptions(seenFirstItemId: string | null) {
   }
 }
 
-export function homeTimelineInfiniteOptions(activeTimelineTab: HomeTimelineTab) {
+export function homeTimelineInfiniteOptions(
+  activeTimelineTab: HomeTimelineTab,
+  queryClient?: QueryClient,
+) {
   return {
     queryKey: ['weibo', 'timeline', activeTimelineTab] as const,
-    queryFn: ({ pageParam }: { pageParam: string | null }) =>
-      loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
+    queryFn: async ({ pageParam }: { pageParam: string | null }) => {
+      let existingCount = 0
+      if (queryClient) {
+        const data = queryClient.getQueryData<InfiniteData<TimelinePage>>([
+          'weibo',
+          'timeline',
+          activeTimelineTab,
+        ])
+        existingCount = data?.pages.reduce((sum, p) => sum + p.items.length, 0) ?? 0
+      }
+      return loadHomeTimeline(activeTimelineTab, { cursor: pageParam, existingCount })
+    },
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: Infinity,

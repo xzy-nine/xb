@@ -92,7 +92,7 @@ export function HomeTimelinePage() {
   const isEnabled = rewriteEnabled && page.kind === 'home'
 
   const timelineQuery = useInfiniteQuery({
-    ...homeTimelineInfiniteOptions(activeTab),
+    ...homeTimelineInfiniteOptions(activeTab, queryClient),
     enabled: isEnabled,
   })
 

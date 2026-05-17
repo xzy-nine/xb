@@ -70,6 +70,7 @@ type ProfileLookup = { uid: string } | { screenName: string }
 
 export interface LoadTimelineOptions {
   cursor?: string | null
+  existingCount?: number
 }
 
 function getTimelinePath(tab: HomeTimelineTab): WeiboEndpointPath {
@@ -84,13 +85,16 @@ async function loadTimeline(
   return adaptTimelineResponse(payload)
 }
 
-function getFollowingTimelineCount(): number {
+function getFollowingTimelineCount(existingCount: number = 0): number {
   const baseCount = 20
   try {
     const { waterfallColumnCount } = getAppSettingsStore().getState()
     if (waterfallColumnCount <= 1) return baseCount
     const rounded = Math.round(baseCount / waterfallColumnCount)
-    return Math.max(waterfallColumnCount, rounded * waterfallColumnCount)
+    const pageSize = Math.max(waterfallColumnCount, rounded * waterfallColumnCount)
+    const gapFill =
+      (waterfallColumnCount - (existingCount % waterfallColumnCount)) % waterfallColumnCount
+    return pageSize + gapFill
   } catch {
     return baseCount
   }
@@ -105,7 +109,7 @@ export async function loadHomeTimeline(
     return loadTimeline(getTimelinePath(tab), {
       list_id: '110001768015440',
       refresh: 4,
-      count: getFollowingTimelineCount(),
+      count: getFollowingTimelineCount(options.existingCount),
       fid: '110001768015440',
       ...(isFirstPage ? { since_id: '0' } : { max_id: options.cursor }),
     })
