@@ -89,6 +89,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
   const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
+  const waterfallFlowEnabled = useAppSettings((s) => s.waterfallFlowEnabled)
+  const waterfallCardWidth = useAppSettings((s) => s.waterfallCardWidth)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -109,6 +111,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setBackgroundImageUrl = useAppSettings((s) => s.setBackgroundImageUrl)
   const setMainColumnMaxWidth = useAppSettings((s) => s.setMainColumnMaxWidth)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
+  const setWaterfallFlowEnabled = useAppSettings((s) => s.setWaterfallFlowEnabled)
+  const setWaterfallCardWidth = useAppSettings((s) => s.setWaterfallCardWidth)
 
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -220,19 +224,47 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label>主栏最大宽度</Label>
-              <p className="text-muted-foreground text-xs">
-                限制主栏最大宽度以获得更好的阅读体验 ({mainColumnMaxWidth}px)
-              </p>
-              <Slider
-                value={[mainColumnMaxWidth]}
-                min={1200}
-                max={2000}
-                step={100}
-                onValueChange={([value]) => setMainColumnMaxWidth(value)}
+            {!waterfallFlowEnabled && (
+              <div className="flex flex-col gap-2">
+                <Label>主栏最大宽度</Label>
+                <p className="text-muted-foreground text-xs">
+                  限制主栏最大宽度以获得更好的阅读体验 ({mainColumnMaxWidth}px)
+                </p>
+                <Slider
+                  value={[mainColumnMaxWidth]}
+                  min={1200}
+                  max={2000}
+                  step={100}
+                  onValueChange={([value]) => setMainColumnMaxWidth(value)}
+                />
+              </div>
+            )}
+
+            <Field
+              label="瀑布流布局"
+              description="开启后主栏用瀑布流展示，单个博文宽度由下方滑块控制"
+            >
+              <Switch
+                checked={waterfallFlowEnabled}
+                onCheckedChange={(checked) => setWaterfallFlowEnabled(checked)}
               />
-            </div>
+            </Field>
+
+            {waterfallFlowEnabled && (
+              <div className="flex flex-col gap-2">
+                <Label>瀑布流卡片宽度</Label>
+                <p className="text-muted-foreground text-xs">
+                  单个博文卡片的宽度 ({waterfallCardWidth}px)
+                </p>
+                <Slider
+                  value={[waterfallCardWidth]}
+                  min={300}
+                  max={800}
+                  step={10}
+                  onValueChange={([value]) => setWaterfallCardWidth(value)}
+                />
+              </div>
+            )}
 
             <Field label="自定义背景" description="为页面添加自定义背景图片">
               <Switch

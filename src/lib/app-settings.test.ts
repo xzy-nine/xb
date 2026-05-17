@@ -75,6 +75,8 @@ describe('app-settings', () => {
       glassBlur: 12,
       mainColumnMaxWidth: 1200,
       xLayoutEnabled: false,
+      waterfallFlowEnabled: false,
+      waterfallCardWidth: 500,
     })
 
     await persistAppSettings(
@@ -108,6 +110,8 @@ describe('app-settings', () => {
         glassBlur: 12,
         mainColumnMaxWidth: 1200,
         xLayoutEnabled: true,
+        waterfallFlowEnabled: false,
+        waterfallCardWidth: 500,
       },
       storage,
     )
@@ -142,6 +146,8 @@ describe('app-settings', () => {
       glassBlur: 12,
       mainColumnMaxWidth: 1200,
       xLayoutEnabled: true,
+      waterfallFlowEnabled: false,
+      waterfallCardWidth: 500,
     })
   })
 
