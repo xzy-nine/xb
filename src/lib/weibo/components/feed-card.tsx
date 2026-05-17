@@ -495,6 +495,7 @@ export const FeedCard = memo(function FeedCard({
   onRepostClick,
   onStatusDeleted,
   className,
+  uniformHeight,
 }: {
   item: FeedItem
   surface?: StatusFeedSurface
@@ -504,6 +505,7 @@ export const FeedCard = memo(function FeedCard({
   /** After deleting this status (owner only), e.g. navigate back from detail. */
   onStatusDeleted?: () => void
   className?: string
+  uniformHeight?: boolean
 }) {
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
@@ -747,9 +749,46 @@ export const FeedCard = memo(function FeedCard({
     onNavigate(resolvedItem)
   }
 
+  const cardContentElement = (
+    <CardContent
+      className="flex flex-col gap-4"
+      onMouseDown={handleCardMouseDown}
+      onMouseUp={handleCardMouseUp}
+    >
+      <FeedTextBlock
+        item={resolvedItem}
+        canLoadLongText={shouldShowLoadLongText}
+        isLongTextLoading={isLongTextLoading}
+        hasLongTextError={hasLongTextError}
+        onLoadLongText={onLoadLongText}
+      />
+
+      <FeedMediaBlock item={resolvedItem} />
+
+      <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
+
+      {resolvedItem.retweetedStatus ? (
+        <RetweetedFeedBlock
+          item={resolvedItem.retweetedStatus}
+          onNavigate={onNavigate}
+          onLikeClick={(target) => likeMutation.mutate(target)}
+          likePendingForId={likePendingId}
+          xLayoutEnabled={xLayoutEnabled}
+          onFavorite={(target) => favoriteMutation.mutate(target)}
+          favoritePendingForId={favoriteMutation.isPending ? resolvedItem.retweetedStatus.id : null}
+        />
+      ) : null}
+    </CardContent>
+  )
+
   return (
     <Card
-      className={cn('gap-4 py-4 relative', canNavigate && 'cursor-pointer', className)}
+      className={cn(
+        'py-4 relative',
+        uniformHeight ? 'gap-0 flex-1' : 'gap-4',
+        canNavigate && 'cursor-pointer',
+        className,
+      )}
       data-testid="feed-card-body"
       onClick={handleCardClick}
     >
@@ -766,43 +805,23 @@ export const FeedCard = memo(function FeedCard({
         xLayoutEnabled={xLayoutEnabled}
       />
       {resolvedItem.title ? (
-        <div className="px-4">
+        <div className={cn('px-4', uniformHeight && 'mb-4')}>
           <Badge variant="secondary">{resolvedItem.title.text}</Badge>
         </div>
       ) : null}
-      <FeedAuthorHeader item={resolvedItem} />
-      <CardContent
-        className="flex flex-col gap-4"
-        onMouseDown={handleCardMouseDown}
-        onMouseUp={handleCardMouseUp}
-      >
-        <FeedTextBlock
-          item={resolvedItem}
-          canLoadLongText={shouldShowLoadLongText}
-          isLongTextLoading={isLongTextLoading}
-          hasLongTextError={hasLongTextError}
-          onLoadLongText={onLoadLongText}
-        />
-
-        <FeedMediaBlock item={resolvedItem} />
-
-        <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
-
-        {resolvedItem.retweetedStatus ? (
-          <RetweetedFeedBlock
-            item={resolvedItem.retweetedStatus}
-            onNavigate={onNavigate}
-            onLikeClick={(target) => likeMutation.mutate(target)}
-            likePendingForId={likePendingId}
-            xLayoutEnabled={xLayoutEnabled}
-            onFavorite={(target) => favoriteMutation.mutate(target)}
-            favoritePendingForId={
-              favoriteMutation.isPending ? resolvedItem.retweetedStatus.id : null
-            }
-          />
-        ) : null}
-      </CardContent>
-      <CardFooter>
+      {uniformHeight ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 px-0">
+          <FeedAuthorHeader item={resolvedItem} />
+          {cardContentElement}
+          <div className="flex-1" />
+        </div>
+      ) : (
+        <>
+          <FeedAuthorHeader item={resolvedItem} />
+          {cardContentElement}
+        </>
+      )}
+      <CardFooter className={cn(uniformHeight && 'mt-4 shrink-0')}>
         <FeedActions
           item={resolvedItem}
           onCommentClick={onCommentClick}
