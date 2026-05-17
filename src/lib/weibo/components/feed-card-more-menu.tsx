@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
-export type ContentType = 'status' | 'comment'
+type ContentType = 'status' | 'comment'
 
 export interface FeedCardMoreMenuProps {
   type: ContentType

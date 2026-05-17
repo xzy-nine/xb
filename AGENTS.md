@@ -4,7 +4,7 @@
 
 xb is a browser extension that rewrites weibo.com into a cleaner X-like reading
 experience. Built with WXT, React 19, TypeScript, Tailwind CSS 4, shadcn/ui,
-Zustand, TanStack Query, and `@reactuses/core`.
+motion(same as framer-motion) Zustand, TanStack Query, and `@reactuses/core`.
 
 ## Developer Commands
 
@@ -73,8 +73,8 @@ src/
   isolated from Weibo's global CSS.
 - **weibo-main-world.ts**: Runs as an **unlisted script** directly in the page
   context (not a content script), installs a history bridge for router sync.
-- **Settings Store**: Zustand store (`lib/app-settings-store.ts`) that
-  persists to `chrome.storage`. Must call `hydrate()` before use.
+- **Settings Store**: Zustand store (`lib/app-settings-store.ts`) that persists
+  to `chrome.storage`. Must call `hydrate()` before use.
 - **API Layer**: Axios-based client (`lib/weibo/services/client.ts`) with
   adapters in `lib/weibo/services/adapters/` that transform Weibo's API
   responses into internal models.
@@ -83,7 +83,8 @@ src/
 
 ## Key Patterns
 
-- **Hooks 优先级**: 开发中需要常规 hooks（如 useDebounce、useLocalStorage、useWindowSize 等）时，先检查 `@reactuses/core` 是否提供，优先使用已有的，避免自行重复实现
+- **Hooks 优先级**: 开发中需要常规 hooks（如 useDebounce、useLocalStorage、useWindowSize 等）时，先检查
+  `@reactuses/core` 是否提供，优先使用已有的，避免自行重复实现
 - **Host selectors** in `lib/weibo/content/host-selectors.ts` wait for Weibo DOM
   elements before mounting
 - **Shell state** (`lib/weibo/content/shell-state.ts`) binds React app to
@@ -142,7 +143,8 @@ Profile 页面共享组件在 `lib/weibo/components/profile-shared.tsx`：
 
 ### Theme & Background
 
-应用支持三种主题模式（light / dark / system）和多种背景色预设，配置在 `app-settings.ts`：
+应用支持三种主题模式（light / dark / system）和多种背景色预设，配置在
+`app-settings.ts`：
 
 - 亮色预设：纯白、纸张、护眼黄、浅灰
 - 暗色预设：深灰、纯黑、暗灰、暖黑
@@ -173,5 +175,6 @@ Profile 页面共享组件在 `lib/weibo/components/profile-shared.tsx`：
 
 - Manifest v3 (WXT default)
 - Permissions: `storage`
-- Host permissions: `https://weibo.com/*`, `https://www.weibo.com/*`, `https://*.sinaimg.cn/*`, `https://*.sinajs.cn/*`, `https://*.weibocdn.com/*`
+- Host permissions: `https://weibo.com/*`, `https://www.weibo.com/*`,
+  `https://*.sinaimg.cn/*`, `https://*.sinajs.cn/*`, `https://*.weibocdn.com/*`
 - Web accessible resource: `weibo-main-world.js` (injected at runtime)

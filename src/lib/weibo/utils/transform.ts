@@ -13,7 +13,7 @@ import { formatCreatedAt } from '../services/utils/date'
 
 // ─── Shared payload types ────────────────────────────────────────────────────
 
-export interface WeiboStatusUser {
+interface WeiboStatusUser {
   avatar_hd?: string
   id?: number | string
   idstr?: string
@@ -76,14 +76,14 @@ export interface WeiboMediaInfo {
   }
 }
 
-export interface WeiboPageInfo {
+interface WeiboPageInfo {
   author_mid?: string | number
   media_info?: WeiboMediaInfo
   object_type?: string
   page_pic?: string
 }
 
-export interface WeiboUrlStruct {
+interface WeiboUrlStruct {
   url_type?: number | string
   short_url?: string
   url_title?: string
@@ -94,11 +94,11 @@ export interface WeiboUrlStruct {
   pic_infos?: Record<string, WeiboPicInfo>
 }
 
-export interface WeiboTopicStruct {
+interface WeiboTopicStruct {
   topic_title?: string
 }
 
-export interface WeiboPicInfo {
+interface WeiboPicInfo {
   largest?: { url?: string }
   bmiddle?: { url?: string }
   large?: { url?: string }
@@ -108,7 +108,7 @@ export interface WeiboPicInfo {
 }
 
 /** mix_media_info item types from Weibo API */
-export interface WeiboMixMediaItemVideo {
+interface WeiboMixMediaItemVideo {
   type: 'video'
   id: string
   data: {
@@ -121,7 +121,7 @@ export interface WeiboMixMediaItemVideo {
   }
 }
 
-export interface WeiboMixMediaItemPic {
+interface WeiboMixMediaItemPic {
   type: 'pic'
   id: string
   data: {
@@ -133,9 +133,9 @@ export interface WeiboMixMediaItemPic {
   }
 }
 
-export type WeiboMixMediaItem = WeiboMixMediaItemVideo | WeiboMixMediaItemPic
+type WeiboMixMediaItem = WeiboMixMediaItemVideo | WeiboMixMediaItemPic
 
-export interface WeiboMixMediaInfo {
+interface WeiboMixMediaInfo {
   items: WeiboMixMediaItem[]
 }
 
@@ -219,7 +219,7 @@ function toImagesFromParts(picIds?: string[], picInfos?: Record<string, WeiboPic
     .filter((item): item is { id: string; thumbnailUrl: string; largeUrl: string } => item !== null)
 }
 
-export function toImages(status: WeiboStatus) {
+function toImages(status: WeiboStatus) {
   return toImagesFromParts(status.pic_ids, status.pic_infos)
 }
 
@@ -681,7 +681,7 @@ function getStatusAuthor(user: WeiboStatusUser | undefined): FeedAuthor {
   }
 }
 
-export function toMixMediaInfo(
+function toMixMediaInfo(
   mixMediaInfo: WeiboMixMediaInfo | undefined,
 ): FeedMixMediaItem[] | undefined {
   if (!mixMediaInfo?.items) {

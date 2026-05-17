@@ -4,7 +4,7 @@ export interface FeedAuthor {
   avatarUrl: string | null
 }
 
-export interface FeedStats {
+interface FeedStats {
   likes: number
   comments: number
   reposts: number
@@ -36,7 +36,7 @@ export interface FeedDashQuality {
 }
 
 /** DASH manifest from original mpdInfo */
-export interface FeedMpdSource {
+interface FeedMpdSource {
   type: 'mpd'
   manifestXml: string
   qualities: FeedDashQuality[]
@@ -52,7 +52,7 @@ export interface FeedPlaybackSource {
 /** DASH manifest + representation ids (aligned with `playback_list` / MPD `Representation@id`). */
 export type FeedDashSource = FeedMpdSource | FeedPlaybackSource
 
-export interface FeedMedia {
+interface FeedMedia {
   type: 'video' | 'audio' | 'podcast_audio' | 'live'
   streamUrl: string
   title: string

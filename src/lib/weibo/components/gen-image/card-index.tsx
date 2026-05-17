@@ -8,4 +8,4 @@ export { CardSoft } from './card-soft'
 export { CardSticker } from './card-sticker'
 export { CardComic } from './card-comic'
 
-export type { CardStyle, ShareCardData, ShareCardProps } from './types'
+export type { CardStyle } from './types'

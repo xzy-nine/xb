@@ -181,7 +181,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="appearance" className="flex flex-col gap-5 px-6 py-4">
+          <TabsContent value="appearance" className="flex flex-col gap-3 px-6 py-4">
             <Field label="深色模式" description="选择应用的配色方案">
               <Select value={theme} onValueChange={(value) => setTheme(value as AppTheme)}>
                 <SelectTrigger className="w-[100px]">
@@ -316,7 +316,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="personalize" className="flex flex-col gap-5 px-6 py-4">
+          <TabsContent value="personalize" className="flex flex-col gap-3 px-6 py-4">
             <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
               <Switch
                 checked={showHotSearchCard}
@@ -375,7 +375,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </Field>
           </TabsContent>
 
-          <TabsContent value="font" className="flex flex-col gap-5 px-6 py-4">
+          <TabsContent value="font" className="flex flex-col gap-3 px-6 py-4">
             <Field label="字体大小" description="微博正文和评论的字体大小">
               <Select
                 value={fontSizeClass}

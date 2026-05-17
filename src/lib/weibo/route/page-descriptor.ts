@@ -1,7 +1,5 @@
 export type NotificationTab = 'mentions' | 'comments' | 'likes'
 
-export type ExploreTab = 'hot' | 'local' | 'realtime' | 'rank'
-
 export type WeiboPageDescriptor =
   | { kind: 'home'; tab: 'for-you' | 'following' }
   | { kind: 'status'; authorId: string; statusId: string }

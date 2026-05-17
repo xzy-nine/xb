@@ -9,7 +9,7 @@ import { StatusText } from '@/lib/weibo/components/status-text'
 import type { ShareCardProps } from './types'
 import { formatCount, formatDate, getDisplayImages } from './utils'
 
-export { formatCount, formatDate, getDisplayImages }
+export { formatCount, formatDate }
 
 function getAuthorInitial(name: string | null | undefined) {
   return name?.slice(0, 1).toUpperCase() || '?'

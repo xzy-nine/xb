@@ -1,6 +1,6 @@
 import type { FeedAuthor } from './feed'
 
-export interface NotificationAuthor extends FeedAuthor {}
+interface NotificationAuthor extends FeedAuthor {}
 
 /** Comment notification with reply reference (similar to retweet relationship) */
 export interface CommentNotification {

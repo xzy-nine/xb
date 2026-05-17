@@ -2,7 +2,7 @@ const HIDDEN_ATTR = 'data-xb-hidden'
 const PREVIOUS_DISPLAY_ATTR = 'data-xb-previous-display'
 
 /** Set on `<html>` once shell state is applied; paired with `weibo-hide.content.css`. */
-export const WEIBO_PAGE_READY_ATTR = 'data-xb-weibo-ready'
+const WEIBO_PAGE_READY_ATTR = 'data-xb-weibo-ready'
 
 export function markWeiboPageReady() {
   document.documentElement.setAttribute(WEIBO_PAGE_READY_ATTR, '')
