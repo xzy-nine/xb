@@ -122,8 +122,7 @@ export interface AppSettings {
   glassBlur: number
   mainColumnMaxWidth: number
   xLayoutEnabled: boolean
-  waterfallFlowEnabled: boolean
-  waterfallCardWidth: number
+  waterfallColumnCount: number
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -176,8 +175,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   glassBlur: 12,
   mainColumnMaxWidth: 1200,
   xLayoutEnabled: false,
-  waterfallFlowEnabled: false,
-  waterfallCardWidth: 500,
+  waterfallColumnCount: 1,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -379,16 +377,12 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.xLayoutEnabled === 'boolean'
         ? candidate.xLayoutEnabled
         : DEFAULT_APP_SETTINGS.xLayoutEnabled,
-    waterfallFlowEnabled:
-      typeof candidate.waterfallFlowEnabled === 'boolean'
-        ? candidate.waterfallFlowEnabled
-        : DEFAULT_APP_SETTINGS.waterfallFlowEnabled,
-    waterfallCardWidth:
-      typeof candidate.waterfallCardWidth === 'number' &&
-      candidate.waterfallCardWidth >= 300 &&
-      candidate.waterfallCardWidth <= 800
-        ? candidate.waterfallCardWidth
-        : DEFAULT_APP_SETTINGS.waterfallCardWidth,
+    waterfallColumnCount:
+      typeof candidate.waterfallColumnCount === 'number' &&
+      candidate.waterfallColumnCount >= 1 &&
+      candidate.waterfallColumnCount <= 5
+        ? candidate.waterfallColumnCount
+        : DEFAULT_APP_SETTINGS.waterfallColumnCount,
   }
 }
 

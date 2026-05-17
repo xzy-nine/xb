@@ -99,7 +99,7 @@ export function ShellFrame({
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
   const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
-  const waterfallFlowEnabled = useAppSettings((s) => s.waterfallFlowEnabled)
+  const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
 
   const glassStyle = useMemo<React.CSSProperties>(
     () =>
@@ -173,7 +173,7 @@ export function ShellFrame({
     >
       <div
         className="relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4"
-        style={{ maxWidth: waterfallFlowEnabled ? '2000px' : `${mainColumnMaxWidth}px` }}
+        style={{ maxWidth: waterfallColumnCount > 1 ? '2000px' : `${mainColumnMaxWidth}px` }}
       >
         <div className="flex h-full shrink-0 flex-col">
           <NavigationRail

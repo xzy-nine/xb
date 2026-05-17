@@ -1,4 +1,5 @@
 import type { HotSearchType } from '@/lib/app-settings'
+import { getAppSettingsStore } from '@/lib/app-settings-store'
 import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import type { WeiboEmoticonConfig } from '@/lib/weibo/models/emoticon'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
@@ -83,6 +84,18 @@ async function loadTimeline(
   return adaptTimelineResponse(payload)
 }
 
+function getFollowingTimelineCount(): number {
+  const baseCount = 20
+  try {
+    const { waterfallColumnCount } = getAppSettingsStore().getState()
+    if (waterfallColumnCount <= 1) return baseCount
+    const rounded = Math.round(baseCount / waterfallColumnCount)
+    return Math.max(waterfallColumnCount, rounded * waterfallColumnCount)
+  } catch {
+    return baseCount
+  }
+}
+
 export async function loadHomeTimeline(
   tab: HomeTimelineTab,
   options: LoadTimelineOptions = {},
@@ -92,7 +105,7 @@ export async function loadHomeTimeline(
     return loadTimeline(getTimelinePath(tab), {
       list_id: '110001768015440',
       refresh: 4,
-      count: 20,
+      count: getFollowingTimelineCount(),
       fid: '110001768015440',
       ...(isFirstPage ? { since_id: '0' } : { max_id: options.cursor }),
     })

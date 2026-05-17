@@ -89,8 +89,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
   const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
-  const waterfallFlowEnabled = useAppSettings((s) => s.waterfallFlowEnabled)
-  const waterfallCardWidth = useAppSettings((s) => s.waterfallCardWidth)
+  const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -111,8 +110,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setBackgroundImageUrl = useAppSettings((s) => s.setBackgroundImageUrl)
   const setMainColumnMaxWidth = useAppSettings((s) => s.setMainColumnMaxWidth)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
-  const setWaterfallFlowEnabled = useAppSettings((s) => s.setWaterfallFlowEnabled)
-  const setWaterfallCardWidth = useAppSettings((s) => s.setWaterfallCardWidth)
+  const setWaterfallColumnCount = useAppSettings((s) => s.setWaterfallColumnCount)
 
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -224,7 +222,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </Field>
 
-            {!waterfallFlowEnabled && (
+            {waterfallColumnCount <= 1 && (
               <div className="flex flex-col gap-2">
                 <Label>主栏最大宽度</Label>
                 <p className="text-muted-foreground text-xs">
@@ -240,31 +238,19 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </div>
             )}
 
-            <Field
-              label="瀑布流布局"
-              description="开启后主栏用瀑布流展示，单个博文宽度由下方滑块控制"
-            >
-              <Switch
-                checked={waterfallFlowEnabled}
-                onCheckedChange={(checked) => setWaterfallFlowEnabled(checked)}
+            <div className="flex flex-col gap-2">
+              <Label>瀑布流栏数</Label>
+              <p className="text-muted-foreground text-xs">
+                设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于 300px
+              </p>
+              <Slider
+                value={[waterfallColumnCount]}
+                min={1}
+                max={5}
+                step={1}
+                onValueChange={([value]) => setWaterfallColumnCount(value)}
               />
-            </Field>
-
-            {waterfallFlowEnabled && (
-              <div className="flex flex-col gap-2">
-                <Label>瀑布流卡片宽度</Label>
-                <p className="text-muted-foreground text-xs">
-                  单个博文卡片的宽度 ({waterfallCardWidth}px)
-                </p>
-                <Slider
-                  value={[waterfallCardWidth]}
-                  min={300}
-                  max={800}
-                  step={10}
-                  onValueChange={([value]) => setWaterfallCardWidth(value)}
-                />
-              </div>
-            )}
+            </div>
 
             <Field label="自定义背景" description="为页面添加自定义背景图片">
               <Switch

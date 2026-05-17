@@ -53,8 +53,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setBackgroundImageUrl: (url: string) => Promise<void>
   setMainColumnMaxWidth: (maxWidth: number) => Promise<void>
   setXLayoutEnabled: (enabled: boolean) => Promise<void>
-  setWaterfallFlowEnabled: (enabled: boolean) => Promise<void>
-  setWaterfallCardWidth: (width: number) => Promise<void>
+  setWaterfallColumnCount: (count: number) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -90,8 +89,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     glassBlur: state.glassBlur,
     mainColumnMaxWidth: state.mainColumnMaxWidth,
     xLayoutEnabled: state.xLayoutEnabled,
-    waterfallFlowEnabled: state.waterfallFlowEnabled,
-    waterfallCardWidth: state.waterfallCardWidth,
+    waterfallColumnCount: state.waterfallColumnCount,
   }
 }
 
@@ -207,11 +205,8 @@ export function createAppSettingsStore(
       async setXLayoutEnabled(xLayoutEnabled) {
         await updateAndPersist({ xLayoutEnabled })
       },
-      async setWaterfallFlowEnabled(waterfallFlowEnabled) {
-        await updateAndPersist({ waterfallFlowEnabled })
-      },
-      async setWaterfallCardWidth(waterfallCardWidth) {
-        await updateAndPersist({ waterfallCardWidth })
+      async setWaterfallColumnCount(waterfallColumnCount) {
+        await updateAndPersist({ waterfallColumnCount })
       },
     }
   })
