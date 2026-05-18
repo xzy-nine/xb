@@ -126,6 +126,6 @@ jobs:
           FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
         run: |
           bunx wxt submit \
-            --chrome-zip .output/*-chrome.zip
+            --chrome-zip .output/*-chrome.zip \
             --firefox-zip .output/*-firefox.zip \
-            --firefox-sources-zip .output/*-sources.zip
+            --firefox-sources-zip .output/*-sources.zip \
