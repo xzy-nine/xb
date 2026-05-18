@@ -35,6 +35,7 @@ describe('NavigationRail', () => {
           viewingProfileUserId={viewingProfileUserId}
           rewriteEnabled={rewriteEnabled}
           theme="system"
+          browsingHistoryEnabled={false}
           onRewriteEnabledChange={vi.fn()}
           onThemeChange={vi.fn()}
           onSettingsOpen={vi.fn()}

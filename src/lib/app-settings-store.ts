@@ -44,6 +44,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setImageGenCardStyle: (style: CardStyle) => Promise<void>
   setHotSearchType: (type: HotSearchType) => Promise<void>
   setXLayoutEnabled: (enabled: boolean) => Promise<void>
+  setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -71,6 +72,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     imageGenCardStyle: state.imageGenCardStyle,
     hotSearchType: state.hotSearchType,
     xLayoutEnabled: state.xLayoutEnabled,
+    browsingHistoryEnabled: state.browsingHistoryEnabled,
   }
 }
 
@@ -161,6 +163,9 @@ export function createAppSettingsStore(
       },
       async setXLayoutEnabled(xLayoutEnabled) {
         await updateAndPersist({ xLayoutEnabled })
+      },
+      async setBrowsingHistoryEnabled(browsingHistoryEnabled) {
+        await updateAndPersist({ browsingHistoryEnabled })
       },
     }
   })

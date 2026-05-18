@@ -10,16 +10,21 @@ import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
 import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
 import { RightRail } from '@/lib/weibo/components/right-rail'
-import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
+import {
+  PAGE_KINDS_WITH_SCROLL_RESTORATION,
+  type WeiboPageDescriptor,
+} from '@/lib/weibo/route/page-descriptor'
 import { parseWeiboUrl } from '@/lib/weibo/route/parse-weibo-url'
 
 const PAGE_LABELS: Record<WeiboPageDescriptor['kind'], string> = {
   home: '主页',
   profile: '个人主页',
+  follow: '关注/粉丝',
   favorites: '收藏',
   status: '微博详情',
   notifications: '通知',
   explore: '探索',
+  history: '历史',
   unsupported: '不支持的页面',
 }
 
@@ -29,6 +34,8 @@ function describePage(page: WeiboPageDescriptor): string {
       return `当前标签: ${page.tab}`
     case 'profile':
       return `用户 ${page.profileId} via /${page.profileSource}`
+    case 'follow':
+      return `用户 ${page.uid} 的${page.tab === 'fans' ? '粉丝' : '关注'}`
     case 'favorites':
       return `用户 ${page.uid} 的收藏`
     case 'status':
@@ -37,6 +44,8 @@ function describePage(page: WeiboPageDescriptor): string {
       return `通知 - ${page.tab}`
     case 'explore':
       return `探索 - ${page.groupId}`
+    case 'history':
+      return '历史'
     case 'unsupported':
       return `原因: ${page.reason}`
   }
@@ -45,13 +54,7 @@ function describePage(page: WeiboPageDescriptor): string {
 /** Routes whose primary feed scrolls inside ShellFrame `<main>` (timeline + profile posts). */
 function mainScrollRestorationKey(pathname: string, search: string): string | null {
   const page = parseWeiboUrl(new URL(`${pathname}${search}`, window.location.origin).href)
-  if (
-    page.kind === 'home' ||
-    page.kind === 'profile' ||
-    page.kind === 'favorites' ||
-    page.kind === 'notifications' ||
-    page.kind === 'explore'
-  ) {
+  if (PAGE_KINDS_WITH_SCROLL_RESTORATION.has(page.kind)) {
     return `${pathname}${search}`
   }
   return null
@@ -62,6 +65,7 @@ interface ShellFrameProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
+  browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
@@ -79,6 +83,7 @@ export function ShellFrame({
   viewingProfileUserId,
   rewriteEnabled,
   theme,
+  browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
@@ -129,6 +134,7 @@ export function ShellFrame({
             viewingProfileUserId={viewingProfileUserId}
             rewriteEnabled={rewriteEnabled}
             theme={theme}
+            browsingHistoryEnabled={browsingHistoryEnabled}
             onRewriteEnabledChange={onRewriteEnabledChange}
             onThemeChange={onThemeChange}
             onSettingsOpen={onSettingsOpen}

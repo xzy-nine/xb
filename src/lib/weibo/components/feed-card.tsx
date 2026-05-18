@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bookmark, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
-import { memo, type MouseEvent, type ReactNode, useRef } from 'react'
+import { memo, useCallback, type MouseEvent, type ReactNode, useRef } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -28,6 +28,7 @@ import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { StatusText } from '@/lib/weibo/components/status-text'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
+import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 import { useFeedLongText } from '@/lib/weibo/hooks/use-feed-long-text'
 import { useFontSettings } from '@/lib/weibo/hooks/use-font-settings'
 import type { FeedItem } from '@/lib/weibo/models/feed'
@@ -61,6 +62,10 @@ function hasTextSelectionWithin(container: HTMLElement) {
 }
 
 function FeedMediaBlock({ item }: { item: FeedItem }) {
+  const addEntry = useCallback(() => {
+    browsingHistoryStore.getState().addEntry(item)
+  }, [item])
+
   if (!item.media) {
     return null
   }
@@ -109,6 +114,7 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
           dash={item.media.dash}
           downloadUrl={item.media.downloadUrl}
           downloadFilename={`${item.author.name} ${item.text.slice(0, 15).replaceAll(/[\\/:*?"<>|]/g, '_')}`}
+          onPlay={addEntry}
         />
       </AspectRatio>
     </div>
@@ -437,6 +443,10 @@ function RetweetedFeedBlock({
     onLoadLongText,
   } = useFeedLongText(item)
 
+  const addEntry = useCallback(() => {
+    browsingHistoryStore.getState().addEntry(resolvedItem)
+  }, [resolvedItem])
+
   const isDeletedAuthor = !resolvedItem.author.id
 
   const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
@@ -469,7 +479,11 @@ function RetweetedFeedBlock({
 
         <FeedMediaBlock item={resolvedItem} />
 
-        <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
+        <ImageCarousel
+          images={resolvedItem.images}
+          mixMediaItems={resolvedItem.mixMediaInfo}
+          onOpen={addEntry}
+        />
 
         {!isDeletedAuthor && (
           <FeedActions
@@ -516,9 +530,12 @@ export const FeedCard = memo(function FeedCard({
     onLoadLongText,
   } = useFeedLongText(item)
 
+  const addEntry = useCallback(() => {
+    browsingHistoryStore.getState().addEntry(resolvedItem)
+  }, [resolvedItem])
+
   const uid = getCurrentUserUid()
   const showOwnerMenu = uid !== null && uid === resolvedItem.author.id
-
   const queryClient = useQueryClient()
 
   const likeMutation = useMutation({
@@ -786,7 +803,11 @@ export const FeedCard = memo(function FeedCard({
 
         <FeedMediaBlock item={resolvedItem} />
 
-        <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
+        <ImageCarousel
+          images={resolvedItem.images}
+          mixMediaItems={resolvedItem.mixMediaInfo}
+          onOpen={addEntry}
+        />
 
         {resolvedItem.retweetedStatus ? (
           <RetweetedFeedBlock

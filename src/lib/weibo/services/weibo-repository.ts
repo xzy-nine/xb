@@ -513,3 +513,60 @@ export async function loadSearch(query: string): Promise<SearchResult> {
   })
   return adaptSearchResponse(payload)
 }
+
+// ─── Unread Notifications ───
+
+export interface UnreadCounts {
+  mentions: number
+  comments: number
+  likes: number
+}
+
+export async function checkUnreadNotifications(): Promise<UnreadCounts> {
+  try {
+    const payload = await wbGet<{
+      data?: { mention_cmt?: number; mention_status?: number; cmt?: number; attitude?: number }
+    }>(WEIBO_ENDPOINTS.remind)
+    const data = payload?.data
+    return {
+      mentions: (data?.mention_cmt ?? 0) + (data?.mention_status ?? 0),
+      comments: data?.cmt ?? 0,
+      likes: data?.attitude ?? 0,
+    }
+  } catch {
+    return { mentions: 0, comments: 0, likes: 0 }
+  }
+}
+
+// ─── Friends / Followers & Following ───
+
+import type { RelationPage, WeiboFriendsPayload } from '@/lib/weibo/models/user-relation'
+import { adaptFriendsResponse } from '@/lib/weibo/services/adapters/friends'
+
+interface LoadFriendsOptions {
+  page?: number
+  relate?: 'fans'
+  count?: number
+}
+
+export async function loadFriends(
+  uid: string,
+  options: LoadFriendsOptions = {},
+): Promise<RelationPage> {
+  const { page = 1, relate, count = 20 } = options
+
+  const params: Record<string, string | number> = {
+    uid,
+    page,
+  }
+
+  if (relate === 'fans') {
+    params.relate = 'fans'
+    params.count = count
+    params.type = 'fans'
+    params.fansSortType = 'followTime'
+  }
+
+  const payload = await wbGet<WeiboFriendsPayload>(WEIBO_ENDPOINTS.friends, params)
+  return adaptFriendsResponse(payload)
+}

@@ -21,7 +21,7 @@ export function BgColorPicker({ presets, value, onChange }: BgColorPickerProps) 
             className="flex flex-col items-center gap-1.5"
           >
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-full border-2 transition-transform active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-full border-2 transition-transform active:scale-95"
               style={{
                 backgroundColor: preset.background,
                 borderColor: isSelected ? 'var(--foreground)' : 'var(--border)',

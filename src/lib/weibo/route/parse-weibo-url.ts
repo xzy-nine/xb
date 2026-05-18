@@ -26,6 +26,13 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
         uid: parts[3],
       }
     }
+    if (parts[1] === 'page' && parts[2] === 'follow' && parts[3]) {
+      return {
+        kind: 'follow',
+        uid: parts[3],
+        tab: 'following',
+      }
+    }
     return {
       kind: 'profile',
       profileId: parts[1],
@@ -76,6 +83,10 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
       kind: 'explore',
       groupId: parts[2],
     }
+  }
+
+  if (parts[0] === 'history') {
+    return { kind: 'history' }
   }
 
   if (parts.length >= 2 && /^\d+$/.test(parts[0])) {

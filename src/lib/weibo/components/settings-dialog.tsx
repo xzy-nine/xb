@@ -35,6 +35,7 @@ import type {
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { BgColorPicker } from '@/lib/weibo/components/bg-color-picker'
+import { MAX_ENTRIES } from '@/lib/weibo/hooks/use-browsing-history'
 
 function Field({
   label,
@@ -90,6 +91,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setLightModeBgColor = useAppSettings((s) => s.setLightModeBgColor)
   const setDarkModeBgColor = useAppSettings((s) => s.setDarkModeBgColor)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
+  const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
+  const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -136,23 +139,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </Select>
             </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label>浅色模式背景</Label>
+            <Field label="浅色模式背景色" description="选择浅色模式下的背景颜色">
               <BgColorPicker
                 presets={LIGHT_BG_PRESETS}
                 value={lightModeBgColor}
                 onChange={(v) => setLightModeBgColor(v as LightBgColorPreset)}
               />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label>深色模式背景</Label>
+            </Field>
+            <Field label="深色模式背景色" description="选择深色模式下的背景颜色">
               <BgColorPicker
                 presets={DARK_BG_PRESETS}
                 value={darkModeBgColor}
                 onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
               />
-            </div>
+            </Field>
 
             <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
               <Switch
@@ -190,6 +190,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Switch
                 checked={xLayoutEnabled}
                 onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+              />
+            </Field>
+
+            <Field
+              label="浏览历史"
+              description={`记录最近访问过的${MAX_ENTRIES}条微博（储存在本地）`}
+            >
+              <Switch
+                checked={browsingHistoryEnabled}
+                onCheckedChange={(checked) => setBrowsingHistoryEnabled(checked)}
               />
             </Field>
           </TabsContent>

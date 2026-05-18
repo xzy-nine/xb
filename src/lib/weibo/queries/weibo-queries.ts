@@ -135,6 +135,24 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
   }
 }
 
+import type { RelationPage } from '@/lib/weibo/models/user-relation'
+import { loadFriends } from '@/lib/weibo/services/weibo-repository'
+
+export function friendsInfiniteOptions(uid: string, tab: 'following' | 'fans') {
+  return {
+    queryKey: ['weibo', 'friends', tab, uid] as const,
+    queryFn: ({ pageParam }: { pageParam: number }) =>
+      loadFriends(uid, {
+        page: pageParam,
+        relate: tab === 'fans' ? 'fans' : undefined,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: RelationPage, _allPages: RelationPage[], lastPageParam: number) =>
+      lastPage.nextPage != null ? lastPageParam + 1 : undefined,
+    staleTime: 30 * 1000,
+  }
+}
+
 export const exploreGroupsQueryOptions = {
   queryKey: ['weibo', 'explore', 'groups'] as const,
   queryFn: () => loadExploreGroups(),

@@ -67,6 +67,7 @@ describe('app-settings', () => {
       imageGenCardStyle: 'default',
       hotSearchType: 'hot',
       xLayoutEnabled: false,
+      browsingHistoryEnabled: true,
     })
 
     await persistAppSettings(
@@ -92,6 +93,7 @@ describe('app-settings', () => {
         imageGenCardStyle: 'default',
         hotSearchType: 'mine',
         xLayoutEnabled: true,
+        browsingHistoryEnabled: true,
       },
       storage,
     )
@@ -118,6 +120,7 @@ describe('app-settings', () => {
       imageGenCardStyle: 'default',
       hotSearchType: 'mine',
       xLayoutEnabled: true,
+      browsingHistoryEnabled: true,
     })
   })
 

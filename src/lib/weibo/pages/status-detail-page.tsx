@@ -17,6 +17,7 @@ import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { CommentItem } from '@/lib/weibo/models/status'
 import { flattenInfiniteItems } from '@/lib/weibo/queries/weibo-queries'
@@ -132,6 +133,12 @@ export function StatusDetailPage() {
     enabled: isEnabled && urlStatusId !== null,
   })
   const detail = detailQuery.data
+
+  useEffect(() => {
+    if (detail) {
+      browsingHistoryStore.getState().addEntry(detail.status)
+    }
+  }, [detail])
 
   return (
     <div className="">

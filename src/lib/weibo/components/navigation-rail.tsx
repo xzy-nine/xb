@@ -3,6 +3,7 @@ import {
   ArrowUpRightIcon,
   Bell,
   Bookmark,
+  Clock,
   Compass,
   House,
   MailIcon,
@@ -97,6 +98,7 @@ interface NavigationRailProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
+  browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
@@ -108,6 +110,7 @@ export function NavigationRail({
   viewingProfileUserId,
   rewriteEnabled,
   theme,
+  browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
@@ -180,6 +183,17 @@ export function NavigationRail({
             >
               <Bell aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
+
+            {browsingHistoryEnabled && (
+              <NavButton
+                label="历史"
+                showLabel={isXl}
+                isActive={pageKind === 'history'}
+                onClick={() => navigate('/history')}
+              >
+                <Clock aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
             <NavButton
               label={

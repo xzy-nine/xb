@@ -121,20 +121,28 @@ export function UserHoverCard(props: UserHoverCardProps) {
 
               <div className="flex items-center gap-4 text-sm">
                 {profile.friendsCount != null ? (
-                  <span className="text-muted-foreground">
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => navigate(`/u/page/follow/${profile.id}?tab=following`)}
+                  >
                     <span className="text-foreground font-semibold">
                       {formatProfileCount(profile.friendsCount)}
                     </span>{' '}
                     关注
-                  </span>
+                  </button>
                 ) : null}
-                {profile.followersCount ? (
-                  <span className="text-muted-foreground">
+                {profile.followersCount != null ? (
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => navigate(`/u/page/follow/${profile.id}?tab=fans`)}
+                  >
                     <span className="text-foreground font-semibold">
                       {profile.followersCountStr}
                     </span>{' '}
                     粉丝
-                  </span>
+                  </button>
                 ) : null}
               </div>
 
