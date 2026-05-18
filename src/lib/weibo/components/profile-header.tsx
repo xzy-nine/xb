@@ -1,4 +1,5 @@
 import { BadgeCheck, CalendarDays, MapPin } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
@@ -67,20 +68,26 @@ function ProfileMetadata({ profile }: { profile: UserProfile }) {
 
       <div className="mt-3 flex items-center gap-5 text-sm">
         {profile.friendsCount != null ? (
-          <span className="text-muted-foreground">
+          <Link
+            to={`/u/page/follow/${profile.id}?tab=following`}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <span className="text-foreground font-bold tabular-nums">
               {formatProfileCount(profile.friendsCount)}
             </span>{' '}
             正在关注
-          </span>
+          </Link>
         ) : null}
         {profile.followersCount != null ? (
-          <span className="text-muted-foreground">
+          <Link
+            to={`/u/page/follow/${profile.id}?tab=fans`}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <span className="text-foreground font-bold tabular-nums">
               {formatProfileCount(profile.followersCount)}
             </span>{' '}
             粉丝
-          </span>
+          </Link>
         ) : null}
       </div>
     </>

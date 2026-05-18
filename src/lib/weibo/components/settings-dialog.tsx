@@ -40,6 +40,7 @@ import type {
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { BgColorPicker } from '@/lib/weibo/components/bg-color-picker'
+import { MAX_ENTRIES } from '@/lib/weibo/hooks/use-browsing-history'
 
 function Field({
   label,
@@ -90,6 +91,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
+  const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -111,7 +113,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setMainColumnMaxWidth = useAppSettings((s) => s.setMainColumnMaxWidth)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
   const setWaterfallColumnCount = useAppSettings((s) => s.setWaterfallColumnCount)
-
+  const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
+  const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
+  const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -202,23 +206,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </Select>
             </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label>浅色模式背景</Label>
+            <Field label="浅色模式背景色" description="选择浅色模式下的背景颜色">
               <BgColorPicker
                 presets={LIGHT_BG_PRESETS}
                 value={lightModeBgColor}
                 onChange={(v) => setLightModeBgColor(v as LightBgColorPreset)}
               />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label>深色模式背景</Label>
+            </Field>
+            <Field label="深色模式背景色" description="选择深色模式下的背景颜色">
               <BgColorPicker
                 presets={DARK_BG_PRESETS}
                 value={darkModeBgColor}
                 onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
               />
-            </div>
+            </Field>
 
             <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
               <Switch
@@ -256,6 +257,23 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Switch
                 checked={xLayoutEnabled}
                 onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+              />
+            </Field>
+
+            <Field
+              label="浏览历史"
+              description={`记录最近访问过的${MAX_ENTRIES}条微博（储存在本地）`}
+            >
+              <Switch
+                checked={browsingHistoryEnabled}
+                onCheckedChange={(checked) => setBrowsingHistoryEnabled(checked)}
+              />
+            </Field>
+
+            <Field label="关注分组" description="在信息流中按分组筛选关注人">
+              <Switch
+                checked={followGroupsEnabled}
+                onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
               />
             </Field>
           </TabsContent>

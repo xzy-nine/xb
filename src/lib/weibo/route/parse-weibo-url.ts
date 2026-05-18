@@ -16,7 +16,10 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
   }
 
   if (parts.length === 1 && parts[0] === 'mygroups') {
-    return { kind: 'home', tab: 'following' }
+    const gid = url.searchParams.get('gid')?.trim()
+    return gid
+      ? { kind: 'home', tab: 'following', groupId: gid }
+      : { kind: 'home', tab: 'following' }
   }
 
   if (parts[0] === 'u' && parts[1]) {
@@ -24,6 +27,13 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
       return {
         kind: 'favorites',
         uid: parts[3],
+      }
+    }
+    if (parts[1] === 'page' && parts[2] === 'follow' && parts[3]) {
+      return {
+        kind: 'follow',
+        uid: parts[3],
+        tab: 'following',
       }
     }
     return {
@@ -76,6 +86,10 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
       kind: 'explore',
       groupId: parts[2],
     }
+  }
+
+  if (parts[0] === 'history') {
+    return { kind: 'history' }
   }
 
   if (parts.length >= 2 && /^\d+$/.test(parts[0])) {

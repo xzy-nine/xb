@@ -3,6 +3,7 @@ import {
   ArrowUpRightIcon,
   Bell,
   Bookmark,
+  Clock,
   Compass,
   House,
   MailIcon,
@@ -97,6 +98,7 @@ interface NavigationRailProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
+  browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
@@ -108,6 +110,7 @@ export function NavigationRail({
   viewingProfileUserId,
   rewriteEnabled,
   theme,
+  browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
@@ -134,7 +137,7 @@ export function NavigationRail({
 
   return (
     <TooltipProvider>
-      <aside className="border-border/40 flex h-full min-h-0 flex-col border-r px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
+      <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
         <div className="mb-5 flex justify-start md:mb-6 xl:mb-7">
           <img
             src={WeiboLogo}
@@ -180,6 +183,17 @@ export function NavigationRail({
             >
               <Bell aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
+
+            {browsingHistoryEnabled && (
+              <NavButton
+                label="历史"
+                showLabel={isXl}
+                isActive={pageKind === 'history'}
+                onClick={() => navigate('/history')}
+              >
+                <Clock aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
             <NavButton
               label={

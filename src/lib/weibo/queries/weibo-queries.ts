@@ -1,4 +1,3 @@
-import type { InfiniteData, QueryClient } from '@tanstack/react-query'
 
 import type { HotSearchType } from '@/lib/app-settings'
 import type { FeedAuthor, TimelinePage } from '@/lib/weibo/models/feed'
@@ -11,6 +10,8 @@ import {
   loadExploreGroups,
   loadExploreHot,
   loadFavorites,
+  loadFollowGroups,
+  loadGroupTimeline,
   loadHotSearchByType,
   loadHomeTimeline,
   loadMentions,
@@ -41,11 +42,16 @@ export interface FollowingNewPostsCheck {
   count: number
 }
 
-export function followingNewPostsCheckOptions(seenFirstItemId: string | null) {
+export function followingNewPostsCheckOptions(
+  seenFirstItemId: string | null,
+  groupListId?: string | null,
+) {
   return {
-    queryKey: ['weibo', 'timeline', 'following', 'new-check'] as const,
+    queryKey: ['weibo', 'timeline', 'following', groupListId ?? 'default', 'new-check'] as const,
     queryFn: async () => {
-      const page = await loadHomeTimeline('following')
+      const page = groupListId
+        ? await loadGroupTimeline(groupListId, { cursor: null })
+        : await loadHomeTimeline('following')
       if (page.items.length === 0) {
         return null as FollowingNewPostsCheck | null
       }
@@ -79,22 +85,15 @@ export function followingNewPostsCheckOptions(seenFirstItemId: string | null) {
 
 export function homeTimelineInfiniteOptions(
   activeTimelineTab: HomeTimelineTab,
-  queryClient?: QueryClient,
+  groupListId?: string | null,
 ) {
+  const useGroupTimeline = activeTimelineTab === 'following' && groupListId
   return {
-    queryKey: ['weibo', 'timeline', activeTimelineTab] as const,
-    queryFn: async ({ pageParam }: { pageParam: string | null }) => {
-      let existingCount = 0
-      if (queryClient) {
-        const data = queryClient.getQueryData<InfiniteData<TimelinePage>>([
-          'weibo',
-          'timeline',
-          activeTimelineTab,
-        ])
-        existingCount = data?.pages.reduce((sum, p) => sum + p.items.length, 0) ?? 0
-      }
-      return loadHomeTimeline(activeTimelineTab, { cursor: pageParam, existingCount })
-    },
+    queryKey: ['weibo', 'timeline', activeTimelineTab, groupListId ?? 'default'] as const,
+    queryFn: ({ pageParam }: { pageParam: string | null }) =>
+      useGroupTimeline
+        ? loadGroupTimeline(groupListId!, { cursor: pageParam })
+        : loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: Infinity,
@@ -172,8 +171,32 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
   }
 }
 
+import type { RelationPage } from '@/lib/weibo/models/user-relation'
+import { loadFriends } from '@/lib/weibo/services/weibo-repository'
+
+export function friendsInfiniteOptions(uid: string, tab: 'following' | 'fans') {
+  return {
+    queryKey: ['weibo', 'friends', tab, uid] as const,
+    queryFn: ({ pageParam }: { pageParam: number }) =>
+      loadFriends(uid, {
+        page: pageParam,
+        relate: tab === 'fans' ? 'fans' : undefined,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: RelationPage, _allPages: RelationPage[], lastPageParam: number) =>
+      lastPage.nextPage != null ? lastPageParam + 1 : undefined,
+    staleTime: 30 * 1000,
+  }
+}
+
 export const exploreGroupsQueryOptions = {
   queryKey: ['weibo', 'explore', 'groups'] as const,
   queryFn: () => loadExploreGroups(),
-  staleTime: 5 * 60 * 1000,
+  staleTime: 60 * 60 * 1000,
+}
+
+export const followGroupsQueryOptions = {
+  queryKey: ['weibo', 'follow-groups'] as const,
+  queryFn: () => loadFollowGroups(),
+  staleTime: 60 * 60 * 1000,
 }

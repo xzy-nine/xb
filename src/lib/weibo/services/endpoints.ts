@@ -1,6 +1,7 @@
 export const WEIBO_ENDPOINTS = {
   forYou: '/ajax/feed/unreadfriendstimeline',
   following: '/ajax/feed/friendstimeline',
+  groupTimeline: '/ajax/feed/groupstimeline',
   exploreHot: '/ajax/feed/hottimeline',
   exploreGroups: '/ajax/feed/allGroups',
   sideCards: '/ajax/side/cards',
@@ -35,6 +36,8 @@ export const WEIBO_ENDPOINTS = {
   mentions: '/ajax/statuses/mentions',
   comments: '/ajax/message/cmt',
   likes: '/ajax/message/attitudes',
+  remind: '/ajax/message/remind',
+  friends: '/ajax/friendships/friends',
 } as const
 
 type WeiboEndpointKey = keyof typeof WEIBO_ENDPOINTS

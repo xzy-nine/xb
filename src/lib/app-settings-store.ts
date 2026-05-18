@@ -54,6 +54,8 @@ export interface AppSettingsStoreState extends AppSettings {
   setMainColumnMaxWidth: (maxWidth: number) => Promise<void>
   setXLayoutEnabled: (enabled: boolean) => Promise<void>
   setWaterfallColumnCount: (count: number) => Promise<void>
+  setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
+  setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -90,6 +92,8 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     mainColumnMaxWidth: state.mainColumnMaxWidth,
     xLayoutEnabled: state.xLayoutEnabled,
     waterfallColumnCount: state.waterfallColumnCount,
+    browsingHistoryEnabled: state.browsingHistoryEnabled,
+    followGroupsEnabled: state.followGroupsEnabled,
   }
 }
 
@@ -207,6 +211,12 @@ export function createAppSettingsStore(
       },
       async setWaterfallColumnCount(waterfallColumnCount) {
         await updateAndPersist({ waterfallColumnCount })
+      },
+      async setBrowsingHistoryEnabled(browsingHistoryEnabled) {
+        await updateAndPersist({ browsingHistoryEnabled })
+      },
+      async setFollowGroupsEnabled(followGroupsEnabled) {
+        await updateAndPersist({ followGroupsEnabled })
       },
     }
   })

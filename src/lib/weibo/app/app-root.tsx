@@ -22,6 +22,9 @@ const ExplorePage = lazy(() =>
 const FavoritesPage = lazy(() =>
   import('@/lib/weibo/pages/favorites-page').then((m) => ({ default: m.FavoritesPage })),
 )
+const FollowFansPage = lazy(() =>
+  import('@/lib/weibo/pages/follow-fans-page').then((m) => ({ default: m.FollowFansPage })),
+)
 const HomeTimelinePage = lazy(() =>
   import('@/lib/weibo/pages/home-timeline-page').then((m) => ({ default: m.HomeTimelinePage })),
 )
@@ -33,6 +36,9 @@ const ProfilePage = lazy(() =>
 )
 const StatusDetailPage = lazy(() =>
   import('@/lib/weibo/pages/status-detail-page').then((m) => ({ default: m.StatusDetailPage })),
+)
+const HistoryPage = lazy(() =>
+  import('@/lib/weibo/pages/history-page').then((m) => ({ default: m.HistoryPage })),
 )
 
 const queryClient = new QueryClient({
@@ -83,9 +89,11 @@ function AppRootBootstrap() {
             <Route path="u/page/fav/:uid" element={<FavoritesPage />} />
             <Route path="n/:uname" element={<ProfilePage />} />
             <Route path="unsupported" element={<UnsupportedPageContent />} />
+            <Route path="u/page/follow/:uid" element={<FollowFansPage />} />
             <Route path="at/weibo" element={<NotificationsPage />} />
             <Route path="comment/inbox" element={<NotificationsPage />} />
             <Route path="like/inbox" element={<NotificationsPage />} />
+            <Route path="history" element={<HistoryPage />} />
           </Route>
         </Routes>
       </Suspense>

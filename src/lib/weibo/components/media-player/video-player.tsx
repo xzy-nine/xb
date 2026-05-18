@@ -77,6 +77,7 @@ interface VideoPlayerProps {
   downloadUrl?: string
   /** Used to generate the downloaded filename: "作者名+前15个字.mp4" */
   downloadFilename?: string
+  onPlay?: () => void
 }
 
 interface QualityOption {
@@ -366,6 +367,7 @@ export function VideoPlayer({
   hideInlineFullScreen,
   downloadUrl,
   downloadFilename,
+  onPlay,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<MediaPlayerClass | null>(null)
@@ -746,7 +748,10 @@ export function VideoPlayer({
         playsInline
         onLoadedMetadata={handleLoadedMetadata}
         onPointerDownCapture={ensureLoaded}
-        onPlay={ensureLoaded}
+        onPlay={() => {
+          ensureLoaded()
+          onPlay?.()
+        }}
       />
 
       <BufferingIndicator

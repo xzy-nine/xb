@@ -13,11 +13,13 @@ import { VideoPlayer } from './media-player/video-player'
 interface ImageCarouselProps {
   images: { id: string; thumbnailUrl: string; largeUrl: string }[]
   mixMediaItems?: FeedMixMediaItem[]
+  onOpen?: () => void
 }
 
 export const ImageCarousel = memo(function ImageCarousel({
   images,
   mixMediaItems,
+  onOpen,
 }: ImageCarouselProps) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
@@ -155,6 +157,9 @@ export const ImageCarousel = memo(function ImageCarousel({
         portalContainer={container}
         photoClosable={true}
         photoClassName="max-w-[900px]"
+        onVisibleChange={(visible) => {
+          if (visible) onOpen?.()
+        }}
       >
         <div
           className={`grid gap-2 ${

@@ -10,6 +10,7 @@ import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import { StatusDetailDialog } from '@/lib/weibo/components/status-detail-dialog'
+import { useNotificationBadge } from '@/lib/weibo/hooks/use-notification-badge'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
@@ -35,6 +36,7 @@ export interface AppShellContext {
   onProfileUserIdChange: (userId: string | null) => void
   onHomeTabChange: (tab: 'for-you' | 'following') => void
   refreshTimeline: () => void
+  onFollowGroupChange: (gid: string | null) => void
 }
 
 export function AppShell() {
@@ -46,6 +48,7 @@ export function AppShell() {
   const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
   const statusDetailPopupEnabled = useAppSettings((state) => state.statusDetailPopupEnabled)
   const statusDetailPopupPosition = useAppSettings((state) => state.statusDetailPopupPosition)
+  const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
   const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
   const setTheme = useAppSettings((state) => state.setTheme)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
@@ -56,6 +59,8 @@ export function AppShell() {
   const [statusDetailDialogOpen, setStatusDetailDialogOpen] = useState(false)
   const [statusDetailItem, setStatusDetailItem] = useState<StatusDetailNavigationItem | null>(null)
   const mainRef = useRef<HTMLDivElement | null>(null)
+
+  useNotificationBadge()
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
 
@@ -99,6 +104,17 @@ export function AppShell() {
     [navigate],
   )
 
+  const onFollowGroupChange = useCallback(
+    (gid: string | null) => {
+      if (gid) {
+        navigate('/mygroups?gid=' + gid)
+      } else {
+        navigate('/mygroups')
+      }
+    },
+    [navigate],
+  )
+
   const context: AppShellContext = useMemo(
     () => ({
       page,
@@ -112,6 +128,7 @@ export function AppShell() {
       onProfileUserIdChange: setViewingProfileUserId,
       onHomeTabChange,
       refreshTimeline,
+      onFollowGroupChange,
     }),
     [
       page,
@@ -123,6 +140,7 @@ export function AppShell() {
       viewingProfileUserId,
       onHomeTabChange,
       refreshTimeline,
+      onFollowGroupChange,
     ],
   )
 
@@ -163,6 +181,7 @@ export function AppShell() {
         viewingProfileUserId={viewingProfileUserId}
         rewriteEnabled={rewriteEnabled}
         theme={theme}
+        browsingHistoryEnabled={browsingHistoryEnabled}
         onRewriteEnabledChange={(enabled: boolean) => {
           setRewriteEnabled(enabled)
           if (!enabled) {

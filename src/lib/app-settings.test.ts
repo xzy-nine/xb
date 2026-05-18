@@ -76,6 +76,8 @@ describe('app-settings', () => {
       mainColumnMaxWidth: 1200,
       xLayoutEnabled: false,
       waterfallColumnCount: 1,
+      browsingHistoryEnabled: true,
+      followGroupsEnabled: false,
     })
 
     await persistAppSettings(
@@ -110,6 +112,8 @@ describe('app-settings', () => {
         mainColumnMaxWidth: 1200,
         xLayoutEnabled: true,
         waterfallColumnCount: 1,
+        browsingHistoryEnabled: true,
+        followGroupsEnabled: false,
       },
       storage,
     )
@@ -145,6 +149,8 @@ describe('app-settings', () => {
       mainColumnMaxWidth: 1200,
       xLayoutEnabled: true,
       waterfallColumnCount: 1,
+      browsingHistoryEnabled: true,
+      followGroupsEnabled: false,
     })
   })
 

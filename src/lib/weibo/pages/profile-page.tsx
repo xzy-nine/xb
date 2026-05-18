@@ -1,8 +1,6 @@
-import { useIntersectionObserver } from '@reactuses/core'
 import { skipToken, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 
-import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -48,15 +46,23 @@ function ProfilePostsTabs({
   const isFetchingNextPage = postsQuery.isFetchingNextPage
   const fetchNextPage = postsQuery.fetchNextPage
 
-  useIntersectionObserver(
-    loadMoreRef,
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        void fetchNextPage()
-      }
-    },
-    { threshold: 0.2 },
-  )
+  // ─── IntersectionObserver for infinite scroll ───
+  useEffect(() => {
+    const el = loadMoreRef.current
+    if (!el || !hasNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchNextPage()
+        }
+      },
+      { threshold: 0.2 },
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, fetchNextPage])
 
   if (postsQuery.isLoading) {
     return <PageLoadingState label="正在加载此用户微博..." />
@@ -85,11 +91,6 @@ function ProfilePostsTabs({
           <div ref={loadMoreRef} className="flex justify-center py-3">
             {isFetchingNextPage ? <Spinner size="sm" /> : null}
           </div>
-        ) : null}
-        {hasNextPage && !isFetchingNextPage ? (
-          <Button variant="outline" onClick={() => void fetchNextPage()}>
-            加载下一页
-          </Button>
         ) : null}
       </TabsContent>
 

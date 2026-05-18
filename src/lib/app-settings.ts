@@ -123,6 +123,8 @@ export interface AppSettings {
   mainColumnMaxWidth: number
   xLayoutEnabled: boolean
   waterfallColumnCount: number
+  browsingHistoryEnabled: boolean
+  followGroupsEnabled: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -176,6 +178,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   mainColumnMaxWidth: 1200,
   xLayoutEnabled: false,
   waterfallColumnCount: 1,
+  browsingHistoryEnabled: true,
+  followGroupsEnabled: false,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -383,6 +387,14 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       candidate.waterfallColumnCount <= 5
         ? candidate.waterfallColumnCount
         : DEFAULT_APP_SETTINGS.waterfallColumnCount,
+    browsingHistoryEnabled:
+      typeof candidate.browsingHistoryEnabled === 'boolean'
+        ? candidate.browsingHistoryEnabled
+        : DEFAULT_APP_SETTINGS.browsingHistoryEnabled,
+    followGroupsEnabled:
+      typeof candidate.followGroupsEnabled === 'boolean'
+        ? candidate.followGroupsEnabled
+        : DEFAULT_APP_SETTINGS.followGroupsEnabled,
   }
 }
 

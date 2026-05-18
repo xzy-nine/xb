@@ -18,8 +18,10 @@ import {
   flattenInfiniteItems,
   followingNewPostsCheckOptions,
   homeTimelineInfiniteOptions,
+  followGroupsQueryOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+import type { FollowGroup } from '@/lib/weibo/services/adapters/explore-groups'
 
 interface RefreshTabTriggerProps {
   value: string
@@ -86,13 +88,26 @@ export function HomeTimelinePage() {
   const page = useWeiboPage()
   const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const activeTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && page.kind === 'home'
 
+  const groupIdFromUrl = page.kind === 'home' && page.groupId ? page.groupId : null
+  const selectedGroupGid = groupIdFromUrl ?? 'default'
+
+  const showGroupSelect = followGroupsEnabled && activeTab === 'following'
+
+  const groupsQuery = useQuery({
+    ...followGroupsQueryOptions,
+    enabled: showGroupSelect,
+  })
+
+  const groupListId = showGroupSelect && selectedGroupGid !== 'default' ? selectedGroupGid : null
+
   const timelineQuery = useInfiniteQuery({
-    ...homeTimelineInfiniteOptions(activeTab, queryClient),
+    ...homeTimelineInfiniteOptions(activeTab, groupListId),
     enabled: isEnabled,
   })
 
@@ -138,8 +153,9 @@ export function HomeTimelinePage() {
   const followingFirstItemId = items.length > 0 && activeTab === 'following' ? items[0].id : null
 
   const newPostsCheckQuery = useQuery({
-    ...followingNewPostsCheckOptions(followingFirstItemId),
+    ...followingNewPostsCheckOptions(followingFirstItemId, groupListId),
     enabled: isEnabled && activeTab === 'following' && followingFirstItemId !== null,
+    refetchOnWindowFocus: true,
   })
 
   const [hasNewPosts, setHasNewPosts] = useState(false)
@@ -151,12 +167,24 @@ export function HomeTimelinePage() {
 
   const handleNewPostsClick = useCallback(() => {
     setHasNewPosts(false)
-    queryClient.setQueryData(['weibo', 'timeline', 'following', 'new-check'], null)
+    queryClient.setQueryData(
+      ['weibo', 'timeline', 'following', groupListId ?? 'default', 'new-check'],
+      null,
+    )
     void queryClient.invalidateQueries({
-      queryKey: ['weibo', 'timeline', 'following'],
+      queryKey: ['weibo', 'timeline', 'following', groupListId ?? 'default'],
       exact: true,
     })
-  }, [queryClient])
+  }, [queryClient, groupListId])
+
+  const handleGroupSelect = useCallback(
+    (gid: string) => {
+      ctx.onFollowGroupChange(gid === 'default' ? null : gid)
+    },
+    [ctx],
+  )
+
+  const groups = groupsQuery.data ?? []
 
   return (
     <div className="relative">
@@ -215,9 +243,19 @@ export function HomeTimelinePage() {
               />
             </div>
           ) : null}
+          {showGroupSelect && groups.length > 0 && (
+            <FollowGroupPillBar
+              groups={groups}
+              selectedGid={selectedGroupGid}
+              onSelect={handleGroupSelect}
+            />
+          )}
         </TabsList>
 
-        <TabsContent value={activeTab} className="flex flex-col">
+        <TabsContent
+          value={activeTab}
+          className={cn('flex flex-col', showGroupSelect && groups.length > 0 && 'pt-12')}
+        >
           {isLoading ? <PageLoadingState label="正在加载微博时间线..." /> : null}
           {!isLoading && errorMessage ? (
             <PageErrorState
@@ -246,5 +284,67 @@ export function HomeTimelinePage() {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+function FollowGroupPillBar({
+  groups,
+  selectedGid,
+  onSelect,
+}: {
+  groups: FollowGroup[]
+  selectedGid: string
+  onSelect: (gid: string) => void
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+
+  return (
+    <div
+      ref={scrollRef}
+      className="bg-background/80 border-border/40 absolute top-full z-10 flex w-full scrollbar-none gap-1.5 overflow-x-auto border-b px-1 py-2 backdrop-blur-lg"
+    >
+      <FollowGroupPill
+        label="全部"
+        isActive={selectedGid === 'default'}
+        onClick={() => onSelect('default')}
+        className="sticky left-0"
+      />
+      {groups.map((group) => (
+        <FollowGroupPill
+          key={group.gid}
+          label={group.title}
+          isActive={selectedGid === group.gid}
+          onClick={() => onSelect(group.gid)}
+        />
+      ))}
+    </div>
+  )
+}
+
+function FollowGroupPill({
+  label,
+  isActive,
+  onClick,
+  className,
+}: {
+  label: string
+  isActive: boolean
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-medium transition-colors',
+        className,
+        isActive
+          ? 'bg-foreground text-background'
+          : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+      )}
+    >
+      {label}
+    </button>
   )
 }
