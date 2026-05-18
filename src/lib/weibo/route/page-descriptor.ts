@@ -1,7 +1,7 @@
 export type NotificationTab = 'mentions' | 'comments' | 'likes'
 
 export type WeiboPageDescriptor =
-  | { kind: 'home'; tab: 'for-you' | 'following' }
+  | { kind: 'home'; tab: 'for-you' | 'following'; groupId?: string }
   | { kind: 'status'; authorId: string; statusId: string }
   | {
       kind: 'profile'

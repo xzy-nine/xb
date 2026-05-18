@@ -68,6 +68,7 @@ describe('app-settings', () => {
       hotSearchType: 'hot',
       xLayoutEnabled: false,
       browsingHistoryEnabled: true,
+      followGroupsEnabled: false,
     })
 
     await persistAppSettings(
@@ -94,6 +95,7 @@ describe('app-settings', () => {
         hotSearchType: 'mine',
         xLayoutEnabled: true,
         browsingHistoryEnabled: true,
+        followGroupsEnabled: false,
       },
       storage,
     )
@@ -121,6 +123,7 @@ describe('app-settings', () => {
       hotSearchType: 'mine',
       xLayoutEnabled: true,
       browsingHistoryEnabled: true,
+      followGroupsEnabled: false,
     })
   })
 

@@ -34,6 +34,7 @@ export interface AppShellContext {
   onProfileUserIdChange: (userId: string | null) => void
   onHomeTabChange: (tab: 'for-you' | 'following') => void
   refreshTimeline: () => void
+  onFollowGroupChange: (gid: string | null) => void
 }
 
 export function AppShell() {
@@ -87,6 +88,17 @@ export function AppShell() {
     [navigate],
   )
 
+  const onFollowGroupChange = useCallback(
+    (gid: string | null) => {
+      if (gid) {
+        navigate('/mygroups?gid=' + gid)
+      } else {
+        navigate('/mygroups')
+      }
+    },
+    [navigate],
+  )
+
   const context: AppShellContext = useMemo(
     () => ({
       page,
@@ -99,6 +111,7 @@ export function AppShell() {
       onProfileUserIdChange: setViewingProfileUserId,
       onHomeTabChange,
       refreshTimeline,
+      onFollowGroupChange,
     }),
     [
       page,
@@ -109,6 +122,7 @@ export function AppShell() {
       viewingProfileUserId,
       onHomeTabChange,
       refreshTimeline,
+      onFollowGroupChange,
     ],
   )
 

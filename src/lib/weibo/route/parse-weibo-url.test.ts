@@ -17,6 +17,14 @@ describe('parseWeiboUrl', () => {
     })
   })
 
+  it('parses the following timeline with a group id', () => {
+    expect(parseWeiboUrl('https://weibo.com/mygroups?gid=4192852076538581')).toEqual({
+      kind: 'home',
+      tab: 'following',
+      groupId: '4192852076538581',
+    })
+  })
+
   it('parses a status detail URL', () => {
     expect(parseWeiboUrl('https://weibo.com/1969776354/PiR8A7d0z')).toEqual({
       kind: 'status',

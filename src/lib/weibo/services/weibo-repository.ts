@@ -20,8 +20,10 @@ import {
 } from '@/lib/weibo/services/adapters/explore'
 import {
   adaptExploreGroupsResponse,
+  adaptFollowGroupsResponse,
   type ExploreGroupsPayload,
   type ExploreGroup,
+  type FollowGroup,
 } from '@/lib/weibo/services/adapters/explore-groups'
 import {
   adaptEntertainmentBandResponse,
@@ -100,6 +102,28 @@ export async function loadHomeTimeline(
 
   return loadTimeline(getTimelinePath(tab), {
     [isFirstPage ? 'since_id' : 'max_id']: isFirstPage ? '0' : options.cursor,
+  })
+}
+
+export async function loadFollowGroups(): Promise<FollowGroup[]> {
+  const payload = await wbGet<ExploreGroupsPayload>(WEIBO_ENDPOINTS.exploreGroups, {
+    is_new_segment: 1,
+    fetch_hot: 1,
+  })
+  return adaptFollowGroupsResponse(payload)
+}
+
+export async function loadGroupTimeline(
+  listId: string,
+  options: LoadTimelineOptions = {},
+): Promise<TimelinePage> {
+  const isFirstPage = !options.cursor
+  return loadTimeline(WEIBO_ENDPOINTS.groupTimeline, {
+    list_id: listId,
+    refresh: 4,
+    fast_refresh: 1,
+    count: 25,
+    ...(isFirstPage ? {} : { max_id: options.cursor }),
   })
 }
 
