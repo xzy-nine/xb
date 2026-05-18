@@ -16,7 +16,10 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
   }
 
   if (parts.length === 1 && parts[0] === 'mygroups') {
-    return { kind: 'home', tab: 'following' }
+    const gid = url.searchParams.get('gid')?.trim()
+    return gid
+      ? { kind: 'home', tab: 'following', groupId: gid }
+      : { kind: 'home', tab: 'following' }
   }
 
   if (parts[0] === 'u' && parts[1]) {

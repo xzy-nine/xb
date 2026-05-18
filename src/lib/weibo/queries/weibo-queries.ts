@@ -37,11 +37,16 @@ interface FollowingNewPostsCheck {
   count: number
 }
 
-export function followingNewPostsCheckOptions(seenFirstItemId: string | null) {
+export function followingNewPostsCheckOptions(
+  seenFirstItemId: string | null,
+  groupListId?: string | null,
+) {
   return {
-    queryKey: ['weibo', 'timeline', 'following', 'new-check'] as const,
+    queryKey: ['weibo', 'timeline', 'following', groupListId ?? 'default', 'new-check'] as const,
     queryFn: async () => {
-      const page = await loadHomeTimeline('following')
+      const page = groupListId
+        ? await loadGroupTimeline(groupListId, { cursor: null })
+        : await loadHomeTimeline('following')
       if (page.items.length === 0) {
         return null as FollowingNewPostsCheck | null
       }
