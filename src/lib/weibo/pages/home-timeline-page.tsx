@@ -140,6 +140,7 @@ export function HomeTimelinePage() {
   const newPostsCheckQuery = useQuery({
     ...followingNewPostsCheckOptions(followingFirstItemId),
     enabled: isEnabled && activeTab === 'following' && followingFirstItemId !== null,
+    refetchOnWindowFocus: true,
   })
 
   const [hasNewPosts, setHasNewPosts] = useState(false)
