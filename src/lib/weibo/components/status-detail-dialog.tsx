@@ -82,7 +82,7 @@ export function StatusDetailDialog({
   )
 
   return (
-    <div className="fixed inset-0 z-[1500] flex">
+    <div className="fixed inset-0 z-[40] flex">
       <div
         className="absolute inset-0 bg-black/50"
         style={glassOverlayStyle}
