@@ -47,7 +47,9 @@ jobs:
         run: bun run test:unit
 
       - name: Build
-        run: bun run build
+        env:
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+        run: bun run build && bun run build:firefox
 
       - name: Capture current release tag
         id: release_base
@@ -110,6 +112,7 @@ jobs:
       - name: Zip extensions
         env:
           EXTENSION_VERSION: ${{ needs.release.outputs.release_version }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
         run: |
           bun run zip
           bun run zip:firefox
@@ -129,3 +132,4 @@ jobs:
             --chrome-zip .output/*-chrome.zip \
             --firefox-zip .output/*-firefox.zip \
             --firefox-sources-zip .output/*-sources.zip \
+            --firefox-channel listed \

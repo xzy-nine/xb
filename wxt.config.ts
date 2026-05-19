@@ -50,7 +50,7 @@ export default defineConfig({
     ],
     browser_specific_settings: {
       gecko: {
-        id: '@xb-weibo',
+        id: process.env.FIREFOX_EXTENSION_ID ?? '@xb-weibo',
         data_collection_permissions: {
           required: ['none'],
         },
