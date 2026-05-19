@@ -69,6 +69,12 @@ interface MweiboMblog {
   isAd?: number
   title?: { text?: string }
   mix_media_info?: { items: Array<unknown> }
+  pics?: Array<{
+    pid: string
+    url: string
+    size?: string
+    large?: { size?: string; url: string }
+  }>
 }
 
 interface MweiboCard {
@@ -121,7 +127,26 @@ export interface MweiboTopicPayload {
 // ─── Transform helpers ──────────────────────────────────────────────────────────
 
 function stripHtmlTags(text: string): string {
-  return text.replace(/<[^>]+>/g, '').trim()
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .trim()
+}
+
+function convertPicsToPicInfos(
+  pics: MweiboMblog['pics'],
+): { pic_ids: string[]; pic_infos: Record<string, WeiboPicInfo> } | null {
+  if (!pics || pics.length === 0) return null
+  const picIds: string[] = []
+  const picInfos: Record<string, WeiboPicInfo> = {}
+  for (const p of pics) {
+    picIds.push(p.pid)
+    picInfos[p.pid] = {
+      thumbnail: { url: p.url },
+      large: { url: p.large?.url ?? p.url },
+    }
+  }
+  return { pic_ids: picIds, pic_infos: picInfos }
 }
 
 function mweiboUserToWeiboStatusUser(user: MweiboUser | undefined): WeiboStatusUser | undefined {
@@ -180,8 +205,8 @@ function mweiboMblogToWeiboStatus(mblog: MweiboMblog): WeiboStatus {
     reposts_count: mblog.reposts_count,
     isLongText: mblog.isLongText,
     isAd: mblog.isAd,
-    pic_ids: mblog.pic_ids,
-    pic_infos: mblog.pic_infos,
+    pic_ids: mblog.pic_ids ?? convertPicsToPicInfos(mblog.pics)?.pic_ids,
+    pic_infos: mblog.pic_infos ?? convertPicsToPicInfos(mblog.pics)?.pic_infos,
     page_info: mweiboPageInfoToWeiboPageInfo(mblog.page_info),
     user: mweiboUserToWeiboStatusUser(mblog.user),
     title: mblog.title,
