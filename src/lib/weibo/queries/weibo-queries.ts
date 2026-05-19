@@ -1,5 +1,5 @@
 import type { HotSearchType } from '@/lib/app-settings'
-import type { FeedAuthor, TimelinePage } from '@/lib/weibo/models/feed'
+import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 import {
@@ -12,6 +12,7 @@ import {
   loadHomeTimeline,
   loadProfilePosts,
   loadSearch,
+  loadTopicSearch,
   type HomeTimelineTab,
 } from '@/lib/weibo/services/weibo-repository'
 
@@ -176,4 +177,26 @@ export const followGroupsQueryOptions = {
   queryKey: ['weibo', 'follow-groups'] as const,
   queryFn: () => loadFollowGroups(),
   staleTime: 60 * 60 * 1000,
+}
+
+export function topicSearchInfiniteOptions(topic: string, channelType?: string) {
+  return {
+    queryKey: ['weibo', 'topic', topic, channelType ?? '1'] as const,
+    queryFn: ({ pageParam }: { pageParam: number }) =>
+      loadTopicSearch(topic, pageParam, channelType),
+    initialPageParam: 1 as number,
+    getNextPageParam: (lastPage: TimelinePage, allPages: TimelinePage[]) =>
+      lastPage.items.length > 0 ? allPages.length + 1 : undefined,
+    staleTime: 5 * 60 * 1000,
+  }
+}
+
+/** Extract channels from the first page of topic search results. */
+export function extractTopicChannels(pages: TimelinePage[] | undefined): TopicChannel[] {
+  return pages?.[0]?.channels ?? []
+}
+
+/** Extract head data from the first page of topic search results. */
+export function extractTopicHeadData(pages: TimelinePage[] | undefined) {
+  return pages?.[0]?.headData ?? null
 }

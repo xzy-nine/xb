@@ -64,7 +64,7 @@ describe('adaptStatusDetailResponse', () => {
     expect(result.status.topicEntities).toEqual([
       {
         title: '天才卡丁车装修进度',
-        url: 'https://s.weibo.com/weibo?q=%23%E5%A4%A9%E6%89%8D%E5%8D%A1%E4%B8%81%E8%BD%A6%E8%A3%85%E4%BF%AE%E8%BF%9B%E5%BA%A6%23',
+        url: '/topic?q=%E5%A4%A9%E6%89%8D%E5%8D%A1%E4%B8%81%E8%BD%A6%E8%A3%85%E4%BF%AE%E8%BF%9B%E5%BA%A6',
       },
     ])
     expect(result.status.media).toBeNull()

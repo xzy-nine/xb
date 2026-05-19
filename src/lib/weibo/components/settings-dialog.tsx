@@ -79,6 +79,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
+  const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -95,6 +96,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
   const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
+  const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -209,6 +211,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Switch
                 checked={followGroupsEnabled}
                 onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
+              />
+            </Field>
+
+            <Field
+              label="xb 内置话题页"
+              description="打开使用 xb 内置话题页，关闭则跳转原微博话题页"
+            >
+              <Switch
+                checked={xbTopicPage}
+                onCheckedChange={(checked) => setNativeTopicPage(checked)}
               />
             </Field>
           </TabsContent>

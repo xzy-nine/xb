@@ -69,6 +69,7 @@ describe('app-settings', () => {
       xLayoutEnabled: false,
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
+      xbTopicPage: true,
     })
 
     await persistAppSettings(
@@ -96,6 +97,7 @@ describe('app-settings', () => {
         xLayoutEnabled: true,
         browsingHistoryEnabled: true,
         followGroupsEnabled: false,
+        xbTopicPage: true,
       },
       storage,
     )
@@ -124,6 +126,7 @@ describe('app-settings', () => {
       xLayoutEnabled: true,
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
+      xbTopicPage: true,
     })
   })
 
