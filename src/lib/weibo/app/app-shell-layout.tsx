@@ -16,44 +16,6 @@ import {
 } from '@/lib/weibo/route/page-descriptor'
 import { parseWeiboUrl } from '@/lib/weibo/route/parse-weibo-url'
 
-const PAGE_LABELS: Record<WeiboPageDescriptor['kind'], string> = {
-  home: '主页',
-  profile: '个人主页',
-  follow: '关注/粉丝',
-  favorites: '收藏',
-  status: '微博详情',
-  notifications: '通知',
-  explore: '探索',
-  history: '历史',
-  topic: '话题',
-  unsupported: '不支持的页面',
-}
-
-function describePage(page: WeiboPageDescriptor): string {
-  switch (page.kind) {
-    case 'home':
-      return `当前标签: ${page.tab}`
-    case 'profile':
-      return `用户 ${page.profileId} via /${page.profileSource}`
-    case 'follow':
-      return `用户 ${page.uid} 的${page.tab === 'fans' ? '粉丝' : '关注'}`
-    case 'favorites':
-      return `用户 ${page.uid} 的收藏`
-    case 'status':
-      return `微博 ${page.statusId} by ${page.authorId}`
-    case 'notifications':
-      return `通知 - ${page.tab}`
-    case 'explore':
-      return `探索 - ${page.groupId}`
-    case 'history':
-      return '历史'
-    case 'topic':
-      return `#${page.topic}#`
-    case 'unsupported':
-      return `原因: ${page.reason}`
-  }
-}
-
 /** Routes whose primary feed scrolls inside ShellFrame `<main>` (timeline + profile posts). */
 function mainScrollRestorationKey(pathname: string, search: string): string | null {
   const page = parseWeiboUrl(new URL(`${pathname}${search}`, window.location.origin).href)
@@ -173,20 +135,5 @@ export function RewritePausedCard({ onResume }: { onResume: () => void }) {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export function UnsupportedPageCard({ page }: { page: WeiboPageDescriptor }) {
-  return (
-    <Card className="border-border/70 bg-card/95 shadow-none">
-      <CardHeader>
-        <CardTitle className="text-xl">{PAGE_LABELS[page.kind]}</CardTitle>
-        <CardDescription>{describePage(page)}</CardDescription>
-      </CardHeader>
-      <CardContent className="text-muted-foreground flex flex-col gap-3 text-sm">
-        <p>ShadowRoot 已成功挂载。</p>
-        <p>路由同步已激活，正在监听主世界历史更新。</p>
-      </CardContent>
-    </Card>
   )
 }

@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { Video } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -30,6 +31,11 @@ export function ComposeDialog({ open, onOpenChange }: ComposeDialogProps) {
 
 function ComposeForm({ onClose }: { onClose: () => void }) {
   const [text, setText] = useState('')
+
+  const openVideoUpload = () => {
+    window.open('https://weibo.com/upload/channel', '_blank')
+  }
+
   const mutation = useMutation({
     mutationFn: publishWeiboStatus,
     meta: {
@@ -64,6 +70,15 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
 
       <div className="flex items-center justify-start">
         <EmoticonPicker onSelect={(item) => setText((value) => `${value}${item.phrase}`)} />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={openVideoUpload}
+          className="ml-2"
+        >
+          <Video className="size-4" /> 视频
+        </Button>
       </div>
 
       <DialogFooter>

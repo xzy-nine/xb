@@ -145,6 +145,12 @@ export function AppShell() {
     )
   }
 
+  // When route is unsupported, shell-state hides the xb container and
+  // restores Weibo's native UI. Skip rendering the shell frame here.
+  if (page.kind === 'unsupported') {
+    return null
+  }
+
   return (
     <GenImageDialogProvider>
       <ShellFrame
