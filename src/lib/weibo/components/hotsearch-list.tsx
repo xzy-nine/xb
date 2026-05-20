@@ -49,7 +49,7 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
 
   const className =
-    'group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-2 rounded px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none'
+    'group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none'
 
   if (!xbTopicPage) {
     const url = `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${word}#`)}`
@@ -150,7 +150,7 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
       ) : items.length === 0 ? (
         <CardDescription className="px-2 pb-2">暂无热搜</CardDescription>
       ) : (
-        <div className="h-[380px] w-full overflow-x-hidden overflow-y-auto">
+        <div className="h-[380px] w-full scrollbar-none overflow-x-hidden overflow-y-auto">
           {items.map((item, index) => (
             <HotSearchItemComponent key={`${item.type}-${item.word}`} item={item} index={index} />
           ))}
