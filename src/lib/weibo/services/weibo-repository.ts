@@ -549,21 +549,33 @@ export interface UnreadCounts {
   mentions: number
   comments: number
   likes: number
+  dm: number
 }
 
 export async function checkUnreadNotifications(): Promise<UnreadCounts> {
   try {
-    const payload = await wbGet<{
-      data?: { mention_cmt?: number; mention_status?: number; cmt?: number; attitude?: number }
-    }>(WEIBO_ENDPOINTS.remind)
+    const payload = await mweiboFetch<{
+      ok: number
+      data?: {
+        mention_cmt?: number
+        mention_status?: number
+        cmt?: number
+        attitude?: number
+        dm?: number
+        group?: number
+        msgbox?: number
+        notice?: number
+      }
+    }>(WEIBO_ENDPOINTS.mweiboRemind)
     const data = payload?.data
     return {
       mentions: (data?.mention_cmt ?? 0) + (data?.mention_status ?? 0),
       comments: data?.cmt ?? 0,
       likes: data?.attitude ?? 0,
+      dm: (data?.dm ?? 0) + (data?.group ?? 0) + (data?.msgbox ?? 0) + (data?.notice ?? 0),
     }
   } catch {
-    return { mentions: 0, comments: 0, likes: 0 }
+    return { mentions: 0, comments: 0, likes: 0, dm: 0 }
   }
 }
 

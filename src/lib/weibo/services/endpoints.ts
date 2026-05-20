@@ -38,6 +38,9 @@ export const WEIBO_ENDPOINTS = {
   likes: '/ajax/message/attitudes',
   remind: '/ajax/message/remind',
   friends: '/ajax/friendships/friends',
+
+  /** m.weibo.cn unread remind endpoint (requires background fetch) */
+  mweiboRemind: 'https://m.weibo.cn/api/remind/unread',
 } as const
 
 type WeiboEndpointKey = keyof typeof WEIBO_ENDPOINTS

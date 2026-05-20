@@ -2,6 +2,8 @@ import type { HotSearchType } from '@/lib/app-settings'
 import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
+import type { UnreadCounts } from '@/lib/weibo/services/weibo-repository'
+import { checkUnreadNotifications } from '@/lib/weibo/services/weibo-repository'
 import {
   loadExploreGroups,
   loadExploreHot,
@@ -199,4 +201,25 @@ export function extractTopicChannels(pages: TimelinePage[] | undefined): TopicCh
 /** Extract head data from the first page of topic search results. */
 export function extractTopicHeadData(pages: TimelinePage[] | undefined) {
   return pages?.[0]?.headData ?? null
+}
+
+// ─── Unread Notifications ───
+
+/** Polls unread notification / DM counts from m.weibo.cn. */
+export const unreadNotificationsQueryOptions = {
+  queryKey: ['weibo', 'unread'] as const,
+  queryFn: (): Promise<UnreadCounts> => checkUnreadNotifications(),
+  staleTime: 30 * 1000,
+  refetchInterval: 60 * 1000,
+  gcTime: 5 * 60 * 1000,
+}
+
+/** Whether the notification tab should show a badge. */
+export function hasNotificationBadge(counts: UnreadCounts): boolean {
+  return counts.mentions + counts.comments + counts.likes > 0
+}
+
+/** Whether the DM tab should show a badge. */
+export function hasDmBadge(counts: UnreadCounts): boolean {
+  return counts.dm > 0
 }
