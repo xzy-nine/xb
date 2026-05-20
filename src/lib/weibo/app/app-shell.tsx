@@ -44,6 +44,7 @@ export function AppShell() {
   const theme = useAppSettings((state) => state.theme)
   const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
   const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
+  const contentWidth = useAppSettings((state) => state.contentWidth)
   const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
   const setTheme = useAppSettings((state) => state.setTheme)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
@@ -158,6 +159,7 @@ export function AppShell() {
         viewingProfileUserId={viewingProfileUserId}
         rewriteEnabled={rewriteEnabled}
         theme={theme}
+        contentWidth={contentWidth}
         browsingHistoryEnabled={browsingHistoryEnabled}
         onRewriteEnabledChange={(enabled: boolean) => {
           setRewriteEnabled(enabled)

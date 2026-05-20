@@ -5,7 +5,8 @@ import { useLocation, useOutletContext } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import type { AppTheme } from '@/lib/app-settings'
+import type { AppTheme, ContentWidth } from '@/lib/app-settings'
+import { cn } from '@/lib/utils'
 import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
 import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
@@ -30,6 +31,7 @@ interface ShellFrameProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
+  contentWidth: ContentWidth
   browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
@@ -48,6 +50,7 @@ export function ShellFrame({
   viewingProfileUserId,
   rewriteEnabled,
   theme,
+  contentWidth,
   browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
@@ -96,12 +99,23 @@ export function ShellFrame({
     main.scrollTop = y
   }, [location.pathname, location.search, mainRef])
 
+  const contentWidthClass: Record<ContentWidth, string> = {
+    standard: 'lg:max-w-[1000px] xl:max-w-[1200px]',
+    wide: 'lg:max-w-[1100px] xl:max-w-[1300px]',
+    wider: 'lg:max-w-[1200px] xl:max-w-[1400px]',
+  }
+
   return (
     <div
       className="bg-background text-foreground flex h-screen flex-col overflow-y-auto"
       ref={assignShellRef}
     >
-      <div className="relative mx-auto flex w-full gap-3 px-3 md:gap-4 md:px-4 lg:max-w-[1000px] xl:max-w-[1200px]">
+      <div
+        className={cn(
+          'relative mx-auto flex w-full gap-3 px-3 md:gap-4 md:px-4',
+          contentWidthClass[contentWidth],
+        )}
+      >
         <div className="sticky top-0 h-screen shrink-0">
           <NavigationRail
             pageKind={pageKind}
@@ -116,7 +130,7 @@ export function ShellFrame({
           />
         </div>
         <main className="min-w-0 flex-1 pb-8">{children}</main>
-        <div className="sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]">
+        <div className={cn('sticky top-0 hidden shrink-0 self-start pt-4 md:flex')}>
           <RightRail />
         </div>
         <BackToTop scrollRoot={mainScrollRoot} />

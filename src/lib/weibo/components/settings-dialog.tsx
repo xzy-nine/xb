@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DARK_BG_PRESETS, DEFAULT_APP_SETTINGS, LIGHT_BG_PRESETS } from '@/lib/app-settings'
 import type {
   AppTheme,
+  ContentWidth,
   DarkBgColorPreset,
   FontFamilyClass,
   FontSizeClass,
@@ -78,6 +79,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
   const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
+  const contentWidth = useAppSettings((s) => s.contentWidth)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
@@ -93,6 +95,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setLightModeBgColor = useAppSettings((s) => s.setLightModeBgColor)
   const setDarkModeBgColor = useAppSettings((s) => s.setDarkModeBgColor)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
+  const setContentWidth = useAppSettings((s) => s.setContentWidth)
   const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
   const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
@@ -195,6 +198,22 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 checked={xLayoutEnabled}
                 onCheckedChange={(checked) => setXLayoutEnabled(checked)}
               />
+            </Field>
+
+            <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+              <Select
+                value={contentWidth}
+                onValueChange={(value) => setContentWidth(value as ContentWidth)}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">标准</SelectItem>
+                  <SelectItem value="wide">宽</SelectItem>
+                  <SelectItem value="wider">更宽</SelectItem>
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field

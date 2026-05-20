@@ -16,6 +16,7 @@ import {
   type LetterSpacingClass,
   type LineHeightClass,
   type GenImageCardTheme,
+  type ContentWidth,
   type HotSearchType,
   type LightBgColorPreset,
 } from '@/lib/app-settings'
@@ -47,12 +48,14 @@ export interface AppSettingsStoreState extends AppSettings {
   setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
   setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
   setNativeTopicPage: (enabled: boolean) => Promise<void>
+  setContentWidth: (width: ContentWidth) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
 
 function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
   return {
+    contentWidth: state.contentWidth,
     theme: state.theme,
     rewriteEnabled: state.rewriteEnabled,
     fontSizeClass: state.fontSizeClass,
@@ -176,6 +179,9 @@ export function createAppSettingsStore(
       },
       async setNativeTopicPage(xbTopicPage) {
         await updateAndPersist({ xbTopicPage })
+      },
+      async setContentWidth(contentWidth) {
+        await updateAndPersist({ contentWidth })
       },
     }
   })

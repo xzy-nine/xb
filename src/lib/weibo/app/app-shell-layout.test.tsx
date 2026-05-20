@@ -25,6 +25,7 @@ describe('ShellFrame', () => {
             viewingProfileUserId={null}
             rewriteEnabled
             theme="system"
+            contentWidth="standard"
             browsingHistoryEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}

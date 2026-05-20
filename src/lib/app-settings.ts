@@ -90,7 +90,10 @@ export type LineHeightClass =
   | 'leading-relaxed'
   | 'leading-loose'
 
+export type ContentWidth = 'standard' | 'wide' | 'wider'
+
 export interface AppSettings {
+  contentWidth: ContentWidth
   theme: AppTheme
   rewriteEnabled: boolean
   fontSizeClass: FontSizeClass
@@ -138,6 +141,7 @@ export interface AppSettingsStorageArea {
 export const APP_SETTINGS_STORAGE_KEY = 'xb:app-settings'
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
+  contentWidth: 'standard' as ContentWidth,
   theme: 'system',
   rewriteEnabled: true,
   fontSizeClass: 'text-base',
@@ -241,6 +245,10 @@ function isLineHeightClass(value: unknown): value is LineHeightClass {
   )
 }
 
+function isContentWidth(value: unknown): value is ContentWidth {
+  return value === 'standard' || value === 'wide' || value === 'wider'
+}
+
 export function normalizeAppSettings(value: unknown): AppSettings {
   if (!value || typeof value !== 'object') {
     return { ...DEFAULT_APP_SETTINGS }
@@ -249,6 +257,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
   const candidate = value as Partial<AppSettings>
 
   return {
+    contentWidth: isContentWidth(candidate.contentWidth)
+      ? candidate.contentWidth
+      : DEFAULT_APP_SETTINGS.contentWidth,
     theme: isAppTheme(candidate.theme) ? candidate.theme : DEFAULT_APP_SETTINGS.theme,
     rewriteEnabled:
       typeof candidate.rewriteEnabled === 'boolean'

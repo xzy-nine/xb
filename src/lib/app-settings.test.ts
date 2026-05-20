@@ -46,6 +46,7 @@ describe('app-settings', () => {
     })
 
     expect(await loadAppSettings(storage)).toEqual({
+      contentWidth: 'standard',
       theme: 'dark',
       rewriteEnabled: false,
       fontSizeClass: 'text-sm',
@@ -74,6 +75,7 @@ describe('app-settings', () => {
 
     await persistAppSettings(
       {
+        contentWidth: 'standard',
         theme: 'light',
         rewriteEnabled: true,
         fontSizeClass: 'text-lg',
@@ -103,6 +105,7 @@ describe('app-settings', () => {
     )
 
     expect(storage.read()).toEqual({
+      contentWidth: 'standard',
       theme: 'light',
       rewriteEnabled: true,
       fontSizeClass: 'text-lg',
