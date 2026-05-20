@@ -5,6 +5,8 @@
   "singleQuote": true,
   "jsxSingleQuote": false,
   "sortImports": true,
-  "sortPackageJson": true,
+  "sortPackageJson": {
+    "sortScripts": true
+  },
   "sortTailwindcss": true
 }

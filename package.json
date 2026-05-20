@@ -22,19 +22,22 @@
   "type": "module",
   "scripts": {
     "build": "wxt build",
+    "build:edge": "wxt build -b edge",
     "build:firefox": "wxt build -b firefox",
     "compile": "tsc --noEmit",
     "dev": "wxt",
+    "dev:edge": "wxt -b edge",
     "dev:firefox": "wxt -b firefox",
+    "knip": "knip",
+    "lint": "oxfmt --no-error-on-unmatched-pattern && oxlint --fix --no-error-on-unmatched-pattern",
     "postinstall": "wxt prepare",
+    "preinstall": "npx only-allow bun",
+    "prepare": "husky",
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "zip": "wxt zip",
-    "zip:firefox": "wxt zip -b firefox",
-    "preinstall": "npx only-allow bun",
-    "prepare": "husky",
-    "lint": "oxfmt --no-error-on-unmatched-pattern && oxlint --fix --no-error-on-unmatched-pattern",
-    "knip": "knip"
+    "zip:edge": "wxt zip -b edge",
+    "zip:firefox": "wxt zip -b firefox"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
