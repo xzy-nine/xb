@@ -1,6 +1,6 @@
 import { Sparkles, Zap } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useOutletContext } from 'react-router'
 
 import { Button } from '@/components/ui/button'
@@ -61,6 +61,15 @@ export function ShellFrame({
   const locationRef = useRef(location)
   locationRef.current = location
 
+  const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
+  const assignShellRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      mainRef.current = node
+      setMainScrollRoot((prev) => (prev === node ? prev : node))
+    },
+    [mainRef],
+  )
+
   useEffect(() => {
     const main = mainRef.current
     if (!main) {
@@ -90,7 +99,7 @@ export function ShellFrame({
   return (
     <div
       className="bg-background text-foreground flex h-screen flex-col overflow-y-auto"
-      ref={mainRef}
+      ref={assignShellRef}
     >
       <div className="relative mx-auto flex w-full gap-3 px-3 md:gap-4 md:px-4 lg:max-w-[1000px] xl:max-w-[1200px]">
         <div className="sticky top-0 h-screen shrink-0">
@@ -110,7 +119,7 @@ export function ShellFrame({
         <div className="sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]">
           <RightRail />
         </div>
-        <BackToTop containerRef={mainRef} />
+        <BackToTop scrollRoot={mainScrollRoot} />
       </div>
     </div>
   )
