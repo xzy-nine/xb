@@ -52,7 +52,6 @@ export interface AppSettingsStoreState extends AppSettings {
   setGlassOpacity: (opacity: number) => Promise<void>
   setGlassBlur: (blur: number) => Promise<void>
   setBackgroundImageUrl: (url: string) => Promise<void>
-  setMainColumnMaxWidth: (maxWidth: number) => Promise<void>
   setXLayoutEnabled: (enabled: boolean) => Promise<void>
   setWaterfallColumnCount: (count: number) => Promise<void>
   setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
@@ -93,7 +92,6 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     backgroundImageUrl: state.backgroundImageUrl,
     glassOpacity: state.glassOpacity,
     glassBlur: state.glassBlur,
-    mainColumnMaxWidth: state.mainColumnMaxWidth,
     xLayoutEnabled: state.xLayoutEnabled,
     waterfallColumnCount: state.waterfallColumnCount,
     browsingHistoryEnabled: state.browsingHistoryEnabled,
@@ -207,9 +205,6 @@ export function createAppSettingsStore(
       },
       async setBackgroundImageUrl(backgroundImageUrl) {
         await updateAndPersist({ backgroundImageUrl })
-      },
-      async setMainColumnMaxWidth(mainColumnMaxWidth) {
-        await updateAndPersist({ mainColumnMaxWidth })
       },
       async setXLayoutEnabled(xLayoutEnabled) {
         await updateAndPersist({ xLayoutEnabled })

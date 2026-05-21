@@ -80,7 +80,6 @@ export function ShellFrame({
   const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
-  const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
 
   const glassStyle = useMemo<React.CSSProperties>(
@@ -164,7 +163,6 @@ export function ShellFrame({
           'relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4',
           waterfallColumnCount > 1 ? '' : contentWidthClass[contentWidth],
         )}
-        style={{ maxWidth: waterfallColumnCount > 1 ? '2000px' : `${mainColumnMaxWidth}px` }}
       >
         <div className="sticky top-0 h-screen shrink-0 flex-col">
           <NavigationRail
