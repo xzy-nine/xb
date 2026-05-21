@@ -614,8 +614,7 @@ function toUrlEntities(status: WeiboStatus, options?: { excludeImageEntities?: b
       const shortUrl = entity.short_url?.trim() ?? ''
       const title = entity.url_title?.trim() ?? ''
       const rawUrlType = entity.url_type
-      const hasUrlType =
-        rawUrlType !== undefined && rawUrlType !== null && String(rawUrlType).trim() !== ''
+      const hasUrlType = rawUrlType !== undefined && rawUrlType !== null
       const isImageEntity = Array.isArray(entity.pic_ids) && entity.pic_ids.length > 0
       const targetUrl =
         entity.h5_target_url?.trim() ??
