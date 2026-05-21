@@ -193,7 +193,7 @@ describe('FeedCard', () => {
     await waitFor(() => {
       expect(screen.getByRole('link', { name: '#话题#' })).toHaveAttribute(
         'href',
-        'https://s.weibo.com/weibo?q=%23%E8%AF%9D%E9%A2%98%23',
+        '/topic?q=%E8%AF%9D%E9%A2%98',
       )
     })
 

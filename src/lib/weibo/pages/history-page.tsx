@@ -97,8 +97,8 @@ export function HistoryPage() {
   }, [entries])
 
   return (
-    <div className="flex flex-col gap-3 pt-4">
-      <div className="flex items-center justify-between px-4">
+    <div className="flex flex-col gap-3">
+      <div className="bg-background/80 sticky top-0 z-10 flex items-center justify-between p-4 backdrop-blur">
         <h1 className="text-lg font-semibold">
           浏览历史{' '}
           <span className="text-muted-foreground text-xs font-normal">最多保存{MAX_ENTRIES}条</span>

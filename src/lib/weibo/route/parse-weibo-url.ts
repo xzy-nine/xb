@@ -92,6 +92,11 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
     return { kind: 'history' }
   }
 
+  if (parts[0] === 'topic') {
+    const q = url.searchParams.get('q')?.trim()
+    return q ? { kind: 'topic', topic: q } : { kind: 'unsupported', reason: 'unmatched-path' }
+  }
+
   if (parts.length >= 2 && /^\d+$/.test(parts[0])) {
     return {
       kind: 'status',

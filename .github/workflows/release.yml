@@ -47,7 +47,9 @@ jobs:
         run: bun run test:unit
 
       - name: Build
-        run: bun run build
+        env:
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+        run: bun run build && bun run build:firefox
 
       - name: Capture current release tag
         id: release_base
@@ -110,6 +112,7 @@ jobs:
       - name: Zip extensions
         env:
           EXTENSION_VERSION: ${{ needs.release.outputs.release_version }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
         run: |
           bun run zip
           bun run zip:firefox
@@ -121,11 +124,16 @@ jobs:
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          # FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
-          # FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
-          # FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
         run: |
           bunx wxt submit \
-            --chrome-zip .output/*-chrome.zip
-        # --firefox-zip .output/*-firefox.zip \
-        # --firefox-sources-zip .output/*-sources.zip
+            --chrome-zip .output/*-chrome.zip \
+            --firefox-zip .output/*-firefox.zip \
+            --firefox-sources-zip .output/*-sources.zip \
+            --firefox-channel listed \
+            --edge-zip .output/*-chrome.zip \

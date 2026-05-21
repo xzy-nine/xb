@@ -1,7 +1,6 @@
-import { usePrevious } from '@reactuses/core'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bug, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Spinner } from '@/components/ui/spinner'
@@ -105,6 +104,7 @@ export function HomeTimelinePage() {
   })
 
   const groupListId = showGroupSelect && selectedGroupGid !== 'default' ? selectedGroupGid : null
+  const followingNewPostsGroupKey = groupListId ?? 'default'
 
   const timelineQuery = useInfiniteQuery({
     ...homeTimelineInfiniteOptions(activeTab, groupListId),
@@ -122,14 +122,18 @@ export function HomeTimelinePage() {
   const isLoading = timelineQuery.isLoading
   const isRefreshing = timelineQuery.isFetching && !isFetchingNextPage && !isLoading
 
-  // ─── Scroll to top after refresh completes ───
-  const prevIsRefreshing = usePrevious(isRefreshing)
+  const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
+  fetchNextPageRef.current = timelineQuery.fetchNextPage
 
+  const wasRefreshingRef = useRef(false)
+
+  // ─── Scroll to top after refresh completes ───
   useEffect(() => {
-    if (prevIsRefreshing && !isRefreshing) {
+    if (wasRefreshingRef.current && !isRefreshing) {
       ctx.scrollMainToTop()
     }
-  }, [prevIsRefreshing, isRefreshing, ctx])
+    wasRefreshingRef.current = isRefreshing
+  }, [isRefreshing, ctx])
 
   // ─── IntersectionObserver for infinite scroll ───
   useEffect(() => {
@@ -139,7 +143,7 @@ export function HomeTimelinePage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          void timelineQuery.fetchNextPage()
+          void fetchNextPageRef.current()
         }
       },
       { threshold: 0.2 },
@@ -147,7 +151,7 @@ export function HomeTimelinePage() {
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasNextPage, timelineQuery])
+  }, [hasNextPage])
 
   // ─── New posts check (following tab only) ───
   const followingFirstItemId = items.length > 0 && activeTab === 'following' ? items[0].id : null
@@ -158,24 +162,26 @@ export function HomeTimelinePage() {
     refetchOnWindowFocus: true,
   })
 
-  const [hasNewPosts, setHasNewPosts] = useState(false)
-
-  useEffect(() => {
-    if (!newPostsCheckQuery.data || hasNewPosts || newPostsCheckQuery.isFetching) return
-    setHasNewPosts(true)
-  }, [hasNewPosts, newPostsCheckQuery.data, newPostsCheckQuery.isFetching])
+  const dismissedNewPostsCheckAtByGroup = useRef<Record<string, number>>({})
+  const dismissedForGroup = dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] ?? 0
+  const showNewPostsBubble =
+    activeTab === 'following' &&
+    Boolean(newPostsCheckQuery.data) &&
+    !newPostsCheckQuery.isFetching &&
+    newPostsCheckQuery.dataUpdatedAt > dismissedForGroup
 
   const handleNewPostsClick = useCallback(() => {
-    setHasNewPosts(false)
+    dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] =
+      newPostsCheckQuery.dataUpdatedAt
     queryClient.setQueryData(
-      ['weibo', 'timeline', 'following', groupListId ?? 'default', 'new-check'],
+      ['weibo', 'timeline', 'following', followingNewPostsGroupKey, 'new-check'],
       null,
     )
     void queryClient.invalidateQueries({
-      queryKey: ['weibo', 'timeline', 'following', groupListId ?? 'default'],
+      queryKey: ['weibo', 'timeline', 'following', followingNewPostsGroupKey],
       exact: true,
     })
-  }, [queryClient, groupListId])
+  }, [queryClient, followingNewPostsGroupKey, newPostsCheckQuery.dataUpdatedAt])
 
   const handleGroupSelect = useCallback(
     (gid: string) => {
@@ -188,29 +194,6 @@ export function HomeTimelinePage() {
 
   return (
     <div className="relative">
-      {/* DEBUG: 本地调试气泡，调试完删除 */}
-      {import.meta.env.DEV && (
-        <button
-          type="button"
-          onClick={() => {
-            setHasNewPosts(true)
-            queryClient.setQueryData(['weibo', 'timeline', 'following', 'new-check'], {
-              authors: [
-                { id: 'd1', name: '测试用户A', avatarUrl: null },
-                { id: 'd2', name: '测试用户B', avatarUrl: null },
-                { id: 'd3', name: '测试用户C', avatarUrl: null },
-                { id: 'd4', name: '测试用户D', avatarUrl: null },
-                { id: 'd5', name: '测试用户E', avatarUrl: null },
-              ],
-              count: 5,
-            })
-          }}
-          className="fixed right-4 bottom-4 z-50 flex items-center gap-1.5 rounded-full bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-yellow-600"
-        >
-          <Bug className="size-3.5" />
-          触发气泡
-        </button>
-      )}
       <Tabs
         value={activeTab}
         className="flex flex-col"
@@ -234,7 +217,7 @@ export function HomeTimelinePage() {
             onRefresh={() => void timelineQuery.refetch()}
             isRefreshing={activeTab === 'following' && isRefreshing}
           />
-          {hasNewPosts ? (
+          {showNewPostsBubble ? (
             <div className="absolute top-20 left-1/2 z-20 -translate-x-1/2">
               <NewPostsBubble
                 authors={newPostsCheckQuery.data?.authors ?? []}

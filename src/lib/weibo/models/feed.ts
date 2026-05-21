@@ -109,9 +109,24 @@ export interface FeedItem {
   retweetedStatus?: Omit<FeedItem, 'retweetedStatus'> | null
 }
 
+export interface TopicChannel {
+  id: string
+  name: string
+}
+
+export interface TopicHeadData {
+  bgImgUrl: string | null
+  title: string
+  midtext: string
+  downtext: string
+  themeBackgroundColor: string | null
+}
+
 export interface TimelinePage {
   items: FeedItem[]
   nextCursor: string | null
+  channels?: TopicChannel[]
+  headData?: TopicHeadData | null
 }
 
 /** Minimal fields needed to navigate to a status detail URL from the shell. */

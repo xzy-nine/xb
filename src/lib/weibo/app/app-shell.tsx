@@ -10,7 +10,6 @@ import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import { StatusDetailDialog } from '@/lib/weibo/components/status-detail-dialog'
-import { useNotificationBadge } from '@/lib/weibo/hooks/use-notification-badge'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
@@ -49,6 +48,7 @@ export function AppShell() {
   const statusDetailPopupEnabled = useAppSettings((state) => state.statusDetailPopupEnabled)
   const statusDetailPopupPosition = useAppSettings((state) => state.statusDetailPopupPosition)
   const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
+  const contentWidth = useAppSettings((state) => state.contentWidth)
   const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
   const setTheme = useAppSettings((state) => state.setTheme)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
@@ -59,8 +59,6 @@ export function AppShell() {
   const [statusDetailDialogOpen, setStatusDetailDialogOpen] = useState(false)
   const [statusDetailItem, setStatusDetailItem] = useState<StatusDetailNavigationItem | null>(null)
   const mainRef = useRef<HTMLDivElement | null>(null)
-
-  useNotificationBadge()
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
 
@@ -174,6 +172,12 @@ export function AppShell() {
     )
   }
 
+  // When route is unsupported, shell-state hides the xb container and
+  // restores Weibo's native UI. Skip rendering the shell frame here.
+  if (page.kind === 'unsupported') {
+    return null
+  }
+
   return (
     <GenImageDialogProvider>
       <ShellFrame
@@ -181,6 +185,7 @@ export function AppShell() {
         viewingProfileUserId={viewingProfileUserId}
         rewriteEnabled={rewriteEnabled}
         theme={theme}
+        contentWidth={contentWidth}
         browsingHistoryEnabled={browsingHistoryEnabled}
         onRewriteEnabledChange={(enabled: boolean) => {
           setRewriteEnabled(enabled)

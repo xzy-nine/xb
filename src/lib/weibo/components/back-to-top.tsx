@@ -1,36 +1,32 @@
 import { useScroll } from '@reactuses/core'
 import { ArrowUp } from 'lucide-react'
-import { useEffect, useState, type RefObject } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface BackToTopProps {
-  /** 滚动容器引用，未提供时回退到 window */
-  containerRef?: RefObject<HTMLElement | null>
+  /**
+   * 滚动容器（由父级在 ref callback 中传入，避免子树在 ref 挂载前读不到元素）。
+   * 未提供或非 HTMLElement 时回退到 window。
+   */
+  scrollRoot?: HTMLElement | Window | null
   /** 显示按钮的阈值（滚动距离），默认 200px */
   threshold?: number
 }
 
-export function BackToTop({ containerRef, threshold = 200 }: BackToTopProps) {
-  const [container, setContainer] = useState<HTMLElement | Window | null>(
-    containerRef?.current ?? window,
-  )
-
-  useEffect(() => {
-    setContainer(containerRef?.current ?? window)
-  }, [containerRef])
-
-  const [, scrollTop] = useScroll(container)
+export function BackToTop({ scrollRoot, threshold = 200 }: BackToTopProps) {
+  const target =
+    scrollRoot instanceof HTMLElement || scrollRoot instanceof Window ? scrollRoot : window
+  const [, scrollTop] = useScroll(target)
   const isVisible = scrollTop > threshold
 
   function scrollToTop() {
-    if (container instanceof Window) {
-      container.scrollTo({ top: 0, behavior: 'smooth' })
+    if (target instanceof Window) {
+      target.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
-    container?.scrollTo({ top: 0, behavior: 'smooth' })
+    target.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (

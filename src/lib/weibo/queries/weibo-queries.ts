@@ -1,10 +1,11 @@
-
 import type { HotSearchType } from '@/lib/app-settings'
-import type { FeedAuthor, TimelinePage } from '@/lib/weibo/models/feed'
+import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
+import type { UnreadCounts } from '@/lib/weibo/services/weibo-repository'
+import { checkUnreadNotifications } from '@/lib/weibo/services/weibo-repository'
 import {
   loadComments,
   loadExploreGroups,
@@ -17,6 +18,7 @@ import {
   loadMentions,
   loadProfilePosts,
   loadSearch,
+  loadTopicSearch,
   type HomeTimelineTab,
 } from '@/lib/weibo/services/weibo-repository'
 
@@ -93,7 +95,7 @@ export function homeTimelineInfiniteOptions(
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
       useGroupTimeline
         ? loadGroupTimeline(groupListId!, { cursor: pageParam })
-        : loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
+        : loadHomeTimeline(activeTimelineTab, { cursor: pageParam, existingCount: 0 }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: Infinity,
@@ -199,4 +201,47 @@ export const followGroupsQueryOptions = {
   queryKey: ['weibo', 'follow-groups'] as const,
   queryFn: () => loadFollowGroups(),
   staleTime: 60 * 60 * 1000,
+}
+
+export function topicSearchInfiniteOptions(topic: string, channelType?: string) {
+  return {
+    queryKey: ['weibo', 'topic', topic, channelType ?? '1'] as const,
+    queryFn: ({ pageParam }: { pageParam: number }) =>
+      loadTopicSearch(topic, pageParam, channelType),
+    initialPageParam: 1 as number,
+    getNextPageParam: (lastPage: TimelinePage, allPages: TimelinePage[]) =>
+      lastPage.items.length > 0 ? allPages.length + 1 : undefined,
+    staleTime: 5 * 60 * 1000,
+  }
+}
+
+/** Extract channels from the first page of topic search results. */
+export function extractTopicChannels(pages: TimelinePage[] | undefined): TopicChannel[] {
+  return pages?.[0]?.channels ?? []
+}
+
+/** Extract head data from the first page of topic search results. */
+export function extractTopicHeadData(pages: TimelinePage[] | undefined) {
+  return pages?.[0]?.headData ?? null
+}
+
+// ─── Unread Notifications ───
+
+/** Polls unread notification / DM counts from m.weibo.cn. */
+export const unreadNotificationsQueryOptions = {
+  queryKey: ['weibo', 'unread'] as const,
+  queryFn: (): Promise<UnreadCounts> => checkUnreadNotifications(),
+  staleTime: 30 * 1000,
+  refetchInterval: 60 * 1000,
+  gcTime: 5 * 60 * 1000,
+}
+
+/** Whether the notification tab should show a badge. */
+export function hasNotificationBadge(counts: UnreadCounts): boolean {
+  return counts.mentions + counts.comments + counts.likes > 0
+}
+
+/** Whether the DM tab should show a badge. */
+export function hasDmBadge(counts: UnreadCounts): boolean {
+  return counts.dm > 0
 }

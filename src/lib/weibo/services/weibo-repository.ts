@@ -41,6 +41,10 @@ import {
 } from '@/lib/weibo/services/adapters/hotsearch'
 import { adaptLikes, type WeiboLikesPayload } from '@/lib/weibo/services/adapters/likes'
 import {
+  adaptMweiboTopicResponse,
+  type MweiboTopicPayload,
+} from '@/lib/weibo/services/adapters/m-weibo-topic'
+import {
   adaptMentionsResponse,
   type WeiboMentionsPayload,
 } from '@/lib/weibo/services/adapters/mentions'
@@ -65,6 +69,7 @@ import { wbGet } from '@/lib/weibo/services/client'
 import { wbPostForm } from '@/lib/weibo/services/client'
 import type { WeiboEndpointPath } from '@/lib/weibo/services/endpoints'
 import { WEIBO_ENDPOINTS } from '@/lib/weibo/services/endpoints'
+import { buildTopicSearchUrl, mweiboFetch } from '@/lib/weibo/services/m-weibo-client'
 import type { WeiboLongTextData } from '@/lib/weibo/utils/transform'
 
 export type HomeTimelineTab = 'for-you' | 'following'
@@ -561,21 +566,33 @@ export interface UnreadCounts {
   mentions: number
   comments: number
   likes: number
+  dm: number
 }
 
 export async function checkUnreadNotifications(): Promise<UnreadCounts> {
   try {
-    const payload = await wbGet<{
-      data?: { mention_cmt?: number; mention_status?: number; cmt?: number; attitude?: number }
-    }>(WEIBO_ENDPOINTS.remind)
+    const payload = await mweiboFetch<{
+      ok: number
+      data?: {
+        mention_cmt?: number
+        mention_status?: number
+        cmt?: number
+        attitude?: number
+        dm?: number
+        group?: number
+        msgbox?: number
+        notice?: number
+      }
+    }>(WEIBO_ENDPOINTS.mweiboRemind)
     const data = payload?.data
     return {
       mentions: (data?.mention_cmt ?? 0) + (data?.mention_status ?? 0),
       comments: data?.cmt ?? 0,
       likes: data?.attitude ?? 0,
+      dm: (data?.dm ?? 0) + (data?.group ?? 0) + (data?.msgbox ?? 0) + (data?.notice ?? 0),
     }
   } catch {
-    return { mentions: 0, comments: 0, likes: 0 }
+    return { mentions: 0, comments: 0, likes: 0, dm: 0 }
   }
 }
 
@@ -610,4 +627,14 @@ export async function loadFriends(
 
   const payload = await wbGet<WeiboFriendsPayload>(WEIBO_ENDPOINTS.friends, params)
   return adaptFriendsResponse(payload)
+}
+
+export async function loadTopicSearch(
+  topic: string,
+  page: number,
+  channelType?: string,
+): Promise<TimelinePage> {
+  const url = buildTopicSearchUrl(topic, page, channelType)
+  const payload = await mweiboFetch<MweiboTopicPayload>(url)
+  return adaptMweiboTopicResponse(payload, page)
 }

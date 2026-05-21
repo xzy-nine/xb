@@ -1,5 +1,5 @@
 import { Smile, Trash } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -26,15 +26,17 @@ export function EmoticonPicker({ onSelect }: { onSelect: (entry: EmoticonEntry) 
   const remember = useRecentEmoticons((state) => state.remember)
   const clearRecent = useRecentEmoticons((state) => state.clear)
 
-  useEffect(() => {
-    if (!isHydrated) {
-      void hydrate()
-    }
-  }, [hydrate, isHydrated])
-
   const defaultTab = data?.groups[0]?.title
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen)
+        if (nextOpen && !isHydrated) {
+          void hydrate()
+        }
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <Button type="button" size="sm" variant="outline">
           <Smile className="size-4" />

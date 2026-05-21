@@ -15,7 +15,7 @@ function ProfileIdentity({ profile }: { profile: UserProfile }) {
   return (
     <>
       <div className="flex items-end justify-between">
-        <div className="relative -mt-[15%]">
+        <div className="relative mt-[-15%]">
           <Avatar className="border-background size-[22%] max-h-[134px] min-h-20 max-w-[134px] min-w-20 border-4">
             <AvatarImage src={profile.avatarUrl ?? undefined} alt={profile.name} />
             <AvatarFallback className="text-3xl font-bold">
@@ -120,7 +120,7 @@ export function ProfileHeader({ profile }: { profile: UserProfile }) {
       <CardContent className="p-0">
         <ProfileBanner
           bannerUrl={profile.bannerUrl}
-          className="bg-muted relative aspect-3/1 w-full overflow-hidden"
+          className="bg-muted relative aspect-3/2 w-full overflow-hidden"
           fallbackClassName="h-full w-full bg-linear-to-br from-blue-400 via-purple-400 to-pink-400"
         />
         <div className="relative px-4">

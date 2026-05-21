@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription } from '@/components/ui/card'
@@ -45,15 +46,29 @@ function getRankClassName(index: number): string {
 
 function HotSearchItemComponent({ item, index }: { item: HotSearchListData; index: number }) {
   const word = normalizeWord(item.word)
-  const url = `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${word}#`)}`
+  const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
+
+  const className =
+    'group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none'
+
+  if (!xbTopicPage) {
+    const url = `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${word}#`)}`
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className={className}>
+        <span
+          className={cn(getRankClassName(index), 'w-4 shrink-0 text-xs font-medium tabular-nums')}
+        >
+          {index + 1}
+        </span>
+        <span className="text-foreground group-hover:text-foreground min-w-0 flex-1 truncate text-sm transition-colors">
+          {word}
+        </span>
+      </a>
+    )
+  }
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-2 rounded px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-    >
+    <Link to={`/topic?q=${encodeURIComponent(word)}`} className={className}>
       <span
         className={cn(getRankClassName(index), 'w-4 shrink-0 text-xs font-medium tabular-nums')}
       >
@@ -62,12 +77,7 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
       <span className="text-foreground group-hover:text-foreground min-w-0 flex-1 truncate text-sm transition-colors">
         {word}
       </span>
-      {/* {item.num > 0 ? (
-            <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-              {formatWeiboCount(item.num)}
-            </span>
-          ) : null} */}
-    </a>
+    </Link>
   )
 }
 
@@ -140,7 +150,7 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
       ) : items.length === 0 ? (
         <CardDescription className="px-2 pb-2">暂无热搜</CardDescription>
       ) : (
-        <div className="h-[380px] w-full overflow-x-hidden overflow-y-auto">
+        <div className="h-[380px] w-full scrollbar-none overflow-x-hidden overflow-y-auto">
           {items.map((item, index) => (
             <HotSearchItemComponent key={`${item.type}-${item.word}`} item={item} index={index} />
           ))}

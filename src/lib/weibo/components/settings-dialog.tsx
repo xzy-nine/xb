@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DARK_BG_PRESETS, DEFAULT_APP_SETTINGS, LIGHT_BG_PRESETS } from '@/lib/app-settings'
 import type {
   AppTheme,
+  ContentWidth,
   DarkBgColorPreset,
   FontFamilyClass,
   FontSizeClass,
@@ -91,7 +92,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const mainColumnMaxWidth = useAppSettings((s) => s.mainColumnMaxWidth)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
+  const contentWidth = useAppSettings((s) => s.contentWidth)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
+  const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -113,9 +116,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setMainColumnMaxWidth = useAppSettings((s) => s.setMainColumnMaxWidth)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
   const setWaterfallColumnCount = useAppSettings((s) => s.setWaterfallColumnCount)
+  const setContentWidth = useAppSettings((s) => s.setContentWidth)
   const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
   const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
+  const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -260,6 +265,22 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </Field>
 
+            <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+              <Select
+                value={contentWidth}
+                onValueChange={(value) => setContentWidth(value as ContentWidth)}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">标准</SelectItem>
+                  <SelectItem value="wide">宽</SelectItem>
+                  <SelectItem value="wider">更宽</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
             <Field
               label="浏览历史"
               description={`记录最近访问过的${MAX_ENTRIES}条微博（储存在本地）`}
@@ -274,6 +295,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <Switch
                 checked={followGroupsEnabled}
                 onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
+              />
+            </Field>
+
+            <Field
+              label="xb 内置话题页"
+              description="打开使用 xb 内置话题页，关闭则跳转原微博话题页"
+            >
+              <Switch
+                checked={xbTopicPage}
+                onCheckedChange={(checked) => setNativeTopicPage(checked)}
               />
             </Field>
           </TabsContent>

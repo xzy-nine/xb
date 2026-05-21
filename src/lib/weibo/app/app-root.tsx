@@ -13,7 +13,6 @@ import { Spinner } from '@/components/ui/spinner'
 import { AppShell } from '@/lib/weibo/app/app-shell'
 import { usePrewarmEmoticonConfig } from '@/lib/weibo/app/emoticon-query'
 import { AppErrorBoundary } from '@/lib/weibo/app/error-boundary'
-import { UnsupportedPageContent } from '@/lib/weibo/app/pages/unsupported-page-content'
 import { WeiboHistorySync } from '@/lib/weibo/app/weibo-history-sync'
 
 const ExplorePage = lazy(() =>
@@ -39,6 +38,9 @@ const StatusDetailPage = lazy(() =>
 )
 const HistoryPage = lazy(() =>
   import('@/lib/weibo/pages/history-page').then((m) => ({ default: m.HistoryPage })),
+)
+const TopicPage = lazy(() =>
+  import('@/lib/weibo/pages/topic-page').then((m) => ({ default: m.TopicPage })),
 )
 
 const queryClient = new QueryClient({
@@ -88,7 +90,7 @@ function AppRootBootstrap() {
             <Route path="u/:uid" element={<ProfilePage />} />
             <Route path="u/page/fav/:uid" element={<FavoritesPage />} />
             <Route path="n/:uname" element={<ProfilePage />} />
-            <Route path="unsupported" element={<UnsupportedPageContent />} />
+            <Route path="topic" element={<TopicPage />} />
             <Route path="u/page/follow/:uid" element={<FollowFansPage />} />
             <Route path="at/weibo" element={<NotificationsPage />} />
             <Route path="comment/inbox" element={<NotificationsPage />} />

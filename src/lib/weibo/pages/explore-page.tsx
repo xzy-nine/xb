@@ -1,4 +1,3 @@
-import { useIntersectionObserver } from '@reactuses/core'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -130,15 +129,22 @@ export function ExplorePage() {
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])
 
-  useIntersectionObserver(
-    loadMoreRef,
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        void fetchNextPageRef.current()
-      }
-    },
-    { threshold: 0.2 },
-  )
+  useEffect(() => {
+    const el = loadMoreRef.current
+    if (!el || !hasNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchNextPageRef.current()
+        }
+      },
+      { threshold: 0.2 },
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage])
 
   const handleGroupClick = (group: ExploreGroup) => {
     navigate(`/hot/weibo/${group.gid}`)

@@ -151,18 +151,32 @@ function renderEntityLink(entity: FeedUrlEntity, key: string) {
   )
 }
 
-function renderTopicLink(entity: FeedTopicEntity, key: string) {
+function TopicLink({ entity, topicKey }: { entity: FeedTopicEntity; topicKey: string }) {
+  const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
+
+  if (!xbTopicPage) {
+    return (
+      <a
+        key={topicKey}
+        href={`https://s.weibo.com/weibo?q=${encodeURIComponent(`#${entity.title}#`)}`}
+        target="_blank"
+        rel="noreferrer"
+        className={LINK_TEXT_CLASS_NAME}
+      >
+        #{entity.title}#
+      </a>
+    )
+  }
+
   return (
-    <a
-      key={key}
-      href={entity.url}
-      target="_blank"
-      rel="noreferrer"
-      className={LINK_TEXT_CLASS_NAME}
-    >
+    <Link key={topicKey} to={entity.url} className={LINK_TEXT_CLASS_NAME}>
       #{entity.title}#
-    </a>
+    </Link>
   )
+}
+
+function renderTopicLink(entity: FeedTopicEntity, key: string) {
+  return <TopicLink entity={entity} topicKey={key} />
 }
 
 function renderTextWithEntities(

@@ -26,7 +26,7 @@ export default defineConfig({
     },
     version: extensionVersion,
     version_name: extensionVersion,
-    permissions: ['storage'],
+    permissions: ['storage', 'cookies'],
     host_permissions: [
       'https://weibo.com/*',
       'https://www.weibo.com/*',
@@ -34,6 +34,8 @@ export default defineConfig({
       'https://*.sinaimg.cn/*',
       'https://*.sinajs.cn/*',
       'https://*.weibocdn.com/*',
+      // m.weibo.cn API for topic search (proxied via background SW)
+      'https://m.weibo.cn/*',
       // 'https://s.weibo.com/*',
     ],
     web_accessible_resources: [
@@ -48,7 +50,7 @@ export default defineConfig({
     ],
     browser_specific_settings: {
       gecko: {
-        id: '@xb-weibo',
+        id: process.env.FIREFOX_EXTENSION_ID ?? '@xb-weibo',
         data_collection_permissions: {
           required: ['none'],
         },

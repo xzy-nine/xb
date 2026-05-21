@@ -1,13 +1,14 @@
 import { Sparkles, Zap } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useOutletContext } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getUiPortalContainer } from '@/components/ui/portal'
-import type { AppTheme } from '@/lib/app-settings'
+import type { AppTheme, ContentWidth } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { cn } from '@/lib/utils'
 import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
 import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
@@ -17,41 +18,6 @@ import {
   type WeiboPageDescriptor,
 } from '@/lib/weibo/route/page-descriptor'
 import { parseWeiboUrl } from '@/lib/weibo/route/parse-weibo-url'
-
-const PAGE_LABELS: Record<WeiboPageDescriptor['kind'], string> = {
-  home: '主页',
-  profile: '个人主页',
-  follow: '关注/粉丝',
-  favorites: '收藏',
-  status: '微博详情',
-  notifications: '通知',
-  explore: '探索',
-  history: '历史',
-  unsupported: '不支持的页面',
-}
-
-function describePage(page: WeiboPageDescriptor): string {
-  switch (page.kind) {
-    case 'home':
-      return `当前标签: ${page.tab}`
-    case 'profile':
-      return `用户 ${page.profileId} via /${page.profileSource}`
-    case 'follow':
-      return `用户 ${page.uid} 的${page.tab === 'fans' ? '粉丝' : '关注'}`
-    case 'favorites':
-      return `用户 ${page.uid} 的收藏`
-    case 'status':
-      return `微博 ${page.statusId} by ${page.authorId}`
-    case 'notifications':
-      return `通知 - ${page.tab}`
-    case 'explore':
-      return `探索 - ${page.groupId}`
-    case 'history':
-      return '历史'
-    case 'unsupported':
-      return `原因: ${page.reason}`
-  }
-}
 
 /** Routes whose primary feed scrolls inside ShellFrame `<main>` (timeline + profile posts). */
 function mainScrollRestorationKey(pathname: string, search: string): string | null {
@@ -67,6 +33,7 @@ interface ShellFrameProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
+  contentWidth: ContentWidth
   browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
@@ -85,6 +52,7 @@ export function ShellFrame({
   viewingProfileUserId,
   rewriteEnabled,
   theme,
+  contentWidth,
   browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
@@ -97,6 +65,15 @@ export function ShellFrame({
   const savedMainScrollByRouteRef = useRef<Partial<Record<string, number>>>({})
   const locationRef = useRef(location)
   locationRef.current = location
+
+  const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
+  const assignShellRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      mainRef.current = node
+      setMainScrollRoot((prev) => (prev === node ? prev : node))
+    },
+    [mainRef],
+  )
 
   const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
   const backgroundColor = useAppSettings((s) => s.backgroundColor)
@@ -130,7 +107,6 @@ export function ShellFrame({
     portal.style.setProperty('--xb-glass-blur', `${glassBlur}px`)
     portal.style.setProperty('--xb-custom-bg', backgroundColor)
   }, [isGlassActive, glassOpacity, glassBlur, backgroundColor])
-
   useEffect(() => {
     const main = mainRef.current
     if (!main) {
@@ -157,6 +133,12 @@ export function ShellFrame({
     main.scrollTop = y
   }, [location.pathname, location.search, mainRef])
 
+  const contentWidthClass: Record<ContentWidth, string> = {
+    standard: 'lg:max-w-[1000px] xl:max-w-[1200px]',
+    wide: 'lg:max-w-[1100px] xl:max-w-[1300px]',
+    wider: 'lg:max-w-[1200px] xl:max-w-[1400px]',
+  }
+
   return (
     <div
       className="bg-background text-foreground flex h-screen flex-col overflow-hidden"
@@ -175,12 +157,16 @@ export function ShellFrame({
           : {}),
       }}
       data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
+      ref={assignShellRef}
     >
       <div
-        className="relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4"
+        className={cn(
+          'relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4',
+          waterfallColumnCount > 1 ? '' : contentWidthClass[contentWidth],
+        )}
         style={{ maxWidth: waterfallColumnCount > 1 ? '2000px' : `${mainColumnMaxWidth}px` }}
       >
-        <div className="flex h-full shrink-0 flex-col">
+        <div className="sticky top-0 h-screen shrink-0 flex-col">
           <NavigationRail
             pageKind={pageKind}
             viewingProfileUserId={viewingProfileUserId}
@@ -196,10 +182,14 @@ export function ShellFrame({
         <main className="no-scrollbar min-w-0 flex-1 overflow-y-auto pb-8" ref={mainRef}>
           {children}
         </main>
-        <div className="hidden shrink-0 pt-4 md:flex md:w-[240px] xl:w-[300px]">
+        <div
+          className={cn(
+            'sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]',
+          )}
+        >
           <RightRail />
         </div>
-        <BackToTop containerRef={mainRef} />
+        <BackToTop scrollRoot={mainScrollRoot} />
       </div>
     </div>
   )
@@ -224,20 +214,5 @@ export function RewritePausedCard({ onResume }: { onResume: () => void }) {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export function UnsupportedPageCard({ page }: { page: WeiboPageDescriptor }) {
-  return (
-    <Card className="border-border/70 bg-card/95 shadow-none">
-      <CardHeader>
-        <CardTitle className="text-xl">{PAGE_LABELS[page.kind]}</CardTitle>
-        <CardDescription>{describePage(page)}</CardDescription>
-      </CardHeader>
-      <CardContent className="text-muted-foreground flex flex-col gap-3 text-sm">
-        <p>ShadowRoot 已成功挂载。</p>
-        <p>路由同步已激活，正在监听主世界历史更新。</p>
-      </CardContent>
-    </Card>
   )
 }

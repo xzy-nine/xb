@@ -1,4 +1,5 @@
 import { useMediaQuery } from '@reactuses/core'
+import { useQuery } from '@tanstack/react-query'
 import {
   ArrowUpRightIcon,
   Bell,
@@ -22,6 +23,11 @@ import type { AppTheme } from '@/lib/app-settings'
 import { cn } from '@/lib/utils'
 import { ThemeModeToggle } from '@/lib/weibo/components/theme-mode-toggle'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
+import {
+  hasDmBadge,
+  hasNotificationBadge,
+  unreadNotificationsQueryOptions,
+} from '@/lib/weibo/queries/weibo-queries'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 
 function NavButton({
@@ -33,6 +39,7 @@ function NavButton({
   href,
   isExternal,
   variant,
+  showBadge,
 }: {
   children: React.ReactNode
   label: React.ReactNode
@@ -42,13 +49,23 @@ function NavButton({
   href?: string
   isExternal?: boolean
   variant?: React.ComponentProps<typeof Button>['variant']
+  showBadge?: boolean
 }) {
   const buttonVariant = variant ?? (isActive ? 'secondary' : 'ghost')
+  const iconWrap = (icon: React.ReactNode) =>
+    showBadge ? (
+      <span className="relative">
+        {icon}
+        <span className="absolute -top-1 -right-1 size-2 rounded-full bg-red-500" />
+      </span>
+    ) : (
+      icon
+    )
   const button = href ? (
     <Button
       asChild
       className={cn(
-        'flex items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
+        'flex items-center gap-2 transition-transform duration-200 active:scale-[0.96] px-3',
         showLabel ? 'justify-start' : 'justify-center',
       )}
       variant={buttonVariant}
@@ -62,7 +79,7 @@ function NavButton({
         aria-label={showLabel ? undefined : String(label)}
         aria-current={isActive ? 'page' : undefined}
       >
-        {children}
+        {iconWrap(children)}
         {showLabel && <span>{label}</span>}
       </a>
     </Button>
@@ -72,13 +89,13 @@ function NavButton({
       aria-label={showLabel ? undefined : String(label)}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'w-full items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
+        'w-full items-center gap-2 transition-transform duration-200 active:scale-[0.96] px-3',
         showLabel ? 'justify-start' : 'justify-center',
       )}
       onClick={onClick}
       size={showLabel ? 'default' : 'icon'}
     >
-      {children}
+      {iconWrap(children)}
       {showLabel && <span>{label}</span>}
     </Button>
   )
@@ -135,6 +152,10 @@ export function NavigationRail({
     currentUserUid === viewingProfileUserId
   const isFavoritesActive = pageKind === 'favorites'
 
+  const { data: unreadCounts } = useQuery(unreadNotificationsQueryOptions)
+  const showNotificationBadge = unreadCounts ? hasNotificationBadge(unreadCounts) : false
+  const showDmBadge = unreadCounts ? hasDmBadge(unreadCounts) : false
+
   return (
     <TooltipProvider>
       <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
@@ -175,15 +196,6 @@ export function NavigationRail({
               <Bookmark aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
-            <NavButton
-              label="通知"
-              showLabel={isXl}
-              isActive={pageKind === 'notifications'}
-              onClick={() => navigate('/at/weibo')}
-            >
-              <Bell aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
-
             {browsingHistoryEnabled && (
               <NavButton
                 label="历史"
@@ -196,6 +208,16 @@ export function NavigationRail({
             )}
 
             <NavButton
+              label="通知"
+              showLabel={isXl}
+              isActive={pageKind === 'notifications'}
+              showBadge={showNotificationBadge}
+              onClick={() => navigate('/at/weibo')}
+            >
+              <Bell aria-hidden="true" className="size-4 shrink-0" />
+            </NavButton>
+
+            <NavButton
               label={
                 <span className="flex items-center gap-1">
                   私信
@@ -205,6 +227,7 @@ export function NavigationRail({
               showLabel={isXl}
               href="https://api.weibo.com/chat"
               isExternal
+              showBadge={showDmBadge}
             >
               <MailIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>

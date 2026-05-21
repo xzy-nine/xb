@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { searchQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 
@@ -28,6 +29,7 @@ export function SearchCard({ className }: SearchCardProps) {
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+  const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
 
   const searchQuery = useQuery(searchQueryOptions(activeQuery))
 
@@ -59,11 +61,15 @@ export function SearchCard({ className }: SearchCardProps) {
   }
 
   const handleHotQueryClick = (suggestion: string) => {
-    window.open(
-      `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
-      '_blank',
-      'noopener,noreferrer',
-    )
+    if (!xbTopicPage) {
+      window.open(
+        `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
+        '_blank',
+        'noopener,noreferrer',
+      )
+    } else {
+      navigate(`/topic?q=${encodeURIComponent(suggestion)}`)
+    }
     setOpen(false)
   }
 

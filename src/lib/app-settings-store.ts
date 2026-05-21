@@ -17,6 +17,7 @@ import {
   type LightBgColorPreset,
   type LineHeightClass,
   type GenImageCardTheme,
+  type ContentWidth,
   type HotSearchType,
   type StatusDetailPopupPosition,
 } from '@/lib/app-settings'
@@ -56,12 +57,15 @@ export interface AppSettingsStoreState extends AppSettings {
   setWaterfallColumnCount: (count: number) => Promise<void>
   setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
   setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
+  setNativeTopicPage: (enabled: boolean) => Promise<void>
+  setContentWidth: (width: ContentWidth) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
 
 function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
   return {
+    contentWidth: state.contentWidth,
     theme: state.theme,
     rewriteEnabled: state.rewriteEnabled,
     fontSizeClass: state.fontSizeClass,
@@ -94,6 +98,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     waterfallColumnCount: state.waterfallColumnCount,
     browsingHistoryEnabled: state.browsingHistoryEnabled,
     followGroupsEnabled: state.followGroupsEnabled,
+    xbTopicPage: state.xbTopicPage,
   }
 }
 
@@ -217,6 +222,12 @@ export function createAppSettingsStore(
       },
       async setFollowGroupsEnabled(followGroupsEnabled) {
         await updateAndPersist({ followGroupsEnabled })
+      },
+      async setNativeTopicPage(xbTopicPage) {
+        await updateAndPersist({ xbTopicPage })
+      },
+      async setContentWidth(contentWidth) {
+        await updateAndPersist({ contentWidth })
       },
     }
   })

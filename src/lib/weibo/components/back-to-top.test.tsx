@@ -25,7 +25,7 @@ describe('BackToTop', () => {
       { x: 'none', y: 'none' },
     ] as unknown as ReturnType<typeof useScroll>)
 
-    render(<BackToTop containerRef={{ current: container }} threshold={200} />)
+    render(<BackToTop scrollRoot={container} threshold={200} />)
 
     fireEvent.click(screen.getByRole('button', { name: '返回顶部' }))
 

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +10,10 @@ const getCurrentUserUidMock = vi.fn<() => string | null>()
 vi.mock('@/lib/weibo/platform/current-user', () => ({
   getCurrentUserUid: () => getCurrentUserUidMock(),
 }))
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+})
 
 describe('NavigationRail', () => {
   beforeEach(() => {
@@ -29,19 +34,21 @@ describe('NavigationRail', () => {
     rewriteEnabled?: boolean
   } = {}) {
     return render(
-      <MemoryRouter>
-        <NavigationRail
-          pageKind={pageKind}
-          viewingProfileUserId={viewingProfileUserId}
-          rewriteEnabled={rewriteEnabled}
-          theme="system"
-          browsingHistoryEnabled={false}
-          onRewriteEnabledChange={vi.fn()}
-          onThemeChange={vi.fn()}
-          onSettingsOpen={vi.fn()}
-          onComposeOpen={vi.fn()}
-        />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <NavigationRail
+            pageKind={pageKind}
+            viewingProfileUserId={viewingProfileUserId}
+            rewriteEnabled={rewriteEnabled}
+            theme="system"
+            browsingHistoryEnabled={false}
+            onRewriteEnabledChange={vi.fn()}
+            onThemeChange={vi.fn()}
+            onSettingsOpen={vi.fn()}
+            onComposeOpen={vi.fn()}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
     )
   }
 

@@ -90,9 +90,11 @@ export type LineHeightClass =
   | 'leading-relaxed'
   | 'leading-loose'
 
+export type ContentWidth = 'standard' | 'wide' | 'wider'
 export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
 
 export interface AppSettings {
+  contentWidth: ContentWidth
   theme: AppTheme
   rewriteEnabled: boolean
   fontSizeClass: FontSizeClass
@@ -125,6 +127,7 @@ export interface AppSettings {
   waterfallColumnCount: number
   browsingHistoryEnabled: boolean
   followGroupsEnabled: boolean
+  xbTopicPage: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -148,6 +151,7 @@ export interface AppSettingsStorageArea {
 export const APP_SETTINGS_STORAGE_KEY = 'xb:app-settings'
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
+  contentWidth: 'standard' as ContentWidth,
   theme: 'system',
   rewriteEnabled: true,
   fontSizeClass: 'text-base',
@@ -180,6 +184,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   waterfallColumnCount: 1,
   browsingHistoryEnabled: true,
   followGroupsEnabled: false,
+  xbTopicPage: true,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -259,6 +264,10 @@ function isLineHeightClass(value: unknown): value is LineHeightClass {
   )
 }
 
+function isContentWidth(value: unknown): value is ContentWidth {
+  return value === 'standard' || value === 'wide' || value === 'wider'
+}
+
 function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopupPosition {
   return value === 'left' || value === 'center' || value === 'right'
 }
@@ -271,6 +280,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
   const candidate = value as Partial<AppSettings>
 
   return {
+    contentWidth: isContentWidth(candidate.contentWidth)
+      ? candidate.contentWidth
+      : DEFAULT_APP_SETTINGS.contentWidth,
     theme: isAppTheme(candidate.theme) ? candidate.theme : DEFAULT_APP_SETTINGS.theme,
     rewriteEnabled:
       typeof candidate.rewriteEnabled === 'boolean'
@@ -395,6 +407,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.followGroupsEnabled === 'boolean'
         ? candidate.followGroupsEnabled
         : DEFAULT_APP_SETTINGS.followGroupsEnabled,
+    xbTopicPage:
+      typeof candidate.xbTopicPage === 'boolean'
+        ? candidate.xbTopicPage
+        : DEFAULT_APP_SETTINGS.xbTopicPage,
   }
 }
 

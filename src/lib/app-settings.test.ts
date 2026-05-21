@@ -46,6 +46,7 @@ describe('app-settings', () => {
     })
 
     expect(await loadAppSettings(storage)).toEqual({
+      contentWidth: 'standard',
       theme: 'dark',
       rewriteEnabled: false,
       fontSizeClass: 'text-sm',
@@ -78,10 +79,12 @@ describe('app-settings', () => {
       waterfallColumnCount: 1,
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
+      xbTopicPage: true,
     })
 
     await persistAppSettings(
       {
+        contentWidth: 'standard',
         theme: 'light',
         rewriteEnabled: true,
         fontSizeClass: 'text-lg',
@@ -114,11 +117,13 @@ describe('app-settings', () => {
         waterfallColumnCount: 1,
         browsingHistoryEnabled: true,
         followGroupsEnabled: false,
+        xbTopicPage: true,
       },
       storage,
     )
 
     expect(storage.read()).toEqual({
+      contentWidth: 'standard',
       theme: 'light',
       rewriteEnabled: true,
       fontSizeClass: 'text-lg',
@@ -151,6 +156,7 @@ describe('app-settings', () => {
       waterfallColumnCount: 1,
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
+      xbTopicPage: true,
     })
   })
 
