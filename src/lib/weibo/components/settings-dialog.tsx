@@ -83,14 +83,6 @@ function SidebarItem({
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-muted-foreground px-1 pt-5 pb-2 text-[11px] font-medium tracking-[0.08em] uppercase first:pt-0">
-      {children}
-    </div>
-  )
-}
-
 function Field({
   label,
   description,
@@ -115,7 +107,7 @@ function Field({
 
 function IllustrationPlaceholder({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-muted/30 border-muted-foreground/20 text-muted-foreground mb-3 flex items-center justify-center rounded-lg border-2 border-dashed p-4 text-xs">
+    <div className="bg-muted/30 border-muted-foreground/20 text-muted-foreground flex items-center justify-center rounded-lg border p-4 text-xs">
       {children}
     </div>
   )
@@ -202,134 +194,123 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeGroup === 'appearance' && (
               <div className="px-6 py-4">
-                <SectionLabel>主题</SectionLabel>
-                <div className="divide-border/40 divide-y">
-                  <Field label="深色模式" description="选择应用的配色方案">
-                    <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="system">跟随系统</SelectItem>
-                        <SelectItem value="light">浅色</SelectItem>
-                        <SelectItem value="dark">深色</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </div>
-                <SectionLabel>背景色</SectionLabel>
-                <div className="divide-border/40 divide-y">
-                  <Field label="浅色模式" description="浅色模式下的背景颜色">
-                    <BgColorPicker
-                      presets={LIGHT_BG_PRESETS}
-                      value={lightModeBgColor}
-                      onChange={(v) => setLightModeBgColor(v as LightBgColorPreset)}
-                    />
-                  </Field>
-                  <Field label="深色模式" description="深色模式下的背景颜色">
-                    <BgColorPicker
-                      presets={DARK_BG_PRESETS}
-                      value={darkModeBgColor}
-                      onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
-                    />
-                  </Field>
-                </div>
+                <Field label="深色模式" description="选择应用的配色方案">
+                  <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="system">跟随系统</SelectItem>
+                      <SelectItem value="light">浅色</SelectItem>
+                      <SelectItem value="dark">深色</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="浅色模式" description="浅色模式下的背景颜色">
+                  <BgColorPicker
+                    presets={LIGHT_BG_PRESETS}
+                    value={lightModeBgColor}
+                    onChange={(v) => setLightModeBgColor(v as LightBgColorPreset)}
+                  />
+                </Field>
+                <Field label="深色模式" description="深色模式下的背景颜色">
+                  <BgColorPicker
+                    presets={DARK_BG_PRESETS}
+                    value={darkModeBgColor}
+                    onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
+                  />
+                </Field>
               </div>
             )}
 
             {activeGroup === 'personalize' && (
-              <div className="px-6 py-4">
-                <div className="divide-border/40 divide-y">
-                  <div>
-                    <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
-                      <Switch
-                        checked={showHotSearchCard}
-                        onCheckedChange={(checked) => setShowHotSearchCard(checked)}
-                      />
-                    </Field>
-                  </div>
-                  <div>
-                    <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
-                      <Switch
-                        checked={darkModeImageDim}
-                        onCheckedChange={(checked) => setDarkModeImageDim(checked)}
-                      />
-                    </Field>
-                    <IllustrationPlaceholder>
-                      <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
-                    </IllustrationPlaceholder>
-                  </div>
-                  <div>
-                    <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
-                      <Select
-                        value={contentWidth}
-                        onValueChange={(v) => setContentWidth(v as ContentWidth)}
-                      >
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">标准</SelectItem>
-                          <SelectItem value="wide">宽</SelectItem>
-                          <SelectItem value="wider">更宽</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
-                  <div>
-                    <Field label="X 操作栏" description="使用 X 风格的操作栏（含收藏和分享按钮）">
-                      <Switch
-                        checked={xLayoutEnabled}
-                        onCheckedChange={(checked) => setXLayoutEnabled(checked)}
-                      />
-                    </Field>
-                    <IllustrationPlaceholder>
-                      <img src={xLayoutJpeg} alt="X 操作栏布局" className="h-auto w-full" />
-                    </IllustrationPlaceholder>
-                  </div>
-                  <div>
-                    <Field label="关注分组" description="在信息流中按分组筛选关注人">
-                      <Switch
-                        checked={followGroupsEnabled}
-                        onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
-                      />
-                    </Field>
-                    <IllustrationPlaceholder>
-                      <img src={myGroupsJpeg} alt="关注分组" className="h-auto w-full" />
-                    </IllustrationPlaceholder>
-                  </div>
-                  <div>
-                    <Field
-                      label="QuoteChains 渲染"
-                      description='将 "//@ 用户名:" 格式渲染成引用样式'
-                    >
-                      <Switch
-                        checked={renderReplyChainEnabled}
-                        onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
-                      />
-                    </Field>
-                    <IllustrationPlaceholder>
-                      <img src={quoteChainsJpeg} alt="QuoteChains 渲染" className="h-auto w-full" />
-                    </IllustrationPlaceholder>
-                  </div>
-                  {renderReplyChainEnabled && (
-                    <div>
-                      <Field label="折叠 QuoteChains" description="超过2条时折叠中间的引用">
-                        <Switch
-                          checked={collapseRepliesEnabled}
-                          onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
-                        />
-                      </Field>
-                      <IllustrationPlaceholder>
-                        <img
-                          src={collapseReplyChain}
-                          alt="折叠 QuoteChains"
-                          className="h-auto w-full"
-                        />
-                      </IllustrationPlaceholder>
-                    </div>
-                  )}
+              <div className="space-y-3 px-6 py-4">
+                <div>
+                  <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
+                    <Switch
+                      checked={showHotSearchCard}
+                      onCheckedChange={(checked) => setShowHotSearchCard(checked)}
+                    />
+                  </Field>
                 </div>
+                <div>
+                  <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
+                    <Switch
+                      checked={darkModeImageDim}
+                      onCheckedChange={(checked) => setDarkModeImageDim(checked)}
+                    />
+                  </Field>
+                  <IllustrationPlaceholder>
+                    <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
+                  </IllustrationPlaceholder>
+                </div>
+                <div>
+                  <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+                    <Select
+                      value={contentWidth}
+                      onValueChange={(v) => setContentWidth(v as ContentWidth)}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">标准</SelectItem>
+                        <SelectItem value="wide">宽</SelectItem>
+                        <SelectItem value="wider">更宽</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+                <div>
+                  <Field label="X 操作栏" description="使用 X 风格的操作栏（含收藏和分享按钮）">
+                    <Switch
+                      checked={xLayoutEnabled}
+                      onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+                    />
+                  </Field>
+                  <IllustrationPlaceholder>
+                    <img src={xLayoutJpeg} alt="X 操作栏布局" className="h-auto w-full" />
+                  </IllustrationPlaceholder>
+                </div>
+                <div>
+                  <Field label="关注分组" description="在信息流中按分组筛选关注人">
+                    <Switch
+                      checked={followGroupsEnabled}
+                      onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
+                    />
+                  </Field>
+                  <IllustrationPlaceholder>
+                    <img src={myGroupsJpeg} alt="关注分组" className="h-auto w-full" />
+                  </IllustrationPlaceholder>
+                </div>
+                <div>
+                  <Field label="QuoteChains 渲染" description='将 "//@ 用户名:" 格式渲染成引用样式'>
+                    <Switch
+                      checked={renderReplyChainEnabled}
+                      onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
+                    />
+                  </Field>
+                  <IllustrationPlaceholder>
+                    <img src={quoteChainsJpeg} alt="QuoteChains 渲染" className="h-auto w-full" />
+                  </IllustrationPlaceholder>
+                </div>
+                {renderReplyChainEnabled && (
+                  <div>
+                    <Field label="折叠 QuoteChains" description="超过2条时折叠中间的引用">
+                      <Switch
+                        checked={collapseRepliesEnabled}
+                        onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
+                      />
+                    </Field>
+                    <IllustrationPlaceholder>
+                      <img
+                        src={collapseReplyChain}
+                        alt="折叠 QuoteChains"
+                        className="h-auto w-full"
+                      />
+                    </IllustrationPlaceholder>
+                  </div>
+                )}
               </div>
             )}
 
