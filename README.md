@@ -1,8 +1,8 @@
 # xb
 
-🥷 xb - Make Weibo more like X and simpler.
+🥷 xb - Redesign Weibo, like X but even better.
 
-[中文](./README.cn.md)
+[English](./README.en.md)
 
 [![CI](https://github.com/nnecec/xb/actions/workflows/test.yml/badge.svg)](https://github.com/nnecec/xb/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/nnecec/xb)](https://github.com/nnecec/xb/blob/main/LICENSE)
@@ -13,8 +13,8 @@
 
 [![Chrome Web Store version](https://img.shields.io/chrome-web-store/v/ffhppkcianllofhhjohbfbobjfppbeao?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
 [![Chrome Web Store users](https://img.shields.io/chrome-web-store/users/ffhppkcianllofhhjohbfbobjfppbeao?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
-[![Firefox Add-ons version](https://img.shields.io/amo/v/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/xb/)
-[![Firefox Add-ons users](https://img.shields.io/amo/users/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/xb/)
+[![Firefox Add-ons version](https://img.shields.io/amo/v/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/zh-CN/firefox/addon/xb/)
+[![Firefox Add-ons users](https://img.shields.io/amo/users/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/zh-CN/firefox/addon/xb/)
 [![Landing page](https://img.shields.io/badge/website-xb--extension.vercel.app-000000?logo=vercel&logoColor=white)](https://xb-extension.vercel.app/)
 
 [![Bun](https://img.shields.io/badge/bun-1.3.14-000000?logo=bun&logoColor=white)](https://bun.sh)
@@ -23,48 +23,34 @@
 [![WXT](https://img.shields.io/badge/WXT-0.20-000000)](https://wxt.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
-![preview](./assets/weibo.com_v0.6.0.jpeg)
+![preview](./assets/xb_0.26.0.jpeg)
 
-xb strips away the noise and gives you a focused, distraction-free reading
-experience — similar to X.
+xb 旨在浏览微博时去除噪音，打造一个专注、无干扰的阅读体验——就像 X 那样清爽。
 
-xb is a chrome extension. Once installed, simply browse Weibo as usual and enjoy
-the beautifully redesigned interface.
+xb 是一个浏览器插件。安装后，正常浏览微博，就能享受到重新设计的优美界面。
 
-Visit [Landing Page](https://xb-extension.vercel.app/) for more.
+查看[xb extension](https://xb-extension.vercel.app/)官方网站
 
-## Install
+## 安装
 
-[Chrome Web Store](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
+[Chrome 网上应用店](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
 
-[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb)
+[Firefox 插件](https://addons.mozilla.org/zh-CN/firefox/addon/xb/)
 
-## Features
+## 功能特点
 
-1. ✨ **X like Style** — Clean, reading-first.
-2. 🔓 **Fully Open Source** — No privacy concerns, open-source totally.
-3. 🎯 **Focus on Reading** — Distraction-free, clearly feed.
-4. 🚫 **No Interruptions** — No stickers, ads, or supertopics.
-5. 🆓 **Everything is Free** - No paid features.
-6. 📷 **Take a shot** - Export Weibo as an image with multiple card templates.
-7. 🔤 **Custom Font** - Choose from system fonts or downloadable open-source
-   fonts.
+1. ✨ **X like 样式** — 简洁纯粹，阅读优先
+2. 🔓 **完全开源** — 没有隐私担忧，开源
+3. 🎯 **聚焦阅读** — 无干扰、清楚的信息流
+4. 🚫 **无干扰** — 没有贴图、广告、超话等扰人信息
+5. 🆓 **完全免费** - 没有付费功能
+6. 📷 **生图** - 把微博导出成图片，支持多种卡片模板
+7. 🔤 **自定义字体** - 支持系统字体和可下载的开源字体
 
-## Supported Pages
+<img src="https://private-user-images.githubusercontent.com/11435907/595844047-8415d1b3-a603-4250-a3f5-6edd8f5f54ca.jpeg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzkzMzQ2MzIsIm5iZiI6MTc3OTMzNDMzMiwicGF0aCI6Ii8xMTQzNTkwNy81OTU4NDQwNDctODQxNWQxYjMtYTYwMy00MjUwLWEzZjUtNmVkZDhmNWY1NGNhLmpwZWc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwNTIxJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDUyMVQwMzMyMTJaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0yOTJiM2U2ODg3ZWU3OWIzNmFiZjczMjU3NDVmZTYyNTUyZmZlN2NmMzk3MmI2YzRiNWZlMWQxNmZmZTc0ZTQ3JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZyZXNwb25zZS1jb250ZW50LXR5cGU9aW1hZ2UlMkZqcGVnIn0.iI8fc2cVr800VLpO-JS2X47uAHVoGDA_Qp95v2vpjJM" width="600" />
 
-xb currently enhances the following pages:
+## 致谢
 
-- [x] Home Timeline
-- [x] Profile Page
-- [x] Weibo Detail
-- [x] Notifications
-- [x] Favorites
-- [x] Search
-- [x] Explore(hot topic)
-- [ ] Articles
-
-## Credits
-
-- Inspired by [BewlyBewly](https://github.com/BewlyBewly/BewlyBewly) and
-  [BewlyCat](https://github.com/keleus/BewlyCat)
-- [Linux Do](https://linux.do/) a friendly community
+- 受 [BewlyBewly](https://github.com/BewlyBewly/BewlyBewly) 和
+  [BewlyCat](https://github.com/keleus/BewlyCat) 启发
+- [Linux Do](https://linux.do/) 友好的中文社区
