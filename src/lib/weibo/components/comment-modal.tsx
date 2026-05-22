@@ -16,7 +16,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { EmoticonPicker } from '@/lib/weibo/components/emoticon-picker'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import type { FeedItem } from '@/lib/weibo/models/feed'
+import {
+  optimisticallyIncrementStatusComments,
+  restoreStatusCacheMutation,
+} from '@/lib/weibo/queries/status-cache'
 import { submitComposeAction } from '@/lib/weibo/services/weibo-repository'
 
 function getModalCopy(target: ComposeTarget) {
@@ -70,65 +73,9 @@ function CommentModalForm({
   const mutation = useMutation({
     mutationFn: submitComposeAction,
     onMutate: () => {
-      if (target.mode !== 'comment') return {}
+      if (target.mode !== 'comment') return undefined
 
-      queryClient.cancelQueries({ queryKey: ['weibo'] })
-      const previousItems = queryClient.getQueriesData({ queryKey: ['weibo'] })
-
-      const statusId = target.statusId
-      queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-        if (!old || typeof old !== 'object' || !('pages' in old)) return old
-        const data = old as { pages: { items: FeedItem[] }[] }
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            items: page.items.map((item) => {
-              if (item.id === statusId) {
-                return {
-                  ...item,
-                  stats: { ...item.stats, comments: item.stats.comments + 1 },
-                }
-              }
-              if (item.retweetedStatus?.id === statusId) {
-                return {
-                  ...item,
-                  retweetedStatus: {
-                    ...item.retweetedStatus,
-                    stats: {
-                      ...item.retweetedStatus.stats,
-                      comments: item.retweetedStatus.stats.comments + 1,
-                    },
-                  },
-                }
-              }
-              return item
-            }),
-          })),
-        }
-      })
-
-      for (const key of queryClient
-        .getQueryCache()
-        .getAll()
-        .map((q) => q.queryKey)) {
-        if (!Array.isArray(key)) continue
-        if (key[0] !== 'weibo' || key[1] !== 'status') continue
-        const cached = queryClient.getQueryData(key)
-        if (!cached || typeof cached !== 'object') continue
-        const detail = cached as { status?: FeedItem }
-        if (detail.status && detail.status.id === statusId) {
-          queryClient.setQueryData(key, {
-            ...detail,
-            status: {
-              ...detail.status,
-              stats: { ...detail.status.stats, comments: detail.status.stats.comments + 1 },
-            },
-          })
-        }
-      }
-
-      return { previousItems }
+      return optimisticallyIncrementStatusComments(queryClient, target.statusId)
     },
     onSuccess: () => {
       toast.success(target.mode === 'repost' ? '转发成功' : '回复成功')
@@ -140,11 +87,7 @@ function CommentModalForm({
       }
     },
     onError: (error, _vars, context) => {
-      if (context?.previousItems) {
-        for (const [queryKey, data] of context.previousItems) {
-          queryClient.setQueryData(queryKey, data)
-        }
-      }
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(error instanceof Error ? error.message : '发送失败，请稍后重试')
     },
   })

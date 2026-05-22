@@ -17,6 +17,10 @@ import { type ComposeTarget, composeTargetFromComment } from '@/lib/weibo/models
 import type { CommentItem } from '@/lib/weibo/models/status'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
+  optimisticallyToggleCommentLike,
+  restoreStatusCacheMutation,
+} from '@/lib/weibo/queries/status-cache'
+import {
   cancelCommentLike,
   deleteWeiboComment,
   setCommentLike,
@@ -48,52 +52,9 @@ export const CommentCard = memo(function CommentCard({
         await setCommentLike(target.id)
       }
     },
-    onMutate: (target: CommentItem) => {
-      queryClient.cancelQueries({ queryKey: ['weibo'] })
-
-      const previousItems = queryClient.getQueriesData({ queryKey: ['weibo'] })
-
-      queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-        if (!old || typeof old !== 'object') return old
-
-        const updateCommentInTree = (comment: CommentItem): CommentItem => {
-          if (comment.id === target.id) {
-            return {
-              ...comment,
-              liked: !comment.liked,
-              likeCount: comment.likeCount + (comment.liked ? -1 : 1),
-            }
-          }
-          if (Array.isArray(comment.comments) && comment.comments.length > 0) {
-            return {
-              ...comment,
-              comments: comment.comments.map(updateCommentInTree),
-            }
-          }
-          return comment
-        }
-
-        if ('pages' in old) {
-          const data = old as { pages: { items: CommentItem[] }[] }
-          return {
-            ...data,
-            pages: data.pages.map((page) => ({
-              ...page,
-              items: page.items.map(updateCommentInTree),
-            })),
-          }
-        }
-        return old
-      })
-
-      return { previousItems }
-    },
+    onMutate: (target: CommentItem) => optimisticallyToggleCommentLike(queryClient, target),
     onError: (_error, _target, context) => {
-      if (context?.previousItems) {
-        for (const [queryKey, data] of context.previousItems) {
-          queryClient.setQueryData(queryKey, data)
-        }
-      }
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
     },
   })
