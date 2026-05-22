@@ -1,12 +1,10 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
-import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
-import { FeedList } from '@/lib/weibo/components/feed-list'
+import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { NewPostsBubble } from '@/lib/weibo/components/new-posts-bubble'
-import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { TimelineTopBar, type TimelineTopBarOption } from '@/lib/weibo/components/timeline-top-bar'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
@@ -33,7 +31,6 @@ export function HomeTimelinePage() {
   const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const activeTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && page.kind === 'home'
@@ -67,9 +64,6 @@ export function HomeTimelinePage() {
   const isLoading = timelineQuery.isLoading
   const isRefreshing = timelineQuery.isFetching && !isFetchingNextPage && !isLoading
 
-  const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
-  fetchNextPageRef.current = timelineQuery.fetchNextPage
-
   const wasRefreshingRef = useRef(false)
 
   // ─── Scroll to top after refresh completes ───
@@ -79,24 +73,6 @@ export function HomeTimelinePage() {
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])
-
-  // ─── IntersectionObserver for infinite scroll ───
-  useEffect(() => {
-    const el = loadMoreRef.current
-    if (!el || !hasNextPage) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchNextPageRef.current()
-        }
-      },
-      { threshold: 0.2 },
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage])
 
   // ─── New posts check (following tab only) ───
   const followingFirstItemId = items.length > 0 && activeTab === 'following' ? items[0].id : null
@@ -183,28 +159,22 @@ export function HomeTimelinePage() {
       </TimelineTopBar>
 
       <div className="flex flex-col">
-        {isLoading ? <PageLoadingState label="正在加载微博时间线..." /> : null}
-        {!isLoading && errorMessage ? (
-          <PageErrorState description={errorMessage} onRetry={() => void timelineQuery.refetch()} />
-        ) : null}
-        {!isLoading && !errorMessage ? (
-          <FeedList
-            items={items}
-            emptyLabel="此时间线暂无内容"
-            onNavigate={ctx.navigateToStatusDetail}
-            onCommentClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
-            }
-            onRepostClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
-            }
-          />
-        ) : null}
-        {hasNextPage ? (
-          <div ref={loadMoreRef} className="flex justify-center py-3">
-            {isFetchingNextPage ? <Spinner size="sm" /> : null}
-          </div>
-        ) : null}
+        <InfiniteFeedList
+          pages={timelineQuery.data?.pages as TimelinePage[] | undefined}
+          emptyLabel="此时间线暂无内容"
+          loadingLabel="正在加载微博时间线..."
+          errorMessage={errorMessage}
+          isLoading={isLoading}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={timelineQuery.fetchNextPage}
+          onRetry={() => void timelineQuery.refetch()}
+          onNavigate={ctx.navigateToStatusDetail}
+          onCommentClick={(item) =>
+            ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
+          }
+          onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
+        />
       </div>
     </div>
   )

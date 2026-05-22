@@ -1,18 +1,15 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
-import { FeedList } from '@/lib/weibo/components/feed-list'
-import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { FeedItem, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
+import type { TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import {
   extractTopicChannels,
   extractTopicHeadData,
-  flattenInfiniteItems,
   topicSearchInfiniteOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
@@ -74,7 +71,6 @@ export function TopicPage() {
   const ctx = useAppShellContext()
   const page = useWeiboPage()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const topic = page.kind === 'topic' ? page.topic : ''
   const isEnabled = rewriteEnabled && page.kind === 'topic' && topic !== ''
@@ -85,11 +81,6 @@ export function TopicPage() {
     ...topicSearchInfiniteOptions(topic, selectedChannelId),
     enabled: isEnabled,
   })
-
-  const items = useMemo(
-    () => flattenInfiniteItems<FeedItem>(topicQuery.data?.pages as TimelinePage[] | undefined),
-    [topicQuery.data?.pages],
-  )
 
   const channels = useMemo(
     () => extractTopicChannels(topicQuery.data?.pages as TimelinePage[] | undefined),
@@ -109,24 +100,6 @@ export function TopicPage() {
   const hasNextPage = Boolean(topicQuery.hasNextPage)
   const isFetchingNextPage = topicQuery.isFetchingNextPage
   const isLoading = topicQuery.isLoading
-
-  // ─── IntersectionObserver for infinite scroll ───
-  useEffect(() => {
-    const el = loadMoreRef.current
-    if (!el || !hasNextPage) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void topicQuery.fetchNextPage()
-        }
-      },
-      { threshold: 0.2 },
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, topicQuery])
 
   return (
     <div className="flex flex-col gap-3">
@@ -151,26 +124,20 @@ export function TopicPage() {
         ) : null}
       </div>
 
-      {isLoading ? <PageLoadingState label="正在加载话题内容..." /> : null}
-      {!isLoading && errorMessage ? (
-        <PageErrorState description={errorMessage} onRetry={() => void topicQuery.refetch()} />
-      ) : null}
-      {!isLoading && !errorMessage ? (
-        <FeedList
-          items={items}
-          emptyLabel="暂无话题内容"
-          onNavigate={ctx.navigateToStatusDetail}
-          onCommentClick={(item) =>
-            ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
-          }
-          onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-        />
-      ) : null}
-      {hasNextPage ? (
-        <div ref={loadMoreRef} className="flex justify-center py-3">
-          {isFetchingNextPage ? <Spinner size="sm" /> : null}
-        </div>
-      ) : null}
+      <InfiniteFeedList
+        pages={topicQuery.data?.pages as TimelinePage[] | undefined}
+        emptyLabel="暂无话题内容"
+        loadingLabel="正在加载话题内容..."
+        errorMessage={errorMessage}
+        isLoading={isLoading}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={topicQuery.fetchNextPage}
+        onRetry={() => void topicQuery.refetch()}
+        onNavigate={ctx.navigateToStatusDetail}
+        onCommentClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
+        onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
+      />
     </div>
   )
 }
