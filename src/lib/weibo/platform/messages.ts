@@ -1,15 +1,8 @@
 export const XB_SOURCE = 'xb'
-export const ROUTE_CHANGE_EVENT = 'route-change'
 export const API_REQUEST_EVENT = 'api-request'
 export const API_RESPONSE_EVENT = 'api-response'
 export const API_UNAUTHORIZED_EVENT = 'api-unauthorized'
 export const MWEIBO_FETCH_EVENT = 'mweibo-fetch'
-
-export interface RouteChangeMessage {
-  source: typeof XB_SOURCE
-  type: typeof ROUTE_CHANGE_EVENT
-  href: string
-}
 
 export interface ApiRequestMessage {
   source: typeof XB_SOURCE
@@ -45,21 +38,7 @@ export interface MweiboFetchResponse {
   error?: string
 }
 
-export type XbMessage =
-  | RouteChangeMessage
-  | ApiRequestMessage
-  | ApiResponseMessage
-  | ApiUnauthorizedMessage
-
-export function isRouteChangeMessage(value: unknown): value is RouteChangeMessage {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    (value as RouteChangeMessage).source === XB_SOURCE &&
-    (value as RouteChangeMessage).type === ROUTE_CHANGE_EVENT &&
-    typeof (value as RouteChangeMessage).href === 'string'
-  )
-}
+export type XbMessage = ApiRequestMessage | ApiResponseMessage | ApiUnauthorizedMessage
 
 export function isApiRequestMessage(value: unknown): value is ApiRequestMessage {
   return (

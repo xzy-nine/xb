@@ -13,7 +13,6 @@ import { Spinner } from '@/components/ui/spinner'
 import { AppShell } from '@/lib/weibo/app/app-shell'
 import { usePrewarmEmoticonConfig } from '@/lib/weibo/app/emoticon-query'
 import { AppErrorBoundary } from '@/lib/weibo/app/error-boundary'
-import { WeiboHistorySync } from '@/lib/weibo/app/weibo-history-sync'
 
 const ExplorePage = lazy(() =>
   import('@/lib/weibo/pages/explore-page').then((m) => ({ default: m.ExplorePage })),
@@ -78,7 +77,6 @@ function AppRootBootstrap() {
   usePrewarmEmoticonConfig()
   return (
     <BrowserRouter>
-      <WeiboHistorySync />
       <Suspense fallback={<PageLoadingFallback />}>
         <Routes>
           <Route path="*" element={<AppShell />}>
