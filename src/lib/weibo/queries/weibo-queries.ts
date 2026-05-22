@@ -1,5 +1,6 @@
 import type { HotSearchType } from '@/lib/app-settings'
 import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
+import type { StatusCommentsPage } from '@/lib/weibo/models/status'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 import type { UnreadCounts } from '@/lib/weibo/services/weibo-repository'
@@ -12,8 +13,12 @@ import {
   loadGroupTimeline,
   loadHotSearchByType,
   loadHomeTimeline,
+  loadNestedComments,
   loadProfilePosts,
   loadSearch,
+  loadStatusComments,
+  loadStatusDetail,
+  loadStatusLongText,
   loadTopicSearch,
   type HomeTimelineTab,
 } from '@/lib/weibo/services/weibo-repository'
@@ -118,6 +123,43 @@ export function favoritesInfiniteOptions(uid: string) {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: 30 * 60 * 1000,
+  }
+}
+
+export function statusDetailQueryOptions(statusId: string | null, enabled = true) {
+  return {
+    queryKey: ['weibo', 'status', statusId ?? ''] as const,
+    queryFn: () => loadStatusDetail(statusId!),
+    enabled: enabled && statusId !== null && statusId !== '',
+  }
+}
+
+export function statusCommentsInfiniteOptions(statusId: string, authorId: string, filter?: string) {
+  return {
+    queryKey: ['weibo', 'status-comments', statusId, filter] as const,
+    queryFn: ({ pageParam }: { pageParam: string | null }) =>
+      loadStatusComments(statusId, authorId, pageParam, filter),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage: StatusCommentsPage) => lastPage.nextCursor ?? undefined,
+    enabled: statusId !== '' && authorId !== '',
+  }
+}
+
+export function nestedCommentsQueryOptions(statusId: string, authorUid: string, enabled = true) {
+  return {
+    queryKey: ['weibo', 'nested-comments', statusId] as const,
+    queryFn: () => loadNestedComments(statusId, authorUid),
+    enabled: enabled && statusId !== '' && authorUid !== '',
+  }
+}
+
+export function longTextQueryOptions(mblogId: string | null, enabled: boolean) {
+  return {
+    queryKey: ['weibo', 'longtext', mblogId] as const,
+    queryFn: () => loadStatusLongText(mblogId!),
+    enabled: enabled && mblogId !== null && mblogId !== '',
+    staleTime: 30 * 60 * 1000,
+    retry: false,
   }
 }
 

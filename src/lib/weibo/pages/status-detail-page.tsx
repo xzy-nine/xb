@@ -20,9 +20,12 @@ import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-st
 import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { CommentItem } from '@/lib/weibo/models/status'
-import { flattenInfiniteItems } from '@/lib/weibo/queries/weibo-queries'
+import {
+  flattenInfiniteItems,
+  statusCommentsInfiniteOptions,
+  statusDetailQueryOptions,
+} from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
-import { loadStatusComments, loadStatusDetail } from '@/lib/weibo/services/weibo-repository'
 
 function StatusCommentsSection({
   statusId,
@@ -35,11 +38,7 @@ function StatusCommentsSection({
 }) {
   const [filter, setFilter] = useState<string | undefined>(undefined)
   const commentsQuery = useInfiniteQuery({
-    queryKey: ['weibo', 'status-comments', statusId, filter],
-    queryFn: ({ pageParam }) => loadStatusComments(statusId, authorId, pageParam, filter),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: statusId !== '' && authorId !== '',
+    ...statusCommentsInfiniteOptions(statusId, authorId, filter),
   })
 
   const comments = flattenInfiniteItems<CommentItem>(commentsQuery.data?.pages)
@@ -128,9 +127,7 @@ export function StatusDetailPage() {
   const isEnabled = rewriteEnabled && page.kind === 'status'
 
   const detailQuery = useQuery({
-    queryKey: ['weibo', 'status', urlStatusId],
-    queryFn: () => loadStatusDetail(urlStatusId!),
-    enabled: isEnabled && urlStatusId !== null,
+    ...statusDetailQueryOptions(urlStatusId, isEnabled),
   })
   const detail = detailQuery.data
 
