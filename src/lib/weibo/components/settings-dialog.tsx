@@ -299,9 +299,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       onCheckedChange={(checked) => setDarkModeImageDim(checked)}
                     />
                   </Field>
-                  <IllustrationPlaceholder>
-                    <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
-                  </IllustrationPlaceholder>
+                  {darkModeImageDim && (
+                    <IllustrationPlaceholder>
+                      <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
+                    </IllustrationPlaceholder>
+                  )}
                 </div>
                 <div>
                   <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
@@ -327,9 +329,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       onCheckedChange={(checked) => setXLayoutEnabled(checked)}
                     />
                   </Field>
-                  <IllustrationPlaceholder>
-                    <img src={xLayoutJpeg} alt="X 操作栏布局" className="h-auto w-full" />
-                  </IllustrationPlaceholder>
+                  {xLayoutEnabled && (
+                    <IllustrationPlaceholder>
+                      <img src={xLayoutJpeg} alt="X 操作栏布局" className="h-auto w-full" />
+                    </IllustrationPlaceholder>
+                  )}
                 </div>
                 <div>
                   <Field label="关注分组" description="在信息流中按分组筛选关注人">
@@ -338,9 +342,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
                     />
                   </Field>
-                  <IllustrationPlaceholder>
-                    <img src={myGroupsJpeg} alt="关注分组" className="h-auto w-full" />
-                  </IllustrationPlaceholder>
+                  {followGroupsEnabled && (
+                    <IllustrationPlaceholder>
+                      <img src={myGroupsJpeg} alt="关注分组" className="h-auto w-full" />
+                    </IllustrationPlaceholder>
+                  )}
                 </div>
                 <div>
                   <Field label="QuoteChains 渲染" description='将 "//@ 用户名:" 格式渲染成引用样式'>
@@ -349,9 +355,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
                     />
                   </Field>
-                  <IllustrationPlaceholder>
-                    <img src={quoteChainsJpeg} alt="QuoteChains 渲染" className="h-auto w-full" />
-                  </IllustrationPlaceholder>
+                  {renderReplyChainEnabled && (
+                    <IllustrationPlaceholder>
+                      <img src={quoteChainsJpeg} alt="QuoteChains 渲染" className="h-auto w-full" />
+                    </IllustrationPlaceholder>
+                  )}
                 </div>
                 {renderReplyChainEnabled && (
                   <div>
