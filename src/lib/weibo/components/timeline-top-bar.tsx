@@ -1,0 +1,132 @@
+import { Check, ChevronDown, RefreshCw } from 'lucide-react'
+import type { ReactNode } from 'react'
+
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
+
+export interface TimelineTopBarOption {
+  value: string
+  label: string
+}
+
+interface TimelineTopBarProps {
+  title: string
+  subtitle?: string
+  titleValue?: string
+  titleOptions?: TimelineTopBarOption[]
+  onTitleChange?: (value: string) => void
+  filterLabel?: string
+  filterOptions?: TimelineTopBarOption[]
+  filterValue?: string
+  onFilterChange?: (value: string) => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
+  rightAction?: ReactNode
+  children?: ReactNode
+}
+
+export function TimelineTopBar({
+  title,
+  subtitle,
+  titleValue,
+  titleOptions,
+  onTitleChange,
+  filterLabel,
+  filterOptions,
+  filterValue,
+  onFilterChange,
+  onRefresh,
+  isRefreshing = false,
+  rightAction,
+  children,
+}: TimelineTopBarProps) {
+  const activeTitleValue =
+    titleValue ?? titleOptions?.find((option) => option.label === title)?.value ?? title
+  const showTitleMenu = titleOptions && titleOptions.length > 1 && onTitleChange
+  const showFilterMenu = filterOptions && filterOptions.length > 0 && filterValue && onFilterChange
+
+  return (
+    <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-lg">
+      <div className="relative flex min-h-14 items-end justify-between gap-3 px-2 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-col">
+            {showTitleMenu ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-auto justify-start px-2 py-1">
+                    <span className="text-foreground truncate text-xl font-semibold">{title}</span>
+                    <ChevronDown className="text-muted-foreground size-4 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  {titleOptions.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onSelect={() => onTitleChange(option.value)}
+                      className="justify-between"
+                    >
+                      {option.label}
+                      {option.value === activeTitleValue ? <Check className="size-4" /> : null}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <h1 className="text-foreground truncate px-2 text-xl font-semibold">{title}</h1>
+            )}
+            {subtitle ? (
+              <p className="text-muted-foreground truncate px-2 text-xs leading-4">{subtitle}</p>
+            ) : null}
+          </div>
+
+          {showFilterMenu ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <span className="truncate">{filterLabel}</span>
+                  <ChevronDown className="size-3 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {filterOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={() => onFilterChange(option.value)}
+                    className="justify-between"
+                  >
+                    <span className="truncate">{option.label}</span>
+                    {option.value === filterValue ? <Check className="size-4" /> : null}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
+          {rightAction}
+          {onRefresh ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="刷新"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={cn('size-4', isRefreshing && 'animate-spin')} />
+            </Button>
+          ) : null}
+        </div>
+
+        {children}
+      </div>
+    </div>
+  )
+}

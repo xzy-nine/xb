@@ -26,6 +26,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
+import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
 import {
   MAX_ENTRIES,
   browsingHistoryStore,
@@ -98,45 +99,45 @@ export function HistoryPage() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-background/80 sticky top-0 z-10 flex items-center justify-between p-4 backdrop-blur">
-        <h1 className="text-lg font-semibold">
-          浏览历史{' '}
-          <span className="text-muted-foreground text-xs font-normal">最多保存{MAX_ENTRIES}条</span>
-        </h1>
-        {entries.length > 0 && (
-          <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-destructive h-auto px-2 py-1 text-xs"
-              >
-                清空
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>清空浏览历史</DialogTitle>
-                <DialogDescription>确定要清除所有浏览记录吗？此操作不可撤销。</DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">取消</Button>
-                </DialogClose>
+      <TimelineTopBar
+        title="浏览历史"
+        subtitle={`最多保存 ${MAX_ENTRIES} 条`}
+        rightAction={
+          entries.length > 0 ? (
+            <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+              <DialogTrigger asChild>
                 <Button
-                  variant="destructive"
-                  onClick={() => {
-                    clearHistory()
-                    setClearConfirmOpen(false)
-                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-destructive"
                 >
                   清空
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>清空浏览历史</DialogTitle>
+                  <DialogDescription>确定要清除所有浏览记录吗？此操作不可撤销。</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">取消</Button>
+                  </DialogClose>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      clearHistory()
+                      setClearConfirmOpen(false)
+                    }}
+                  >
+                    清空
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : null
+        }
+      />
 
       {entries.length === 0 ? (
         <div className="text-muted-foreground flex flex-col items-center gap-2 py-12">

@@ -37,7 +37,7 @@ export function adaptExploreGroupsResponse(payload: ExploreGroupsPayload): Explo
     groups = myChannel.group ?? []
   }
 
-  return groups.slice(0, 5) as ExploreGroup[]
+  return groups as ExploreGroup[]
 }
 
 export function adaptFollowGroupsResponse(payload: ExploreGroupsPayload): FollowGroup[] {

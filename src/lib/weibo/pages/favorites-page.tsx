@@ -6,6 +6,7 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { FeedList } from '@/lib/weibo/components/feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import { favoritesInfiniteOptions, flattenInfiniteItems } from '@/lib/weibo/queries/weibo-queries'
@@ -34,6 +35,10 @@ export function FavoritesPage() {
   const hasNextPage = Boolean(favoritesQuery.hasNextPage)
   const isFetchingNextPage = favoritesQuery.isFetchingNextPage
   const isLoading = favoritesQuery.isLoading
+  const isRefreshing = favoritesQuery.isFetching && !isFetchingNextPage && !isLoading
+  const handleFavoriteTypeChange = () => {
+    // 预留收藏类型扩展入口，目前微博接口只接入全部收藏。
+  }
 
   const fetchNextPageRef = useRef(favoritesQuery.fetchNextPage)
   fetchNextPageRef.current = favoritesQuery.fetchNextPage
@@ -56,27 +61,44 @@ export function FavoritesPage() {
   }, [hasNextPage])
 
   return (
-    <div className="flex flex-col gap-3 pt-4">
-      {isLoading ? <PageLoadingState label="正在加载收藏..." /> : null}
-      {!isLoading && errorMessage ? (
-        <PageErrorState description={errorMessage} onRetry={() => void favoritesQuery.refetch()} />
-      ) : null}
-      {!isLoading && !errorMessage ? (
-        <FeedList
-          items={items}
-          emptyLabel="暂无收藏内容"
-          onNavigate={ctx.navigateToStatusDetail}
-          onCommentClick={(item) =>
-            ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
-          }
-          onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-        />
-      ) : null}
-      {hasNextPage ? (
-        <div ref={loadMoreRef} className="flex justify-center py-3">
-          {isFetchingNextPage ? <Spinner size="sm" /> : null}
-        </div>
-      ) : null}
+    <div className="flex flex-col">
+      <TimelineTopBar
+        title="收藏"
+        filterLabel="全部收藏"
+        filterOptions={[{ value: 'all', label: '全部收藏' }]}
+        filterValue="all"
+        onFilterChange={handleFavoriteTypeChange}
+        onRefresh={() => void favoritesQuery.refetch()}
+        isRefreshing={isRefreshing}
+      />
+
+      <div className="flex flex-col gap-3">
+        {isLoading ? <PageLoadingState label="正在加载收藏..." /> : null}
+        {!isLoading && errorMessage ? (
+          <PageErrorState
+            description={errorMessage}
+            onRetry={() => void favoritesQuery.refetch()}
+          />
+        ) : null}
+        {!isLoading && !errorMessage ? (
+          <FeedList
+            items={items}
+            emptyLabel="暂无收藏内容"
+            onNavigate={ctx.navigateToStatusDetail}
+            onCommentClick={(item) =>
+              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
+            }
+            onRepostClick={(item) =>
+              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
+            }
+          />
+        ) : null}
+        {hasNextPage ? (
+          <div ref={loadMoreRef} className="flex justify-center py-3">
+            {isFetchingNextPage ? <Spinner size="sm" /> : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

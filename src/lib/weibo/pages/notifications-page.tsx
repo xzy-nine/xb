@@ -4,18 +4,29 @@ import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { NotificationList } from '@/lib/weibo/components/notification-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { TimelineTopBar, type TimelineTopBarOption } from '@/lib/weibo/components/timeline-top-bar'
 import type { NotificationItem } from '@/lib/weibo/models/notification'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+
+const NOTIFICATION_OPTIONS: TimelineTopBarOption[] = [
+  { value: 'mentions', label: '@我' },
+  { value: 'comments', label: '评论' },
+  { value: 'likes', label: '赞' },
+]
 
 const TAB_ROUTES: Record<NotificationTab, string> = {
   mentions: '/at/weibo',
   comments: '/comment/inbox',
   likes: '/like/inbox',
+}
+
+function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
+  requestAnimationFrame(resetMainScroll)
 }
 
 function NotificationTabContent({
@@ -82,6 +93,7 @@ function NotificationTabContent({
 }
 
 export function NotificationsPage() {
+  const ctx = useAppShellContext()
   const page = useWeiboPage()
   const navigate = useNavigate()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
@@ -89,7 +101,9 @@ export function NotificationsPage() {
   const isEnabled = rewriteEnabled && page.kind === 'notifications'
 
   const handleTabChange = (tab: string) => {
+    if (tab === activeTab) return
     navigate(TAB_ROUTES[tab as NotificationTab])
+    resetMainScrollAfterRouteChange(ctx.resetMainScroll)
   }
 
   const notificationsQuery = useInfiniteQuery({
@@ -123,55 +137,35 @@ export function NotificationsPage() {
     notificationsQuery.error instanceof Error ? notificationsQuery.error.message : null
 
   return (
-    <div>
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col">
-        <div className="bg-muted/60 sticky top-0 z-10 backdrop-blur">
-          <TabsList className="grid w-full grid-cols-3" variant="line">
-            <TabsTrigger value="mentions">@我</TabsTrigger>
-            <TabsTrigger value="comments">评论</TabsTrigger>
-            <TabsTrigger value="likes">赞</TabsTrigger>
-          </TabsList>
-        </div>
+    <div className="flex flex-col">
+      <TimelineTopBar
+        title="通知"
+        filterLabel={NOTIFICATION_OPTIONS.find((option) => option.value === activeTab)?.label}
+        filterOptions={NOTIFICATION_OPTIONS}
+        filterValue={activeTab}
+        onFilterChange={handleTabChange}
+        onRefresh={() => void notificationsQuery.refetch()}
+        isRefreshing={notificationsQuery.isFetching && !notificationsQuery.isFetchingNextPage}
+      />
 
-        <TabsContent value="mentions" className="flex flex-col gap-3">
-          <NotificationTabContent
-            items={items}
-            hasNextPage={Boolean(notificationsQuery.hasNextPage)}
-            isFetchingNextPage={notificationsQuery.isFetchingNextPage}
-            isLoading={notificationsQuery.isLoading}
-            errorMessage={errorMessage}
-            onFetchNextPage={() => void notificationsQuery.fetchNextPage()}
-            onRefetch={() => void notificationsQuery.refetch()}
-            emptyLabel="暂无@内容"
-          />
-        </TabsContent>
-
-        <TabsContent value="comments" className="flex flex-col gap-3">
-          <NotificationTabContent
-            items={items}
-            hasNextPage={Boolean(notificationsQuery.hasNextPage)}
-            isFetchingNextPage={notificationsQuery.isFetchingNextPage}
-            isLoading={notificationsQuery.isLoading}
-            errorMessage={errorMessage}
-            onFetchNextPage={() => void notificationsQuery.fetchNextPage()}
-            onRefetch={() => void notificationsQuery.refetch()}
-            emptyLabel="暂无评论"
-          />
-        </TabsContent>
-
-        <TabsContent value="likes" className="flex flex-col gap-3">
-          <NotificationTabContent
-            items={items}
-            hasNextPage={Boolean(notificationsQuery.hasNextPage)}
-            isFetchingNextPage={notificationsQuery.isFetchingNextPage}
-            isLoading={notificationsQuery.isLoading}
-            errorMessage={errorMessage}
-            onFetchNextPage={() => void notificationsQuery.fetchNextPage()}
-            onRefetch={() => void notificationsQuery.refetch()}
-            emptyLabel="暂无赞"
-          />
-        </TabsContent>
-      </Tabs>
+      <div className="flex flex-col gap-3">
+        <NotificationTabContent
+          items={items}
+          hasNextPage={Boolean(notificationsQuery.hasNextPage)}
+          isFetchingNextPage={notificationsQuery.isFetchingNextPage}
+          isLoading={notificationsQuery.isLoading}
+          errorMessage={errorMessage}
+          onFetchNextPage={() => void notificationsQuery.fetchNextPage()}
+          onRefetch={() => void notificationsQuery.refetch()}
+          emptyLabel={
+            activeTab === 'mentions'
+              ? '暂无@内容'
+              : activeTab === 'comments'
+                ? '暂无评论'
+                : '暂无赞'
+          }
+        />
+      </div>
     </div>
   )
 }

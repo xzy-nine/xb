@@ -128,7 +128,11 @@ describe('AppShell', () => {
   it('navigates to the following timeline when the home tab changes', async () => {
     renderWeiboShell(['/'])
 
-    fireEvent.mouseDown(screen.getByRole('tab', { name: '我关注的' }))
+    fireEvent.pointerDown(screen.getByRole('button', { name: '推荐' }), {
+      button: 0,
+      ctrlKey: false,
+    })
+    fireEvent.click(await screen.findByRole('menuitem', { name: '我关注的' }))
 
     await waitFor(() => {
       expect(vi.mocked(loadHomeTimeline)).toHaveBeenLastCalledWith('following', { cursor: null })

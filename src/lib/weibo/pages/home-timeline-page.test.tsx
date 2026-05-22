@@ -76,7 +76,7 @@ describe('HomeTimelinePage', () => {
     })
   })
 
-  it('renders tabs and feed cards', async () => {
+  it('renders the timeline top bar and feed cards', async () => {
     const queryClient = new QueryClient()
     render(
       <QueryClientProvider client={queryClient}>
@@ -90,7 +90,7 @@ describe('HomeTimelinePage', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.getByRole('tab', { name: '推荐' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '推荐' })).toBeInTheDocument()
     expect(await screen.findByText('hello world')).toBeInTheDocument()
     expect(vi.mocked(loadHomeTimeline)).toHaveBeenCalled()
   })

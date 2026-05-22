@@ -97,7 +97,7 @@ function StatusCommentsSection({
           onClick={() => void commentsQuery.fetchNextPage()}
           disabled={commentsQuery.isFetchingNextPage}
         >
-          {commentsQuery.isFetchingNextPage ? '加载中...' : '加载下一页评论'}
+          {commentsQuery.isFetchingNextPage ? '加载中...' : '加载更多评论'}
         </Button>
       ) : null}
     </>
@@ -142,12 +142,15 @@ export function StatusDetailPage() {
 
   return (
     <div className="">
-      <div className="sticky top-0 z-10 py-2 backdrop-blur">
-        <Button variant="ghost" size="sm" className="gap-2" onClick={handleGoBack}>
-          <ArrowLeft className="size-4" />
-          返回
-        </Button>
+      <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-lg">
+        <div className="relative flex min-h-14 items-end justify-between gap-3 py-2">
+          <Button variant="ghost" onClick={handleGoBack}>
+            <ArrowLeft className="size-4" />
+            <span className="text-foreground truncate font-semibold">返回</span>
+          </Button>
+        </div>
       </div>
+
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
       {detailQuery.error instanceof Error ? (
         <PageErrorState description={detailQuery.error.message} />
