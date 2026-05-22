@@ -30,7 +30,9 @@ function getTimelineStatuses(payload: WeiboTimelinePayload): WeiboStatus[] {
         ? payload.data.status
         : Array.isArray(payload.data?.list)
           ? payload.data.list
-          : []
+          : Array.isArray(payload.data)
+            ? payload.data
+            : []
   return statuses.filter(
     (status): status is WeiboStatus =>
       status !== null && typeof status === 'object' && status.isAd !== 1,

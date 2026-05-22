@@ -1,7 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 
-import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
@@ -78,11 +77,6 @@ export function FavoritesPage() {
         <div ref={loadMoreRef} className="flex justify-center py-3">
           {isFetchingNextPage ? <Spinner size="sm" /> : null}
         </div>
-      ) : null}
-      {hasNextPage && !isFetchingNextPage ? (
-        <Button variant="outline" onClick={() => void favoritesQuery.fetchNextPage()}>
-          加载下一页
-        </Button>
       ) : null}
     </div>
   )
