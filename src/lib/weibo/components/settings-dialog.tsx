@@ -3,7 +3,6 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 
 import darkModeImageDimJpeg from '@/assets/images/dark-mode-image-dim.jpeg'
-import myGroupsJpeg from '@/assets/images/my-groups.jpeg'
 import collapseReplyChain from '@/assets/images/quotechains-collapsible.jpeg'
 import quoteChainsJpeg from '@/assets/images/quotechains.jpeg'
 import xLayoutJpeg from '@/assets/images/x-layout.jpeg'
@@ -273,15 +272,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </IllustrationPlaceholder>
                 </div>
                 <div>
-                  <Field label="关注分组" description="在信息流中按分组筛选关注人">
+                  <Field label="关注分组" description="在我关注的中展示我的分组筛选">
                     <Switch
                       checked={followGroupsEnabled}
                       onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
                     />
                   </Field>
-                  <IllustrationPlaceholder>
-                    <img src={myGroupsJpeg} alt="关注分组" className="h-auto w-full" />
-                  </IllustrationPlaceholder>
                 </div>
                 <div>
                   <Field label="QuoteChains 渲染" description='将 "//@ 用户名:" 格式渲染成引用样式'>

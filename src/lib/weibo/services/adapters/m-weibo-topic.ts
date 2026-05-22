@@ -133,6 +133,10 @@ function stripHtmlTags(text: string): string {
     .trim()
 }
 
+function stripTopicLongTextPreviewLabel(text: string): string {
+  return text.replace(/((?:\.{3}|…|⋯)\s*)(?:<a\b[^>]*>\s*)?全文\s*(?:<\/a>)?\s*$/i, '$1').trimEnd()
+}
+
 function convertPicsToPicInfos(
   pics: MweiboMblog['pics'],
 ): { pic_ids: string[]; pic_infos: Record<string, WeiboPicInfo> } | null {
@@ -188,13 +192,16 @@ function mweiboPageInfoToWeiboPageInfo(
 }
 
 function mweiboMblogToWeiboStatus(mblog: MweiboMblog): WeiboStatus {
+  const text = mblog.text ?? ''
+  const displayText = mblog.isLongText ? stripTopicLongTextPreviewLabel(text) : text
+
   return {
     id: String(mblog.id),
     idstr: String(mblog.id),
     mid: String(mblog.id),
     mblogid: mblog.bid ?? String(mblog.id),
-    text: mblog.text ?? '',
-    text_raw: mblog.text ? stripHtmlTags(mblog.text) : '',
+    text: displayText,
+    text_raw: displayText ? stripHtmlTags(displayText) : '',
     created_at: mblog.created_at,
     source: mblog.source,
     region_name: mblog.region_name,

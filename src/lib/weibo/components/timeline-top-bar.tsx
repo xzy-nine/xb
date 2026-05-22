@@ -53,7 +53,7 @@ export function TimelineTopBar({
 
   return (
     <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-lg">
-      <div className="relative flex min-h-14 items-end justify-between gap-3 px-2 py-2">
+      <div className="relative flex min-h-14 items-end justify-between gap-2 px-2 py-2">
         <div className="flex min-w-0 items-center gap-2">
           {showTitleMenu ? (
             <DropdownMenu>
