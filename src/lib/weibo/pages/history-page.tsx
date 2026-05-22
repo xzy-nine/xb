@@ -1,6 +1,6 @@
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { Clock, Trash2 } from 'lucide-react'
+import { BrushCleaning, Clock, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 
@@ -101,17 +101,17 @@ export function HistoryPage() {
     <div className="flex flex-col gap-3">
       <TimelineTopBar
         title="浏览历史"
-        subtitle={`最多保存 ${MAX_ENTRIES} 条`}
+        description={`最多保存 ${MAX_ENTRIES} 条`}
         rightAction={
           entries.length > 0 ? (
             <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
               <DialogTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   className="text-muted-foreground hover:text-destructive"
                 >
-                  清空
+                  <BrushCleaning />
                 </Button>
               </DialogTrigger>
               <DialogContent>

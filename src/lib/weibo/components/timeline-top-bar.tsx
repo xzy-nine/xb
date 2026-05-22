@@ -17,7 +17,7 @@ export interface TimelineTopBarOption {
 
 interface TimelineTopBarProps {
   title: string
-  subtitle?: string
+  description?: string
   titleValue?: string
   titleOptions?: TimelineTopBarOption[]
   onTitleChange?: (value: string) => void
@@ -33,7 +33,7 @@ interface TimelineTopBarProps {
 
 export function TimelineTopBar({
   title,
-  subtitle,
+  description,
   titleValue,
   titleOptions,
   onTitleChange,
@@ -55,58 +55,58 @@ export function TimelineTopBar({
     <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-lg">
       <div className="relative flex min-h-14 items-end justify-between gap-3 px-2 py-2">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="flex min-w-0 flex-col">
-            {showTitleMenu ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-auto justify-start px-2 py-1">
-                    <span className="text-foreground truncate text-xl font-semibold">{title}</span>
-                    <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-40">
-                  {titleOptions.map((option) => (
-                    <DropdownMenuItem
-                      key={option.value}
-                      onSelect={() => onTitleChange(option.value)}
-                      className="justify-between"
-                    >
-                      {option.label}
-                      {option.value === activeTitleValue ? <Check className="size-4" /> : null}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <h1 className="text-foreground truncate px-2 text-xl font-semibold">{title}</h1>
-            )}
-            {subtitle ? (
-              <p className="text-muted-foreground truncate px-2 text-xs leading-4">{subtitle}</p>
-            ) : null}
-          </div>
-
-          {showFilterMenu ? (
+          {showTitleMenu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <span className="truncate">{filterLabel}</span>
-                  <ChevronDown className="size-3 shrink-0" />
+                <Button variant="ghost">
+                  <span className="text-foreground truncate text-xl font-semibold">{title}</span>
+                  <ChevronDown className="text-muted-foreground size-4 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                {filterOptions.map((option) => (
+              <DropdownMenuContent align="start" className="w-40">
+                {titleOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onSelect={() => onFilterChange(option.value)}
+                    onSelect={() => onTitleChange(option.value)}
                     className="justify-between"
                   >
-                    <span className="truncate">{option.label}</span>
-                    {option.value === filterValue ? <Check className="size-4" /> : null}
+                    {option.label}
+                    {option.value === activeTitleValue ? <Check className="size-4" /> : null}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : null}
+          ) : (
+            <h1 className="text-foreground truncate px-2 py-1 text-xl font-semibold">{title}</h1>
+          )}
+
+          <div className="flex h-full flex-col items-center justify-end gap-1">
+            {showFilterMenu ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <span className="truncate">{filterLabel}</span>
+                    <ChevronDown className="size-3 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {filterOptions.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onSelect={() => onFilterChange(option.value)}
+                      className="justify-between"
+                    >
+                      <span className="truncate">{option.label}</span>
+                      {option.value === filterValue ? <Check className="size-4" /> : null}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+            {description ? (
+              <p className="text-muted-foreground truncate px-2 text-xs leading-4">{description}</p>
+            ) : null}
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
