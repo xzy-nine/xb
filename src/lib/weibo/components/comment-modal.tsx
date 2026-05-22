@@ -150,7 +150,8 @@ function CommentModalForm({
   })
 
   const copy = getModalCopy(target)
-  const isSubmitDisabled = mutation.isPending || text.trim().length === 0
+  const isSubmitDisabled =
+    mutation.isPending || (target.mode === 'comment' && text.trim().length === 0)
 
   return (
     <DialogContent className="sm:max-w-xl">
