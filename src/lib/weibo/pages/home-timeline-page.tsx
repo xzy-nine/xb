@@ -251,6 +251,7 @@ export function HomeTimelinePage() {
               items={items}
               emptyLabel="此时间线暂无内容"
               onNavigate={ctx.navigateToStatusDetail}
+              onNavigateProfile={ctx.navigateToProfile}
               onCommentClick={(item) =>
                 ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
               }

@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bookmark, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import { memo, useCallback, type MouseEvent, type ReactNode, useRef } from 'react'
-import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -121,39 +120,49 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
   )
 }
 
+type ProfileLookup = { uid: string } | { screenName: string }
+
 function FeedAuthorHeader({
   item,
+  onNavigateProfile,
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
   trailing?: ReactNode
+  onNavigateProfile?: (lookup: ProfileLookup) => void
 }) {
+  const handleAuthorClick = (event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (onNavigateProfile) {
+      onNavigateProfile({ uid: item.author.id })
+    }
+  }
+
   return (
     <CardHeader className="flex flex-row gap-3 px-4">
       <UserHoverCard uid={item.author.id}>
-        <Link
-          to={`/n/${encodeURIComponent(item.author.name)}`}
-          onClick={(event) => event.stopPropagation()}
-        >
+        <button type="button" onClick={handleAuthorClick} className="cursor-pointer">
           <UserAvatar
             author={item.author}
             sizeClassName="size-12"
             fallbackClassName="text-sm font-semibold"
           />
-        </Link>
+        </button>
       </UserHoverCard>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <UserHoverCard uid={item.author.id}>
-                <Link
-                  to={`/n/${encodeURIComponent(item.author.name)}`}
-                  onClick={(event) => event.stopPropagation()}
+                <button
+                  type="button"
+                  onClick={handleAuthorClick}
+                  className="cursor-pointer text-left"
                 >
                   <CardTitle className="truncate text-base hover:underline">
                     {item.author.name}
                   </CardTitle>
-                </Link>
+                </button>
               </UserHoverCard>
               <CreatedAtBadge label={item.createdAtLabel} />
             </div>
@@ -507,6 +516,7 @@ export const FeedCard = memo(function FeedCard({
   onNavigate,
   onCommentClick,
   onRepostClick,
+  onNavigateProfile,
   onStatusDeleted,
   className,
   uniformHeight,
@@ -516,6 +526,7 @@ export const FeedCard = memo(function FeedCard({
   onNavigate?: (item: FeedItem) => void
   onCommentClick?: (item: FeedItem) => void
   onRepostClick?: (item: FeedItem) => void
+  onNavigateProfile?: (lookup: ProfileLookup) => void
   /** After deleting this status (owner only), e.g. navigate back from detail. */
   onStatusDeleted?: () => void
   className?: string
@@ -824,13 +835,13 @@ export const FeedCard = memo(function FeedCard({
       ) : null}
       {uniformHeight ? (
         <div className="flex min-h-0 flex-1 flex-col gap-4 px-0">
-          <FeedAuthorHeader item={resolvedItem} />
+          <FeedAuthorHeader item={resolvedItem} onNavigateProfile={onNavigateProfile} />
           {cardContentElement}
           <div className="flex-1" />
         </div>
       ) : (
         <>
-          <FeedAuthorHeader item={resolvedItem} />
+          <FeedAuthorHeader item={resolvedItem} onNavigateProfile={onNavigateProfile} />
           {cardContentElement}
         </>
       )}

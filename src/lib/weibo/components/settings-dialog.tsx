@@ -82,6 +82,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
   const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
   const statusDetailPopupPosition = useAppSettings((s) => s.statusDetailPopupPosition)
+  const statusDetailPopupWidth = useAppSettings((s) => s.statusDetailPopupWidth)
   const theme = useAppSettings((s) => s.theme)
   const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
   const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
@@ -108,6 +109,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setDarkModeBgColor = useAppSettings((s) => s.setDarkModeBgColor)
   const setStatusDetailPopupEnabled = useAppSettings((s) => s.setStatusDetailPopupEnabled)
   const setStatusDetailPopupPosition = useAppSettings((s) => s.setStatusDetailPopupPosition)
+  const setStatusDetailPopupWidth = useAppSettings((s) => s.setStatusDetailPopupWidth)
   const setBackgroundEnabled = useAppSettings((s) => s.setBackgroundEnabled)
   const setGlassOpacity = useAppSettings((s) => s.setGlassOpacity)
   const setGlassBlur = useAppSettings((s) => s.setGlassBlur)
@@ -335,6 +337,22 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </Field>
             )}
 
+            {statusDetailPopupEnabled && (
+              <div className="flex flex-col gap-2">
+                <Label>弹窗宽度</Label>
+                <p className="text-muted-foreground text-xs">
+                  详情弹窗占页面宽度的比例 ({statusDetailPopupWidth}%)
+                </p>
+                <Slider
+                  value={[statusDetailPopupWidth]}
+                  min={50}
+                  max={80}
+                  step={5}
+                  onValueChange={([value]) => setStatusDetailPopupWidth(value)}
+                />
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <Label>瀑布流栏数</Label>
               <p className="text-muted-foreground text-xs">
@@ -421,6 +439,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 onClick={() => {
                   setStatusDetailPopupEnabled(DEFAULT_APP_SETTINGS.statusDetailPopupEnabled)
                   setStatusDetailPopupPosition(DEFAULT_APP_SETTINGS.statusDetailPopupPosition)
+                  setStatusDetailPopupWidth(DEFAULT_APP_SETTINGS.statusDetailPopupWidth)
                   setWaterfallColumnCount(DEFAULT_APP_SETTINGS.waterfallColumnCount)
                   setBackgroundEnabled(DEFAULT_APP_SETTINGS.backgroundEnabled)
                   setBackgroundImageUrl(DEFAULT_APP_SETTINGS.backgroundImageUrl)

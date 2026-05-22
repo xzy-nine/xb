@@ -117,6 +117,7 @@ export interface AppSettings {
   hotSearchType: HotSearchType
   statusDetailPopupEnabled: boolean
   statusDetailPopupPosition: StatusDetailPopupPosition
+  statusDetailPopupWidth: number
   backgroundEnabled: boolean
   backgroundColor: string
   backgroundImageUrl: string
@@ -173,6 +174,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   hotSearchType: 'hot' as HotSearchType,
   statusDetailPopupEnabled: true,
   statusDetailPopupPosition: 'right',
+  statusDetailPopupWidth: 50,
   backgroundEnabled: true,
   backgroundColor: '#1e40af',
   backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
@@ -270,6 +272,10 @@ function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopup
   return value === 'left' || value === 'center' || value === 'right'
 }
 
+function isStatusDetailPopupWidth(value: unknown): value is number {
+  return typeof value === 'number' && value >= 50 && value <= 80
+}
+
 export function normalizeAppSettings(value: unknown): AppSettings {
   if (!value || typeof value !== 'object') {
     return { ...DEFAULT_APP_SETTINGS }
@@ -357,6 +363,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     statusDetailPopupPosition: isStatusDetailPopupPosition(candidate.statusDetailPopupPosition)
       ? candidate.statusDetailPopupPosition
       : DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
+    statusDetailPopupWidth: isStatusDetailPopupWidth(candidate.statusDetailPopupWidth)
+      ? candidate.statusDetailPopupWidth
+      : DEFAULT_APP_SETTINGS.statusDetailPopupWidth,
     backgroundEnabled:
       typeof candidate.backgroundEnabled === 'boolean'
         ? candidate.backgroundEnabled

@@ -6,6 +6,8 @@ import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageEmptyState } from '@/lib/weibo/components/page-state'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
+type ProfileLookup = { uid: string } | { screenName: string }
+
 const MIN_CARD_WIDTH = 300
 
 export function FeedList({
@@ -14,12 +16,14 @@ export function FeedList({
   onNavigate,
   onCommentClick,
   onRepostClick,
+  onNavigateProfile,
 }: {
   items: FeedItem[]
   emptyLabel: string
   onNavigate?: (item: FeedItem) => void
   onCommentClick?: (item: FeedItem) => void
   onRepostClick?: (item: FeedItem) => void
+  onNavigateProfile?: (lookup: ProfileLookup) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth] = useElementSize(containerRef)
@@ -45,6 +49,7 @@ export function FeedList({
               onNavigate={onNavigate}
               onCommentClick={onCommentClick}
               onRepostClick={onRepostClick}
+              onNavigateProfile={onNavigateProfile}
             />
           ))}
         </div>
@@ -65,6 +70,7 @@ export function FeedList({
               onNavigate={onNavigate}
               onCommentClick={onCommentClick}
               onRepostClick={onRepostClick}
+              onNavigateProfile={onNavigateProfile}
               uniformHeight
             />
           </div>

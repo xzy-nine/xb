@@ -40,6 +40,7 @@ interface ShellFrameProps {
   onSettingsOpen: () => void
   onComposeOpen: () => void
   mainRef: React.RefObject<HTMLDivElement | null>
+  appShellContext: AppShellContext
   children: ReactNode
 }
 
@@ -59,6 +60,7 @@ export function ShellFrame({
   onSettingsOpen,
   onComposeOpen,
   mainRef,
+  appShellContext,
   children,
 }: ShellFrameProps) {
   const location = useLocation()
@@ -185,7 +187,7 @@ export function ShellFrame({
             'sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]',
           )}
         >
-          <RightRail />
+          <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
         </div>
         <BackToTop scrollRoot={mainScrollRoot} />
       </div>

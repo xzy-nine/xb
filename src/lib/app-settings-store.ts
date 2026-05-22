@@ -47,6 +47,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setHotSearchType: (type: HotSearchType) => Promise<void>
   setStatusDetailPopupEnabled: (enabled: boolean) => Promise<void>
   setStatusDetailPopupPosition: (position: StatusDetailPopupPosition) => Promise<void>
+  setStatusDetailPopupWidth: (width: number) => Promise<void>
   setBackgroundEnabled: (enabled: boolean) => Promise<void>
   setBackgroundColor: (color: string) => Promise<void>
   setGlassOpacity: (opacity: number) => Promise<void>
@@ -87,6 +88,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     hotSearchType: state.hotSearchType,
     statusDetailPopupEnabled: state.statusDetailPopupEnabled,
     statusDetailPopupPosition: state.statusDetailPopupPosition,
+    statusDetailPopupWidth: state.statusDetailPopupWidth,
     backgroundEnabled: state.backgroundEnabled,
     backgroundColor: state.backgroundColor,
     backgroundImageUrl: state.backgroundImageUrl,
@@ -190,6 +192,9 @@ export function createAppSettingsStore(
       },
       async setStatusDetailPopupPosition(statusDetailPopupPosition) {
         await updateAndPersist({ statusDetailPopupPosition })
+      },
+      async setStatusDetailPopupWidth(statusDetailPopupWidth) {
+        await updateAndPersist({ statusDetailPopupWidth })
       },
       async setBackgroundEnabled(backgroundEnabled) {
         await updateAndPersist({ backgroundEnabled })
