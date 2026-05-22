@@ -14,11 +14,6 @@ stats-*.json
 .wxt
 web-ext.config.ts
 docs
-!docs/
-!docs/superpowers/
-!docs/superpowers/specs/
-!docs/superpowers/specs/*.md
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

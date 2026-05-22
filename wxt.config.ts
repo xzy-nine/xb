@@ -17,7 +17,7 @@ export default defineConfig({
   srcDir: 'src',
   manifest: {
     name: 'xb',
-    description: 'xb rewrites weibo.com into a cleaner X-like reading experience',
+    description: 'xb - Redesign Weibo, like X but even better',
     icons: {
       16: 'icon/logo-16.png',
       32: 'icon/logo-32.png',
