@@ -92,7 +92,7 @@ jobs:
     if: needs.release.outputs.new_release == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -115,7 +115,15 @@ jobs:
           FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
         run: |
           bun run zip
+          bun run zip:edge
           bun run zip:firefox
+
+      - name: Upload release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.release.outputs.release_git_tag }}" \
+            .output/xb-*.zip --clobber
 
       - name: Submit to stores
         env:
