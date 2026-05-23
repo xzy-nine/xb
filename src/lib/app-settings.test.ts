@@ -71,6 +71,7 @@ describe('app-settings', () => {
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
       xbTopicPage: true,
+      homeTab: 'for-you',
     })
 
     await persistAppSettings(
@@ -100,6 +101,7 @@ describe('app-settings', () => {
         browsingHistoryEnabled: true,
         followGroupsEnabled: false,
         xbTopicPage: true,
+        homeTab: 'for-you',
       },
       storage,
     )
@@ -130,6 +132,7 @@ describe('app-settings', () => {
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
       xbTopicPage: true,
+      homeTab: 'for-you',
     })
   })
 

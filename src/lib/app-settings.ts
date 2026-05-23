@@ -92,6 +92,8 @@ export type LineHeightClass =
 
 export type ContentWidth = 'standard' | 'wide' | 'wider'
 
+export type HomeTab = 'for-you' | 'following'
+
 export interface AppSettings {
   contentWidth: ContentWidth
   theme: AppTheme
@@ -118,6 +120,7 @@ export interface AppSettings {
   browsingHistoryEnabled: boolean
   followGroupsEnabled: boolean
   xbTopicPage: boolean
+  homeTab: HomeTab
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -166,6 +169,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   browsingHistoryEnabled: true,
   followGroupsEnabled: false,
   xbTopicPage: true,
+  homeTab: 'for-you',
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -247,6 +251,10 @@ function isLineHeightClass(value: unknown): value is LineHeightClass {
 
 function isContentWidth(value: unknown): value is ContentWidth {
   return value === 'standard' || value === 'wide' || value === 'wider'
+}
+
+function isHomeTab(value: unknown): value is HomeTab {
+  return value === 'for-you' || value === 'following'
 }
 
 export function normalizeAppSettings(value: unknown): AppSettings {
@@ -345,6 +353,7 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.xbTopicPage === 'boolean'
         ? candidate.xbTopicPage
         : DEFAULT_APP_SETTINGS.xbTopicPage,
+    homeTab: isHomeTab(candidate.homeTab) ? candidate.homeTab : DEFAULT_APP_SETTINGS.homeTab,
   }
 }
 

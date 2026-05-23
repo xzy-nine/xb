@@ -3,6 +3,8 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
+import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
 import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
 
 const getCurrentUserUidMock = vi.fn<() => string | null>()
@@ -19,6 +21,40 @@ describe('NavigationRail', () => {
   beforeEach(() => {
     getCurrentUserUidMock.mockReset()
     getCurrentUserUidMock.mockReturnValue('1001')
+    Object.defineProperty(globalThis, 'browser', {
+      writable: true,
+      value: {
+        storage: {
+          local: {
+            get: vi.fn(async () => ({})),
+            set: vi.fn(async () => {}),
+          },
+        },
+      },
+    })
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        matches: false,
+        media: '',
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    })
+    resetAppSettingsStoreForTest()
+    const store = getAppSettingsStore({
+      get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
+      set: async () => {},
+    })
+    store.setState({
+      ...store.getState(),
+      homeTab: 'for-you',
+      isHydrated: true,
+    })
   })
   afterEach(() => {
     cleanup()

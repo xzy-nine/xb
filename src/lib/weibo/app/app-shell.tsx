@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 
+import type { HomeTab } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { RewritePausedCard, ShellFrame } from '@/lib/weibo/app/app-shell-layout'
 import { AuthRequiredDialog } from '@/lib/weibo/components/auth-required-dialog'
@@ -31,7 +32,7 @@ export interface AppShellContext {
   setComposeTarget: (target: ComposeTarget | null) => void
   viewingProfileUserId: string | null
   onProfileUserIdChange: (userId: string | null) => void
-  onHomeTabChange: (tab: 'for-you' | 'following') => void
+  onHomeTabChange: (tab: HomeTab) => void
   refreshTimeline: () => void
   onFollowGroupChange: (gid: string | null) => void
 }
@@ -45,6 +46,7 @@ export function AppShell() {
   const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
   const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
   const contentWidth = useAppSettings((state) => state.contentWidth)
+  const setHomeTab = useAppSettings((state) => state.setHomeTab)
   const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
   const setTheme = useAppSettings((state) => state.setTheme)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
@@ -82,8 +84,11 @@ export function AppShell() {
   }, [queryClient])
 
   const onHomeTabChange = useCallback(
-    (tab: 'for-you' | 'following') => navigate(getHomeTimelinePath(tab)),
-    [navigate],
+    (tab: HomeTab) => {
+      void setHomeTab(tab)
+      navigate(getHomeTimelinePath(tab))
+    },
+    [navigate, setHomeTab],
   )
 
   const onFollowGroupChange = useCallback(

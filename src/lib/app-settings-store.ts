@@ -16,6 +16,7 @@ import {
   type LetterSpacingClass,
   type LineHeightClass,
   type GenImageCardTheme,
+  type HomeTab,
   type ContentWidth,
   type HotSearchType,
   type LightBgColorPreset,
@@ -49,6 +50,8 @@ export interface AppSettingsStoreState extends AppSettings {
   setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
   setNativeTopicPage: (enabled: boolean) => Promise<void>
   setContentWidth: (width: ContentWidth) => Promise<void>
+  homeTab: HomeTab
+  setHomeTab: (tab: HomeTab) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -80,6 +83,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     browsingHistoryEnabled: state.browsingHistoryEnabled,
     followGroupsEnabled: state.followGroupsEnabled,
     xbTopicPage: state.xbTopicPage,
+    homeTab: state.homeTab,
   }
 }
 
@@ -173,6 +177,9 @@ export function createAppSettingsStore(
       },
       async setBrowsingHistoryEnabled(browsingHistoryEnabled) {
         await updateAndPersist({ browsingHistoryEnabled })
+      },
+      async setHomeTab(homeTab) {
+        await updateAndPersist({ homeTab })
       },
       async setFollowGroupsEnabled(followGroupsEnabled) {
         await updateAndPersist({ followGroupsEnabled })
