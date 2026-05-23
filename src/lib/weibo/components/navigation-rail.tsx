@@ -154,7 +154,7 @@ export function NavigationRail({
     Boolean(currentUserUid) &&
     Boolean(viewingProfileUserId) &&
     currentUserUid === viewingProfileUserId
-  const isFavoritesActive = pageKind === 'favorites'
+  const isSavedItemsActive = pageKind === 'favorites' || pageKind === 'liked'
 
   const { data: unreadCounts } = useQuery(unreadNotificationsQueryOptions)
   const showNotificationBadge = unreadCounts ? hasNotificationBadge(unreadCounts) : false
@@ -194,7 +194,7 @@ export function NavigationRail({
             <NavButton
               label="收藏"
               showLabel={isXl}
-              isActive={isFavoritesActive}
+              isActive={isSavedItemsActive}
               onClick={() => navigate(favoritesHref)}
             >
               <Bookmark aria-hidden="true" className="size-4 shrink-0" />

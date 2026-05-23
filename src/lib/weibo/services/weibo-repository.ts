@@ -293,6 +293,19 @@ export async function loadFavorites(
   return adaptTimelineResponse(payload, page)
 }
 
+export async function loadLikedStatuses(
+  uid: string,
+  options: LoadFavoritesOptions = {},
+): Promise<TimelinePage> {
+  const page = options.page ?? 1
+  const payload = await wbGet<WeiboTimelinePayload>(WEIBO_ENDPOINTS.likedStatuses, {
+    uid,
+    page,
+    ...(page === 1 ? { with_total: 'true' } : {}),
+  })
+  return adaptTimelineResponse(payload, page)
+}
+
 export async function followUser(uid: string): Promise<UserProfile> {
   const payload = await wbPostForm<ProfileInfoPayload>(WEIBO_ENDPOINTS.followCreate, {
     friend_uid: uid,

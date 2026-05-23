@@ -13,6 +13,7 @@ import {
   loadGroupTimeline,
   loadHotSearchByType,
   loadHomeTimeline,
+  loadLikedStatuses,
   loadNestedComments,
   loadProfilePosts,
   loadSearch,
@@ -120,6 +121,17 @@ export function favoritesInfiniteOptions(uid: string) {
     queryKey: ['weibo', 'favorites', uid] as const,
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
       loadFavorites(uid, { page: pageParam ? Number(pageParam) : 1 }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    staleTime: 30 * 60 * 1000,
+  }
+}
+
+export function likedStatusesInfiniteOptions(uid: string) {
+  return {
+    queryKey: ['weibo', 'liked-statuses', uid] as const,
+    queryFn: ({ pageParam }: { pageParam: string | null }) =>
+      loadLikedStatuses(uid, { page: pageParam ? Number(pageParam) : 1 }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: 30 * 60 * 1000,

@@ -31,6 +31,7 @@ export const WEIBO_ENDPOINTS = {
   socialBand: '/ajax/statuses/social',
   searchSide: '/ajax/side/search',
   favoritesAll: '/ajax/favorites/all_fav',
+  likedStatuses: '/ajax/statuses/likelist',
   createFavorites: '/ajax/statuses/createFavorites',
   destroyFavorites: '/ajax/statuses/destoryFavorites',
   mentions: '/ajax/statuses/mentions',

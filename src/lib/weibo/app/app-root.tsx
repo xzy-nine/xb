@@ -26,6 +26,11 @@ const FollowFansPage = lazy(() =>
 const HomeTimelinePage = lazy(() =>
   import('@/lib/weibo/pages/home-timeline-page').then((m) => ({ default: m.HomeTimelinePage })),
 )
+const LikedStatusesPage = lazy(() =>
+  import('@/lib/weibo/pages/liked-statuses-page').then((m) => ({
+    default: m.LikedStatusesPage,
+  })),
+)
 const NotificationsPage = lazy(() =>
   import('@/lib/weibo/pages/notifications-page').then((m) => ({ default: m.NotificationsPage })),
 )
@@ -87,6 +92,7 @@ function AppRootBootstrap() {
             <Route path=":authorId/:statusId" element={<StatusDetailPage />} />
             <Route path="u/:uid" element={<ProfilePage />} />
             <Route path="u/page/fav/:uid" element={<FavoritesPage />} />
+            <Route path="u/page/like/:uid" element={<LikedStatusesPage />} />
             <Route path="n/:uname" element={<ProfilePage />} />
             <Route path="topic" element={<TopicPage />} />
             <Route path="u/page/follow/:uid" element={<FollowFansPage />} />

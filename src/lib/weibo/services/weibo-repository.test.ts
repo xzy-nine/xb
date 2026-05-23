@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
-import { loadHomeTimeline, submitComposeAction } from '@/lib/weibo/services/weibo-repository'
+import {
+  loadHomeTimeline,
+  loadLikedStatuses,
+  submitComposeAction,
+} from '@/lib/weibo/services/weibo-repository'
 
 const { wbGet, wbPostForm } = vi.hoisted(() => ({
   wbGet: vi.fn(),
@@ -43,6 +47,31 @@ describe('weibo-repository', () => {
 
     expect(wbGet).toHaveBeenCalledWith('/ajax/feed/unreadfriendstimeline', {
       since_id: '0',
+    })
+  })
+
+  it('loads liked statuses from likelist', async () => {
+    await expect(loadLikedStatuses('6393557498')).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    })
+
+    expect(wbGet).toHaveBeenCalledWith('/ajax/statuses/likelist', {
+      uid: '6393557498',
+      page: 1,
+      with_total: 'true',
+    })
+  })
+
+  it('loads later liked status pages without total', async () => {
+    await expect(loadLikedStatuses('6393557498', { page: 2 })).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    })
+
+    expect(wbGet).toHaveBeenCalledWith('/ajax/statuses/likelist', {
+      uid: '6393557498',
+      page: 2,
     })
   })
 })

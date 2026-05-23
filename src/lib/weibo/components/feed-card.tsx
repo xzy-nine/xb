@@ -552,6 +552,11 @@ export const FeedCard = memo(function FeedCard({
       }
     },
     onMutate: (target: FeedItem) => optimisticallyToggleStatusLike(queryClient, target),
+    onSuccess: (_data, target) => {
+      if (target.liked) {
+        void queryClient.invalidateQueries({ queryKey: ['weibo', 'liked-statuses'] })
+      }
+    },
     onError: (_error, _target, context) => {
       restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')

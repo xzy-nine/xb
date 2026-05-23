@@ -7,36 +7,37 @@ import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
-import { favoritesInfiniteOptions } from '@/lib/weibo/queries/weibo-queries'
+import { likedStatusesInfiniteOptions } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 
 const SAVED_LIST_OPTIONS = [
-  { value: 'favorites', label: '我的收藏' },
+  { value: 'favorites', label: '全部收藏' },
   { value: 'liked', label: '我的赞' },
 ]
 
-export function FavoritesPage() {
+export function LikedStatusesPage() {
   const ctx = useAppShellContext()
   const page = useWeiboPage()
   const navigate = useNavigate()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
 
-  const uid = page.kind === 'favorites' ? page.uid : ''
-  const isEnabled = rewriteEnabled && page.kind === 'favorites'
+  const uid = page.kind === 'liked' ? page.uid : ''
+  const isEnabled = rewriteEnabled && page.kind === 'liked'
 
-  const favoritesQuery = useInfiniteQuery({
-    ...favoritesInfiniteOptions(uid),
+  const likedStatusesQuery = useInfiniteQuery({
+    ...likedStatusesInfiniteOptions(uid),
     enabled: isEnabled && uid !== '',
   })
 
-  const errorMessage = favoritesQuery.error instanceof Error ? favoritesQuery.error.message : null
-  const hasNextPage = Boolean(favoritesQuery.hasNextPage)
-  const isFetchingNextPage = favoritesQuery.isFetchingNextPage
-  const isLoading = favoritesQuery.isLoading
-  const isRefreshing = favoritesQuery.isFetching && !isFetchingNextPage && !isLoading
+  const errorMessage =
+    likedStatusesQuery.error instanceof Error ? likedStatusesQuery.error.message : null
+  const hasNextPage = Boolean(likedStatusesQuery.hasNextPage)
+  const isFetchingNextPage = likedStatusesQuery.isFetchingNextPage
+  const isLoading = likedStatusesQuery.isLoading
+  const isRefreshing = likedStatusesQuery.isFetching && !isFetchingNextPage && !isLoading
   const handleSavedListChange = (value: string) => {
-    if (value === 'liked' && uid !== '') {
-      navigate(`/u/page/like/${uid}`)
+    if (value === 'favorites' && uid !== '') {
+      navigate(`/u/page/fav/${uid}`)
     }
   }
 
@@ -44,24 +45,24 @@ export function FavoritesPage() {
     <div className="flex flex-col">
       <TimelineTopBar
         title="收藏"
-        filterLabel="我的收藏"
+        filterLabel="我的赞"
         filterOptions={SAVED_LIST_OPTIONS}
-        filterValue="favorites"
+        filterValue="liked"
         onFilterChange={handleSavedListChange}
-        onRefresh={() => void favoritesQuery.refetch()}
+        onRefresh={() => void likedStatusesQuery.refetch()}
         isRefreshing={isRefreshing}
       />
 
       <InfiniteFeedList
-        pages={favoritesQuery.data?.pages as TimelinePage[] | undefined}
-        emptyLabel="暂无收藏内容"
-        loadingLabel="正在加载收藏..."
+        pages={likedStatusesQuery.data?.pages as TimelinePage[] | undefined}
+        emptyLabel="暂无点赞内容"
+        loadingLabel="正在加载我的赞..."
         errorMessage={errorMessage}
         isLoading={isLoading}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
-        fetchNextPage={favoritesQuery.fetchNextPage}
-        onRetry={() => void favoritesQuery.refetch()}
+        fetchNextPage={likedStatusesQuery.fetchNextPage}
+        onRetry={() => void likedStatusesQuery.refetch()}
         onNavigate={ctx.navigateToStatusDetail}
         onCommentClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
         onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
