@@ -104,6 +104,7 @@ export interface AppSettings {
   lineHeightClass: LineHeightClass
   fontFamilyClass: FontFamilyClass
   showHotSearchCard: boolean
+  showFollowedSuperTopicsCard: boolean
   collapseRepliesEnabled: boolean
   renderReplyChainEnabled: boolean
   darkModeImageDim: boolean
@@ -153,6 +154,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   lineHeightClass: 'leading-relaxed',
   fontFamilyClass: 'font-sans',
   showHotSearchCard: true,
+  showFollowedSuperTopicsCard: false,
   collapseRepliesEnabled: false,
   renderReplyChainEnabled: true,
   darkModeImageDim: false,
@@ -292,6 +294,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.showHotSearchCard === 'boolean'
         ? candidate.showHotSearchCard
         : DEFAULT_APP_SETTINGS.showHotSearchCard,
+    showFollowedSuperTopicsCard:
+      typeof candidate.showFollowedSuperTopicsCard === 'boolean'
+        ? candidate.showFollowedSuperTopicsCard
+        : DEFAULT_APP_SETTINGS.showFollowedSuperTopicsCard,
     collapseRepliesEnabled:
       typeof candidate.collapseRepliesEnabled === 'boolean'
         ? candidate.collapseRepliesEnabled

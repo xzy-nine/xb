@@ -33,6 +33,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setLineHeightClass: (lineHeightClass: LineHeightClass) => Promise<void>
   setFontFamilyClass: (fontFamilyClass: FontFamilyClass) => Promise<void>
   setShowHotSearchCard: (show: boolean) => Promise<void>
+  setShowFollowedSuperTopicsCard: (show: boolean) => Promise<void>
   setCollapseRepliesEnabled: (enabled: boolean) => Promise<void>
   setRenderReplyChainEnabled: (enabled: boolean) => Promise<void>
   setDarkModeImageDim: (enabled: boolean) => Promise<void>
@@ -67,6 +68,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     lineHeightClass: state.lineHeightClass,
     fontFamilyClass: state.fontFamilyClass,
     showHotSearchCard: state.showHotSearchCard,
+    showFollowedSuperTopicsCard: state.showFollowedSuperTopicsCard,
     collapseRepliesEnabled: state.collapseRepliesEnabled,
     renderReplyChainEnabled: state.renderReplyChainEnabled,
     darkModeImageDim: state.darkModeImageDim,
@@ -135,6 +137,9 @@ export function createAppSettingsStore(
       },
       async setShowHotSearchCard(showHotSearchCard) {
         await updateAndPersist({ showHotSearchCard })
+      },
+      async setShowFollowedSuperTopicsCard(showFollowedSuperTopicsCard) {
+        await updateAndPersist({ showFollowedSuperTopicsCard })
       },
       async setCollapseRepliesEnabled(collapseRepliesEnabled) {
         await updateAndPersist({ collapseRepliesEnabled })

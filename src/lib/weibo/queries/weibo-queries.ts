@@ -10,6 +10,7 @@ import {
   loadExploreHot,
   loadFavorites,
   loadFollowGroups,
+  loadFollowedSuperTopics,
   loadGroupTimeline,
   loadHotSearchByType,
   loadHomeTimeline,
@@ -182,6 +183,13 @@ export function hotSearchQueryOptions(type: HotSearchType = 'hot') {
     staleTime: 5 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
   }
+}
+
+export const followedSuperTopicsQueryOptions = {
+  queryKey: ['weibo', 'super-topics', 'followed'] as const,
+  queryFn: () => loadFollowedSuperTopics(),
+  staleTime: 30 * 60 * 1000,
+  gcTime: 60 * 60 * 1000,
 }
 
 export function searchQueryOptions(query: string) {

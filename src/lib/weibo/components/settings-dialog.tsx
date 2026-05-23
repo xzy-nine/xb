@@ -122,6 +122,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const lineHeightClass = useAppSettings((s) => s.lineHeightClass)
   const fontFamilyClass = useAppSettings((s) => s.fontFamilyClass)
   const showHotSearchCard = useAppSettings((s) => s.showHotSearchCard)
+  const showFollowedSuperTopicsCard = useAppSettings((s) => s.showFollowedSuperTopicsCard)
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
@@ -138,6 +139,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setLineHeightClass = useAppSettings((s) => s.setLineHeightClass)
   const setFontFamilyClass = useAppSettings((s) => s.setFontFamilyClass)
   const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
+  const setShowFollowedSuperTopicsCard = useAppSettings((s) => s.setShowFollowedSuperTopicsCard)
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
@@ -229,6 +231,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     <Switch
                       checked={showHotSearchCard}
                       onCheckedChange={(checked) => setShowHotSearchCard(checked)}
+                    />
+                  </Field>
+                </div>
+                <div>
+                  <Field label="超话卡片" description="在右侧边栏显示我关注的超话">
+                    <Switch
+                      checked={showFollowedSuperTopicsCard}
+                      onCheckedChange={(checked) => setShowFollowedSuperTopicsCard(checked)}
                     />
                   </Field>
                 </div>

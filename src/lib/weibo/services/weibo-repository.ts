@@ -62,6 +62,11 @@ import {
   adaptStatusCommentsResponse,
   adaptStatusDetailResponse,
 } from '@/lib/weibo/services/adapters/status'
+import {
+  adaptSuperTopicResponse,
+  type SuperTopicPage,
+  type SuperTopicPayload,
+} from '@/lib/weibo/services/adapters/super-topic'
 import type { WeiboTimelinePayload } from '@/lib/weibo/services/adapters/timeline'
 import { adaptTimelineResponse } from '@/lib/weibo/services/adapters/timeline'
 import { wbGet } from '@/lib/weibo/services/client'
@@ -517,6 +522,14 @@ export async function loadHotSearchByType(type: HotSearchType = 'hot'): Promise<
         type,
       )
   }
+}
+
+export async function loadFollowedSuperTopics(): Promise<SuperTopicPage> {
+  const payload = await wbGet<SuperTopicPayload>(WEIBO_ENDPOINTS.profileTopicContent, {
+    tabid: '231093_-_chaohua',
+  })
+
+  return adaptSuperTopicResponse(payload)
 }
 
 export interface LoadExploreHotOptions {

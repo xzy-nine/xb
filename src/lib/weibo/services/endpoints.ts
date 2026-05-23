@@ -22,6 +22,7 @@ export const WEIBO_ENDPOINTS = {
   profileInfo: '/ajax/profile/info',
   profileDetail: '/ajax/profile/detail',
   profilePosts: '/ajax/statuses/mymblog',
+  profileTopicContent: '/ajax/profile/topicContent',
   followCreate: '/ajax/friendships/create',
   followDestroy: '/ajax/friendships/destory',
   searchBand: '/ajax/side/searchBand',
