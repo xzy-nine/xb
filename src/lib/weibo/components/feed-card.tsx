@@ -584,6 +584,9 @@ export const FeedCard = memo(function FeedCard({
     onSuccess: (_data, target) => {
       toast.success(target.favorited ? '取消收藏成功' : '收藏成功')
     },
+    meta: {
+      invalidates: [['weibo', 'favorites']],
+    },
     onError: (_error, target, context) => {
       restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
