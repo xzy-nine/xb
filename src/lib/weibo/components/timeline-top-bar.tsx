@@ -52,7 +52,7 @@ export function TimelineTopBar({
   const showFilterMenu = filterOptions && filterOptions.length > 0 && filterValue && onFilterChange
 
   return (
-    <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-lg">
+    <div className="bg-background/70 border-border/40 sticky top-0 z-50 border-b backdrop-blur-lg">
       <div className="relative flex min-h-14 items-center justify-between">
         <div className="flex min-w-0 items-center">
           {showTitleMenu ? (

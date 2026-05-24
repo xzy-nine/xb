@@ -248,10 +248,7 @@ export const ImageCarousel = memo(function ImageCarousel({
                   <ImagePhotoView image={item.image}>
                     <AspectRatio
                       ratio={ratio}
-                      className={cn(
-                        'border-foreground/10 bg-muted relative overflow-hidden border',
-                        roundedClassName,
-                      )}
+                      className={cn('bg-muted relative overflow-hidden', roundedClassName)}
                     >
                       <ImageOverlay image={item.image} dim={darkModeImageDim} />
                     </AspectRatio>
