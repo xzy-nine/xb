@@ -36,6 +36,14 @@ describe('app-settings', () => {
     ).toEqual(DEFAULT_APP_SETTINGS)
   })
 
+  it('migrates the old modern minimal preset key to modern', () => {
+    expect(
+      normalizeAppSettings({
+        customThemePreset: 'modern-minimal',
+      }).customThemePreset,
+    ).toBe('modern')
+  })
+
   it('loads and persists settings through storage', async () => {
     const storage = createStorageArea({
       theme: 'dark',
@@ -73,6 +81,10 @@ describe('app-settings', () => {
       followGroupsEnabled: false,
       xbTopicPage: true,
       homeTab: 'for-you',
+      customThemeEnabled: false,
+      customThemePreset: 'default',
+      customThemeLightCss: '',
+      customThemeDarkCss: '',
     })
 
     await persistAppSettings(
@@ -104,6 +116,10 @@ describe('app-settings', () => {
         followGroupsEnabled: false,
         xbTopicPage: true,
         homeTab: 'for-you',
+        customThemeEnabled: true,
+        customThemePreset: 'twitter',
+        customThemeLightCss: '--primary: #1d9bf0;',
+        customThemeDarkCss: '--primary: #1d9bf0;',
       },
       storage,
     )
@@ -136,6 +152,10 @@ describe('app-settings', () => {
       followGroupsEnabled: false,
       xbTopicPage: true,
       homeTab: 'for-you',
+      customThemeEnabled: true,
+      customThemePreset: 'twitter',
+      customThemeLightCss: '--primary: #1d9bf0;',
+      customThemeDarkCss: '--primary: #1d9bf0;',
     })
   })
 

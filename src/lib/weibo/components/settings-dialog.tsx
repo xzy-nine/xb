@@ -26,20 +26,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { DARK_BG_PRESETS, DEFAULT_APP_SETTINGS, LIGHT_BG_PRESETS } from '@/lib/app-settings'
+import { Textarea } from '@/components/ui/textarea'
+import { DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
 import type {
   AppTheme,
   ContentWidth,
-  DarkBgColorPreset,
+  CustomThemePreset,
   FontFamilyClass,
   FontSizeClass,
   FontWeightClass,
   LetterSpacingClass,
-  LightBgColorPreset,
   LineHeightClass,
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { BgColorPicker } from '@/lib/weibo/components/bg-color-picker'
+import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
 import { MAX_ENTRIES } from '@/lib/weibo/hooks/use-browsing-history'
 
 import { FontPreviewCard } from './settings-font-preview'
@@ -112,6 +112,28 @@ function IllustrationPlaceholder({ children }: { children: React.ReactNode }) {
   )
 }
 
+function StackedField({
+  label,
+  description,
+  children,
+}: {
+  label: string
+  description?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-2 py-[11px] first:pt-0 last:pb-0">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <Label className="text-sm leading-snug font-medium">{label}</Label>
+        {description && (
+          <span className="text-muted-foreground text-xs leading-relaxed">{description}</span>
+        )}
+      </div>
+      {children}
+    </div>
+  )
+}
+
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [version, setVersion] = useState<string>('')
   const [activeGroup, setActiveGroup] = useState<GroupId>('appearance')
@@ -127,12 +149,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
   const theme = useAppSettings((s) => s.theme)
-  const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
-  const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
   const contentWidth = useAppSettings((s) => s.contentWidth)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
+  const customThemeEnabled = useAppSettings((s) => s.customThemeEnabled)
+  const customThemePreset = useAppSettings((s) => s.customThemePreset)
+  const customThemeLightCss = useAppSettings((s) => s.customThemeLightCss)
+  const customThemeDarkCss = useAppSettings((s) => s.customThemeDarkCss)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
   const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
   const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
@@ -144,14 +168,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
   const setTheme = useAppSettings((s) => s.setTheme)
-  const setLightModeBgColor = useAppSettings((s) => s.setLightModeBgColor)
-  const setDarkModeBgColor = useAppSettings((s) => s.setDarkModeBgColor)
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
   const setContentWidth = useAppSettings((s) => s.setContentWidth)
   const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
   const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
   const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
+  const setCustomThemeEnabled = useAppSettings((s) => s.setCustomThemeEnabled)
+  const setCustomThemePreset = useAppSettings((s) => s.setCustomThemePreset)
+  const setCustomThemeLightCss = useAppSettings((s) => s.setCustomThemeLightCss)
+  const setCustomThemeDarkCss = useAppSettings((s) => s.setCustomThemeDarkCss)
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -165,6 +191,22 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setLetterSpacingClass(DEFAULT_APP_SETTINGS.letterSpacingClass)
     setLineHeightClass(DEFAULT_APP_SETTINGS.lineHeightClass)
     setFontFamilyClass(DEFAULT_APP_SETTINGS.fontFamilyClass)
+  }
+
+  function applyCustomThemePreset(presetKey: CustomThemePreset) {
+    const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === presetKey)
+    void setCustomThemePreset(presetKey)
+    if (preset) {
+      void setCustomThemeLightCss(preset.lightCss)
+      void setCustomThemeDarkCss(preset.darkCss)
+    }
+  }
+
+  function resetCustomTheme() {
+    void setCustomThemeEnabled(DEFAULT_APP_SETTINGS.customThemeEnabled)
+    void setCustomThemePreset(DEFAULT_APP_SETTINGS.customThemePreset)
+    void setCustomThemeLightCss(DEFAULT_APP_SETTINGS.customThemeLightCss)
+    void setCustomThemeDarkCss(DEFAULT_APP_SETTINGS.customThemeDarkCss)
   }
 
   return (
@@ -194,7 +236,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeGroup === 'appearance' && (
-              <div className="px-6 py-4">
+              <div className="divide-border/40 divide-y px-6 py-4">
                 <Field label="深色模式" description="选择应用的配色方案">
                   <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
                     <SelectTrigger className="w-[100px]">
@@ -207,20 +249,70 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="浅色模式" description="浅色模式下的背景颜色">
-                  <BgColorPicker
-                    presets={LIGHT_BG_PRESETS}
-                    value={lightModeBgColor}
-                    onChange={(v) => setLightModeBgColor(v as LightBgColorPreset)}
+                <Field label="自定义主题" description="使用 CSS 变量覆盖 shadcn 原生主题">
+                  <Switch
+                    checked={customThemeEnabled}
+                    onCheckedChange={(checked) => setCustomThemeEnabled(checked)}
                   />
                 </Field>
-                <Field label="深色模式" description="深色模式下的背景颜色">
-                  <BgColorPicker
-                    presets={DARK_BG_PRESETS}
-                    value={darkModeBgColor}
-                    onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
-                  />
-                </Field>
+                {customThemeEnabled && (
+                  <>
+                    <Field label="预设主题" description="选择后会填入对应的 CSS 变量">
+                      <Select
+                        value={customThemePreset}
+                        onValueChange={(v) => applyCustomThemePreset(v as CustomThemePreset)}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CUSTOM_THEME_PRESETS.map((preset) => (
+                            <SelectItem key={preset.key} value={preset.key}>
+                              {preset.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <StackedField
+                      label="浅色主题样式变量"
+                      description="每行输入一个 CSS 变量声明，例如 --foreground: #333333;"
+                    >
+                      <Textarea
+                        value={customThemeLightCss}
+                        onChange={(event) => {
+                          void setCustomThemeLightCss(event.target.value)
+                        }}
+                        rows={10}
+                        spellCheck={false}
+                        className="min-h-[210px] resize-none font-mono text-xs leading-relaxed"
+                        placeholder="--background: oklch(1.0000 0 0);
+--foreground: #333333;"
+                      />
+                    </StackedField>
+                    <StackedField
+                      label="深色主题样式变量"
+                      description="每行输入一个 CSS 变量声明，例如 --background: #000000;"
+                    >
+                      <Textarea
+                        value={customThemeDarkCss}
+                        onChange={(event) => {
+                          void setCustomThemeDarkCss(event.target.value)
+                        }}
+                        rows={10}
+                        spellCheck={false}
+                        className="min-h-[210px] resize-none font-mono text-xs leading-relaxed"
+                        placeholder="--background: oklch(0.1450 0 0);
+--foreground: #ffffff;"
+                      />
+                    </StackedField>
+                    <div className="flex justify-end py-3">
+                      <Button variant="outline" size="sm" onClick={resetCustomTheme}>
+                        恢复默认
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

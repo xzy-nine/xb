@@ -9,6 +9,7 @@ import {
   type AppSettingsStorageArea,
   type AppTheme,
   type CardStyle,
+  type CustomThemePreset,
   type DarkBgColorPreset,
   type FontFamilyClass,
   type FontSizeClass,
@@ -53,6 +54,10 @@ export interface AppSettingsStoreState extends AppSettings {
   setContentWidth: (width: ContentWidth) => Promise<void>
   homeTab: HomeTab
   setHomeTab: (tab: HomeTab) => Promise<void>
+  setCustomThemeEnabled: (enabled: boolean) => Promise<void>
+  setCustomThemePreset: (preset: CustomThemePreset) => Promise<void>
+  setCustomThemeLightCss: (css: string) => Promise<void>
+  setCustomThemeDarkCss: (css: string) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -86,6 +91,10 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     followGroupsEnabled: state.followGroupsEnabled,
     xbTopicPage: state.xbTopicPage,
     homeTab: state.homeTab,
+    customThemeEnabled: state.customThemeEnabled,
+    customThemePreset: state.customThemePreset,
+    customThemeLightCss: state.customThemeLightCss,
+    customThemeDarkCss: state.customThemeDarkCss,
   }
 }
 
@@ -194,6 +203,18 @@ export function createAppSettingsStore(
       },
       async setContentWidth(contentWidth) {
         await updateAndPersist({ contentWidth })
+      },
+      async setCustomThemeEnabled(customThemeEnabled) {
+        await updateAndPersist({ customThemeEnabled })
+      },
+      async setCustomThemePreset(customThemePreset) {
+        await updateAndPersist({ customThemePreset })
+      },
+      async setCustomThemeLightCss(customThemeLightCss) {
+        await updateAndPersist({ customThemeLightCss })
+      },
+      async setCustomThemeDarkCss(customThemeDarkCss) {
+        await updateAndPersist({ customThemeDarkCss })
       },
     }
   })

@@ -1,5 +1,6 @@
 import { DARK_BG_PRESETS, LIGHT_BG_PRESETS, resolveIsDarkMode } from '@/lib/app-settings'
 import type { AppSettingsStore } from '@/lib/app-settings-store'
+import { CUSTOM_THEME_VARIABLE_NAMES, parseCustomThemeVariables } from '@/lib/custom-theme'
 import {
   applyPageTakeover,
   clearPageTakeover,
@@ -11,6 +12,12 @@ const OVERFLOW_STORAGE_KEY = 'data-xb-previous-overflow'
 
 function isRouteSupported(): boolean {
   return parseWeiboUrl(window.location.href).kind !== 'unsupported'
+}
+
+function clearCustomThemeVariables(container: HTMLElement) {
+  for (const variable of CUSTOM_THEME_VARIABLE_NAMES) {
+    container.style.removeProperty(variable)
+  }
 }
 
 export function bindShellState({
@@ -29,6 +36,7 @@ export function bindShellState({
     const isDark = resolveIsDarkMode(settings.theme, mediaQuery.matches)
 
     container.classList.toggle('dark', isDark)
+    clearCustomThemeVariables(container)
 
     // Apply background color preset CSS variables
     const preset = isDark
@@ -38,6 +46,14 @@ export function bindShellState({
     if (preset) {
       container.style.setProperty('--background', preset.background)
       container.style.setProperty('--card', preset.card)
+    }
+
+    const customThemeCss = isDark ? settings.customThemeDarkCss : settings.customThemeLightCss
+    if (settings.customThemeEnabled && customThemeCss.trim()) {
+      const variables = parseCustomThemeVariables(customThemeCss)
+      for (const [name, value] of Object.entries(variables)) {
+        container.style.setProperty(name, value)
+      }
     }
 
     // When route is unsupported, release the host page and hide xb UI
@@ -105,6 +121,7 @@ export function bindShellState({
     history.pushState = originalPushState
     history.replaceState = originalReplaceState
     container.classList.remove('dark')
+    clearCustomThemeVariables(container)
     container.style.removeProperty('display')
     const previousOverflow = document.documentElement.getAttribute(OVERFLOW_STORAGE_KEY)
     document.documentElement.style.overflow =
