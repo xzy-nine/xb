@@ -93,6 +93,8 @@ export type LineHeightClass =
 export type ContentWidth = 'standard' | 'wide' | 'wider'
 export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
 
+export type HomeTab = 'for-you' | 'following'
+
 export interface AppSettings {
   contentWidth: ContentWidth
   theme: AppTheme
@@ -103,6 +105,7 @@ export interface AppSettings {
   lineHeightClass: LineHeightClass
   fontFamilyClass: FontFamilyClass
   showHotSearchCard: boolean
+  showFollowedSuperTopicsCard: boolean
   collapseRepliesEnabled: boolean
   renderReplyChainEnabled: boolean
   darkModeImageDim: boolean
@@ -128,6 +131,7 @@ export interface AppSettings {
   browsingHistoryEnabled: boolean
   followGroupsEnabled: boolean
   xbTopicPage: boolean
+  homeTab: HomeTab
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -160,6 +164,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   lineHeightClass: 'leading-relaxed',
   fontFamilyClass: 'font-sans',
   showHotSearchCard: true,
+  showFollowedSuperTopicsCard: false,
   collapseRepliesEnabled: false,
   renderReplyChainEnabled: true,
   darkModeImageDim: false,
@@ -185,6 +190,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   browsingHistoryEnabled: true,
   followGroupsEnabled: false,
   xbTopicPage: true,
+  homeTab: 'for-you',
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -276,6 +282,10 @@ function isStatusDetailPopupWidth(value: unknown): value is number {
   return typeof value === 'number' && value >= 50 && value <= 80
 }
 
+function isHomeTab(value: unknown): value is HomeTab {
+  return value === 'for-you' || value === 'following'
+}
+
 export function normalizeAppSettings(value: unknown): AppSettings {
   if (!value || typeof value !== 'object') {
     return { ...DEFAULT_APP_SETTINGS }
@@ -311,6 +321,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.showHotSearchCard === 'boolean'
         ? candidate.showHotSearchCard
         : DEFAULT_APP_SETTINGS.showHotSearchCard,
+    showFollowedSuperTopicsCard:
+      typeof candidate.showFollowedSuperTopicsCard === 'boolean'
+        ? candidate.showFollowedSuperTopicsCard
+        : DEFAULT_APP_SETTINGS.showFollowedSuperTopicsCard,
     collapseRepliesEnabled:
       typeof candidate.collapseRepliesEnabled === 'boolean'
         ? candidate.collapseRepliesEnabled
@@ -412,6 +426,7 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.xbTopicPage === 'boolean'
         ? candidate.xbTopicPage
         : DEFAULT_APP_SETTINGS.xbTopicPage,
+    homeTab: isHomeTab(candidate.homeTab) ? candidate.homeTab : DEFAULT_APP_SETTINGS.homeTab,
   }
 }
 

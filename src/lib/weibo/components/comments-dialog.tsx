@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { PageEmptyState, PageErrorState } from '@/lib/weibo/components/page-state'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import { loadNestedComments } from '@/lib/weibo/services/weibo-repository'
+import { nestedCommentsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 
 import { CommentList } from './comment-list'
 
@@ -34,9 +34,7 @@ export function CommentsDialog({
   onCommentReply,
 }: CommentsDialogProps) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['weibo', 'nested-comments', statusId],
-    queryFn: () => loadNestedComments(statusId, authorUid),
-    enabled: open && statusId !== '' && authorUid !== '',
+    ...nestedCommentsQueryOptions(statusId, authorUid, open),
   })
 
   const comments = data?.items ? [...data.items].reverse() : []

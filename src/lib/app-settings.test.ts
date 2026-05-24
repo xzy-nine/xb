@@ -55,6 +55,7 @@ describe('app-settings', () => {
       lineHeightClass: 'leading-relaxed',
       fontFamilyClass: 'font-serif',
       showHotSearchCard: false,
+      showFollowedSuperTopicsCard: false,
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
       darkModeImageDim: false,
@@ -80,6 +81,7 @@ describe('app-settings', () => {
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
       xbTopicPage: true,
+      homeTab: 'for-you',
     })
 
     await persistAppSettings(
@@ -93,6 +95,7 @@ describe('app-settings', () => {
         lineHeightClass: 'leading-loose',
         fontFamilyClass: 'font-serif',
         showHotSearchCard: true,
+        showFollowedSuperTopicsCard: false,
         collapseRepliesEnabled: false,
         renderReplyChainEnabled: true,
         darkModeImageDim: false,
@@ -118,6 +121,7 @@ describe('app-settings', () => {
         browsingHistoryEnabled: true,
         followGroupsEnabled: false,
         xbTopicPage: true,
+        homeTab: 'for-you',
       },
       storage,
     )
@@ -132,6 +136,7 @@ describe('app-settings', () => {
       lineHeightClass: 'leading-loose',
       fontFamilyClass: 'font-serif',
       showHotSearchCard: true,
+      showFollowedSuperTopicsCard: false,
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
       darkModeImageDim: false,
@@ -157,6 +162,7 @@ describe('app-settings', () => {
       browsingHistoryEnabled: true,
       followGroupsEnabled: false,
       xbTopicPage: true,
+      homeTab: 'for-you',
     })
   })
 

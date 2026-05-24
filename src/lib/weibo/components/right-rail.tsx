@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAppSettings } from '@/lib/app-settings-store'
 import { HotSearchCard } from '@/lib/weibo/components/hotsearch-list'
 import { SearchCard } from '@/lib/weibo/components/search-card'
+import { SuperTopicCard } from '@/lib/weibo/components/super-topic-card'
 
 type ProfileLookup = { uid: string } | { screenName: string }
 
@@ -13,11 +14,13 @@ interface RightRailProps {
 
 export function RightRail({ onNavigateProfile }: RightRailProps) {
   const showHotSearchCard = useAppSettings((state) => state.showHotSearchCard)
+  const showFollowedSuperTopicsCard = useAppSettings((state) => state.showFollowedSuperTopicsCard)
 
   return (
     <div className="flex w-full flex-col gap-4">
       <SearchCard onNavigateProfile={onNavigateProfile} />
       {showHotSearchCard && <HotSearchCard className="gap-2 p-2" />}
+      {showFollowedSuperTopicsCard && <SuperTopicCard className="gap-2 p-2" />}
 
       <Card className="py-4">
         <CardHeader className="px-4">

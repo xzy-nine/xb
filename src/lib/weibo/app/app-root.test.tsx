@@ -9,10 +9,6 @@ vi.mock('@/lib/weibo/app/app-shell', () => ({
   AppShell: () => <div>app-shell</div>,
 }))
 
-vi.mock('@/lib/weibo/app/weibo-history-sync', () => ({
-  WeiboHistorySync: () => null,
-}))
-
 vi.mock('@/lib/weibo/app/error-boundary', () => ({
   AppErrorBoundary: ({ children }: { children: React.ReactNode }) => children,
 }))

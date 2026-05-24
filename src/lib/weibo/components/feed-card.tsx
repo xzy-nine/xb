@@ -37,6 +37,11 @@ import {
 } from '@/lib/weibo/models/status-presentation'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
+  optimisticallyToggleStatusFavorite,
+  optimisticallyToggleStatusLike,
+  restoreStatusCacheMutation,
+} from '@/lib/weibo/queries/status-cache'
+import {
   cancelStatusLike,
   createFavorite,
   deleteWeiboStatus,
@@ -566,82 +571,14 @@ export const FeedCard = memo(function FeedCard({
         await setStatusLike(target.id)
       }
     },
-    onMutate: (target: FeedItem) => {
-      queryClient.cancelQueries({ queryKey: ['weibo'] })
-
-      const previousItems = queryClient.getQueriesData({ queryKey: ['weibo'] })
-
-      queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-        if (!old || typeof old !== 'object' || !('pages' in old)) return old
-        const data = old as { pages: { items: FeedItem[] }[] }
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            items: page.items.map((item) => {
-              if (item.id === target.id) {
-                return {
-                  ...item,
-                  liked: !item.liked,
-                  stats: {
-                    ...item.stats,
-                    likes: item.stats.likes + (item.liked ? -1 : 1),
-                  },
-                }
-              }
-              if (item.retweetedStatus?.id === target.id) {
-                return {
-                  ...item,
-                  retweetedStatus: {
-                    ...item.retweetedStatus,
-                    liked: !item.retweetedStatus.liked,
-                    stats: {
-                      ...item.retweetedStatus.stats,
-                      likes:
-                        item.retweetedStatus.stats.likes + (item.retweetedStatus.liked ? -1 : 1),
-                    },
-                  },
-                }
-              }
-              return item
-            }),
-          })),
-        }
-      })
-
-      for (const key of queryClient
-        .getQueryCache()
-        .getAll()
-        .map((q) => q.queryKey)) {
-        if (!Array.isArray(key)) continue
-        if (key[0] !== 'weibo' || key[1] !== 'status') continue
-        const cached = queryClient.getQueryData(key)
-        if (!cached || typeof cached !== 'object') continue
-        const detail = cached as { status?: FeedItem }
-        if (detail.status && detail.status.id === target.id) {
-          queryClient.setQueryData(key, {
-            ...detail,
-            status: {
-              ...detail.status,
-              liked: !detail.status.liked,
-              stats: {
-                ...detail.status.stats,
-                likes: detail.status.stats.likes + (detail.status.liked ? -1 : 1),
-              },
-            },
-          })
-        }
+    onMutate: (target: FeedItem) => optimisticallyToggleStatusLike(queryClient, target),
+    onSuccess: (_data, target) => {
+      if (target.liked) {
+        void queryClient.invalidateQueries({ queryKey: ['weibo', 'liked-statuses'] })
       }
-
-      return { previousItems }
     },
     onError: (_error, _target, context) => {
-      // Rollback on error
-      if (context?.previousItems) {
-        for (const [queryKey, data] of context.previousItems) {
-          queryClient.setQueryData(queryKey, data)
-        }
-      }
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
     },
   })
@@ -668,65 +605,15 @@ export const FeedCard = memo(function FeedCard({
         await createFavorite(target.id)
       }
     },
-    onMutate: (target: FeedItem) => {
-      queryClient.cancelQueries({ queryKey: ['weibo'] })
-
-      const previousItems = queryClient.getQueriesData({ queryKey: ['weibo'] })
-
-      queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-        if (!old || typeof old !== 'object' || !('pages' in old)) return old
-        const data = old as { pages: { items: FeedItem[] }[] }
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            items: page.items.map((item) => {
-              if (item.id === target.id) {
-                return { ...item, favorited: !item.favorited }
-              }
-              if (item.retweetedStatus?.id === target.id) {
-                return {
-                  ...item,
-                  retweetedStatus: {
-                    ...item.retweetedStatus,
-                    favorited: !item.retweetedStatus.favorited,
-                  },
-                }
-              }
-              return item
-            }),
-          })),
-        }
-      })
-
-      for (const key of queryClient
-        .getQueryCache()
-        .getAll()
-        .map((q) => q.queryKey)) {
-        if (!Array.isArray(key)) continue
-        if (key[0] !== 'weibo' || key[1] !== 'status') continue
-        const cached = queryClient.getQueryData(key)
-        if (!cached || typeof cached !== 'object') continue
-        const detail = cached as { status?: FeedItem }
-        if (detail.status && detail.status.id === target.id) {
-          queryClient.setQueryData(key, {
-            ...detail,
-            status: { ...detail.status, favorited: !detail.status.favorited },
-          })
-        }
-      }
-
-      return { previousItems }
-    },
+    onMutate: (target: FeedItem) => optimisticallyToggleStatusFavorite(queryClient, target),
     onSuccess: (_data, target) => {
       toast.success(target.favorited ? '取消收藏成功' : '收藏成功')
     },
+    meta: {
+      invalidates: [['weibo', 'favorites']],
+    },
     onError: (_error, target, context) => {
-      if (context?.previousItems) {
-        for (const [queryKey, data] of context.previousItems) {
-          queryClient.setQueryData(queryKey, data)
-        }
-      }
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
     },
   })

@@ -1,4 +1,4 @@
-import { Image, Link, MoreHorizontal, Star } from 'lucide-react'
+import { Image, Link, MoreHorizontal, Star, Trash } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -130,6 +130,7 @@ export function FeedCardMoreMenu({
                 setConfirmOpen(true)
               }}
             >
+              <Trash className="mr-2 size-4" />
               删除
             </DropdownMenuItem>
           )}

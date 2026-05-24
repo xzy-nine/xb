@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import type { FeedItem } from '@/lib/weibo/models/feed'
-import { loadStatusLongText } from '@/lib/weibo/services/weibo-repository'
+import { longTextQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 import { mergeLongTextIntoFeedItem } from '@/lib/weibo/utils/transform'
 
 export function useFeedLongText(item: FeedItem) {
@@ -14,11 +14,7 @@ export function useFeedLongText(item: FeedItem) {
     isLoading: isLongTextLoading,
     refetch: refetchLongText,
   } = useQuery({
-    queryKey: ['weibo', 'longtext', item.mblogId],
-    queryFn: () => loadStatusLongText(item.mblogId!),
-    enabled: longTextEnabled && canLoadLongText,
-    staleTime: 30 * 60 * 1000,
-    retry: false,
+    ...longTextQueryOptions(item.mblogId, longTextEnabled && canLoadLongText),
   })
   const hasResolvedLongText = Boolean(
     longText && (longText.longTextContent?.trim() || longText.longTextContent_raw?.trim()),

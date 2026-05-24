@@ -1,80 +1,40 @@
 import { skipToken, useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect } from 'react'
 
-import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
-import { FeedList } from '@/lib/weibo/components/feed-list'
+import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { PageEmptyState, PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { ProfileHeader } from '@/lib/weibo/components/profile-header'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
+import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
-  flattenInfiniteItems,
   profileLookupFromPage,
   profilePostsInfiniteOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { loadProfileHoverCard } from '@/lib/weibo/services/weibo-repository'
 
-type ProfileLookup = { uid: string } | { screenName: string }
-
 export function ProfilePostsTabs({
   profileId,
   onNavigate,
   onCommentClick,
   onRepostClick,
-  onNavigateProfile,
 }: {
   profileId: string
   onNavigate: ReturnType<typeof useAppShellContext>['navigateToStatusDetail']
   onCommentClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
   onRepostClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
-  onNavigateProfile?: (lookup: ProfileLookup) => void
 }) {
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
-
   const postsQuery = useInfiniteQuery({
     ...profilePostsInfiniteOptions(profileId),
     enabled: profileId !== '',
   })
 
-  const items = useMemo(
-    () => flattenInfiniteItems<FeedItem>(postsQuery.data?.pages as TimelinePage[] | undefined),
-    [postsQuery.data?.pages],
-  )
-
   const errorMessage = postsQuery.error instanceof Error ? postsQuery.error.message : null
   const hasNextPage = Boolean(postsQuery.hasNextPage)
   const isFetchingNextPage = postsQuery.isFetchingNextPage
-  const fetchNextPage = postsQuery.fetchNextPage
-
-  // ─── IntersectionObserver for infinite scroll ───
-  useEffect(() => {
-    const el = loadMoreRef.current
-    if (!el || !hasNextPage) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchNextPage()
-        }
-      },
-      { threshold: 0.2 },
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, fetchNextPage])
-
-  if (postsQuery.isLoading) {
-    return <PageLoadingState label="正在加载此用户微博..." />
-  }
-
-  if (errorMessage) {
-    return <PageErrorState description={errorMessage} />
-  }
 
   return (
     <Tabs defaultValue="posts" className="flex flex-col gap-4">
@@ -84,19 +44,20 @@ export function ProfilePostsTabs({
       </TabsList>
 
       <TabsContent value="posts" className="flex flex-col gap-4">
-        <FeedList
-          items={items}
+        <InfiniteFeedList
+          pages={postsQuery.data?.pages as TimelinePage[] | undefined}
           emptyLabel="暂时还没有微博内容"
+          loadingLabel="正在加载此用户微博..."
+          errorMessage={errorMessage}
+          isLoading={postsQuery.isLoading}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={postsQuery.fetchNextPage}
+          onRetry={() => void postsQuery.refetch()}
           onNavigate={onNavigate}
           onCommentClick={onCommentClick}
           onRepostClick={onRepostClick}
-          onNavigateProfile={onNavigateProfile}
         />
-        {hasNextPage ? (
-          <div ref={loadMoreRef} className="flex justify-center py-3">
-            {isFetchingNextPage ? <Spinner size="sm" /> : null}
-          </div>
-        ) : null}
       </TabsContent>
 
       <TabsContent value="pictures" className="flex flex-col gap-0">
@@ -149,7 +110,6 @@ export function ProfilePage() {
           <ProfilePostsTabs
             profileId={profileQuery.data.id}
             onNavigate={ctx.navigateToStatusDetail}
-            onNavigateProfile={ctx.navigateToProfile}
             onCommentClick={(item) =>
               ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
             }

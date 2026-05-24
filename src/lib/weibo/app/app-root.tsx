@@ -13,7 +13,6 @@ import { Spinner } from '@/components/ui/spinner'
 import { AppShell } from '@/lib/weibo/app/app-shell'
 import { usePrewarmEmoticonConfig } from '@/lib/weibo/app/emoticon-query'
 import { AppErrorBoundary } from '@/lib/weibo/app/error-boundary'
-import { WeiboHistorySync } from '@/lib/weibo/app/weibo-history-sync'
 
 const ExplorePage = lazy(() =>
   import('@/lib/weibo/pages/explore-page').then((m) => ({ default: m.ExplorePage })),
@@ -26,6 +25,11 @@ const FollowFansPage = lazy(() =>
 )
 const HomeTimelinePage = lazy(() =>
   import('@/lib/weibo/pages/home-timeline-page').then((m) => ({ default: m.HomeTimelinePage })),
+)
+const LikedStatusesPage = lazy(() =>
+  import('@/lib/weibo/pages/liked-statuses-page').then((m) => ({
+    default: m.LikedStatusesPage,
+  })),
 )
 const NotificationsPage = lazy(() =>
   import('@/lib/weibo/pages/notifications-page').then((m) => ({ default: m.NotificationsPage })),
@@ -78,7 +82,6 @@ function AppRootBootstrap() {
   usePrewarmEmoticonConfig()
   return (
     <BrowserRouter>
-      <WeiboHistorySync />
       <Suspense fallback={<PageLoadingFallback />}>
         <Routes>
           <Route path="*" element={<AppShell />}>
@@ -89,6 +92,7 @@ function AppRootBootstrap() {
             <Route path=":authorId/:statusId" element={<StatusDetailPage />} />
             <Route path="u/:uid" element={<ProfilePage />} />
             <Route path="u/page/fav/:uid" element={<FavoritesPage />} />
+            <Route path="u/page/like/:uid" element={<LikedStatusesPage />} />
             <Route path="n/:uname" element={<ProfilePage />} />
             <Route path="topic" element={<TopicPage />} />
             <Route path="u/page/follow/:uid" element={<FollowFansPage />} />

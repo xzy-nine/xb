@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import darkModeImageDimJpeg from '@/assets/images/dark-mode-image-dim.jpeg'
-import myGroupsJpeg from '@/assets/images/my-groups.jpeg'
 import collapseReplyChain from '@/assets/images/quotechains-collapsible.jpeg'
 import quoteChainsJpeg from '@/assets/images/quotechains.jpeg'
 import xLayoutJpeg from '@/assets/images/x-layout.jpeg'
@@ -130,6 +129,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
   const lineHeightClass = useAppSettings((s) => s.lineHeightClass)
   const fontFamilyClass = useAppSettings((s) => s.fontFamilyClass)
   const showHotSearchCard = useAppSettings((s) => s.showHotSearchCard)
+  const showFollowedSuperTopicsCard = useAppSettings((s) => s.showFollowedSuperTopicsCard)
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
@@ -154,6 +154,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
   const setLineHeightClass = useAppSettings((s) => s.setLineHeightClass)
   const setFontFamilyClass = useAppSettings((s) => s.setFontFamilyClass)
   const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
+  const setShowFollowedSuperTopicsCard = useAppSettings((s) => s.setShowFollowedSuperTopicsCard)
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
@@ -358,6 +359,14 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   </Field>
                 </div>
                 <div>
+                  <Field label="超话卡片" description="在右侧边栏显示我关注的超话">
+                    <Switch
+                      checked={showFollowedSuperTopicsCard}
+                      onCheckedChange={(checked) => setShowFollowedSuperTopicsCard(checked)}
+                    />
+                  </Field>
+                </div>
+                <div>
                   <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
                     <Switch
                       checked={darkModeImageDim}
@@ -401,17 +410,12 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   )}
                 </div>
                 <div>
-                  <Field label="关注分组" description="在信息流中按分组筛选关注人">
+                  <Field label="关注分组" description="在我关注的中展示我的分组筛选">
                     <Switch
                       checked={followGroupsEnabled}
                       onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
                     />
                   </Field>
-                  {followGroupsEnabled && (
-                    <IllustrationPlaceholder>
-                      <img src={myGroupsJpeg} alt="关注分组" className="h-auto w-full" />
-                    </IllustrationPlaceholder>
-                  )}
                 </div>
                 <div>
                   <Field label="QuoteChains 渲染" description='将 "//@ 用户名:" 格式渲染成引用样式'>

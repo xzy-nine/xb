@@ -58,6 +58,13 @@ describe('parseWeiboUrl', () => {
     })
   })
 
+  it('parses a liked statuses URL', () => {
+    expect(parseWeiboUrl('https://weibo.com/u/page/like/1969776354')).toEqual({
+      kind: 'liked',
+      uid: '1969776354',
+    })
+  })
+
   it('returns unsupported for unknown paths', () => {
     expect(parseWeiboUrl('https://weibo.com/settings')).toEqual({
       kind: 'unsupported',

@@ -18,6 +18,10 @@ import { type ComposeTarget, composeTargetFromComment } from '@/lib/weibo/models
 import type { CommentItem } from '@/lib/weibo/models/status'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
+  optimisticallyToggleCommentLike,
+  restoreStatusCacheMutation,
+} from '@/lib/weibo/queries/status-cache'
+import {
   cancelCommentLike,
   deleteWeiboComment,
   setCommentLike,
@@ -102,11 +106,7 @@ export const CommentCard = memo(function CommentCard({
       return { previousItems }
     },
     onError: (_error, _target, context) => {
-      if (context?.previousItems) {
-        for (const [queryKey, data] of context.previousItems) {
-          queryClient.setQueryData(queryKey, data)
-        }
-      }
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
     },
   })

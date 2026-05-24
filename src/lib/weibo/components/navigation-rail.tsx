@@ -20,6 +20,7 @@ import WeiboLogo from '@/assets/icons/weibo.svg'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { AppTheme } from '@/lib/app-settings'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { ThemeModeToggle } from '@/lib/weibo/components/theme-mode-toggle'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
@@ -135,6 +136,7 @@ export function NavigationRail({
   onSettingsOpen,
   onComposeOpen,
 }: NavigationRailProps) {
+  const homeTab = useAppSettings((state) => state.homeTab)
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
   const navigate = useNavigate()
   const isXl = useMediaQuery('(min-width: 1280px)')
@@ -152,7 +154,7 @@ export function NavigationRail({
     Boolean(currentUserUid) &&
     Boolean(viewingProfileUserId) &&
     currentUserUid === viewingProfileUserId
-  const isFavoritesActive = pageKind === 'favorites'
+  const isSavedItemsActive = pageKind === 'favorites' || pageKind === 'liked'
 
   const { data: unreadCounts } = useQuery(unreadNotificationsQueryOptions)
   const showNotificationBadge = unreadCounts ? hasNotificationBadge(unreadCounts) : false
@@ -175,7 +177,7 @@ export function NavigationRail({
               label="主页"
               showLabel={isXl}
               isActive={!isOwnProfileActive && pageKind === 'home'}
-              onClick={() => navigate('/')}
+              onClick={() => navigate(homeTab === 'following' ? '/mygroups' : '/')}
             >
               <House aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
@@ -192,7 +194,7 @@ export function NavigationRail({
             <NavButton
               label="收藏"
               showLabel={isXl}
-              isActive={isFavoritesActive}
+              isActive={isSavedItemsActive}
               onClick={() => navigate(favoritesHref)}
             >
               <Bookmark aria-hidden="true" className="size-4 shrink-0" />

@@ -29,6 +29,12 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
         uid: parts[3],
       }
     }
+    if (parts[1] === 'page' && parts[2] === 'like' && parts[3]) {
+      return {
+        kind: 'liked',
+        uid: parts[3],
+      }
+    }
     if (parts[1] === 'page' && parts[2] === 'follow' && parts[3]) {
       return {
         kind: 'follow',

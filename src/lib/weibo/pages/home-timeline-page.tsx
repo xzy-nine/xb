@@ -1,16 +1,11 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
-import { RefreshCw } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
-import { Spinner } from '@/components/ui/spinner'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
-import { FeedList } from '@/lib/weibo/components/feed-list'
+import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { NewPostsBubble } from '@/lib/weibo/components/new-posts-bubble'
-import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { TimelineTopBar, type TimelineTopBarOption } from '@/lib/weibo/components/timeline-top-bar'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import {
@@ -20,66 +15,14 @@ import {
   followGroupsQueryOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
-import type { FollowGroup } from '@/lib/weibo/services/adapters/explore-groups'
 
-interface RefreshTabTriggerProps {
-  value: string
-  label: string
-  isActive: boolean
-  onRefresh: () => void
-  isRefreshing: boolean
-}
+const HOME_TIMELINE_OPTIONS: TimelineTopBarOption[] = [
+  { value: 'for-you', label: '推荐' },
+  { value: 'following', label: '我关注的' },
+]
 
-function RefreshTabTrigger({
-  value,
-  label,
-  isActive,
-  onRefresh,
-  isRefreshing,
-}: RefreshTabTriggerProps) {
-  const [isHovered, setIsHovered] = useState(false)
-
-  const showRefresh = isActive && (isHovered || isRefreshing)
-
-  return (
-    <TabsTrigger
-      value={value}
-      className={cn('relative', isActive && showRefresh && 'text-foreground')}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => {
-        if (isActive && !isRefreshing) {
-          onRefresh()
-        }
-      }}
-    >
-      <AnimatePresence mode="wait">
-        {showRefresh ? (
-          <motion.span
-            key="refresh"
-            className="flex items-center gap-1.5"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.15 }}
-          >
-            <RefreshCw className={cn('size-4', isRefreshing && 'animate-spin')} />
-            刷新
-          </motion.span>
-        ) : (
-          <motion.span
-            key="label"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.15 }}
-          >
-            {label}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </TabsTrigger>
-  )
+function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
+  requestAnimationFrame(resetMainScroll)
 }
 
 export function HomeTimelinePage() {
@@ -88,7 +31,6 @@ export function HomeTimelinePage() {
   const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const activeTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && page.kind === 'home'
@@ -122,9 +64,6 @@ export function HomeTimelinePage() {
   const isLoading = timelineQuery.isLoading
   const isRefreshing = timelineQuery.isFetching && !isFetchingNextPage && !isLoading
 
-  const fetchNextPageRef = useRef(timelineQuery.fetchNextPage)
-  fetchNextPageRef.current = timelineQuery.fetchNextPage
-
   const wasRefreshingRef = useRef(false)
 
   // ─── Scroll to top after refresh completes ───
@@ -134,24 +73,6 @@ export function HomeTimelinePage() {
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])
-
-  // ─── IntersectionObserver for infinite scroll ───
-  useEffect(() => {
-    const el = loadMoreRef.current
-    if (!el || !hasNextPage) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          void fetchNextPageRef.current()
-        }
-      },
-      { threshold: 0.2 },
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage])
 
   // ─── New posts check (following tab only) ───
   const followingFirstItemId = items.length > 0 && activeTab === 'following' ? items[0].id : null
@@ -185,150 +106,76 @@ export function HomeTimelinePage() {
 
   const handleGroupSelect = useCallback(
     (gid: string) => {
+      if (gid === selectedGroupGid) return
       ctx.onFollowGroupChange(gid === 'default' ? null : gid)
+      resetMainScrollAfterRouteChange(ctx.resetMainScroll)
     },
-    [ctx],
+    [ctx, selectedGroupGid],
+  )
+
+  const handleTimelineChange = useCallback(
+    (value: string) => {
+      if (value === activeTab) return
+      ctx.onHomeTabChange(value as 'for-you' | 'following')
+      resetMainScrollAfterRouteChange(ctx.resetMainScroll)
+    },
+    [activeTab, ctx],
   )
 
   const groups = groupsQuery.data ?? []
+  const activeTitle = activeTab === 'following' ? '我关注的' : '推荐'
+  const groupOptions = showGroupSelect
+    ? [
+        { value: 'default', label: '全部分组' },
+        ...groups.map((group) => ({ value: group.gid, label: group.title })),
+      ]
+    : []
+  const selectedGroupLabel =
+    groupOptions.find((option) => option.value === selectedGroupGid)?.label ?? '全部分组'
 
   return (
     <div className="relative">
-      <Tabs
-        value={activeTab}
-        className="flex flex-col"
-        onValueChange={(value) => ctx.onHomeTabChange(value as 'for-you' | 'following')}
+      <TimelineTopBar
+        title={activeTitle}
+        titleValue={activeTab}
+        titleOptions={HOME_TIMELINE_OPTIONS}
+        onTitleChange={handleTimelineChange}
+        filterLabel={showGroupSelect && groupOptions.length > 0 ? selectedGroupLabel : undefined}
+        filterOptions={groupOptions}
+        filterValue={showGroupSelect ? selectedGroupGid : undefined}
+        onFilterChange={handleGroupSelect}
+        onRefresh={() => void timelineQuery.refetch()}
+        isRefreshing={isRefreshing}
       >
-        <TabsList
-          className="bg-background/80 border-border/40 relative sticky top-0 z-10 grid w-full grid-cols-2 border-b backdrop-blur-lg"
-          variant="line"
-        >
-          <RefreshTabTrigger
-            value="for-you"
-            label="推荐"
-            isActive={activeTab === 'for-you'}
-            onRefresh={() => void timelineQuery.refetch()}
-            isRefreshing={activeTab === 'for-you' && isRefreshing}
-          />
-          <RefreshTabTrigger
-            value="following"
-            label="我关注的"
-            isActive={activeTab === 'following'}
-            onRefresh={() => void timelineQuery.refetch()}
-            isRefreshing={activeTab === 'following' && isRefreshing}
-          />
-          {showNewPostsBubble ? (
-            <div className="absolute top-20 left-1/2 z-20 -translate-x-1/2">
-              <NewPostsBubble
-                authors={newPostsCheckQuery.data?.authors ?? []}
-                count={newPostsCheckQuery.data?.count ?? 0}
-                onClick={handleNewPostsClick}
-              />
-            </div>
-          ) : null}
-          {showGroupSelect && groups.length > 0 && (
-            <FollowGroupPillBar
-              groups={groups}
-              selectedGid={selectedGroupGid}
-              onSelect={handleGroupSelect}
+        {showNewPostsBubble ? (
+          <div className="absolute top-[calc(100%+0.75rem)] left-1/2 z-20 -translate-x-1/2">
+            <NewPostsBubble
+              authors={newPostsCheckQuery.data?.authors ?? []}
+              count={newPostsCheckQuery.data?.count ?? 0}
+              onClick={handleNewPostsClick}
             />
-          )}
-        </TabsList>
+          </div>
+        ) : null}
+      </TimelineTopBar>
 
-        <TabsContent
-          value={activeTab}
-          className={cn('flex flex-col', showGroupSelect && groups.length > 0 && 'pt-12')}
-        >
-          {isLoading ? <PageLoadingState label="正在加载微博时间线..." /> : null}
-          {!isLoading && errorMessage ? (
-            <PageErrorState
-              description={errorMessage}
-              onRetry={() => void timelineQuery.refetch()}
-            />
-          ) : null}
-          {!isLoading && !errorMessage ? (
-            <FeedList
-              items={items}
-              emptyLabel="此时间线暂无内容"
-              onNavigate={ctx.navigateToStatusDetail}
-              onNavigateProfile={ctx.navigateToProfile}
-              onCommentClick={(item) =>
-                ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
-              }
-              onRepostClick={(item) =>
-                ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
-              }
-            />
-          ) : null}
-          {hasNextPage ? (
-            <div ref={loadMoreRef} className="flex justify-center py-3">
-              {isFetchingNextPage ? <Spinner size="sm" /> : null}
-            </div>
-          ) : null}
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
-
-function FollowGroupPillBar({
-  groups,
-  selectedGid,
-  onSelect,
-}: {
-  groups: FollowGroup[]
-  selectedGid: string
-  onSelect: (gid: string) => void
-}) {
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-
-  return (
-    <div
-      ref={scrollRef}
-      className="bg-background/80 border-border/40 absolute top-full z-10 flex w-full scrollbar-none gap-1.5 overflow-x-auto border-b px-1 py-2 backdrop-blur-lg"
-    >
-      <FollowGroupPill
-        label="全部"
-        isActive={selectedGid === 'default'}
-        onClick={() => onSelect('default')}
-        className="sticky left-0"
-      />
-      {groups.map((group) => (
-        <FollowGroupPill
-          key={group.gid}
-          label={group.title}
-          isActive={selectedGid === group.gid}
-          onClick={() => onSelect(group.gid)}
+      <div className="flex flex-col">
+        <InfiniteFeedList
+          pages={timelineQuery.data?.pages as TimelinePage[] | undefined}
+          emptyLabel="此时间线暂无内容"
+          loadingLabel="正在加载微博时间线..."
+          errorMessage={errorMessage}
+          isLoading={isLoading}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={timelineQuery.fetchNextPage}
+          onRetry={() => void timelineQuery.refetch()}
+          onNavigate={ctx.navigateToStatusDetail}
+          onCommentClick={(item) =>
+            ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
+          }
+          onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
         />
-      ))}
+      </div>
     </div>
-  )
-}
-
-function FollowGroupPill({
-  label,
-  isActive,
-  onClick,
-  className,
-}: {
-  label: string
-  isActive: boolean
-  onClick: () => void
-  className?: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-medium transition-colors',
-        className,
-        isActive
-          ? 'bg-foreground text-background'
-          : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground',
-      )}
-    >
-      {label}
-    </button>
   )
 }
