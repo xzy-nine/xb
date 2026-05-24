@@ -57,7 +57,7 @@ function NavButton({
     showBadge ? (
       <span className="relative">
         {icon}
-        <span className="absolute -top-1 -right-1 size-2 rounded-full bg-red-500" />
+        <span className="bg-destructive absolute -top-1 -right-1 size-2 rounded-full" />
       </span>
     ) : (
       icon

@@ -53,6 +53,7 @@ import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
+import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
 import { getPlaybackPositionStore } from './video-playback-position-store'
 import { registerPlayingVideo, unregisterPlayingVideo } from './video-playback-registry'
@@ -85,6 +86,7 @@ interface QualityOption {
 
 interface PlaybackResumeState {
   currentTime: number
+  playbackRate: number
   shouldResume: boolean
 }
 
@@ -420,9 +422,7 @@ export function VideoPlayer({
     }
 
     setDownloading(true)
-    const name = downloadFilename
-      ? `${downloadFilename.replaceAll(/[\\/:*?"<>|]/g, '_')}.mp4`
-      : 'weibo_video.mp4'
+    const name = downloadFilename ? `${sanitizeFilename(downloadFilename)}.mp4` : 'weibo_video.mp4'
     toast.info(`准备下载：${name}`)
     try {
       // firefox doesn't support cors download, so we need to open a tab
@@ -430,7 +430,6 @@ export function VideoPlayer({
         try {
           const a = document.createElement('a')
           a.href = downloadUrl
-          console.log('🚀 ~ VideoPlayer ~ downloadUrl:', downloadUrl)
           a.download = name
           a.target = '_blank'
           a.rel = 'noopener'
@@ -689,6 +688,7 @@ export function VideoPlayer({
         if (video) {
           pendingPlaybackRef.current = {
             currentTime: video.currentTime,
+            playbackRate: video.playbackRate,
             shouldResume: !video.paused && !video.ended,
           }
         }
@@ -730,6 +730,10 @@ export function VideoPlayer({
       video.currentTime = Math.min(pendingPlayback.currentTime, duration)
     }
 
+    if (Number.isFinite(pendingPlayback.playbackRate) && pendingPlayback.playbackRate > 0) {
+      video.playbackRate = pendingPlayback.playbackRate
+    }
+
     if (pendingPlayback.shouldResume) {
       void video.play().catch(() => {
         // ignore autoplay failures while restoring playback after quality switch
@@ -742,6 +746,7 @@ export function VideoPlayer({
   return (
     <PlayerProvider>
       <PlayerContainer className="media-default-skin media-default-skin--video relative h-full w-full overflow-hidden rounded-[inherit]">
+        {/* data-xb-media-* 用于外部脚本定位本扩展挂载的媒体元素(如全局播放协调) */}
         <Video
           key={isMpd ? 'dash-video' : 'html-video'}
           ref={videoRef}
@@ -749,6 +754,8 @@ export function VideoPlayer({
           poster={poster}
           preload="none"
           playsInline
+          data-xb-media-video="true"
+          data-xb-media-kind="video"
           onLoadedMetadata={handleLoadedMetadata}
           onPointerDownCapture={ensureLoaded}
           onPlay={() => {

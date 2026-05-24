@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { toMedia } from './transform'
+import { toFeedItem, toMedia } from './transform'
 
 describe('toMedia', () => {
   describe('live type', () => {
@@ -236,5 +236,74 @@ describe('toMedia', () => {
       expect(result?.type).toBe('audio')
       expect(result?.streamUrl).toBe('https://example.com/audio.mp3')
     })
+  })
+})
+
+describe('toFeedItem media images', () => {
+  it('maps livephoto images with dimensions and video url', () => {
+    const result = toFeedItem({
+      idstr: '5301829593990431',
+      text_raw: '#哦#',
+      user: { idstr: '7478408373', screen_name: '苏子竹qqq' },
+      pic_ids: ['live-pic'],
+      pic_infos: {
+        'live-pic': {
+          large: { url: 'https://wx3.sinaimg.cn/orj960/live-pic.jpg', width: 960, height: 1279 },
+          largest: { url: 'https://wx3.sinaimg.cn/large/live-pic.jpg', width: 2048, height: 2730 },
+          type: 'livephoto',
+          video: 'https://livephoto.us.sinaimg.cn/live-pic.mov',
+        },
+      },
+    } as any)
+
+    expect(result.images).toEqual([
+      {
+        id: 'live-pic',
+        thumbnailUrl: 'https://wx3.sinaimg.cn/orj960/live-pic.jpg',
+        largeUrl: 'https://wx3.sinaimg.cn/large/live-pic.jpg',
+        width: 2048,
+        height: 2730,
+        type: 'livephoto',
+        livePhotoVideoUrl: 'https://livephoto.us.sinaimg.cn/live-pic.mov',
+      },
+    ])
+  })
+
+  it('maps mixed media video metadata for the media viewer', () => {
+    const result = toFeedItem({
+      idstr: 'mixed-1',
+      text_raw: 'mixed media',
+      user: { idstr: '1', screen_name: 'Alice' },
+      mix_media_info: {
+        items: [
+          {
+            type: 'video',
+            id: 'video-1',
+            data: {
+              object_type: 'video',
+              content1: '混合视频',
+              page_pic: 'https://example.com/cover.jpg',
+              media_info: {
+                stream_url: 'https://example.com/video.mp4',
+                mp4_hd_url: 'https://example.com/download.mp4',
+                video_orientation: 'horizontal',
+              },
+            },
+          },
+        ],
+      },
+    } as any)
+
+    expect(result.mixMediaInfo).toEqual([
+      {
+        type: 'video',
+        id: 'video-1',
+        videoCoverUrl: 'https://example.com/cover.jpg',
+        videoStreamUrl: 'https://example.com/video.mp4',
+        videoOrientation: 'horizontal',
+        videoDownloadUrl: 'https://example.com/download.mp4',
+        videoTitle: '混合视频',
+      },
+    ])
   })
 })

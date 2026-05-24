@@ -189,7 +189,15 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
       <div className="relative h-full w-full">
         <Player.Provider>
           <Player.Container className="media-default-skin media-default-skin--video relative h-full w-full overflow-hidden rounded-[inherit]">
-            <Video src={undefined} poster={coverUrl} preload="none" playsInline />
+            {/* data-xb-media-* 用于外部脚本定位本扩展挂载的媒体元素,kind 标记直播/回放/不可用三种状态 */}
+            <Video
+              src={undefined}
+              poster={coverUrl}
+              preload="none"
+              playsInline
+              data-xb-media-video="true"
+              data-xb-media-kind="live-unavailable"
+            />
           </Player.Container>
         </Player.Provider>
       </div>
@@ -206,6 +214,8 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
             poster={coverUrl}
             preload="metadata"
             playsInline
+            data-xb-media-video="true"
+            data-xb-media-kind={isReplay ? 'live-replay' : 'live'}
             onPointerDownCapture={isReplay ? undefined : handlePointerDown}
             onLoadedMetadata={handleLoadedMetadata}
           />

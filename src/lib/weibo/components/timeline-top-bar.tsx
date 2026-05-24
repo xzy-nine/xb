@@ -120,7 +120,7 @@ export function TimelineTopBar({
               onClick={onRefresh}
               disabled={isRefreshing}
             >
-              <RefreshCw className={cn('size-4', isRefreshing && 'animate-spin')} />
+              <RefreshCw className={cn('size-3', isRefreshing && 'animate-spin')} />
             </Button>
           ) : null}
         </div>
