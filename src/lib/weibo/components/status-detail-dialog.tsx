@@ -9,14 +9,19 @@ import type { FeedItem, StatusDetailNavigationItem } from '@/lib/weibo/models/fe
 import { StatusCommentsSection } from '@/lib/weibo/pages/status-detail-page'
 import { loadStatusDetail } from '@/lib/weibo/services/weibo-repository'
 
+type ProfileLookup = { uid: string } | { screenName: string }
+
 interface StatusDetailDialogProps {
   open: boolean
   item: StatusDetailNavigationItem | null
   position: string
   width?: number
+  zIndex?: number
   onOpenChange: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
   onNavigate?: (item: FeedItem) => void
+  onNavigateProfile?: (lookup: ProfileLookup) => void
+  onNavigateTopic?: (topic: string) => void
 }
 
 export function StatusDetailDialog({
@@ -24,9 +29,12 @@ export function StatusDetailDialog({
   item,
   position,
   width,
+  zIndex,
   onOpenChange,
   setComposeTarget,
   onNavigate,
+  onNavigateProfile,
+  onNavigateTopic,
 }: StatusDetailDialogProps) {
   if (!open || !item) {
     return null
@@ -42,12 +50,14 @@ export function StatusDetailDialog({
   })
 
   const detail = detailQuery.data
+  const commentsZIndex = zIndex != null ? zIndex + 1 : undefined
 
   return (
     <DialogContainer
       open={open}
       position={position as any}
       width={width}
+      zIndex={zIndex}
       onOpenChange={onOpenChange}
     >
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
@@ -60,6 +70,8 @@ export function StatusDetailDialog({
             item={detail.status}
             surface="detail"
             onNavigate={onNavigate}
+            onNavigateProfile={onNavigateProfile}
+            onNavigateTopic={onNavigateTopic}
             onCommentClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
             onRepostClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
             onStatusDeleted={() => onOpenChange(false)}
@@ -69,6 +81,7 @@ export function StatusDetailDialog({
             <StatusCommentsSection
               statusId={detail.status.id}
               authorId={authorId}
+              zIndex={commentsZIndex}
               onCommentReply={setComposeTarget}
             />
           </div>

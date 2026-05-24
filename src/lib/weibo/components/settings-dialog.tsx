@@ -62,6 +62,7 @@ type GroupId = (typeof SIDEBAR_GROUPS)[number]['id']
 
 interface SettingsDialogProps {
   open: boolean
+  zIndex?: number
   onOpenChange: (open: boolean) => void
 }
 
@@ -100,7 +101,7 @@ function Field({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-[11px] first:pt-0 last:pb-0">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      <div className="flex max-w-[65%] min-w-0 flex-1 flex-col gap-0.5">
         <Label className="text-sm leading-snug font-medium">{label}</Label>
         {description && (
           <span className="text-muted-foreground text-xs leading-relaxed">{description}</span>
@@ -119,7 +120,7 @@ function IllustrationPlaceholder({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogProps) {
   const [version, setVersion] = useState<string>('')
   const [activeGroup, setActiveGroup] = useState<GroupId>('appearance')
 
@@ -227,7 +228,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[520px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[640px]">
+      <DialogContent
+        className="flex h-[520px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[640px]"
+        style={{ zIndex }}
+        overlayStyle={{ zIndex }}
+      >
         <DialogHeader>
           <DialogTitle className="px-6 pt-5 text-base tracking-tight">设置</DialogTitle>
           <VisuallyHidden>
@@ -252,7 +257,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeGroup === 'appearance' && (
-              <div className="px-6 py-4">
+              <div className="divide-border/40 divide-y px-6 py-4">
                 <Field label="深色模式" description="选择应用的配色方案">
                   <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
                     <SelectTrigger className="w-[100px]">
@@ -279,6 +284,66 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
                   />
                 </Field>
+
+                <Field label="自定义背景" description="为页面添加自定义背景图片">
+                  <Switch
+                    checked={backgroundEnabled}
+                    onCheckedChange={(checked) => setBackgroundEnabled(checked)}
+                  />
+                </Field>
+
+                {backgroundEnabled && (
+                  <Field label="背景图片" description="输入图片 URL 作为背景">
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/bg.jpg"
+                      value={backgroundImageUrl}
+                      onChange={(e) => handleBackgroundImageUrlChange(e.target.value)}
+                      className="h-8 w-[220px]"
+                    />
+                  </Field>
+                )}
+
+                {backgroundEnabled && backgroundImageUrl && (
+                  <IllustrationPlaceholder>
+                    <img
+                      src={backgroundImageUrl}
+                      alt="背景预览"
+                      className={cn('h-auto w-full', imagePreviewError && 'hidden')}
+                      onError={() => setImagePreviewError(true)}
+                      onLoad={() => setImagePreviewError(false)}
+                    />
+                    {imagePreviewError && <span className="text-destructive">图片加载失败</span>}
+                  </IllustrationPlaceholder>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <Label>玻璃透明度</Label>
+                  <p className="text-muted-foreground text-xs">
+                    卡片和弹窗的半透明程度 ({glassOpacity}%)
+                  </p>
+                  <Slider
+                    value={[glassOpacity]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => setGlassOpacity(v as number)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>玻璃模糊</Label>
+                  <p className="text-muted-foreground text-xs">
+                    卡片和弹窗的背景模糊程度 ({glassBlur}px)
+                  </p>
+                  <Slider
+                    value={[glassBlur]}
+                    min={0}
+                    max={20}
+                    step={1}
+                    onValueChange={([v]) => setGlassBlur(v as number)}
+                  />
+                </div>
               </div>
             )}
 
@@ -378,6 +443,68 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     </IllustrationPlaceholder>
                   </div>
                 )}
+
+                <div>
+                  <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
+                    <Switch
+                      checked={statusDetailPopupEnabled}
+                      onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
+                    />
+                  </Field>
+                </div>
+
+                {statusDetailPopupEnabled && (
+                  <div>
+                    <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
+                      <Select
+                        value={statusDetailPopupPosition}
+                        onValueChange={(value) =>
+                          setStatusDetailPopupPosition(value as StatusDetailPopupPosition)
+                        }
+                      >
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">左</SelectItem>
+                          <SelectItem value="center">中</SelectItem>
+                          <SelectItem value="right">右</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+                )}
+
+                {statusDetailPopupEnabled && (
+                  <div className="flex flex-col gap-2">
+                    <Label>弹窗宽度</Label>
+                    <p className="text-muted-foreground text-xs">
+                      详情弹窗占页面宽度的比例 ({statusDetailPopupWidth}%)
+                    </p>
+                    <Slider
+                      value={[statusDetailPopupWidth]}
+                      min={50}
+                      max={80}
+                      step={5}
+                      onValueChange={([value]) => setStatusDetailPopupWidth(value)}
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <Label>瀑布流栏数</Label>
+                  <p className="text-muted-foreground text-xs">
+                    设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于
+                    300px
+                  </p>
+                  <Slider
+                    value={[waterfallColumnCount]}
+                    min={1}
+                    max={5}
+                    step={1}
+                    onValueChange={([value]) => setWaterfallColumnCount(value)}
+                  />
+                </div>
               </div>
             )}
 
