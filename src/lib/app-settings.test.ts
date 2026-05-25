@@ -39,8 +39,8 @@ describe('app-settings', () => {
   it('migrates the old modern minimal preset key to modern', () => {
     expect(
       normalizeAppSettings({
-        customThemePreset: 'modern-minimal',
-      }).customThemePreset,
+        customThemePreset: 'modern-minimal' as never,
+      }).selectedThemeId,
     ).toBe('modern')
   })
 
@@ -82,10 +82,11 @@ describe('app-settings', () => {
       followGroupsEnabled: false,
       xbTopicPage: true,
       homeTab: 'for-you',
-      customThemeEnabled: false,
-      customThemePreset: 'default',
       customThemeLightCss: '',
       customThemeDarkCss: '',
+      selectedThemeType: 'preset',
+      selectedThemeId: 'default',
+      userThemes: [],
     })
 
     await persistAppSettings(
@@ -118,10 +119,11 @@ describe('app-settings', () => {
         followGroupsEnabled: false,
         xbTopicPage: true,
         homeTab: 'for-you',
-        customThemeEnabled: true,
-        customThemePreset: 'twitter',
         customThemeLightCss: '--primary: #1d9bf0;',
         customThemeDarkCss: '--primary: #1d9bf0;',
+        selectedThemeType: 'preset',
+        selectedThemeId: 'default',
+        userThemes: [],
       },
       storage,
     )
@@ -155,10 +157,11 @@ describe('app-settings', () => {
       followGroupsEnabled: false,
       xbTopicPage: true,
       homeTab: 'for-you',
-      customThemeEnabled: true,
-      customThemePreset: 'twitter',
       customThemeLightCss: '--primary: #1d9bf0;',
       customThemeDarkCss: '--primary: #1d9bf0;',
+      selectedThemeType: 'preset',
+      selectedThemeId: 'default',
+      userThemes: [],
     })
   })
 

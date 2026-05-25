@@ -103,6 +103,15 @@ export type CustomThemePreset =
   | 'modern'
   | 'claude'
 
+export interface UserTheme {
+  id: string
+  name: string
+  lightCss: string
+  darkCss: string
+}
+
+export type SelectedThemeType = 'preset' | 'custom'
+
 export const BROWSING_HISTORY_LIMIT_OPTIONS = [200, 300, 500] as const
 
 export type BrowsingHistoryLimit = (typeof BROWSING_HISTORY_LIMIT_OPTIONS)[number]
@@ -136,10 +145,11 @@ export interface AppSettings {
   followGroupsEnabled: boolean
   xbTopicPage: boolean
   homeTab: HomeTab
-  customThemeEnabled: boolean
-  customThemePreset: CustomThemePreset
   customThemeLightCss: string
   customThemeDarkCss: string
+  selectedThemeType: SelectedThemeType
+  selectedThemeId: string
+  userThemes: UserTheme[]
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -191,10 +201,11 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   followGroupsEnabled: false,
   xbTopicPage: true,
   homeTab: 'for-you',
-  customThemeEnabled: false,
-  customThemePreset: 'default',
   customThemeLightCss: '',
   customThemeDarkCss: '',
+  selectedThemeType: 'preset',
+  selectedThemeId: 'default',
+  userThemes: [],
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -286,6 +297,10 @@ function isBrowsingHistoryLimit(value: unknown): value is BrowsingHistoryLimit {
   return BROWSING_HISTORY_LIMIT_OPTIONS.includes(value as BrowsingHistoryLimit)
 }
 
+function isSelectedThemeType(value: unknown): value is SelectedThemeType {
+  return value === 'preset' || value === 'custom'
+}
+
 function isCustomThemePreset(value: unknown): value is CustomThemePreset {
   return (
     value === 'default' ||
@@ -303,7 +318,7 @@ function normalizeCustomThemePreset(value: unknown): CustomThemePreset {
     return 'modern'
   }
 
-  return isCustomThemePreset(value) ? value : DEFAULT_APP_SETTINGS.customThemePreset
+  return isCustomThemePreset(value) ? value : 'default'
 }
 
 export function normalizeAppSettings(value: unknown): AppSettings {
@@ -410,11 +425,6 @@ export function normalizeAppSettings(value: unknown): AppSettings {
         ? candidate.xbTopicPage
         : DEFAULT_APP_SETTINGS.xbTopicPage,
     homeTab: isHomeTab(candidate.homeTab) ? candidate.homeTab : DEFAULT_APP_SETTINGS.homeTab,
-    customThemeEnabled:
-      typeof candidate.customThemeEnabled === 'boolean'
-        ? candidate.customThemeEnabled
-        : DEFAULT_APP_SETTINGS.customThemeEnabled,
-    customThemePreset: normalizeCustomThemePreset(candidate.customThemePreset),
     customThemeLightCss:
       typeof candidate.customThemeLightCss === 'string'
         ? candidate.customThemeLightCss
@@ -423,6 +433,26 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.customThemeDarkCss === 'string'
         ? candidate.customThemeDarkCss
         : DEFAULT_APP_SETTINGS.customThemeDarkCss,
+    selectedThemeType: isSelectedThemeType(candidate.selectedThemeType)
+      ? candidate.selectedThemeType
+      : (candidate as Record<string, unknown>).customThemeEnabled === true
+        ? 'custom'
+        : DEFAULT_APP_SETTINGS.selectedThemeType,
+    selectedThemeId:
+      typeof candidate.selectedThemeId === 'string' && candidate.selectedThemeId.length > 0
+        ? candidate.selectedThemeId
+        : typeof (candidate as Record<string, unknown>).customThemePreset === 'string'
+          ? normalizeCustomThemePreset((candidate as Record<string, unknown>).customThemePreset)
+          : DEFAULT_APP_SETTINGS.selectedThemeId,
+    userThemes: Array.isArray(candidate.userThemes)
+      ? candidate.userThemes.filter(
+          (t: unknown): t is UserTheme =>
+            typeof t === 'object' &&
+            t !== null &&
+            typeof (t as UserTheme).id === 'string' &&
+            typeof (t as UserTheme).name === 'string',
+        )
+      : DEFAULT_APP_SETTINGS.userThemes,
   }
 }
 

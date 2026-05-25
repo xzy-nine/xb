@@ -10,7 +10,6 @@ import {
   type AppTheme,
   type BrowsingHistoryLimit,
   type CardStyle,
-  type CustomThemePreset,
   type DarkBgColorPreset,
   type FontFamilyClass,
   type FontSizeClass,
@@ -22,7 +21,10 @@ import {
   type ContentWidth,
   type HotSearchType,
   type LightBgColorPreset,
+  type SelectedThemeType,
+  type UserTheme,
 } from '@/lib/app-settings'
+import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
 
 export interface AppSettingsStoreState extends AppSettings {
   isHydrated: boolean
@@ -56,10 +58,16 @@ export interface AppSettingsStoreState extends AppSettings {
   setContentWidth: (width: ContentWidth) => Promise<void>
   homeTab: HomeTab
   setHomeTab: (tab: HomeTab) => Promise<void>
-  setCustomThemeEnabled: (enabled: boolean) => Promise<void>
-  setCustomThemePreset: (preset: CustomThemePreset) => Promise<void>
   setCustomThemeLightCss: (css: string) => Promise<void>
   setCustomThemeDarkCss: (css: string) => Promise<void>
+  setSelectedThemeType: (type: SelectedThemeType) => Promise<void>
+  setSelectedThemeId: (id: string) => Promise<void>
+  addUserTheme: (theme: UserTheme) => Promise<void>
+  deleteUserTheme: (id: string) => Promise<void>
+  updateUserTheme: (
+    id: string,
+    updates: Partial<Pick<UserTheme, 'lightCss' | 'darkCss' | 'name'>>,
+  ) => Promise<void>
 }
 
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
@@ -94,10 +102,11 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     followGroupsEnabled: state.followGroupsEnabled,
     xbTopicPage: state.xbTopicPage,
     homeTab: state.homeTab,
-    customThemeEnabled: state.customThemeEnabled,
-    customThemePreset: state.customThemePreset,
     customThemeLightCss: state.customThemeLightCss,
     customThemeDarkCss: state.customThemeDarkCss,
+    selectedThemeType: state.selectedThemeType,
+    selectedThemeId: state.selectedThemeId,
+    userThemes: state.userThemes,
   }
 }
 
@@ -121,6 +130,20 @@ export function createAppSettingsStore(
       isHydrated: false,
       async hydrate() {
         const settings = await loadAppSettings(storageArea)
+
+        // If a preset is selected but CSS is empty, fill from the preset definition
+        if (
+          settings.selectedThemeType === 'preset' &&
+          !settings.customThemeLightCss.trim() &&
+          !settings.customThemeDarkCss.trim()
+        ) {
+          const preset = CUSTOM_THEME_PRESETS.find((p) => p.key === settings.selectedThemeId)
+          if (preset) {
+            settings.customThemeLightCss = preset.lightCss
+            settings.customThemeDarkCss = preset.darkCss
+          }
+        }
+
         set({
           ...settings,
           isHydrated: true,
@@ -210,17 +233,35 @@ export function createAppSettingsStore(
       async setContentWidth(contentWidth) {
         await updateAndPersist({ contentWidth })
       },
-      async setCustomThemeEnabled(customThemeEnabled) {
-        await updateAndPersist({ customThemeEnabled })
-      },
-      async setCustomThemePreset(customThemePreset) {
-        await updateAndPersist({ customThemePreset })
-      },
       async setCustomThemeLightCss(customThemeLightCss) {
         await updateAndPersist({ customThemeLightCss })
       },
       async setCustomThemeDarkCss(customThemeDarkCss) {
         await updateAndPersist({ customThemeDarkCss })
+      },
+      async setSelectedThemeType(selectedThemeType) {
+        await updateAndPersist({ selectedThemeType })
+      },
+      async setSelectedThemeId(selectedThemeId) {
+        await updateAndPersist({ selectedThemeId })
+      },
+      async addUserTheme(theme) {
+        const current = get()
+        await updateAndPersist({
+          userThemes: [...current.userThemes, theme],
+        })
+      },
+      async deleteUserTheme(id) {
+        const current = get()
+        await updateAndPersist({
+          userThemes: current.userThemes.filter((t) => t.id !== id),
+        })
+      },
+      async updateUserTheme(id, updates) {
+        const current = get()
+        await updateAndPersist({
+          userThemes: current.userThemes.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+        })
       },
     }
   })

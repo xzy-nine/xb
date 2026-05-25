@@ -1,4 +1,4 @@
-import { Palette, Settings, Sparkles, Type } from 'lucide-react'
+import { Palette, Settings, Sparkles, SunMoon, Trash2, Type } from 'lucide-react'
 import React from 'react'
 import { useEffect, useState } from 'react'
 
@@ -32,12 +32,12 @@ import type {
   AppTheme,
   BrowsingHistoryLimit,
   ContentWidth,
-  CustomThemePreset,
   FontFamilyClass,
   FontSizeClass,
   FontWeightClass,
   LetterSpacingClass,
   LineHeightClass,
+  UserTheme,
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
@@ -46,7 +46,8 @@ import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 import { FontPreviewCard } from './settings-font-preview'
 
 const SIDEBAR_GROUPS = [
-  { id: 'appearance' as const, label: '外观', icon: Palette },
+  { id: 'appearance' as const, label: '外观', icon: SunMoon },
+  { id: 'theme' as const, label: '主题', icon: Palette },
   { id: 'personalize' as const, label: '个性化', icon: Sparkles },
   { id: 'font' as const, label: '字体', icon: Type },
   { id: 'advanced' as const, label: '高级', icon: Settings },
@@ -154,8 +155,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const contentWidth = useAppSettings((s) => s.contentWidth)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
-  const customThemeEnabled = useAppSettings((s) => s.customThemeEnabled)
-  const customThemePreset = useAppSettings((s) => s.customThemePreset)
+  const selectedThemeType = useAppSettings((s) => s.selectedThemeType)
+  const selectedThemeId = useAppSettings((s) => s.selectedThemeId)
+  const userThemes = useAppSettings((s) => s.userThemes)
   const customThemeLightCss = useAppSettings((s) => s.customThemeLightCss)
   const customThemeDarkCss = useAppSettings((s) => s.customThemeDarkCss)
   const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
@@ -177,10 +179,19 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setBrowsingHistoryLimit = useAppSettings((s) => s.setBrowsingHistoryLimit)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
   const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
-  const setCustomThemeEnabled = useAppSettings((s) => s.setCustomThemeEnabled)
-  const setCustomThemePreset = useAppSettings((s) => s.setCustomThemePreset)
+  const setSelectedThemeType = useAppSettings((s) => s.setSelectedThemeType)
+  const setSelectedThemeId = useAppSettings((s) => s.setSelectedThemeId)
   const setCustomThemeLightCss = useAppSettings((s) => s.setCustomThemeLightCss)
   const setCustomThemeDarkCss = useAppSettings((s) => s.setCustomThemeDarkCss)
+  const addUserTheme = useAppSettings((s) => s.addUserTheme)
+  const deleteUserTheme = useAppSettings((s) => s.deleteUserTheme)
+  const updateUserTheme = useAppSettings((s) => s.updateUserTheme)
+
+  const [themeNameInput, setThemeNameInput] = useState<string>('')
+  const activeThemeName =
+    selectedThemeType === 'custom'
+      ? (userThemes.find((t) => t.id === selectedThemeId)?.name ?? '')
+      : ''
 
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
@@ -196,20 +207,85 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setFontFamilyClass(DEFAULT_APP_SETTINGS.fontFamilyClass)
   }
 
-  function applyCustomThemePreset(presetKey: CustomThemePreset) {
+  useEffect(() => {
+    setThemeNameInput(activeThemeName)
+  }, [activeThemeName])
+
+  function handleSaveThemeName() {
+    if (selectedThemeType === 'custom' && themeNameInput.trim().length > 0) {
+      void updateUserTheme(selectedThemeId, { name: themeNameInput.trim() })
+    }
+  }
+
+  function applyCustomThemePreset(presetKey: string) {
     const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === presetKey)
-    void setCustomThemePreset(presetKey)
     if (preset) {
       void setCustomThemeLightCss(preset.lightCss)
       void setCustomThemeDarkCss(preset.darkCss)
     }
   }
 
-  function resetCustomTheme() {
-    void setCustomThemeEnabled(DEFAULT_APP_SETTINGS.customThemeEnabled)
-    void setCustomThemePreset(DEFAULT_APP_SETTINGS.customThemePreset)
-    void setCustomThemeLightCss(DEFAULT_APP_SETTINGS.customThemeLightCss)
-    void setCustomThemeDarkCss(DEFAULT_APP_SETTINGS.customThemeDarkCss)
+  function handleThemeSelect(value: string) {
+    const [type, ...rest] = value.split(':')
+    const id = rest.join(':')
+
+    if (type === 'preset') {
+      void setSelectedThemeType('preset')
+      void setSelectedThemeId(id)
+      applyCustomThemePreset(id)
+    } else if (type === 'user') {
+      const theme = userThemes.find((t) => t.id === id)
+      if (theme) {
+        void setSelectedThemeType('custom')
+        void setSelectedThemeId(id)
+        void setCustomThemeLightCss(theme.lightCss)
+        void setCustomThemeDarkCss(theme.darkCss)
+      }
+    }
+  }
+
+  function getCurrentSelectValue(): string {
+    if (selectedThemeType === 'preset') {
+      return `preset:${selectedThemeId}`
+    }
+    return `user:${selectedThemeId}`
+  }
+
+  function handleAddCustomTheme() {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+    const count = userThemes.filter((t) => t.name.startsWith('自定义主题')).length + 1
+    const theme: UserTheme = {
+      id,
+      name: `自定义主题 ${count}`,
+      lightCss: customThemeLightCss,
+      darkCss: customThemeDarkCss,
+    }
+    void addUserTheme(theme)
+    void setSelectedThemeType('custom')
+    void setSelectedThemeId(id)
+  }
+
+  function handleDeleteCustomTheme() {
+    if (selectedThemeType === 'custom') {
+      void deleteUserTheme(selectedThemeId)
+      void setSelectedThemeType('preset')
+      void setSelectedThemeId('default')
+      applyCustomThemePreset('default')
+    }
+  }
+
+  function handleLightCssChange(value: string) {
+    void setCustomThemeLightCss(value)
+    if (selectedThemeType === 'custom') {
+      void updateUserTheme(selectedThemeId, { lightCss: value })
+    }
+  }
+
+  function handleDarkCssChange(value: string) {
+    void setCustomThemeDarkCss(value)
+    if (selectedThemeType === 'custom') {
+      void updateUserTheme(selectedThemeId, { darkCss: value })
+    }
   }
 
   function handleBrowsingHistoryLimitChange(value: string) {
@@ -259,31 +335,73 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="自定义主题" description="使用 CSS 变量覆盖 shadcn 原生主题">
-                  <Switch
-                    checked={customThemeEnabled}
-                    onCheckedChange={(checked) => setCustomThemeEnabled(checked)}
-                  />
-                </Field>
-                {customThemeEnabled && (
-                  <>
-                    <Field label="预设主题" description="选择后会填入对应的 CSS 变量">
-                      <Select
-                        value={customThemePreset}
-                        onValueChange={(v) => applyCustomThemePreset(v as CustomThemePreset)}
-                      >
-                        <SelectTrigger className="w-[150px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
+              </div>
+            )}
+
+            {activeGroup === 'theme' && (
+              <div className="divide-border/40 divide-y px-6 py-4">
+                <div className="flex items-center justify-between gap-4 py-[11px] first:pt-0 last:pb-0">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <Select value={getCurrentSelectValue()} onValueChange={handleThemeSelect}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>预设主题</SelectLabel>
                           {CUSTOM_THEME_PRESETS.map((preset) => (
-                            <SelectItem key={preset.key} value={preset.key}>
+                            <SelectItem key={`preset:${preset.key}`} value={`preset:${preset.key}`}>
                               {preset.name}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                        </SelectGroup>
+                        {userThemes.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel>自定义主题</SelectLabel>
+                            {userThemes.map((theme) => (
+                              <SelectItem key={`user:${theme.id}`} value={`user:${theme.id}`}>
+                                {theme.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {selectedThemeType === 'custom' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleDeleteCustomTheme}
+                        className="text-muted-foreground hover:text-destructive shrink-0"
+                        aria-label="删除主题"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    )}
+                  </div>
+                  <Button variant="secondary" size="sm" onClick={handleAddCustomTheme}>
+                    添加自定义主题
+                  </Button>
+                </div>
+                {selectedThemeType === 'custom' && (
+                  <>
+                    <div className="flex items-center gap-2 py-[11px] first:pt-0 last:pb-0">
+                      <Label className="shrink-0 text-sm leading-snug font-medium">主题名称</Label>
+                      <input
+                        type="text"
+                        value={themeNameInput}
+                        onChange={(e) => setThemeNameInput(e.target.value)}
+                        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+                      />
+                      <Button
+                        variant="default"
+                        size="sm"
+                        disabled={themeNameInput === activeThemeName}
+                        onClick={handleSaveThemeName}
+                      >
+                        保存
+                      </Button>
+                    </div>
                     <StackedField
                       label="浅色主题样式变量"
                       description="每行输入一个 CSS 变量声明，例如 --foreground: #333333;"
@@ -291,7 +409,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       <Textarea
                         value={customThemeLightCss}
                         onChange={(event) => {
-                          void setCustomThemeLightCss(event.target.value)
+                          handleLightCssChange(event.target.value)
                         }}
                         rows={10}
                         spellCheck={false}
@@ -307,7 +425,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       <Textarea
                         value={customThemeDarkCss}
                         onChange={(event) => {
-                          void setCustomThemeDarkCss(event.target.value)
+                          handleDarkCssChange(event.target.value)
                         }}
                         rows={10}
                         spellCheck={false}
@@ -316,11 +434,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 --foreground: #ffffff;"
                       />
                     </StackedField>
-                    <div className="flex justify-end py-3">
-                      <Button variant="outline" size="sm" onClick={resetCustomTheme}>
-                        恢复默认
-                      </Button>
-                    </div>
                   </>
                 )}
               </div>

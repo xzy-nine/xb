@@ -49,7 +49,7 @@ export function bindShellState({
     }
 
     const customThemeCss = isDark ? settings.customThemeDarkCss : settings.customThemeLightCss
-    if (settings.customThemeEnabled && customThemeCss.trim()) {
+    if (customThemeCss.trim()) {
       const variables = parseCustomThemeVariables(customThemeCss)
       for (const [name, value] of Object.entries(variables)) {
         container.style.setProperty(name, value)
