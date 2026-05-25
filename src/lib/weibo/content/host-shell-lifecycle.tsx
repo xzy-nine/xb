@@ -40,6 +40,17 @@ export async function mountWeiboHostShell({
   const settingsStore = getAppSettingsStore()
   await settingsStore.getState().hydrate()
 
+  // 强制跳转我关注的：当 window.history.length <= 2 且当前在首页时，重定向到 /mygroups
+  const { forceRedirectToFollowing } = settingsStore.getState()
+  if (
+    forceRedirectToFollowing &&
+    window.history.length <= 2 &&
+    (window.location.pathname === '/' || window.location.pathname === '')
+  ) {
+    window.location.replace('/mygroups')
+    return null
+  }
+
   const ui = await createShadowRootUi(ctx, {
     name: 'xb-shell',
     position: 'inline',
