@@ -27,9 +27,10 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
+import { BROWSING_HISTORY_LIMIT_OPTIONS, DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
 import type {
   AppTheme,
+  BrowsingHistoryLimit,
   ContentWidth,
   CustomThemePreset,
   FontFamilyClass,
@@ -40,7 +41,7 @@ import type {
 } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
-import { MAX_ENTRIES } from '@/lib/weibo/hooks/use-browsing-history'
+import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 
 import { FontPreviewCard } from './settings-font-preview'
 
@@ -171,7 +172,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
   const setContentWidth = useAppSettings((s) => s.setContentWidth)
   const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
+  const browsingHistoryLimit = useAppSettings((s) => s.browsingHistoryLimit)
   const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
+  const setBrowsingHistoryLimit = useAppSettings((s) => s.setBrowsingHistoryLimit)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
   const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
   const setCustomThemeEnabled = useAppSettings((s) => s.setCustomThemeEnabled)
@@ -207,6 +210,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     void setCustomThemePreset(DEFAULT_APP_SETTINGS.customThemePreset)
     void setCustomThemeLightCss(DEFAULT_APP_SETTINGS.customThemeLightCss)
     void setCustomThemeDarkCss(DEFAULT_APP_SETTINGS.customThemeDarkCss)
+  }
+
+  function handleBrowsingHistoryLimitChange(value: string) {
+    const limit = Number(value) as BrowsingHistoryLimit
+    void setBrowsingHistoryLimit(limit).then(() => {
+      browsingHistoryStore.getState().trimToLimit(limit)
+    })
   }
 
   return (
@@ -548,13 +558,34 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </Field>
                 <Field
                   label="浏览历史"
-                  description={`记录最近访问过的${MAX_ENTRIES}条微博（储存在本地）`}
+                  description={`记录最近访问过的${browsingHistoryLimit}条微博（储存在本地）`}
                 >
                   <Switch
                     checked={browsingHistoryEnabled}
                     onCheckedChange={(checked) => setBrowsingHistoryEnabled(checked)}
                   />
                 </Field>
+                {browsingHistoryEnabled && (
+                  <Field label="保留条数" description="超过上限后自动删除最早的记录">
+                    <Select
+                      value={String(browsingHistoryLimit)}
+                      onValueChange={handleBrowsingHistoryLimitChange}
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {BROWSING_HISTORY_LIMIT_OPTIONS.map((limit) => (
+                            <SelectItem key={limit} value={String(limit)}>
+                              {limit} 条
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
               </div>
             )}
           </main>

@@ -1,6 +1,7 @@
 import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 
+import { getAppSettingsStore } from '@/lib/app-settings-store'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
 export interface HistoryEntry {
@@ -18,9 +19,9 @@ export interface BrowsingHistoryStore {
   addEntry: (item: FeedItem) => void
   clearHistory: () => void
   removeEntry: (id: string) => void
+  trimToLimit: (limit: number) => void
 }
 
-export const MAX_ENTRIES = 200
 const STORAGE_KEY = 'xb:browsing-history'
 
 function loadFromStorage(): HistoryEntry[] {
@@ -40,6 +41,14 @@ function saveToStorage(entries: HistoryEntry[]) {
   }
 }
 
+function getBrowsingHistoryLimit(): number {
+  return getAppSettingsStore().getState().browsingHistoryLimit
+}
+
+function trimEntries(entries: HistoryEntry[], limit: number): HistoryEntry[] {
+  return entries.slice(0, limit)
+}
+
 export const browsingHistoryStore = createStore<BrowsingHistoryStore>((set) => ({
   entries: loadFromStorage(),
   addEntry: (item) =>
@@ -54,7 +63,7 @@ export const browsingHistoryStore = createStore<BrowsingHistoryStore>((set) => (
         readAt: Date.now(),
       }
       const filtered = state.entries.filter((e) => e.id !== item.id)
-      const entries = [entry, ...filtered].slice(0, MAX_ENTRIES)
+      const entries = trimEntries([entry, ...filtered], getBrowsingHistoryLimit())
       saveToStorage(entries)
       return { entries }
     }),
@@ -65,6 +74,12 @@ export const browsingHistoryStore = createStore<BrowsingHistoryStore>((set) => (
   removeEntry: (id) =>
     set((state) => {
       const entries = state.entries.filter((e) => e.id !== id)
+      saveToStorage(entries)
+      return { entries }
+    }),
+  trimToLimit: (limit) =>
+    set((state) => {
+      const entries = trimEntries(state.entries, limit)
       saveToStorage(entries)
       return { entries }
     }),

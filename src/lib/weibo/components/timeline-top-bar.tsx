@@ -59,7 +59,7 @@ export function TimelineTopBar({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost">
-                  <span className="text-foreground truncate text-xl font-semibold">{title}</span>
+                  <span className="text-foreground truncate text-lg font-semibold">{title}</span>
                   <ChevronDown className="text-muted-foreground size-4 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>

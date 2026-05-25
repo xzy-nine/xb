@@ -8,6 +8,7 @@ import {
   type AppSettings,
   type AppSettingsStorageArea,
   type AppTheme,
+  type BrowsingHistoryLimit,
   type CardStyle,
   type CustomThemePreset,
   type DarkBgColorPreset,
@@ -49,6 +50,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setHotSearchType: (type: HotSearchType) => Promise<void>
   setXLayoutEnabled: (enabled: boolean) => Promise<void>
   setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
+  setBrowsingHistoryLimit: (limit: BrowsingHistoryLimit) => Promise<void>
   setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
   setNativeTopicPage: (enabled: boolean) => Promise<void>
   setContentWidth: (width: ContentWidth) => Promise<void>
@@ -88,6 +90,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     hotSearchType: state.hotSearchType,
     xLayoutEnabled: state.xLayoutEnabled,
     browsingHistoryEnabled: state.browsingHistoryEnabled,
+    browsingHistoryLimit: state.browsingHistoryLimit,
     followGroupsEnabled: state.followGroupsEnabled,
     xbTopicPage: state.xbTopicPage,
     homeTab: state.homeTab,
@@ -191,6 +194,9 @@ export function createAppSettingsStore(
       },
       async setBrowsingHistoryEnabled(browsingHistoryEnabled) {
         await updateAndPersist({ browsingHistoryEnabled })
+      },
+      async setBrowsingHistoryLimit(browsingHistoryLimit) {
+        await updateAndPersist({ browsingHistoryLimit })
       },
       async setHomeTab(homeTab) {
         await updateAndPersist({ homeTab })

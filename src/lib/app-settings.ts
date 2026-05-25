@@ -103,6 +103,10 @@ export type CustomThemePreset =
   | 'modern'
   | 'claude'
 
+export const BROWSING_HISTORY_LIMIT_OPTIONS = [200, 300, 500] as const
+
+export type BrowsingHistoryLimit = (typeof BROWSING_HISTORY_LIMIT_OPTIONS)[number]
+
 export interface AppSettings {
   contentWidth: ContentWidth
   theme: AppTheme
@@ -128,6 +132,7 @@ export interface AppSettings {
   hotSearchType: HotSearchType
   xLayoutEnabled: boolean
   browsingHistoryEnabled: boolean
+  browsingHistoryLimit: BrowsingHistoryLimit
   followGroupsEnabled: boolean
   xbTopicPage: boolean
   homeTab: HomeTab
@@ -182,6 +187,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   hotSearchType: 'hot' as HotSearchType,
   xLayoutEnabled: false,
   browsingHistoryEnabled: true,
+  browsingHistoryLimit: 200,
   followGroupsEnabled: false,
   xbTopicPage: true,
   homeTab: 'for-you',
@@ -274,6 +280,10 @@ function isContentWidth(value: unknown): value is ContentWidth {
 
 function isHomeTab(value: unknown): value is HomeTab {
   return value === 'for-you' || value === 'following'
+}
+
+function isBrowsingHistoryLimit(value: unknown): value is BrowsingHistoryLimit {
+  return BROWSING_HISTORY_LIMIT_OPTIONS.includes(value as BrowsingHistoryLimit)
 }
 
 function isCustomThemePreset(value: unknown): value is CustomThemePreset {
@@ -388,6 +398,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.browsingHistoryEnabled === 'boolean'
         ? candidate.browsingHistoryEnabled
         : DEFAULT_APP_SETTINGS.browsingHistoryEnabled,
+    browsingHistoryLimit: isBrowsingHistoryLimit(candidate.browsingHistoryLimit)
+      ? candidate.browsingHistoryLimit
+      : DEFAULT_APP_SETTINGS.browsingHistoryLimit,
     followGroupsEnabled:
       typeof candidate.followGroupsEnabled === 'boolean'
         ? candidate.followGroupsEnabled

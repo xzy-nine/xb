@@ -1,11 +1,12 @@
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { BrushCleaning, Clock, Trash2 } from 'lucide-react'
+import { BrushCleaning, CalendarDays, Clock, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Dialog,
   DialogClose,
@@ -26,12 +27,30 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
-import {
-  MAX_ENTRIES,
-  browsingHistoryStore,
-  useBrowsingHistory,
-} from '@/lib/weibo/hooks/use-browsing-history'
+import { browsingHistoryStore, useBrowsingHistory } from '@/lib/weibo/hooks/use-browsing-history'
+
+function getDateKey(date: Date): string {
+  return format(date, 'yyyy-MM-dd')
+}
+
+function getReadDateKey(timestamp: number): string {
+  return getDateKey(new Date(timestamp))
+}
+
+function formatGroupLabel(dateKey: string, todayKey: string): string {
+  if (dateKey === todayKey) {
+    return '今天'
+  }
+
+  return format(new Date(`${dateKey}T00:00:00`), 'yyyy年M月d日', { locale: zhCN })
+}
+
+function formatSelectedDateLabel(date: Date | undefined): string {
+  return date ? format(date, 'M月d日', { locale: zhCN }) : '全部日期'
+}
 
 function formatReadAt(timestamp: number): string {
   const date = new Date(timestamp)
@@ -59,82 +78,131 @@ function formatReadAt(timestamp: number): string {
 
 export function HistoryPage() {
   const entries = useBrowsingHistory((s) => s.entries)
+  const browsingHistoryLimit = useAppSettings((s) => s.browsingHistoryLimit)
   const removeEntry = browsingHistoryStore.getState().removeEntry
   const clearHistory = browsingHistoryStore.getState().clearHistory
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date>()
+
+  const selectedDateKey = selectedDate ? getDateKey(selectedDate) : undefined
+  const visibleEntries = useMemo(() => {
+    if (!selectedDateKey) {
+      return entries
+    }
+
+    return entries.filter((entry) => getReadDateKey(entry.readAt) === selectedDateKey)
+  }, [entries, selectedDateKey])
 
   const groupedEntries = useMemo(() => {
-    const groups: Array<{ label: string; entries: typeof entries }> = []
-    const now = Date.now()
-    const today = new Date(now)
-    today.setHours(0, 0, 0, 0)
-    const todayTs = today.getTime()
-    const yesterdayTs = todayTs - 86_400_000
-    const thisWeekTs = todayTs - 6 * 86_400_000
+    const todayKey = getDateKey(new Date())
+    const groupMap = new Map<string, typeof entries>()
 
-    const todayEntries: typeof entries = []
-    const yesterdayEntries: typeof entries = []
-    const thisWeekEntries: typeof entries = []
-    const earlierEntries: typeof entries = []
+    for (const entry of visibleEntries) {
+      const dateKey = getReadDateKey(entry.readAt)
+      const group = groupMap.get(dateKey)
 
-    for (const entry of entries) {
-      if (entry.readAt >= todayTs) {
-        todayEntries.push(entry)
-      } else if (entry.readAt >= yesterdayTs) {
-        yesterdayEntries.push(entry)
-      } else if (entry.readAt >= thisWeekTs) {
-        thisWeekEntries.push(entry)
+      if (group) {
+        group.push(entry)
       } else {
-        earlierEntries.push(entry)
+        groupMap.set(dateKey, [entry])
       }
     }
 
-    if (todayEntries.length > 0) groups.push({ label: '今天', entries: todayEntries })
-    if (yesterdayEntries.length > 0) groups.push({ label: '昨天', entries: yesterdayEntries })
-    if (thisWeekEntries.length > 0) groups.push({ label: '本周', entries: thisWeekEntries })
-    if (earlierEntries.length > 0) groups.push({ label: '更早', entries: earlierEntries })
+    return Array.from(groupMap, ([dateKey, groupEntries]) => ({
+      label: formatGroupLabel(dateKey, todayKey),
+      entries: groupEntries,
+    }))
+  }, [visibleEntries])
 
-    return groups
-  }, [entries])
+  const hasDateFilter = Boolean(selectedDate)
 
   return (
     <div className="flex flex-col gap-3">
       <TimelineTopBar
         title="浏览历史"
-        description={`最多保存 ${MAX_ENTRIES} 条`}
+        description={
+          hasDateFilter
+            ? `${formatSelectedDateLabel(selectedDate)}，共 ${visibleEntries.length} 条`
+            : `最多保存 ${browsingHistoryLimit} 条`
+        }
         rightAction={
           entries.length > 0 ? (
-            <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <BrushCleaning />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>清空浏览历史</DialogTitle>
-                  <DialogDescription>确定要清除所有浏览记录吗？此操作不可撤销。</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">取消</Button>
-                  </DialogClose>
+            <>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <PopoverTrigger asChild>
                   <Button
-                    variant="destructive"
-                    onClick={() => {
-                      clearHistory()
-                      setClearConfirmOpen(false)
-                    }}
+                    type="button"
+                    variant={hasDateFilter ? 'secondary' : 'ghost'}
+                    size="sm"
+                    aria-label="选择浏览日期"
                   >
-                    清空
+                    <CalendarDays />
+                    <span className="hidden sm:inline">
+                      {formatSelectedDateLabel(selectedDate)}
+                    </span>
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-auto p-2">
+                  <div className="flex flex-col gap-2">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      locale={zhCN}
+                      onSelect={(date) => {
+                        setSelectedDate(date)
+                        setDatePickerOpen(false)
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={!hasDateFilter}
+                      onClick={() => {
+                        setSelectedDate(undefined)
+                        setDatePickerOpen(false)
+                      }}
+                    >
+                      查看全部
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <BrushCleaning />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>清空浏览历史</DialogTitle>
+                    <DialogDescription>
+                      确定要清除所有浏览记录吗？此操作不可撤销。
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="outline">取消</Button>
+                    </DialogClose>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        clearHistory()
+                        setClearConfirmOpen(false)
+                      }}
+                    >
+                      清空
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
           ) : null
         }
       />
@@ -143,6 +211,11 @@ export function HistoryPage() {
         <div className="text-muted-foreground flex flex-col items-center gap-2 py-12">
           <Clock className="size-8 opacity-50" />
           <p className="text-sm">暂无浏览历史</p>
+        </div>
+      ) : visibleEntries.length === 0 ? (
+        <div className="text-muted-foreground flex flex-col items-center gap-2 py-12">
+          <CalendarDays className="size-8 opacity-50" />
+          <p className="text-sm">这一天没有浏览历史</p>
         </div>
       ) : (
         <ItemGroup>
