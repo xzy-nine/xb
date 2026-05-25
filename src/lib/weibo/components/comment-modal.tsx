@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -67,6 +67,7 @@ function CommentModalForm({
   target: ComposeTarget
   onOpenChange: (open: boolean) => void
 }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [text, setText] = useState('')
   const [alsoSecondaryAction, setAlsoSecondaryAction] = useState(false)
   const queryClient = useQueryClient()
@@ -97,7 +98,13 @@ function CommentModalForm({
     mutation.isPending || (target.mode === 'comment' && text.trim().length === 0)
 
   return (
-    <DialogContent className="sm:max-w-xl">
+    <DialogContent
+      className="sm:max-w-xl"
+      onOpenAutoFocus={(e) => {
+        e.preventDefault()
+        textareaRef.current?.focus()
+      }}
+    >
       <DialogHeader>
         <DialogTitle>{copy.title}</DialogTitle>
         <DialogDescription>
@@ -106,8 +113,8 @@ function CommentModalForm({
       </DialogHeader>
 
       <Textarea
+        ref={textareaRef}
         aria-label="回复内容"
-        autoFocus
         className="min-h-32"
         value={text}
         onChange={(event) => setText(event.target.value)}
