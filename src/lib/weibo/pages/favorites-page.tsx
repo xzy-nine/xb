@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -34,6 +35,15 @@ export function FavoritesPage() {
   const isFetchingNextPage = favoritesQuery.isFetchingNextPage
   const isLoading = favoritesQuery.isLoading
   const isRefreshing = favoritesQuery.isFetching && !isFetchingNextPage && !isLoading
+
+  const wasRefreshingRef = useRef(false)
+  useEffect(() => {
+    if (wasRefreshingRef.current && !isRefreshing) {
+      ctx.scrollMainToTop()
+    }
+    wasRefreshingRef.current = isRefreshing
+  }, [isRefreshing, ctx])
+
   const handleSavedListChange = (value: string) => {
     if (value === 'liked' && uid !== '') {
       navigate(`/u/page/like/${uid}`)

@@ -604,6 +604,19 @@ export const FeedCard = memo(function FeedCard({
     },
   })
 
+  const unfavoriteMutation = useMutation({
+    mutationFn: (targetId: string) => destroyFavorite(targetId),
+    onSuccess: () => {
+      toast.success('取消收藏成功')
+    },
+    meta: {
+      invalidates: [['weibo', 'favorites']],
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : '取消收藏失败')
+    },
+  })
+
   const likePendingId =
     likeMutation.isPending && likeMutation.variables ? likeMutation.variables.id : null
 
@@ -655,6 +668,28 @@ export const FeedCard = memo(function FeedCard({
     }
 
     onNavigate(resolvedItem)
+  }
+
+  if (resolvedItem.deleted) {
+    return (
+      <Card className={cn('gap-4 py-4 relative', className)}>
+        <CardContent className="flex flex-col items-center gap-3 py-8">
+          <p className="text-muted-foreground text-sm">此微博已被删除</p>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={unfavoriteMutation.isPending}
+            onClick={(event) => {
+              event.stopPropagation()
+              void unfavoriteMutation.mutateAsync(resolvedItem.id)
+            }}
+          >
+            <Bookmark className="mr-1 size-3" />
+            取消收藏
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

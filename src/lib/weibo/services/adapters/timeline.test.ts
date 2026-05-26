@@ -36,6 +36,7 @@ describe('adaptTimelineResponse', () => {
       items: [
         {
           id: '501',
+          deleted: false,
           isLongText: false,
           liked: false,
           favorited: false,
@@ -87,6 +88,7 @@ describe('adaptTimelineResponse', () => {
       items: [
         {
           id: '777',
+          deleted: false,
           isLongText: false,
           liked: false,
           favorited: false,
@@ -130,6 +132,7 @@ describe('adaptTimelineResponse', () => {
       items: [
         {
           id: '901',
+          deleted: false,
           isLongText: false,
           liked: false,
           favorited: false,

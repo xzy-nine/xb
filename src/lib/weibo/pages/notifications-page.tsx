@@ -129,6 +129,16 @@ export function NotificationsPage() {
     enabled: isEnabled,
   })
 
+  const isRefreshing = notificationsQuery.isFetching && !notificationsQuery.isFetchingNextPage
+
+  const wasRefreshingRef = useRef(false)
+  useEffect(() => {
+    if (wasRefreshingRef.current && !isRefreshing) {
+      ctx.scrollMainToTop()
+    }
+    wasRefreshingRef.current = isRefreshing
+  }, [isRefreshing, ctx])
+
   const items = useMemo(
     () => notificationsQuery.data?.pages.flatMap((p) => p.items) ?? [],
     [notificationsQuery.data?.pages],
@@ -145,7 +155,7 @@ export function NotificationsPage() {
         filterValue={activeTab}
         onFilterChange={handleTabChange}
         onRefresh={() => void notificationsQuery.refetch()}
-        isRefreshing={notificationsQuery.isFetching && !notificationsQuery.isFetchingNextPage}
+        isRefreshing={isRefreshing}
       />
 
       <div className="flex flex-col gap-3">

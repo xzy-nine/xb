@@ -150,6 +150,7 @@ export interface WeiboStatus {
   attitudes_count?: number
   comments_count?: number
   created_at?: string
+  deleted?: string
   idstr?: string
   isLongText?: boolean
   longText?: object
@@ -835,6 +836,7 @@ export function toFeedItem(status: WeiboStatus, includeRetweeted = true): FeedIt
     id: getStatusId(status),
     mblogId: status.mblogid ?? null,
     isLongText: Boolean(status.isLongText && !status.longText),
+    deleted: status.deleted === '1',
     liked: Boolean(status.attitudes_status),
     favorited: Boolean(status.favorited),
     text: getStatusText(status),
