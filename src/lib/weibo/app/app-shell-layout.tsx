@@ -111,10 +111,7 @@ export function ShellFrame({
       ref={assignShellRef}
     >
       <div
-        className={cn(
-          'relative mx-auto flex w-full gap-3 px-3 md:gap-4 md:px-4',
-          contentWidthClass[contentWidth],
-        )}
+        className={cn('relative mx-auto flex w-full gap-3 px-3', contentWidthClass[contentWidth])}
       >
         <div className="sticky top-0 h-screen shrink-0">
           <NavigationRail
