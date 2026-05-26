@@ -49,6 +49,9 @@ Visit [Landing Page](https://xb-extension.vercel.app/) for more.
 6. 📷 **Take a shot** - Export Weibo as an image with multiple card templates.
 7. 🔤 **Custom Font** - Choose from system fonts or downloadable open-source
    fonts.
+8. 🎨 **Custom Theme** — Customize theme colors. See
+   [Tutorial](https://github.com/nnecec/xb/discussions/54).
+9. 📅 **Browsing History** — The history is recorded locally.
 
 ## Supported Pages
 
