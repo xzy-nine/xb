@@ -127,7 +127,7 @@ export function ShellFrame({
           />
         </div>
         <main className="min-w-0 flex-1 pb-8">{children}</main>
-        <div className={cn('sticky top-0 h-screen shrink-0')}>
+        <div className={cn('sticky top-0 h-screen shrink-0 w-[260px]')}>
           <RightRail />
         </div>
         <BackToTop scrollRoot={mainScrollRoot} />
