@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { Video } from 'lucide-react'
+import { ArrowUpRightIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -66,26 +66,22 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
         <DialogDescription>有什么新鲜事想分享给大家？</DialogDescription>
       </DialogHeader>
 
-      <Textarea
-        ref={textareaRef}
-        aria-label="微博内容"
-        className="min-h-32"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        placeholder="我想..."
-      />
+      <div className={`border-foreground/20 flex flex-col gap-2 rounded-2xl border p-2`}>
+        <Textarea
+          ref={textareaRef}
+          aria-label="微博内容"
+          className="h-32 resize-none border-none! bg-transparent! ring-transparent!"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder="我想..."
+        />
 
-      <div className="flex items-center justify-start">
-        <EmoticonPicker onSelect={(item) => setText((value) => `${value}${item.phrase}`)} />
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={openVideoUpload}
-          className="ml-2"
-        >
-          <Video className="size-4" /> 视频
-        </Button>
+        <div className="flex items-center justify-between">
+          <EmoticonPicker onSelect={(item) => setText((value) => `${value}${item.phrase}`)} />
+          <Button type="button" size="sm" variant="ghost" onClick={openVideoUpload}>
+            视频 <ArrowUpRightIcon className="size-3" />
+          </Button>
+        </div>
       </div>
 
       <DialogFooter>

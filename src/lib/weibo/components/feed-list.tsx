@@ -1,5 +1,6 @@
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageEmptyState } from '@/lib/weibo/components/page-state'
+import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
 export function FeedList({
@@ -8,12 +9,14 @@ export function FeedList({
   onNavigate,
   onCommentClick,
   onRepostClick,
+  onCommentReply,
 }: {
   items: FeedItem[]
   emptyLabel: string
   onNavigate?: (item: FeedItem) => void
   onCommentClick?: (item: FeedItem) => void
   onRepostClick?: (item: FeedItem) => void
+  onCommentReply?: (target: ComposeTarget) => void
 }) {
   if (items.length === 0) {
     return <PageEmptyState label={emptyLabel} />
@@ -28,6 +31,7 @@ export function FeedList({
           onNavigate={onNavigate}
           onCommentClick={onCommentClick}
           onRepostClick={onRepostClick}
+          onCommentReply={onCommentReply}
         />
       ))}
     </div>

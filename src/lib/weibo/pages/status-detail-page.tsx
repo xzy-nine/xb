@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
+import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
@@ -30,10 +31,14 @@ import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 function StatusCommentsSection({
   statusId,
   authorId,
+  authorName,
+  statusText,
   onCommentReply,
 }: {
   statusId: string
   authorId: string
+  authorName: string
+  statusText: string
   onCommentReply: ReturnType<typeof useAppShellContext>['setComposeTarget']
 }) {
   const [filter, setFilter] = useState<string | undefined>(undefined)
@@ -48,6 +53,18 @@ function StatusCommentsSection({
 
   return (
     <>
+      <CommentBox
+        target={{
+          kind: 'status',
+          mode: 'comment',
+          statusId,
+          targetCommentId: null,
+          authorName,
+          excerpt: statusText.trim().slice(0, 80),
+        }}
+        placeholder="写评论..."
+      />
+
       {filterGroup && filterGroup.length > 0 && selectedFilter ? (
         <div className="flex items-center gap-2">
           <Select value={selectedFilter.param} onValueChange={(value) => setFilter(value)}>
@@ -170,6 +187,8 @@ export function StatusDetailPage() {
             <StatusCommentsSection
               statusId={detail.status.id}
               authorId={authorId}
+              authorName={detail.status.author.name}
+              statusText={detail.status.text}
               onCommentReply={ctx.setComposeTarget}
             />
           ) : null}

@@ -180,13 +180,7 @@ export const CommentCard = memo(function CommentCard({
               />
             ))}
             {item.moreInfoText && authorUid ? (
-              <Button
-                type="button"
-                variant="link"
-                size="xs"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => setShowNestedCommentsDialog(true)}
-              >
+              <Button variant="link" size="xs" onClick={() => setShowNestedCommentsDialog(true)}>
                 {item.moreInfoText}
               </Button>
             ) : null}

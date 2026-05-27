@@ -38,9 +38,8 @@ export function EmoticonPicker({ onSelect }: { onSelect: (entry: EmoticonEntry) 
       }}
     >
       <DropdownMenuTrigger asChild>
-        <Button type="button" size="sm" variant="outline">
+        <Button type="button" size="sm" variant="ghost">
           <Smile className="size-4" />
-          表情
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="p-3" align="start">
