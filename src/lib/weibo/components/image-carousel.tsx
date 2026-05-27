@@ -156,37 +156,13 @@ function LivePhotoPreview({ image, params }: { image: FeedImage; params: PhotoRe
   )
 }
 
-function renderImage(image: FeedImage, params: PhotoRenderParams) {
-  if (image.type === 'livephoto' && image.livePhotoVideoUrl) {
-    return <LivePhotoPreview image={image} params={params} />
-  }
-
-  return (
-    <div
-      {...params.attrs}
-      className="flex h-full w-full justify-center overflow-y-auto overscroll-contain px-4 py-6"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <img
-        src={image.largeUrl}
-        className="h-auto max-h-none w-auto max-w-full object-contain"
-        alt=""
-        style={{ transform: `scale(${params.scale})`, transformOrigin: 'top center' }}
-      />
-    </div>
-  )
-}
-
 function ImagePhotoView({ image, children }: { image: FeedImage; children: React.ReactElement }) {
-  const needsCustomRender =
-    (image.type === 'livephoto' && Boolean(image.livePhotoVideoUrl)) || isLongImage(image)
-
-  if (needsCustomRender) {
+  if (image.type === 'livephoto' && image.livePhotoVideoUrl) {
     return (
       <PhotoView
         width={image.width}
         height={image.height}
-        render={(params) => renderImage(image, params)}
+        render={(params) => <LivePhotoPreview image={image} params={params} />}
       >
         {children}
       </PhotoView>
