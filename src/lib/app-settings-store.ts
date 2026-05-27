@@ -36,6 +36,14 @@ export interface AppSettingsStoreState extends AppSettings {
   setLetterSpacingClass: (letterSpacingClass: LetterSpacingClass) => Promise<void>
   setLineHeightClass: (lineHeightClass: LineHeightClass) => Promise<void>
   setFontFamilyClass: (fontFamilyClass: FontFamilyClass) => Promise<void>
+  setShowExplore: (show: boolean) => Promise<void>
+  setShowFavorites: (show: boolean) => Promise<void>
+  setShowHistory: (show: boolean) => Promise<void>
+  setShowNotifications: (show: boolean) => Promise<void>
+  setShowDMs: (show: boolean) => Promise<void>
+  setShowProfile: (show: boolean) => Promise<void>
+  setShowCompose: (show: boolean) => Promise<void>
+  setShowRightRail: (show: boolean) => Promise<void>
   setShowHotSearchCard: (show: boolean) => Promise<void>
   setShowFollowedSuperTopicsCard: (show: boolean) => Promise<void>
   setCollapseRepliesEnabled: (enabled: boolean) => Promise<void>
@@ -83,6 +91,14 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     letterSpacingClass: state.letterSpacingClass,
     lineHeightClass: state.lineHeightClass,
     fontFamilyClass: state.fontFamilyClass,
+    showExplore: state.showExplore,
+    showFavorites: state.showFavorites,
+    showHistory: state.showHistory,
+    showNotifications: state.showNotifications,
+    showDMs: state.showDMs,
+    showProfile: state.showProfile,
+    showCompose: state.showCompose,
+    showRightRail: state.showRightRail,
     showHotSearchCard: state.showHotSearchCard,
     showFollowedSuperTopicsCard: state.showFollowedSuperTopicsCard,
     collapseRepliesEnabled: state.collapseRepliesEnabled,
@@ -171,6 +187,30 @@ export function createAppSettingsStore(
       },
       async setFontFamilyClass(fontFamilyClass) {
         await updateAndPersist({ fontFamilyClass })
+      },
+      async setShowExplore(showExplore) {
+        await updateAndPersist({ showExplore })
+      },
+      async setShowFavorites(showFavorites) {
+        await updateAndPersist({ showFavorites })
+      },
+      async setShowHistory(showHistory) {
+        await updateAndPersist({ showHistory })
+      },
+      async setShowNotifications(showNotifications) {
+        await updateAndPersist({ showNotifications })
+      },
+      async setShowDMs(showDMs) {
+        await updateAndPersist({ showDMs })
+      },
+      async setShowProfile(showProfile) {
+        await updateAndPersist({ showProfile })
+      },
+      async setShowCompose(showCompose) {
+        await updateAndPersist({ showCompose })
+      },
+      async setShowRightRail(showRightRail) {
+        await updateAndPersist({ showRightRail })
       },
       async setShowHotSearchCard(showHotSearchCard) {
         await updateAndPersist({ showHotSearchCard })

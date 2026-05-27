@@ -125,6 +125,14 @@ export interface AppSettings {
   letterSpacingClass: LetterSpacingClass
   lineHeightClass: LineHeightClass
   fontFamilyClass: FontFamilyClass
+  showExplore: boolean
+  showFavorites: boolean
+  showHistory: boolean
+  showNotifications: boolean
+  showDMs: boolean
+  showProfile: boolean
+  showCompose: boolean
+  showRightRail: boolean
   showHotSearchCard: boolean
   showFollowedSuperTopicsCard: boolean
   collapseRepliesEnabled: boolean
@@ -182,6 +190,14 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   letterSpacingClass: 'tracking-normal',
   lineHeightClass: 'leading-relaxed',
   fontFamilyClass: 'font-sans',
+  showExplore: true,
+  showFavorites: true,
+  showHistory: true,
+  showNotifications: true,
+  showDMs: true,
+  showProfile: true,
+  showCompose: true,
+  showRightRail: true,
   showHotSearchCard: true,
   showFollowedSuperTopicsCard: false,
   collapseRepliesEnabled: false,
@@ -354,6 +370,36 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     fontFamilyClass: isFontFamilyClass(candidate.fontFamilyClass)
       ? candidate.fontFamilyClass
       : DEFAULT_APP_SETTINGS.fontFamilyClass,
+    showExplore:
+      typeof candidate.showExplore === 'boolean'
+        ? candidate.showExplore
+        : DEFAULT_APP_SETTINGS.showExplore,
+    showFavorites:
+      typeof candidate.showFavorites === 'boolean'
+        ? candidate.showFavorites
+        : DEFAULT_APP_SETTINGS.showFavorites,
+    showHistory:
+      typeof candidate.showHistory === 'boolean'
+        ? candidate.showHistory
+        : DEFAULT_APP_SETTINGS.showHistory,
+    showNotifications:
+      typeof candidate.showNotifications === 'boolean'
+        ? candidate.showNotifications
+        : DEFAULT_APP_SETTINGS.showNotifications,
+    showDMs:
+      typeof candidate.showDMs === 'boolean' ? candidate.showDMs : DEFAULT_APP_SETTINGS.showDMs,
+    showProfile:
+      typeof candidate.showProfile === 'boolean'
+        ? candidate.showProfile
+        : DEFAULT_APP_SETTINGS.showProfile,
+    showCompose:
+      typeof candidate.showCompose === 'boolean'
+        ? candidate.showCompose
+        : DEFAULT_APP_SETTINGS.showCompose,
+    showRightRail:
+      typeof candidate.showRightRail === 'boolean'
+        ? candidate.showRightRail
+        : DEFAULT_APP_SETTINGS.showRightRail,
     showHotSearchCard:
       typeof candidate.showHotSearchCard === 'boolean'
         ? candidate.showHotSearchCard

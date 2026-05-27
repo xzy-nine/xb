@@ -131,6 +131,13 @@ export function NavigationRail({
   onComposeOpen,
 }: NavigationRailProps) {
   const homeTab = useAppSettings((state) => state.homeTab)
+  const showExplore = useAppSettings((state) => state.showExplore)
+  const showFavorites = useAppSettings((state) => state.showFavorites)
+  const showHistorySetting = useAppSettings((state) => state.showHistory)
+  const showNotifications = useAppSettings((state) => state.showNotifications)
+  const showDMs = useAppSettings((state) => state.showDMs)
+  const showProfile = useAppSettings((state) => state.showProfile)
+  const showCompose = useAppSettings((state) => state.showCompose)
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
   const navigate = useNavigate()
   const isXl = useMediaQuery('(min-width: 1280px)')
@@ -176,25 +183,29 @@ export function NavigationRail({
               <HomeIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
-            <NavButton
-              label="探索"
-              showLabel={isXl}
-              isActive={pageKind === 'explore'}
-              onClick={() => navigate('/hot/weibo/102803')}
-            >
-              <CompassIcon aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+            {showExplore && (
+              <NavButton
+                label="探索"
+                showLabel={isXl}
+                isActive={pageKind === 'explore'}
+                onClick={() => navigate('/hot/weibo/102803')}
+              >
+                <CompassIcon aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
-            <NavButton
-              label="收藏"
-              showLabel={isXl}
-              isActive={isSavedItemsActive}
-              onClick={() => navigate(favoritesHref)}
-            >
-              <BookmarkIcon aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+            {showFavorites && (
+              <NavButton
+                label="收藏"
+                showLabel={isXl}
+                isActive={isSavedItemsActive}
+                onClick={() => navigate(favoritesHref)}
+              >
+                <BookmarkIcon aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
-            {browsingHistoryEnabled && (
+            {showHistorySetting && browsingHistoryEnabled && (
               <NavButton
                 label="历史"
                 showLabel={isXl}
@@ -205,43 +216,51 @@ export function NavigationRail({
               </NavButton>
             )}
 
-            <NavButton
-              label="通知"
-              showLabel={isXl}
-              isActive={pageKind === 'notifications'}
-              showBadge={showNotificationBadge}
-              onClick={() => navigate('/at/weibo')}
-            >
-              <BellIcon aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+            {showNotifications && (
+              <NavButton
+                label="通知"
+                showLabel={isXl}
+                isActive={pageKind === 'notifications'}
+                showBadge={showNotificationBadge}
+                onClick={() => navigate('/at/weibo')}
+              >
+                <BellIcon aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
-            <NavButton
-              label={
-                <span className="flex items-center gap-1">
-                  私信
-                  <ArrowUpRightIcon className="size-3" />
-                </span>
-              }
-              showLabel={isXl}
-              href="https://api.weibo.com/chat"
-              isExternal
-              showBadge={showDmBadge}
-            >
-              <MessageSquareMoreIcon aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+            {showDMs && (
+              <NavButton
+                label={
+                  <span className="flex items-center gap-1">
+                    私信
+                    <ArrowUpRightIcon className="size-3" />
+                  </span>
+                }
+                showLabel={isXl}
+                href="https://api.weibo.com/chat"
+                isExternal
+                showBadge={showDmBadge}
+              >
+                <MessageSquareMoreIcon aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
-            <NavButton
-              label="我的"
-              showLabel={isXl}
-              isActive={isOwnProfileActive}
-              onClick={() => navigate(profileHref)}
-            >
-              <UserIcon aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+            {showProfile && (
+              <NavButton
+                label="我的"
+                showLabel={isXl}
+                isActive={isOwnProfileActive}
+                onClick={() => navigate(profileHref)}
+              >
+                <UserIcon aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
 
-            <NavButton label="发微博" showLabel={isXl} onClick={onComposeOpen} variant="default">
-              <Pencil aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+            {showCompose && (
+              <NavButton label="发微博" showLabel={isXl} onClick={onComposeOpen} variant="default">
+                <Pencil aria-hidden="true" className="size-4 shrink-0" />
+              </NavButton>
+            )}
           </div>
 
           <div className="border-border/40 mt-auto space-y-3 border-t pt-3 xl:w-[180px] xl:space-y-3.5 xl:pt-4">

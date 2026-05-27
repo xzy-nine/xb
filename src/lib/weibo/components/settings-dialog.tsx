@@ -1,11 +1,29 @@
-import { Palette, Settings, Sparkles, SunMoon, Trash2, Type } from 'lucide-react'
+import {
+  Bookmark,
+  Compass,
+  History,
+  Home,
+  MessageSquare,
+  Palette,
+  PanelRight,
+  Pencil,
+  Settings,
+  Sparkles,
+  SunMoon,
+  Trash2,
+  Type,
+  User,
+  Bell,
+  PanelLeft,
+} from 'lucide-react'
 import React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import darkModeImageDimJpeg from '@/assets/images/dark-mode-image-dim.jpeg'
 import collapseReplyChain from '@/assets/images/quotechains-collapsible.jpeg'
 import quoteChainsJpeg from '@/assets/images/quotechains.jpeg'
 import xLayoutJpeg from '@/assets/images/x-layout.jpeg'
+import { TreeView, type TreeDataItem } from '@/components/tree-view'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -91,7 +109,7 @@ function Field({
 }: {
   label: string
   description?: string
-  children: React.ReactNode
+  children?: React.ReactNode
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-[11px] first:pt-0 last:pb-0">
@@ -147,6 +165,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const fontFamilyClass = useAppSettings((s) => s.fontFamilyClass)
   const showHotSearchCard = useAppSettings((s) => s.showHotSearchCard)
   const showFollowedSuperTopicsCard = useAppSettings((s) => s.showFollowedSuperTopicsCard)
+  const showExplore = useAppSettings((s) => s.showExplore)
+  const showFavorites = useAppSettings((s) => s.showFavorites)
+  const showHistory = useAppSettings((s) => s.showHistory)
+  const showNotifications = useAppSettings((s) => s.showNotifications)
+  const showDMs = useAppSettings((s) => s.showDMs)
+  const showProfile = useAppSettings((s) => s.showProfile)
+  const showCompose = useAppSettings((s) => s.showCompose)
+  const showRightRail = useAppSettings((s) => s.showRightRail)
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
@@ -168,6 +194,133 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setFontFamilyClass = useAppSettings((s) => s.setFontFamilyClass)
   const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
   const setShowFollowedSuperTopicsCard = useAppSettings((s) => s.setShowFollowedSuperTopicsCard)
+  const setShowExplore = useAppSettings((s) => s.setShowExplore)
+  const setShowFavorites = useAppSettings((s) => s.setShowFavorites)
+  const setShowHistory = useAppSettings((s) => s.setShowHistory)
+  const setShowNotifications = useAppSettings((s) => s.setShowNotifications)
+  const setShowDMs = useAppSettings((s) => s.setShowDMs)
+  const setShowProfile = useAppSettings((s) => s.setShowProfile)
+  const setShowCompose = useAppSettings((s) => s.setShowCompose)
+  const setShowRightRail = useAppSettings((s) => s.setShowRightRail)
+
+  const pageElementTreeData = useMemo<TreeDataItem[]>(
+    () => [
+      {
+        id: 'left-rail',
+        name: '左侧边栏',
+        icon: PanelLeft,
+        disabled: true,
+        children: [
+          { id: 'home', name: '主页', icon: Home, disabled: true },
+          { id: 'explore', name: '探索', icon: Compass },
+          { id: 'favorites', name: '收藏', icon: Bookmark },
+          { id: 'history', name: '历史', icon: History },
+          { id: 'notifications', name: '通知', icon: Bell },
+          { id: 'dms', name: '私信', icon: MessageSquare },
+          { id: 'profile', name: '我的', icon: User },
+          { id: 'compose', name: '发微博', icon: Pencil },
+        ],
+      },
+      {
+        id: 'right-rail',
+        name: '右侧边栏',
+        icon: PanelRight,
+        children: [
+          { id: 'hot-search', name: '热搜卡片' },
+          { id: 'super-topic', name: '超话卡片' },
+        ],
+      },
+    ],
+    [],
+  )
+
+  function getSwitchState(id: string): boolean {
+    switch (id) {
+      case 'home':
+        return true
+      case 'explore':
+        return showExplore
+      case 'favorites':
+        return showFavorites
+      case 'history':
+        return showHistory
+      case 'notifications':
+        return showNotifications
+      case 'dms':
+        return showDMs
+      case 'profile':
+        return showProfile
+      case 'compose':
+        return showCompose
+      case 'right-rail':
+        return showRightRail
+      case 'hot-search':
+        return showHotSearchCard
+      case 'super-topic':
+        return showFollowedSuperTopicsCard
+      default:
+        return true
+    }
+  }
+
+  function setSwitchState(id: string, checked: boolean) {
+    switch (id) {
+      case 'explore':
+        void setShowExplore(checked)
+        break
+      case 'favorites':
+        void setShowFavorites(checked)
+        break
+      case 'history':
+        void setShowHistory(checked)
+        break
+      case 'notifications':
+        void setShowNotifications(checked)
+        break
+      case 'dms':
+        void setShowDMs(checked)
+        break
+      case 'profile':
+        void setShowProfile(checked)
+        break
+      case 'compose':
+        void setShowCompose(checked)
+        break
+      case 'right-rail':
+        void setShowRightRail(checked)
+        break
+      case 'hot-search':
+        void setShowHotSearchCard(checked)
+        break
+      case 'super-topic':
+        void setShowFollowedSuperTopicsCard(checked)
+        break
+    }
+  }
+
+  function renderTreeItem({ item, isLeaf }: { item: TreeDataItem; isLeaf: boolean }) {
+    const isParent = !isLeaf && item.id !== 'home'
+    const isRightRailChild = item.id === 'hot-search' || item.id === 'super-topic'
+    const disabledByParent = isRightRailChild && !showRightRail
+
+    return (
+      <div className="flex flex-1 items-center justify-between">
+        <span className="flex items-center gap-2 text-sm">
+          {item.icon && <item.icon className="size-4 shrink-0" />}
+          {item.name}
+        </span>
+        {!item.disabled && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Switch
+              checked={getSwitchState(item.id)}
+              disabled={isParent ? false : disabledByParent}
+              onCheckedChange={(checked) => setSwitchState(item.id, checked)}
+            />
+          </div>
+        )}
+      </div>
+    )
+  }
   const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
   const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
   const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
@@ -324,19 +477,29 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeGroup === 'appearance' && (
-              <div className="divide-border/40 divide-y px-6 py-4">
-                <Field label="深色模式" description="选择应用的配色方案">
-                  <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="system">跟随系统</SelectItem>
-                      <SelectItem value="light">浅色</SelectItem>
-                      <SelectItem value="dark">深色</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+              <div className="flex flex-col">
+                <div className="divide-border/40 divide-y px-6 py-4">
+                  <Field label="深色模式" description="选择应用的配色方案">
+                    <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system">跟随系统</SelectItem>
+                        <SelectItem value="light">浅色</SelectItem>
+                        <SelectItem value="dark">深色</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+                <div className="border-border/40 border-t px-6 py-4">
+                  <Field label="页面元素设置" />
+                  <TreeView
+                    data={pageElementTreeData}
+                    className="max-h-[200px] overflow-y-auto"
+                    renderItem={renderTreeItem}
+                  />
+                </div>
               </div>
             )}
 
@@ -443,22 +606,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {activeGroup === 'personalize' && (
               <div className="space-y-3 px-6 py-4">
-                <div>
-                  <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
-                    <Switch
-                      checked={showHotSearchCard}
-                      onCheckedChange={(checked) => setShowHotSearchCard(checked)}
-                    />
-                  </Field>
-                </div>
-                <div>
-                  <Field label="超话卡片" description="在右侧边栏显示我关注的超话">
-                    <Switch
-                      checked={showFollowedSuperTopicsCard}
-                      onCheckedChange={(checked) => setShowFollowedSuperTopicsCard(checked)}
-                    />
-                  </Field>
-                </div>
                 <div>
                   <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
                     <Switch
