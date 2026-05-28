@@ -81,6 +81,7 @@ describe('FeedCard', () => {
     store.setState({
       ...store.getState(),
       collapseRepliesEnabled: false,
+      xLayoutEnabled: false,
       isHydrated: true,
     })
   })

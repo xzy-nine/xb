@@ -38,7 +38,7 @@ export function EmoticonPicker({ onSelect }: { onSelect: (entry: EmoticonEntry) 
       }}
     >
       <DropdownMenuTrigger asChild>
-        <Button type="button" size="sm" variant="ghost">
+        <Button type="button" size="sm" variant="ghost" aria-label="表情">
           <Smile className="size-4" />
         </Button>
       </DropdownMenuTrigger>
