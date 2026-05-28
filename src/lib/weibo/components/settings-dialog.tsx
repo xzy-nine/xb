@@ -494,6 +494,23 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       </SelectContent>
                     </Select>
                   </Field>
+                  <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+                    <Select
+                      value={contentWidth}
+                      onValueChange={(v) =>
+                        void updateSettings({ contentWidth: v as ContentWidth })
+                      }
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">标准</SelectItem>
+                        <SelectItem value="wide">宽</SelectItem>
+                        <SelectItem value="wider">更宽</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
                 </div>
                 <div className="border-border/40 border-t px-6 py-4">
                   <Field label="页面元素设置" />
@@ -621,25 +638,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <IllustrationPlaceholder>
                     <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
                   </IllustrationPlaceholder>
-                </div>
-                <div>
-                  <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
-                    <Select
-                      value={contentWidth}
-                      onValueChange={(v) =>
-                        void updateSettings({ contentWidth: v as ContentWidth })
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">标准</SelectItem>
-                        <SelectItem value="wide">宽</SelectItem>
-                        <SelectItem value="wider">更宽</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
                 </div>
                 <div>
                   <Field label="X 操作栏" description="使用 X 风格的操作栏（含收藏和分享按钮）">
