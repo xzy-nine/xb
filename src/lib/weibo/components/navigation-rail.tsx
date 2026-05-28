@@ -1,6 +1,6 @@
 import { useMediaQuery } from '@reactuses/core'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowUpRightIcon, Pencil } from 'lucide-react'
+import { ArrowUpRightIcon, ChevronsLeftIcon, ChevronsRightIcon, Pencil } from 'lucide-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -117,6 +117,7 @@ interface NavigationRailProps {
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
   onComposeOpen: () => void
+  onSidebarCollapsedChange: (collapsed: boolean) => void
 }
 
 export function NavigationRail({
@@ -129,6 +130,7 @@ export function NavigationRail({
   onThemeChange,
   onSettingsOpen,
   onComposeOpen,
+  onSidebarCollapsedChange,
 }: NavigationRailProps) {
   const {
     homeTab,
@@ -139,6 +141,7 @@ export function NavigationRail({
     showDMs,
     showProfile,
     showCompose,
+    sidebarCollapsed,
   } = useAppSettings(
     useShallow((state) => ({
       homeTab: state.homeTab,
@@ -149,11 +152,13 @@ export function NavigationRail({
       showDMs: state.showDMs,
       showProfile: state.showProfile,
       showCompose: state.showCompose,
+      sidebarCollapsed: state.sidebarCollapsed,
     })),
   )
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
   const navigate = useNavigate()
   const isXl = useMediaQuery('(min-width: 1280px)')
+  const isCollapsed = !isXl || sidebarCollapsed
 
   const profileHref = useMemo(
     () => (currentUserUid ? `/u/${currentUserUid}` : '/'),
@@ -176,7 +181,7 @@ export function NavigationRail({
 
   return (
     <TooltipProvider>
-      <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
+      <aside className="flex h-full min-h-0 flex-col px-1 py-3 transition md:px-2 md:py-4 xl:px-3 xl:py-5">
         <div className="mb-4 flex justify-start">
           <img
             src={WeiboLogo}
@@ -189,7 +194,7 @@ export function NavigationRail({
           <div className="flex flex-col gap-1">
             <NavButton
               label="主页"
-              showLabel={isXl}
+              showLabel={!isCollapsed}
               isActive={!isOwnProfileActive && pageKind === 'home'}
               onClick={() => navigate(homeTab === 'following' ? '/mygroups' : '/')}
             >
@@ -199,7 +204,7 @@ export function NavigationRail({
             {showExplore && (
               <NavButton
                 label="探索"
-                showLabel={isXl}
+                showLabel={!isCollapsed}
                 isActive={pageKind === 'explore'}
                 onClick={() => navigate('/hot/weibo/102803')}
               >
@@ -210,7 +215,7 @@ export function NavigationRail({
             {showFavorites && (
               <NavButton
                 label="收藏"
-                showLabel={isXl}
+                showLabel={!isCollapsed}
                 isActive={isSavedItemsActive}
                 onClick={() => navigate(favoritesHref)}
               >
@@ -221,7 +226,7 @@ export function NavigationRail({
             {showHistorySetting && browsingHistoryEnabled && (
               <NavButton
                 label="历史"
-                showLabel={isXl}
+                showLabel={!isCollapsed}
                 isActive={pageKind === 'history'}
                 onClick={() => navigate('/history')}
               >
@@ -232,7 +237,7 @@ export function NavigationRail({
             {showNotifications && (
               <NavButton
                 label="通知"
-                showLabel={isXl}
+                showLabel={!isCollapsed}
                 isActive={pageKind === 'notifications'}
                 showBadge={showNotificationBadge}
                 onClick={() => navigate('/at/weibo')}
@@ -249,7 +254,7 @@ export function NavigationRail({
                     <ArrowUpRightIcon className="size-3" />
                   </span>
                 }
-                showLabel={isXl}
+                showLabel={!isCollapsed}
                 href="https://api.weibo.com/chat"
                 isExternal
                 showBadge={showDmBadge}
@@ -261,7 +266,7 @@ export function NavigationRail({
             {showProfile && (
               <NavButton
                 label="我的"
-                showLabel={isXl}
+                showLabel={!isCollapsed}
                 isActive={isOwnProfileActive}
                 onClick={() => navigate(profileHref)}
               >
@@ -270,16 +275,35 @@ export function NavigationRail({
             )}
 
             {showCompose && (
-              <NavButton label="发微博" showLabel={isXl} onClick={onComposeOpen} variant="default">
+              <NavButton
+                label="发微博"
+                showLabel={!isCollapsed}
+                onClick={onComposeOpen}
+                variant="default"
+              >
                 <Pencil aria-hidden="true" className="size-4 shrink-0" />
               </NavButton>
             )}
           </div>
 
-          <div className="border-border/40 mt-auto space-y-3 border-t pt-3 xl:w-[180px] xl:space-y-3.5 xl:pt-4">
-            <div className="flex items-center justify-center xl:justify-between">
-              <p className="text-muted-foreground hidden text-xs font-medium xl:block">设置</p>
-              {isXl ? (
+          <div
+            className={cn(
+              'border-border/40 mt-auto space-y-3 border-t pt-3',
+              !isCollapsed && 'xl:w-[180px] xl:space-y-3.5 xl:pt-4',
+            )}
+          >
+            <div
+              className={cn(
+                'flex items-center justify-center ',
+                !isCollapsed && 'xl:justify-between',
+              )}
+            >
+              <p
+                className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
+              >
+                设置
+              </p>
+              {!isCollapsed ? (
                 <Button type="button" size="icon" variant="secondary" onClick={onSettingsOpen}>
                   <CogIcon className="size-4" aria-hidden="true" />
                 </Button>
@@ -296,10 +320,12 @@ export function NavigationRail({
             </div>
 
             <div className="flex items-center justify-center xl:justify-between">
-              <p className="text-muted-foreground hidden text-xs font-medium xl:block">
+              <p
+                className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
+              >
                 返回原模式
               </p>
-              {isXl ? (
+              {!isCollapsed ? (
                 <Button
                   type="button"
                   size="icon"
@@ -330,8 +356,12 @@ export function NavigationRail({
             </div>
 
             <div className="flex items-center justify-center xl:justify-between">
-              <p className="text-muted-foreground hidden text-xs font-medium xl:block">深色模式</p>
-              {isXl ? (
+              <p
+                className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
+              >
+                深色模式
+              </p>
+              {!isCollapsed ? (
                 <ThemeModeToggle value={theme} onChange={onThemeChange} />
               ) : (
                 <Tooltip>
@@ -340,6 +370,31 @@ export function NavigationRail({
                   </TooltipTrigger>
                   <TooltipContent side="right">深色模式</TooltipContent>
                 </Tooltip>
+              )}
+            </div>
+
+            <div className="flex items-center justify-center xl:justify-between">
+              <p
+                className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
+              >
+                收起
+              </p>
+              {isXl && (
+                <div className="flex items-center justify-center">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    onClick={() => onSidebarCollapsedChange(!sidebarCollapsed)}
+                    aria-label={sidebarCollapsed ? '展开边栏' : '收起边栏'}
+                  >
+                    {sidebarCollapsed ? (
+                      <ChevronsRightIcon className="size-4" aria-hidden="true" />
+                    ) : (
+                      <ChevronsLeftIcon className="size-4" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
           </div>

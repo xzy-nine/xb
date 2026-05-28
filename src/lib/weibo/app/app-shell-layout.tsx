@@ -65,6 +65,7 @@ export function ShellFrame({
   const locationRef = useRef(location)
   locationRef.current = location
   const showRightRail = useAppSettings((state) => state.showRightRail)
+  const updateSettings = useAppSettings((state) => state.updateSettings)
 
   const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
   const assignShellRef = useCallback(
@@ -126,6 +127,9 @@ export function ShellFrame({
             onThemeChange={onThemeChange}
             onSettingsOpen={onSettingsOpen}
             onComposeOpen={onComposeOpen}
+            onSidebarCollapsedChange={(collapsed) =>
+              updateSettings({ sidebarCollapsed: collapsed })
+            }
           />
         </div>
         <main className="min-w-0 flex-1 pb-8">{children}</main>

@@ -135,6 +135,7 @@ export interface AppSettings {
   showRightRail: boolean
   showHotSearchCard: boolean
   showFollowedSuperTopicsCard: boolean
+  sidebarCollapsed: boolean
   collapseRepliesEnabled: boolean
   renderReplyChainEnabled: boolean
   darkModeImageDim: boolean
@@ -200,6 +201,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   showRightRail: true,
   showHotSearchCard: true,
   showFollowedSuperTopicsCard: false,
+  sidebarCollapsed: false,
   collapseRepliesEnabled: false,
   renderReplyChainEnabled: true,
   darkModeImageDim: false,
@@ -408,6 +410,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.showFollowedSuperTopicsCard === 'boolean'
         ? candidate.showFollowedSuperTopicsCard
         : DEFAULT_APP_SETTINGS.showFollowedSuperTopicsCard,
+    sidebarCollapsed:
+      typeof candidate.sidebarCollapsed === 'boolean'
+        ? candidate.sidebarCollapsed
+        : DEFAULT_APP_SETTINGS.sidebarCollapsed,
     collapseRepliesEnabled:
       typeof candidate.collapseRepliesEnabled === 'boolean'
         ? candidate.collapseRepliesEnabled
