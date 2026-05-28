@@ -212,7 +212,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenTheme: 'light' as GenImageCardTheme,
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
-  xLayoutEnabled: false,
+  xLayoutEnabled: true,
   browsingHistoryEnabled: true,
   browsingHistoryLimit: 200,
   followGroupsEnabled: false,

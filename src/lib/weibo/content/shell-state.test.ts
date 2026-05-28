@@ -30,8 +30,7 @@ describe('bindShellState', () => {
 
     expect(document.documentElement.getAttribute('data-xb-weibo-ready')).toBe('')
 
-    await store.getState().setTheme('dark')
-    await store.getState().setRewriteEnabled(false)
+    await store.getState().updateSettings({ theme: 'dark', rewriteEnabled: false })
 
     expect(container.classList.contains('dark')).toBe(true)
     expect(appRoot.getAttribute('data-xb-hidden')).toBeNull()
@@ -63,7 +62,7 @@ describe('bindShellState', () => {
       settingsStore: store,
     })
 
-    await store.getState().setTheme('dark')
+    await store.getState().updateSettings({ theme: 'dark' })
 
     expect(container.classList.contains('dark')).toBe(true)
     expect(appRoot.getAttribute('data-xb-hidden')).toBe('true')
@@ -99,19 +98,23 @@ describe('bindShellState', () => {
       settingsStore: store,
     })
 
-    await store.getState().setCustomThemeLightCss('--primary: #111111; --background: #ffffff;')
-    await store.getState().setCustomThemeDarkCss('--primary: #eeeeee; --background: #000000;')
+    await store.getState().updateSettings({
+      customThemeLightCss: '--primary: #111111; --background: #ffffff;',
+      customThemeDarkCss: '--primary: #eeeeee; --background: #000000;',
+    })
 
     expect(container.style.getPropertyValue('--primary')).toBe('#111111')
     expect(container.style.getPropertyValue('--background')).toBe('#ffffff')
 
-    await store.getState().setTheme('dark')
+    await store.getState().updateSettings({ theme: 'dark' })
 
     expect(container.style.getPropertyValue('--primary')).toBe('#eeeeee')
     expect(container.style.getPropertyValue('--background')).toBe('#000000')
 
-    await store.getState().setCustomThemeLightCss('')
-    await store.getState().setCustomThemeDarkCss('')
+    await store.getState().updateSettings({
+      customThemeLightCss: '',
+      customThemeDarkCss: '',
+    })
 
     expect(container.style.getPropertyValue('--primary')).toBe('')
     expect(container.style.getPropertyValue('--background')).toBe('oklch(0.1908 0.002 106.59)')

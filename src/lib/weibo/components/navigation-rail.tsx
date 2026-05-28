@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { UserIcon } from '@/components/ui/user'
 import { ZapOffIcon } from '@/components/ui/zap-off'
 import type { AppTheme } from '@/lib/app-settings'
-import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { ThemeModeToggle } from '@/lib/weibo/components/theme-mode-toggle'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
@@ -130,14 +130,27 @@ export function NavigationRail({
   onSettingsOpen,
   onComposeOpen,
 }: NavigationRailProps) {
-  const homeTab = useAppSettings((state) => state.homeTab)
-  const showExplore = useAppSettings((state) => state.showExplore)
-  const showFavorites = useAppSettings((state) => state.showFavorites)
-  const showHistorySetting = useAppSettings((state) => state.showHistory)
-  const showNotifications = useAppSettings((state) => state.showNotifications)
-  const showDMs = useAppSettings((state) => state.showDMs)
-  const showProfile = useAppSettings((state) => state.showProfile)
-  const showCompose = useAppSettings((state) => state.showCompose)
+  const {
+    homeTab,
+    showExplore,
+    showFavorites,
+    showHistory: showHistorySetting,
+    showNotifications,
+    showDMs,
+    showProfile,
+    showCompose,
+  } = useAppSettings(
+    useShallow((state) => ({
+      homeTab: state.homeTab,
+      showExplore: state.showExplore,
+      showFavorites: state.showFavorites,
+      showHistory: state.showHistory,
+      showNotifications: state.showNotifications,
+      showDMs: state.showDMs,
+      showProfile: state.showProfile,
+      showCompose: state.showCompose,
+    })),
+  )
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
   const navigate = useNavigate()
   const isXl = useMediaQuery('(min-width: 1280px)')

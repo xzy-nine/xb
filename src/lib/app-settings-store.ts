@@ -1,4 +1,5 @@
 import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 import { createStore, type StoreApi } from 'zustand/vanilla'
 
 import {
@@ -7,70 +8,16 @@ import {
   persistAppSettings,
   type AppSettings,
   type AppSettingsStorageArea,
-  type AppTheme,
-  type BrowsingHistoryLimit,
-  type CardStyle,
-  type DarkBgColorPreset,
-  type FontFamilyClass,
-  type FontSizeClass,
-  type FontWeightClass,
-  type LetterSpacingClass,
-  type LineHeightClass,
-  type GenImageCardTheme,
-  type HomeTab,
-  type ContentWidth,
-  type HotSearchType,
-  type LightBgColorPreset,
-  type SelectedThemeType,
   type UserTheme,
 } from '@/lib/app-settings'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
 
+const PERSISTED_KEYS = Object.keys(DEFAULT_APP_SETTINGS) as (keyof AppSettings)[]
+
 export interface AppSettingsStoreState extends AppSettings {
   isHydrated: boolean
   hydrate: () => Promise<void>
-  setTheme: (theme: AppTheme) => Promise<void>
-  setRewriteEnabled: (enabled: boolean) => Promise<void>
-  setFontSizeClass: (fontSizeClass: FontSizeClass) => Promise<void>
-  setFontWeightClass: (fontWeightClass: FontWeightClass) => Promise<void>
-  setLetterSpacingClass: (letterSpacingClass: LetterSpacingClass) => Promise<void>
-  setLineHeightClass: (lineHeightClass: LineHeightClass) => Promise<void>
-  setFontFamilyClass: (fontFamilyClass: FontFamilyClass) => Promise<void>
-  setShowExplore: (show: boolean) => Promise<void>
-  setShowFavorites: (show: boolean) => Promise<void>
-  setShowHistory: (show: boolean) => Promise<void>
-  setShowNotifications: (show: boolean) => Promise<void>
-  setShowDMs: (show: boolean) => Promise<void>
-  setShowProfile: (show: boolean) => Promise<void>
-  setShowCompose: (show: boolean) => Promise<void>
-  setShowRightRail: (show: boolean) => Promise<void>
-  setShowHotSearchCard: (show: boolean) => Promise<void>
-  setShowFollowedSuperTopicsCard: (show: boolean) => Promise<void>
-  setCollapseRepliesEnabled: (enabled: boolean) => Promise<void>
-  setRenderReplyChainEnabled: (enabled: boolean) => Promise<void>
-  setDarkModeImageDim: (enabled: boolean) => Promise<void>
-  setLightModeBgColor: (color: LightBgColorPreset) => Promise<void>
-  setDarkModeBgColor: (color: DarkBgColorPreset) => Promise<void>
-  setImageGenEnabled: (enabled: boolean) => Promise<void>
-  setImageGenShowDataArea: (show: boolean) => Promise<void>
-  setImageGenShowFullImages: (show: boolean) => Promise<void>
-  setImageGenShowWeiboLink: (show: boolean) => Promise<void>
-  setImageGenTheme: (theme: GenImageCardTheme) => Promise<void>
-  setImageGenCardStyle: (style: CardStyle) => Promise<void>
-  setHotSearchType: (type: HotSearchType) => Promise<void>
-  setXLayoutEnabled: (enabled: boolean) => Promise<void>
-  setBrowsingHistoryEnabled: (enabled: boolean) => Promise<void>
-  setBrowsingHistoryLimit: (limit: BrowsingHistoryLimit) => Promise<void>
-  setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
-  setNativeTopicPage: (enabled: boolean) => Promise<void>
-  setForceRedirectToFollowing: (enabled: boolean) => Promise<void>
-  setContentWidth: (width: ContentWidth) => Promise<void>
-  homeTab: HomeTab
-  setHomeTab: (tab: HomeTab) => Promise<void>
-  setCustomThemeLightCss: (css: string) => Promise<void>
-  setCustomThemeDarkCss: (css: string) => Promise<void>
-  setSelectedThemeType: (type: SelectedThemeType) => Promise<void>
-  setSelectedThemeId: (id: string) => Promise<void>
+  updateSettings: (patch: Partial<AppSettings>) => Promise<void>
   addUserTheme: (theme: UserTheme) => Promise<void>
   deleteUserTheme: (id: string) => Promise<void>
   updateUserTheme: (
@@ -82,50 +29,9 @@ export interface AppSettingsStoreState extends AppSettings {
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
 
 function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
-  return {
-    contentWidth: state.contentWidth,
-    theme: state.theme,
-    rewriteEnabled: state.rewriteEnabled,
-    fontSizeClass: state.fontSizeClass,
-    fontWeightClass: state.fontWeightClass,
-    letterSpacingClass: state.letterSpacingClass,
-    lineHeightClass: state.lineHeightClass,
-    fontFamilyClass: state.fontFamilyClass,
-    showExplore: state.showExplore,
-    showFavorites: state.showFavorites,
-    showHistory: state.showHistory,
-    showNotifications: state.showNotifications,
-    showDMs: state.showDMs,
-    showProfile: state.showProfile,
-    showCompose: state.showCompose,
-    showRightRail: state.showRightRail,
-    showHotSearchCard: state.showHotSearchCard,
-    showFollowedSuperTopicsCard: state.showFollowedSuperTopicsCard,
-    collapseRepliesEnabled: state.collapseRepliesEnabled,
-    renderReplyChainEnabled: state.renderReplyChainEnabled,
-    darkModeImageDim: state.darkModeImageDim,
-    lightModeBgColor: state.lightModeBgColor,
-    darkModeBgColor: state.darkModeBgColor,
-    imageGenEnabled: state.imageGenEnabled,
-    imageGenShowDataArea: state.imageGenShowDataArea,
-    imageGenShowFullImages: state.imageGenShowFullImages,
-    imageGenShowWeiboLink: state.imageGenShowWeiboLink,
-    imageGenTheme: state.imageGenTheme,
-    imageGenCardStyle: state.imageGenCardStyle,
-    hotSearchType: state.hotSearchType,
-    xLayoutEnabled: state.xLayoutEnabled,
-    browsingHistoryEnabled: state.browsingHistoryEnabled,
-    browsingHistoryLimit: state.browsingHistoryLimit,
-    followGroupsEnabled: state.followGroupsEnabled,
-    xbTopicPage: state.xbTopicPage,
-    forceRedirectToFollowing: state.forceRedirectToFollowing,
-    homeTab: state.homeTab,
-    customThemeLightCss: state.customThemeLightCss,
-    customThemeDarkCss: state.customThemeDarkCss,
-    selectedThemeType: state.selectedThemeType,
-    selectedThemeId: state.selectedThemeId,
-    userThemes: state.userThemes,
-  }
+  return Object.fromEntries(
+    PERSISTED_KEYS.map((key) => [key, state[key]]),
+  ) as unknown as AppSettings
 }
 
 export function createAppSettingsStore(
@@ -149,7 +55,6 @@ export function createAppSettingsStore(
       async hydrate() {
         const settings = await loadAppSettings(storageArea)
 
-        // If a preset is selected but CSS is empty, fill from the preset definition
         if (
           settings.selectedThemeType === 'preset' &&
           !settings.customThemeLightCss.trim() &&
@@ -167,129 +72,7 @@ export function createAppSettingsStore(
           isHydrated: true,
         })
       },
-      async setTheme(theme) {
-        await updateAndPersist({ theme })
-      },
-      async setRewriteEnabled(rewriteEnabled) {
-        await updateAndPersist({ rewriteEnabled })
-      },
-      async setFontSizeClass(fontSizeClass) {
-        await updateAndPersist({ fontSizeClass })
-      },
-      async setFontWeightClass(fontWeightClass) {
-        await updateAndPersist({ fontWeightClass })
-      },
-      async setLetterSpacingClass(letterSpacingClass) {
-        await updateAndPersist({ letterSpacingClass })
-      },
-      async setLineHeightClass(lineHeightClass) {
-        await updateAndPersist({ lineHeightClass })
-      },
-      async setFontFamilyClass(fontFamilyClass) {
-        await updateAndPersist({ fontFamilyClass })
-      },
-      async setShowExplore(showExplore) {
-        await updateAndPersist({ showExplore })
-      },
-      async setShowFavorites(showFavorites) {
-        await updateAndPersist({ showFavorites })
-      },
-      async setShowHistory(showHistory) {
-        await updateAndPersist({ showHistory })
-      },
-      async setShowNotifications(showNotifications) {
-        await updateAndPersist({ showNotifications })
-      },
-      async setShowDMs(showDMs) {
-        await updateAndPersist({ showDMs })
-      },
-      async setShowProfile(showProfile) {
-        await updateAndPersist({ showProfile })
-      },
-      async setShowCompose(showCompose) {
-        await updateAndPersist({ showCompose })
-      },
-      async setShowRightRail(showRightRail) {
-        await updateAndPersist({ showRightRail })
-      },
-      async setShowHotSearchCard(showHotSearchCard) {
-        await updateAndPersist({ showHotSearchCard })
-      },
-      async setShowFollowedSuperTopicsCard(showFollowedSuperTopicsCard) {
-        await updateAndPersist({ showFollowedSuperTopicsCard })
-      },
-      async setCollapseRepliesEnabled(collapseRepliesEnabled) {
-        await updateAndPersist({ collapseRepliesEnabled })
-      },
-      async setRenderReplyChainEnabled(renderReplyChainEnabled) {
-        await updateAndPersist({ renderReplyChainEnabled })
-      },
-      async setDarkModeImageDim(darkModeImageDim) {
-        await updateAndPersist({ darkModeImageDim })
-      },
-      async setLightModeBgColor(lightModeBgColor) {
-        await updateAndPersist({ lightModeBgColor })
-      },
-      async setDarkModeBgColor(darkModeBgColor) {
-        await updateAndPersist({ darkModeBgColor })
-      },
-      async setImageGenEnabled(imageGenEnabled) {
-        await updateAndPersist({ imageGenEnabled })
-      },
-      async setImageGenShowDataArea(imageGenShowDataArea) {
-        await updateAndPersist({ imageGenShowDataArea })
-      },
-      async setImageGenShowFullImages(imageGenShowFullImages) {
-        await updateAndPersist({ imageGenShowFullImages })
-      },
-      async setImageGenShowWeiboLink(imageGenShowWeiboLink) {
-        await updateAndPersist({ imageGenShowWeiboLink })
-      },
-      async setImageGenTheme(imageGenTheme) {
-        await updateAndPersist({ imageGenTheme })
-      },
-      async setImageGenCardStyle(imageGenCardStyle) {
-        await updateAndPersist({ imageGenCardStyle })
-      },
-      async setHotSearchType(hotSearchType) {
-        await updateAndPersist({ hotSearchType })
-      },
-      async setXLayoutEnabled(xLayoutEnabled) {
-        await updateAndPersist({ xLayoutEnabled })
-      },
-      async setBrowsingHistoryEnabled(browsingHistoryEnabled) {
-        await updateAndPersist({ browsingHistoryEnabled })
-      },
-      async setBrowsingHistoryLimit(browsingHistoryLimit) {
-        await updateAndPersist({ browsingHistoryLimit })
-      },
-      async setHomeTab(homeTab) {
-        await updateAndPersist({ homeTab })
-      },
-      async setFollowGroupsEnabled(followGroupsEnabled) {
-        await updateAndPersist({ followGroupsEnabled })
-      },
-      async setNativeTopicPage(xbTopicPage) {
-        await updateAndPersist({ xbTopicPage })
-      },
-      async setForceRedirectToFollowing(forceRedirectToFollowing) {
-        await updateAndPersist({ forceRedirectToFollowing })
-      },
-      async setContentWidth(contentWidth) {
-        await updateAndPersist({ contentWidth })
-      },
-      async setCustomThemeLightCss(customThemeLightCss) {
-        await updateAndPersist({ customThemeLightCss })
-      },
-      async setCustomThemeDarkCss(customThemeDarkCss) {
-        await updateAndPersist({ customThemeDarkCss })
-      },
-      async setSelectedThemeType(selectedThemeType) {
-        await updateAndPersist({ selectedThemeType })
-      },
-      async setSelectedThemeId(selectedThemeId) {
-        await updateAndPersist({ selectedThemeId })
-      },
+      updateSettings: updateAndPersist,
       async addUserTheme(theme) {
         const current = get()
         await updateAndPersist({
@@ -329,3 +112,9 @@ export function resetAppSettingsStoreForTest() {
 export function useAppSettings<T>(selector: (state: AppSettingsStoreState) => T): T {
   return useStore(getAppSettingsStore(), selector)
 }
+
+export function useUpdateAppSettings() {
+  return useAppSettings((state) => state.updateSettings)
+}
+
+export { useShallow }

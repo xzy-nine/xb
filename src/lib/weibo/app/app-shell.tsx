@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Outlet, useNavigate } from 'react-router'
 
 import type { HomeTab } from '@/lib/app-settings'
-import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { RewritePausedCard, ShellFrame } from '@/lib/weibo/app/app-shell-layout'
 import { AuthRequiredDialog } from '@/lib/weibo/components/auth-required-dialog'
 import { CommentModal } from '@/lib/weibo/components/comment-modal'
@@ -42,13 +42,16 @@ export function AppShell() {
   const page = useWeiboPage()
   const queryClient = useQueryClient()
 
-  const theme = useAppSettings((state) => state.theme)
-  const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
-  const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
-  const contentWidth = useAppSettings((state) => state.contentWidth)
-  const setHomeTab = useAppSettings((state) => state.setHomeTab)
-  const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
-  const setTheme = useAppSettings((state) => state.setTheme)
+  const { theme, rewriteEnabled, browsingHistoryEnabled, contentWidth, updateSettings } =
+    useAppSettings(
+      useShallow((state) => ({
+        theme: state.theme,
+        rewriteEnabled: state.rewriteEnabled,
+        browsingHistoryEnabled: state.browsingHistoryEnabled,
+        contentWidth: state.contentWidth,
+        updateSettings: state.updateSettings,
+      })),
+    )
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -85,10 +88,10 @@ export function AppShell() {
 
   const onHomeTabChange = useCallback(
     (tab: HomeTab) => {
-      void setHomeTab(tab)
+      void updateSettings({ homeTab: tab })
       navigate(getHomeTimelinePath(tab))
     },
-    [navigate, setHomeTab],
+    [navigate, updateSettings],
   )
 
   const onFollowGroupChange = useCallback(
@@ -144,7 +147,7 @@ export function AppShell() {
   if (!rewriteEnabled) {
     return (
       <>
-        <RewritePausedCard onResume={() => void setRewriteEnabled(true)} />
+        <RewritePausedCard onResume={() => void updateSettings({ rewriteEnabled: true })} />
         {composeModal}
         <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
       </>
@@ -167,12 +170,12 @@ export function AppShell() {
         contentWidth={contentWidth}
         browsingHistoryEnabled={browsingHistoryEnabled}
         onRewriteEnabledChange={(enabled: boolean) => {
-          setRewriteEnabled(enabled)
+          void updateSettings({ rewriteEnabled: enabled })
           if (!enabled) {
             window.location.reload()
           }
         }}
-        onThemeChange={(nextTheme: typeof theme) => void setTheme(nextTheme)}
+        onThemeChange={(nextTheme: typeof theme) => void updateSettings({ theme: nextTheme })}
         onSettingsOpen={() => setSettingsOpen(true)}
         onComposeOpen={() => setComposeOpen(true)}
         mainRef={mainRef}
@@ -187,7 +190,7 @@ export function AppShell() {
         <AuthRequiredDialog
           open={authDialogOpen}
           onLogin={async () => {
-            await setRewriteEnabled(false)
+            await updateSettings({ rewriteEnabled: false })
             window.location.href = 'https://weibo.com/newlogin'
           }}
         />

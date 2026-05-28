@@ -1,5 +1,6 @@
-import { useStore } from 'zustand'
 import { createStore, type StoreApi } from 'zustand/vanilla'
+
+import { createSingletonStoreAccess } from '@/lib/zustand-singleton-store'
 
 interface PlaybackPositionEntry {
   currentTime: number
@@ -59,19 +60,8 @@ function createPlaybackPositionStore(): StoreApi<PlaybackPositionState> {
   }))
 }
 
-let playbackPositionStore: StoreApi<PlaybackPositionState> | null = null
+const playbackPositionStoreAccess = createSingletonStoreAccess(createPlaybackPositionStore)
 
-export function getPlaybackPositionStore(): StoreApi<PlaybackPositionState> {
-  if (!playbackPositionStore) {
-    playbackPositionStore = createPlaybackPositionStore()
-  }
-  return playbackPositionStore
-}
-
-export function resetPlaybackPositionStoreForTest() {
-  playbackPositionStore = null
-}
-
-export function usePlaybackPosition<T>(selector: (state: PlaybackPositionState) => T): T {
-  return useStore(getPlaybackPositionStore(), selector)
-}
+export const getPlaybackPositionStore = playbackPositionStoreAccess.getStore
+export const resetPlaybackPositionStoreForTest = playbackPositionStoreAccess.resetForTest
+export const usePlaybackPosition = playbackPositionStoreAccess.useSingletonStore

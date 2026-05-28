@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import type { HotSearchType } from '@/lib/app-settings'
-import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { hotSearchQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 
@@ -86,8 +86,12 @@ interface HotSearchCardProps {
 }
 
 export function HotSearchCard({ className }: HotSearchCardProps) {
-  const selectedType = useAppSettings((s) => s.hotSearchType)
-  const setHotSearchType = useAppSettings((s) => s.setHotSearchType)
+  const { hotSearchType: selectedType, updateSettings } = useAppSettings(
+    useShallow((s) => ({
+      hotSearchType: s.hotSearchType,
+      updateSettings: s.updateSettings,
+    })),
+  )
 
   const hotQuery = useQuery(hotSearchQueryOptions('hot'))
   const mineQuery = useQuery(hotSearchQueryOptions('mine'))
@@ -118,7 +122,7 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
       <div className="flex items-center justify-between gap-2">
         <Select
           value={selectedType}
-          onValueChange={(value) => setHotSearchType(value as HotSearchType)}
+          onValueChange={(value) => void updateSettings({ hotSearchType: value as HotSearchType })}
         >
           <SelectTrigger size="sm" className="w-fit">
             <SelectValue />
