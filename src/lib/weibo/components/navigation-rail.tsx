@@ -1,24 +1,21 @@
 import { useMediaQuery } from '@reactuses/core'
 import { useQuery } from '@tanstack/react-query'
-import {
-  ArrowUpRightIcon,
-  Bell,
-  Bookmark,
-  Clock,
-  Compass,
-  House,
-  MailIcon,
-  Pencil,
-  Settings,
-  UserRound,
-  ZapOff,
-} from 'lucide-react'
+import { ArrowUpRightIcon, Pencil } from 'lucide-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 
 import WeiboLogo from '@/assets/icons/weibo.svg'
+import { BellIcon } from '@/components/ui/bell'
+import { BookmarkIcon } from '@/components/ui/bookmark'
 import { Button } from '@/components/ui/button'
+import { CogIcon } from '@/components/ui/cog'
+import { CompassIcon } from '@/components/ui/compass'
+import { HistoryIcon } from '@/components/ui/history'
+import { HomeIcon } from '@/components/ui/home'
+import { MessageSquareMoreIcon } from '@/components/ui/message-square-more'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { UserIcon } from '@/components/ui/user'
+import { ZapOffIcon } from '@/components/ui/zap-off'
 import type { AppTheme } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
@@ -178,7 +175,7 @@ export function NavigationRail({
               isActive={!isOwnProfileActive && pageKind === 'home'}
               onClick={() => navigate(homeTab === 'following' ? '/mygroups' : '/')}
             >
-              <House aria-hidden="true" className="size-4 shrink-0" />
+              <HomeIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             <NavButton
@@ -187,7 +184,7 @@ export function NavigationRail({
               isActive={pageKind === 'explore'}
               onClick={() => navigate('/hot/weibo/102803')}
             >
-              <Compass aria-hidden="true" className="size-4 shrink-0" />
+              <CompassIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             <NavButton
@@ -196,7 +193,7 @@ export function NavigationRail({
               isActive={isSavedItemsActive}
               onClick={() => navigate(favoritesHref)}
             >
-              <Bookmark aria-hidden="true" className="size-4 shrink-0" />
+              <BookmarkIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             {browsingHistoryEnabled && (
@@ -206,7 +203,7 @@ export function NavigationRail({
                 isActive={pageKind === 'history'}
                 onClick={() => navigate('/history')}
               >
-                <Clock aria-hidden="true" className="size-4 shrink-0" />
+                <HistoryIcon aria-hidden="true" className="size-4 shrink-0" />
               </NavButton>
             )}
 
@@ -217,7 +214,7 @@ export function NavigationRail({
               showBadge={showNotificationBadge}
               onClick={() => navigate('/at/weibo')}
             >
-              <Bell aria-hidden="true" className="size-4 shrink-0" />
+              <BellIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             <NavButton
@@ -232,7 +229,7 @@ export function NavigationRail({
               isExternal
               showBadge={showDmBadge}
             >
-              <MailIcon aria-hidden="true" className="size-4 shrink-0" />
+              <MessageSquareMoreIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             <NavButton
@@ -241,7 +238,7 @@ export function NavigationRail({
               isActive={isOwnProfileActive}
               onClick={() => navigate(profileHref)}
             >
-              <UserRound aria-hidden="true" className="size-4 shrink-0" />
+              <UserIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>
 
             <NavButton label="发微博" showLabel={isXl} onClick={onComposeOpen} variant="default">
@@ -254,13 +251,13 @@ export function NavigationRail({
               <p className="text-muted-foreground hidden text-xs font-medium xl:block">设置</p>
               {isXl ? (
                 <Button type="button" size="icon" variant="secondary" onClick={onSettingsOpen}>
-                  <Settings className="size-4" aria-hidden="true" />
+                  <CogIcon className="size-4" aria-hidden="true" />
                 </Button>
               ) : (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button type="button" size="icon" variant="secondary" onClick={onSettingsOpen}>
-                      <Settings className="size-4" aria-hidden="true" />
+                      <CogIcon className="size-4" aria-hidden="true" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="right">设置</TooltipContent>
@@ -281,7 +278,7 @@ export function NavigationRail({
                   aria-pressed={rewriteEnabled}
                   aria-label="切换 xb 重写"
                 >
-                  <ZapOff className="size-4" aria-hidden="true" />
+                  <ZapOffIcon className="size-4" aria-hidden="true" />
                 </Button>
               ) : (
                 <Tooltip>
@@ -294,7 +291,7 @@ export function NavigationRail({
                       aria-pressed={rewriteEnabled}
                       aria-label="切换 xb 重写"
                     >
-                      <ZapOff className="size-4" aria-hidden="true" />
+                      <ZapOffIcon className="size-4" aria-hidden="true" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="right">返回原模式</TooltipContent>

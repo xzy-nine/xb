@@ -65,6 +65,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setBrowsingHistoryLimit: (limit: BrowsingHistoryLimit) => Promise<void>
   setFollowGroupsEnabled: (enabled: boolean) => Promise<void>
   setNativeTopicPage: (enabled: boolean) => Promise<void>
+  setForceRedirectToFollowing: (enabled: boolean) => Promise<void>
   setContentWidth: (width: ContentWidth) => Promise<void>
   homeTab: HomeTab
   setHomeTab: (tab: HomeTab) => Promise<void>
@@ -120,6 +121,7 @@ function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
     browsingHistoryLimit: state.browsingHistoryLimit,
     followGroupsEnabled: state.followGroupsEnabled,
     xbTopicPage: state.xbTopicPage,
+    forceRedirectToFollowing: state.forceRedirectToFollowing,
     homeTab: state.homeTab,
     customThemeLightCss: state.customThemeLightCss,
     customThemeDarkCss: state.customThemeDarkCss,
@@ -275,6 +277,9 @@ export function createAppSettingsStore(
       },
       async setNativeTopicPage(xbTopicPage) {
         await updateAndPersist({ xbTopicPage })
+      },
+      async setForceRedirectToFollowing(forceRedirectToFollowing) {
+        await updateAndPersist({ forceRedirectToFollowing })
       },
       async setContentWidth(contentWidth) {
         await updateAndPersist({ contentWidth })

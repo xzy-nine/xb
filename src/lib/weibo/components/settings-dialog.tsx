@@ -170,6 +170,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
   const contentWidth = useAppSettings((s) => s.contentWidth)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
+  const forceRedirectToFollowing = useAppSettings((s) => s.forceRedirectToFollowing)
   const selectedThemeType = useAppSettings((s) => s.selectedThemeType)
   const selectedThemeId = useAppSettings((s) => s.selectedThemeId)
   const userThemes = useAppSettings((s) => s.userThemes)
@@ -202,6 +203,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
   const setBrowsingHistoryLimit = useAppSettings((s) => s.setBrowsingHistoryLimit)
   const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
   const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
+  const setForceRedirectToFollowing = useAppSettings((s) => s.setForceRedirectToFollowing)
   const setSelectedThemeType = useAppSettings((s) => s.setSelectedThemeType)
   const setSelectedThemeId = useAppSettings((s) => s.setSelectedThemeId)
   const setCustomThemeLightCss = useAppSettings((s) => s.setCustomThemeLightCss)
@@ -553,6 +555,17 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     <Switch
                       checked={followGroupsEnabled}
                       onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
+                    />
+                  </Field>
+                </div>
+                <div>
+                  <Field
+                    label="强制跳转我关注的"
+                    description="打开后，进入首页时自动跳转到「我关注的」"
+                  >
+                    <Switch
+                      checked={forceRedirectToFollowing}
+                      onCheckedChange={(checked) => setForceRedirectToFollowing(checked)}
                     />
                   </Field>
                 </div>

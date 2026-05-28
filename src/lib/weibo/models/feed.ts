@@ -91,6 +91,7 @@ export interface FeedItem {
   id: string
   mblogId: string | null
   isLongText: boolean
+  deleted?: boolean
   liked?: boolean
   favorited?: boolean
   author: FeedAuthor
