@@ -99,7 +99,6 @@ describe('bindShellState', () => {
       settingsStore: store,
     })
 
-    await store.getState().setCustomThemeEnabled(true)
     await store.getState().setCustomThemeLightCss('--primary: #111111; --background: #ffffff;')
     await store.getState().setCustomThemeDarkCss('--primary: #eeeeee; --background: #000000;')
 
@@ -111,7 +110,8 @@ describe('bindShellState', () => {
     expect(container.style.getPropertyValue('--primary')).toBe('#eeeeee')
     expect(container.style.getPropertyValue('--background')).toBe('#000000')
 
-    await store.getState().setCustomThemeEnabled(false)
+    await store.getState().setCustomThemeLightCss('')
+    await store.getState().setCustomThemeDarkCss('')
 
     expect(container.style.getPropertyValue('--primary')).toBe('')
     expect(container.style.getPropertyValue('--background')).toBe('oklch(0.1908 0.002 106.59)')

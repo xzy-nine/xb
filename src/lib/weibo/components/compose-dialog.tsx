@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { Video } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,7 @@ export function ComposeDialog({ open, zIndex, onOpenChange }: ComposeDialogProps
 }
 
 function ComposeForm({ onClose }: { onClose: () => void }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [text, setText] = useState('')
 
   const openVideoUpload = () => {
@@ -56,15 +57,21 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
   const isSubmitDisabled = mutation.isPending || text.trim().length === 0
 
   return (
-    <DialogContent className="sm:max-w-xl">
+    <DialogContent
+      className="sm:max-w-xl"
+      onOpenAutoFocus={(e) => {
+        e.preventDefault()
+        textareaRef.current?.focus()
+      }}
+    >
       <DialogHeader>
         <DialogTitle>发微博</DialogTitle>
         <DialogDescription>有什么新鲜事想分享给大家？</DialogDescription>
       </DialogHeader>
 
       <Textarea
+        ref={textareaRef}
         aria-label="微博内容"
-        autoFocus
         className="min-h-32"
         value={text}
         onChange={(event) => setText(event.target.value)}
