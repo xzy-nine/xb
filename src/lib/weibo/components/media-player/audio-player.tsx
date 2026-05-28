@@ -15,7 +15,8 @@ export function AudioPlayerComponent({ src }: AudioPlayerProps) {
   return (
     <AudioPlayer.Provider>
       <AudioPlayer.Container className="media-default-skin media-default-skin--audio">
-        <Audio src={src} preload="metadata" />
+        {/* data-xb-media-* 用于外部脚本(如全局播放协调、shadow-root 查询)定位本扩展挂载的媒体元素 */}
+        <Audio src={src} preload="metadata" data-xb-media-audio="true" data-xb-media-kind="audio" />
         <AudioSkin />
       </AudioPlayer.Container>
     </AudioPlayer.Provider>

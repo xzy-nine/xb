@@ -75,4 +75,47 @@ describe('bindShellState', () => {
     expect(appRoot.getAttribute('data-xb-hidden')).toBeNull()
     expect(document.documentElement.style.overflow).toBe('auto')
   })
+
+  it('applies custom theme variables for the active color mode', async () => {
+    const container = document.createElement('div')
+    const appRoot = document.createElement('div')
+    const store = createAppSettingsStore({
+      get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
+      set: async () => {},
+    })
+
+    Object.defineProperty(window, 'matchMedia', {
+      value: () => ({
+        matches: false,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+      configurable: true,
+    })
+
+    const cleanup = bindShellState({
+      container,
+      appRoot,
+      settingsStore: store,
+    })
+
+    await store.getState().setCustomThemeEnabled(true)
+    await store.getState().setCustomThemeLightCss('--primary: #111111; --background: #ffffff;')
+    await store.getState().setCustomThemeDarkCss('--primary: #eeeeee; --background: #000000;')
+
+    expect(container.style.getPropertyValue('--primary')).toBe('#111111')
+    expect(container.style.getPropertyValue('--background')).toBe('#ffffff')
+
+    await store.getState().setTheme('dark')
+
+    expect(container.style.getPropertyValue('--primary')).toBe('#eeeeee')
+    expect(container.style.getPropertyValue('--background')).toBe('#000000')
+
+    await store.getState().setCustomThemeEnabled(false)
+
+    expect(container.style.getPropertyValue('--primary')).toBe('')
+    expect(container.style.getPropertyValue('--background')).toBe('oklch(0.1908 0.002 106.59)')
+
+    cleanup()
+  })
 })

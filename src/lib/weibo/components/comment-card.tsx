@@ -17,10 +17,7 @@ import { useFontSettings } from '@/lib/weibo/hooks/use-font-settings'
 import { type ComposeTarget, composeTargetFromComment } from '@/lib/weibo/models/compose'
 import type { CommentItem } from '@/lib/weibo/models/status'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
-import {
-  optimisticallyToggleCommentLike,
-  restoreStatusCacheMutation,
-} from '@/lib/weibo/queries/status-cache'
+import { restoreStatusCacheMutation } from '@/lib/weibo/queries/status-cache'
 import {
   cancelCommentLike,
   deleteWeiboComment,

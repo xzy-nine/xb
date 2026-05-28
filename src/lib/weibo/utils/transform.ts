@@ -99,12 +99,16 @@ interface WeiboTopicStruct {
 }
 
 export interface WeiboPicInfo {
-  largest?: { url?: string }
-  bmiddle?: { url?: string }
-  large?: { url?: string }
-  original?: { url?: string }
-  woriginal?: { url?: string }
-  thumbnail?: { url?: string }
+  largest?: { url?: string; width?: number; height?: number }
+  bmiddle?: { url?: string; width?: number; height?: number }
+  large?: { url?: string; width?: number; height?: number }
+  original?: { url?: string; width?: number; height?: number }
+  woriginal?: { url?: string; width?: number; height?: number }
+  thumbnail?: { url?: string; width?: number; height?: number }
+  mw2000?: { url?: string; width?: number; height?: number }
+  type?: string
+  video?: string
+  video_hd?: string
 }
 
 /** mix_media_info item types from Weibo API */
@@ -130,6 +134,7 @@ interface WeiboMixMediaItemPic {
     large?: { url?: string; width?: number; height?: number }
     original?: { url?: string; width?: number; height?: number }
     largest?: { url?: string; width?: number; height?: number }
+    mw2000?: { url?: string; width?: number; height?: number }
   }
 }
 
@@ -199,24 +204,37 @@ function toImagesFromParts(picIds?: string[], picInfos?: Record<string, WeiboPic
     return []
   }
 
-  return picIds
-    .map((picId) => {
-      const info = picInfos?.[picId]
-      const thumbnailUrl = info?.large?.url ?? info?.bmiddle?.url ?? info?.thumbnail?.url
-      const largeUrl =
-        info?.largest?.url ??
-        info?.woriginal?.url ??
-        info?.large?.url ??
-        info?.original?.url ??
-        info?.bmiddle?.url ??
-        info?.thumbnail?.url
-      if (!thumbnailUrl || !largeUrl) {
-        return null
-      }
+  const images: FeedImage[] = []
 
-      return { id: picId, thumbnailUrl, largeUrl }
+  for (const picId of picIds) {
+    const info = picInfos?.[picId]
+    const thumbnailUrl = info?.large?.url ?? info?.bmiddle?.url ?? info?.thumbnail?.url
+    const largeImage =
+      info?.largest ??
+      info?.mw2000 ??
+      info?.woriginal ??
+      info?.large ??
+      info?.original ??
+      info?.bmiddle ??
+      info?.thumbnail
+    const largeUrl = largeImage?.url
+    if (!thumbnailUrl || !largeUrl) {
+      continue
+    }
+
+    const livePhotoVideoUrl = pickNonEmptyUrl(info?.video) ?? pickNonEmptyUrl(info?.video_hd)
+    images.push({
+      id: picId,
+      thumbnailUrl,
+      largeUrl,
+      ...(typeof largeImage?.width === 'number' ? { width: largeImage.width } : {}),
+      ...(typeof largeImage?.height === 'number' ? { height: largeImage.height } : {}),
+      ...(info?.type === 'livephoto' ? { type: 'livephoto' as const } : {}),
+      ...(livePhotoVideoUrl ? { livePhotoVideoUrl } : {}),
     })
-    .filter((item): item is { id: string; thumbnailUrl: string; largeUrl: string } => item !== null)
+  }
+
+  return images
 }
 
 function toImages(status: WeiboStatus) {
@@ -726,17 +744,20 @@ function toMixMediaInfo(
         videoDash: dash,
         videoOrientation: mediaInfo.video_orientation,
         videoDownloadUrl: downloadUrlFromMediaInfo(mediaInfo),
+        videoTitle: mediaInfo.video_title ?? item.data.content1 ?? item.data.content2 ?? '',
       })
     } else {
       // type === 'pic'
-      const thumbnailUrl =
-        item.data.large?.url ?? item.data.bmiddle?.url ?? item.data.thumbnail?.url
-      const largeUrl =
-        item.data.largest?.url ??
-        item.data.original?.url ??
-        item.data.large?.url ??
-        item.data.bmiddle?.url ??
-        item.data.thumbnail?.url
+      const thumbnailImage = item.data.large ?? item.data.bmiddle ?? item.data.thumbnail
+      const largeImage =
+        item.data.largest ??
+        item.data.mw2000 ??
+        item.data.original ??
+        item.data.large ??
+        item.data.bmiddle ??
+        item.data.thumbnail
+      const thumbnailUrl = thumbnailImage?.url
+      const largeUrl = largeImage?.url
 
       if (!thumbnailUrl || !largeUrl) {
         continue
@@ -745,7 +766,13 @@ function toMixMediaInfo(
       results.push({
         type: 'pic',
         id: item.id,
-        image: { id: item.id, thumbnailUrl, largeUrl },
+        image: {
+          id: item.id,
+          thumbnailUrl,
+          largeUrl,
+          width: largeImage?.width,
+          height: largeImage?.height,
+        },
       })
     }
   }

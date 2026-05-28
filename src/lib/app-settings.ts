@@ -95,6 +95,15 @@ export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
 
 export type HomeTab = 'for-you' | 'following'
 
+export type CustomThemePreset =
+  | 'default'
+  | 'vercel'
+  | 'twitter'
+  | 'supabase'
+  | 'mono'
+  | 'modern'
+  | 'claude'
+
 export interface AppSettings {
   contentWidth: ContentWidth
   theme: AppTheme
@@ -132,6 +141,10 @@ export interface AppSettings {
   followGroupsEnabled: boolean
   xbTopicPage: boolean
   homeTab: HomeTab
+  customThemeEnabled: boolean
+  customThemePreset: CustomThemePreset
+  customThemeLightCss: string
+  customThemeDarkCss: string
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -191,6 +204,10 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   followGroupsEnabled: false,
   xbTopicPage: true,
   homeTab: 'for-you',
+  customThemeEnabled: false,
+  customThemePreset: 'default',
+  customThemeLightCss: '',
+  customThemeDarkCss: '',
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -284,6 +301,26 @@ function isStatusDetailPopupWidth(value: unknown): value is number {
 
 function isHomeTab(value: unknown): value is HomeTab {
   return value === 'for-you' || value === 'following'
+}
+
+function isCustomThemePreset(value: unknown): value is CustomThemePreset {
+  return (
+    value === 'default' ||
+    value === 'vercel' ||
+    value === 'twitter' ||
+    value === 'supabase' ||
+    value === 'mono' ||
+    value === 'modern' ||
+    value === 'claude'
+  )
+}
+
+function normalizeCustomThemePreset(value: unknown): CustomThemePreset {
+  if (value === 'modern-minimal') {
+    return 'modern'
+  }
+
+  return isCustomThemePreset(value) ? value : DEFAULT_APP_SETTINGS.customThemePreset
 }
 
 export function normalizeAppSettings(value: unknown): AppSettings {
@@ -427,6 +464,19 @@ export function normalizeAppSettings(value: unknown): AppSettings {
         ? candidate.xbTopicPage
         : DEFAULT_APP_SETTINGS.xbTopicPage,
     homeTab: isHomeTab(candidate.homeTab) ? candidate.homeTab : DEFAULT_APP_SETTINGS.homeTab,
+    customThemeEnabled:
+      typeof candidate.customThemeEnabled === 'boolean'
+        ? candidate.customThemeEnabled
+        : DEFAULT_APP_SETTINGS.customThemeEnabled,
+    customThemePreset: normalizeCustomThemePreset(candidate.customThemePreset),
+    customThemeLightCss:
+      typeof candidate.customThemeLightCss === 'string'
+        ? candidate.customThemeLightCss
+        : DEFAULT_APP_SETTINGS.customThemeLightCss,
+    customThemeDarkCss:
+      typeof candidate.customThemeDarkCss === 'string'
+        ? candidate.customThemeDarkCss
+        : DEFAULT_APP_SETTINGS.customThemeDarkCss,
   }
 }
 

@@ -14,6 +14,10 @@ export interface FeedImage {
   id: string
   thumbnailUrl: string
   largeUrl: string
+  width?: number
+  height?: number
+  type?: 'image' | 'livephoto'
+  livePhotoVideoUrl?: string
 }
 
 /** A single item inside mix_media_info */
@@ -26,6 +30,7 @@ export interface FeedMixMediaItem {
   videoOrientation?: 'vertical' | 'horizontal'
   /** Direct mp4 URL for downloading (avoids DASH/DRM issues) */
   videoDownloadUrl?: string
+  videoTitle?: string
   /** Only present when type === 'pic' */
   image?: FeedImage
 }

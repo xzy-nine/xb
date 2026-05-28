@@ -4,9 +4,9 @@ import { createRef } from 'react'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
 import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
+import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { ShellFrame } from '@/lib/weibo/app/app-shell-layout'
 
 const queryClient = new QueryClient({

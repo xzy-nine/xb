@@ -48,6 +48,7 @@ import {
   destroyFavorite,
   setStatusLike,
 } from '@/lib/weibo/services/weibo-repository'
+import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
 
 import { AudioPlayerComponent } from './media-player/audio-player'
@@ -63,6 +64,10 @@ function hasTextSelectionWithin(container: HTMLElement) {
   const range = selection.getRangeAt(0)
   const commonAncestor = range.commonAncestorContainer
   return commonAncestor === container || container.contains(commonAncestor)
+}
+
+function getMediaDownloadFilename(item: Pick<FeedItem, 'author' | 'text'>) {
+  return `${item.author.name} ${sanitizeFilename(item.text.slice(0, 15))}`
 }
 
 function FeedMediaBlock({ item }: { item: FeedItem }) {
@@ -117,7 +122,7 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
           poster={item.media.coverUrl ?? undefined}
           dash={item.media.dash}
           downloadUrl={item.media.downloadUrl}
-          downloadFilename={`${item.author.name} ${item.text.slice(0, 15).replaceAll(/[\\/:*?"<>|]/g, '_')}`}
+          downloadFilename={getMediaDownloadFilename(item)}
           onPlay={addEntry}
         />
       </AspectRatio>
@@ -505,6 +510,7 @@ function RetweetedFeedBlock({
         <ImageCarousel
           images={resolvedItem.images}
           mixMediaItems={resolvedItem.mixMediaInfo}
+          downloadFilename={getMediaDownloadFilename(resolvedItem)}
           onOpen={addEntry}
         />
 
@@ -558,6 +564,10 @@ export const FeedCard = memo(function FeedCard({
     hasLongTextError,
     onLoadLongText,
   } = useFeedLongText(item)
+
+  const addEntry = useCallback(() => {
+    browsingHistoryStore.getState().addEntry(resolvedItem)
+  }, [resolvedItem])
 
   const uid = getCurrentUserUid()
   const showOwnerMenu = uid !== null && uid === resolvedItem.author.id
@@ -688,7 +698,12 @@ export const FeedCard = memo(function FeedCard({
 
       <FeedMediaBlock item={resolvedItem} />
 
-      <ImageCarousel images={resolvedItem.images} mixMediaItems={resolvedItem.mixMediaInfo} />
+      <ImageCarousel
+        images={resolvedItem.images}
+        mixMediaItems={resolvedItem.mixMediaInfo}
+        downloadFilename={getMediaDownloadFilename(resolvedItem)}
+        onOpen={addEntry}
+      />
 
       {resolvedItem.retweetedStatus ? (
         <RetweetedFeedBlock

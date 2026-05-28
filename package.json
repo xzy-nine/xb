@@ -1,6 +1,6 @@
 {
   "name": "xb",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "xb enhances your Weibo.com experience",
   "keywords": [
     "browser",
@@ -40,6 +40,7 @@
     "zip:firefox": "wxt zip -b firefox"
   },
   "dependencies": {
+    "@base-ui/react": "^1.5.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "@reactuses/core": "^6.3.1",

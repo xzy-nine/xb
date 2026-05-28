@@ -57,34 +57,33 @@ function NavButton({
     showBadge ? (
       <span className="relative">
         {icon}
-        <span className="absolute -top-1 -right-1 size-2 rounded-full bg-red-500" />
+        <span className="bg-destructive absolute -top-1 -right-1 size-2 rounded-full" />
       </span>
     ) : (
       icon
     )
   const button = href ? (
-    <Button
-      asChild
-      className={cn(
-        'flex items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
-        showLabel ? 'justify-start' : 'justify-center',
-        showBadge && showLabel && 'px-3',
-      )}
-      variant={buttonVariant}
-      onClick={onClick}
-      size={showLabel ? 'default' : 'icon'}
+    <a
+      href={href}
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
+      aria-label={showLabel ? undefined : String(label)}
+      aria-current={isActive ? 'page' : undefined}
     >
-      <a
-        href={href}
-        target={isExternal ? '_blank' : undefined}
-        rel={isExternal ? 'noopener noreferrer' : undefined}
-        aria-label={showLabel ? undefined : String(label)}
-        aria-current={isActive ? 'page' : undefined}
+      <Button
+        className={cn(
+          'flex items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
+          showLabel ? 'justify-start' : 'justify-center',
+          showBadge && showLabel && 'px-3',
+        )}
+        variant={buttonVariant}
+        onClick={onClick}
+        size={showLabel ? 'default' : 'icon'}
       >
         {iconWrap(children)}
         {showLabel && <span>{label}</span>}
-      </a>
-    </Button>
+      </Button>
+    </a>
   ) : (
     <Button
       variant={buttonVariant}
@@ -163,11 +162,11 @@ export function NavigationRail({
   return (
     <TooltipProvider>
       <aside className="flex h-full min-h-0 flex-col px-1 py-3 md:px-2 md:py-4 xl:px-3 xl:py-5">
-        <div className="mb-5 flex justify-start md:mb-6 xl:mb-7">
+        <div className="mb-4 flex justify-start">
           <img
             src={WeiboLogo}
             alt="微博 Logo"
-            className="h-8 w-8 translate-y-[1px] fill-current object-contain opacity-80 transition-opacity duration-200 hover:opacity-100"
+            className="h-8 w-8 translate-y-px fill-current object-contain opacity-80 transition-opacity duration-200 hover:opacity-100"
           />
         </div>
 
