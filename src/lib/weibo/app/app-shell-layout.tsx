@@ -6,6 +6,7 @@ import { useLocation, useOutletContext } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AppTheme, ContentWidth } from '@/lib/app-settings'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
@@ -63,6 +64,7 @@ export function ShellFrame({
   const savedMainScrollByRouteRef = useRef<Partial<Record<string, number>>>({})
   const locationRef = useRef(location)
   locationRef.current = location
+  const showRightRail = useAppSettings((state) => state.showRightRail)
 
   const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
   const assignShellRef = useCallback(
@@ -127,9 +129,12 @@ export function ShellFrame({
           />
         </div>
         <main className="min-w-0 flex-1 pb-8">{children}</main>
-        <div className={cn('sticky top-0 h-screen shrink-0 w-[260px]')}>
-          <RightRail />
-        </div>
+        {showRightRail && (
+          <div className={cn('sticky top-0 h-screen shrink-0 w-[260px]')}>
+            <RightRail />
+          </div>
+        )}
+
         <BackToTop scrollRoot={mainScrollRoot} />
       </div>
     </div>

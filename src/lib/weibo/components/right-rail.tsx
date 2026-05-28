@@ -4,13 +4,8 @@ import { SearchCard } from '@/lib/weibo/components/search-card'
 import { SuperTopicCard } from '@/lib/weibo/components/super-topic-card'
 
 export function RightRail() {
-  const showRightRail = useAppSettings((state) => state.showRightRail)
   const showHotSearchCard = useAppSettings((state) => state.showHotSearchCard)
   const showFollowedSuperTopicsCard = useAppSettings((state) => state.showFollowedSuperTopicsCard)
-
-  if (!showRightRail) {
-    return null
-  }
 
   return (
     <div className="flex h-full w-full flex-col justify-between py-4">
