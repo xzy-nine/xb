@@ -19,6 +19,8 @@ import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 const HOME_TIMELINE_OPTIONS: TimelineTopBarOption[] = [
   { value: 'for-you', label: '推荐' },
   { value: 'following', label: '我关注的' },
+  { value: 'special-follow', label: '特别关注' },
+  { value: 'friend-circle', label: '朋友圈' },
 ]
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
@@ -116,14 +118,25 @@ export function HomeTimelinePage() {
   const handleTimelineChange = useCallback(
     (value: string) => {
       if (value === activeTab) return
-      ctx.onHomeTabChange(value as 'for-you' | 'following')
+      ctx.onHomeTabChange(value as 'for-you' | 'following' | 'special-follow' | 'friend-circle')
       resetMainScrollAfterRouteChange(ctx.resetMainScroll)
     },
     [activeTab, ctx],
   )
 
   const groups = groupsQuery.data ?? []
-  const activeTitle = activeTab === 'following' ? '我关注的' : '推荐'
+  const activeTitle = (() => {
+    switch (activeTab) {
+      case 'for-you':
+        return '推荐'
+      case 'following':
+        return '我关注的'
+      case 'special-follow':
+        return '特别关注'
+      case 'friend-circle':
+        return '朋友圈'
+    }
+  })()
   const groupOptions = showGroupSelect
     ? [
         { value: 'default', label: '全部分组' },

@@ -19,8 +19,18 @@ const GenImageDialog = lazy(() =>
   import('@/lib/weibo/components/gen-image-dialog').then((m) => ({ default: m.GenImageDialog })),
 )
 
-function getHomeTimelinePath(tab: 'for-you' | 'following') {
-  return tab === 'following' ? '/mygroups' : '/'
+function getHomeTimelinePath(tab: 'for-you' | 'following' | 'special-follow' | 'friend-circle') {
+  switch (tab) {
+    case 'following':
+      return '/mygroups'
+    case 'special-follow':
+      return '/mygroups?gid=4192852076145461'
+    case 'friend-circle':
+      return '/mygroups?gid=100096393557498'
+    case 'for-you':
+    default:
+      return '/'
+  }
 }
 
 export interface AppShellContext {

@@ -92,7 +92,7 @@ export type LineHeightClass =
 
 export type ContentWidth = 'standard' | 'wide' | 'wider'
 
-export type HomeTab = 'for-you' | 'following'
+export type HomeTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 
 export type CustomThemePreset =
   | 'default'
@@ -310,7 +310,12 @@ function isContentWidth(value: unknown): value is ContentWidth {
 }
 
 function isHomeTab(value: unknown): value is HomeTab {
-  return value === 'for-you' || value === 'following'
+  return (
+    value === 'for-you' ||
+    value === 'following' ||
+    value === 'special-follow' ||
+    value === 'friend-circle'
+  )
 }
 
 function isBrowsingHistoryLimit(value: unknown): value is BrowsingHistoryLimit {

@@ -17,6 +17,12 @@ export function parseWeiboUrl(input: string): WeiboPageDescriptor {
 
   if (parts.length === 1 && parts[0] === 'mygroups') {
     const gid = url.searchParams.get('gid')?.trim()
+    if (gid === '4192852076145461') {
+      return { kind: 'home', tab: 'special-follow', groupId: gid }
+    }
+    if (gid === '100096393557498') {
+      return { kind: 'home', tab: 'friend-circle', groupId: gid }
+    }
     return gid
       ? { kind: 'home', tab: 'following', groupId: gid }
       : { kind: 'home', tab: 'following' }

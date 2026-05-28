@@ -76,7 +76,7 @@ import { WEIBO_ENDPOINTS } from '@/lib/weibo/services/endpoints'
 import { buildTopicSearchUrl, mweiboFetch } from '@/lib/weibo/services/m-weibo-client'
 import type { WeiboLongTextData } from '@/lib/weibo/utils/transform'
 
-export type HomeTimelineTab = 'for-you' | 'following'
+export type HomeTimelineTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 type ProfileLookup = { uid: string } | { screenName: string }
 
 export interface LoadTimelineOptions {
@@ -100,6 +100,28 @@ export async function loadHomeTimeline(
   options: LoadTimelineOptions = {},
 ): Promise<TimelinePage> {
   const isFirstPage = !options.cursor
+
+  // Special follow (特别关注) and friend circle (朋友圈) use the groupstimeline endpoint
+  if (tab === 'special-follow') {
+    return loadTimeline(WEIBO_ENDPOINTS.groupTimeline, {
+      list_id: '4192852076145461',
+      refresh: 4,
+      fast_refresh: 1,
+      count: 25,
+      ...(isFirstPage ? {} : { max_id: options.cursor }),
+    })
+  }
+
+  if (tab === 'friend-circle') {
+    return loadTimeline(WEIBO_ENDPOINTS.groupTimeline, {
+      list_id: '100096393557498',
+      refresh: 4,
+      fast_refresh: 1,
+      count: 25,
+      ...(isFirstPage ? {} : { max_id: options.cursor }),
+    })
+  }
+
   if (tab === 'following') {
     return loadTimeline(getTimelinePath(tab), {
       list_id: '110001768015440',
