@@ -285,66 +285,6 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     onChange={(v) => setDarkModeBgColor(v as DarkBgColorPreset)}
                   />
                 </Field>
-
-                <Field label="自定义背景" description="为页面添加自定义背景图片">
-                  <Switch
-                    checked={backgroundEnabled}
-                    onCheckedChange={(checked) => setBackgroundEnabled(checked)}
-                  />
-                </Field>
-
-                {backgroundEnabled && (
-                  <Field label="背景图片" description="输入图片 URL 作为背景">
-                    <Input
-                      type="url"
-                      placeholder="https://example.com/bg.jpg"
-                      value={backgroundImageUrl}
-                      onChange={(e) => handleBackgroundImageUrlChange(e.target.value)}
-                      className="h-8 w-[220px]"
-                    />
-                  </Field>
-                )}
-
-                {backgroundEnabled && backgroundImageUrl && (
-                  <IllustrationPlaceholder>
-                    <img
-                      src={backgroundImageUrl}
-                      alt="背景预览"
-                      className={cn('h-auto w-full', imagePreviewError && 'hidden')}
-                      onError={() => setImagePreviewError(true)}
-                      onLoad={() => setImagePreviewError(false)}
-                    />
-                    {imagePreviewError && <span className="text-destructive">图片加载失败</span>}
-                  </IllustrationPlaceholder>
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <Label>玻璃透明度</Label>
-                  <p className="text-muted-foreground text-xs">
-                    卡片和弹窗的半透明程度 ({glassOpacity}%)
-                  </p>
-                  <Slider
-                    value={[glassOpacity]}
-                    min={0}
-                    max={100}
-                    step={5}
-                    onValueChange={([v]) => setGlassOpacity(v as number)}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>玻璃模糊</Label>
-                  <p className="text-muted-foreground text-xs">
-                    卡片和弹窗的背景模糊程度 ({glassBlur}px)
-                  </p>
-                  <Slider
-                    value={[glassBlur]}
-                    min={0}
-                    max={20}
-                    step={1}
-                    onValueChange={([v]) => setGlassBlur(v as number)}
-                  />
-                </div>
               </div>
             )}
 
@@ -378,23 +318,6 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                       <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
                     </IllustrationPlaceholder>
                   )}
-                </div>
-                <div>
-                  <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
-                    <Select
-                      value={contentWidth}
-                      onValueChange={(v) => setContentWidth(v as ContentWidth)}
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">标准</SelectItem>
-                        <SelectItem value="wide">宽</SelectItem>
-                        <SelectItem value="wider">更宽</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
                 </div>
                 <div>
                   <Field label="X 操作栏" description="使用 X 风格的操作栏（含收藏和分享按钮）">
@@ -447,68 +370,6 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     </IllustrationPlaceholder>
                   </div>
                 )}
-
-                <div>
-                  <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
-                    <Switch
-                      checked={statusDetailPopupEnabled}
-                      onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
-                    />
-                  </Field>
-                </div>
-
-                {statusDetailPopupEnabled && (
-                  <div>
-                    <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
-                      <Select
-                        value={statusDetailPopupPosition}
-                        onValueChange={(value) =>
-                          setStatusDetailPopupPosition(value as StatusDetailPopupPosition)
-                        }
-                      >
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="left">左</SelectItem>
-                          <SelectItem value="center">中</SelectItem>
-                          <SelectItem value="right">右</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
-                )}
-
-                {statusDetailPopupEnabled && (
-                  <div className="flex flex-col gap-2">
-                    <Label>弹窗宽度</Label>
-                    <p className="text-muted-foreground text-xs">
-                      详情弹窗占页面宽度的比例 ({statusDetailPopupWidth}%)
-                    </p>
-                    <Slider
-                      value={[statusDetailPopupWidth]}
-                      min={50}
-                      max={80}
-                      step={5}
-                      onValueChange={([value]) => setStatusDetailPopupWidth(value)}
-                    />
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <Label>瀑布流栏数</Label>
-                  <p className="text-muted-foreground text-xs">
-                    设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于
-                    300px
-                  </p>
-                  <Slider
-                    value={[waterfallColumnCount]}
-                    min={1}
-                    max={5}
-                    step={1}
-                    onValueChange={([value]) => setWaterfallColumnCount(value)}
-                  />
-                </div>
               </div>
             )}
 
@@ -640,6 +501,22 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
 
             {activeGroup === 'features' && (
               <div className="divide-border/40 divide-y px-6 py-4">
+                <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+                  <Select
+                    value={contentWidth}
+                    onValueChange={(v) => setContentWidth(v as ContentWidth)}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">标准</SelectItem>
+                      <SelectItem value="wide">宽</SelectItem>
+                      <SelectItem value="wider">更宽</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+
                 <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
                   <Switch
                     checked={statusDetailPopupEnabled}
@@ -768,6 +645,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     variant="outline"
                     size="sm"
                     onClick={() => {
+                      setContentWidth(DEFAULT_APP_SETTINGS.contentWidth)
                       setStatusDetailPopupEnabled(DEFAULT_APP_SETTINGS.statusDetailPopupEnabled)
                       setStatusDetailPopupPosition(DEFAULT_APP_SETTINGS.statusDetailPopupPosition)
                       setStatusDetailPopupWidth(DEFAULT_APP_SETTINGS.statusDetailPopupWidth)
