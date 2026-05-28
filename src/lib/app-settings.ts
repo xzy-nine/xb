@@ -153,7 +153,8 @@ export interface AppSettings {
   browsingHistoryLimit: BrowsingHistoryLimit
   followGroupsEnabled: boolean
   xbTopicPage: boolean
-  forceRedirectToFollowing: boolean
+  forceRedirectToFollowing?: boolean
+  firstLoadRedirect: HomeTab
   homeTab: HomeTab
   customThemeLightCss: string
   customThemeDarkCss: string
@@ -220,6 +221,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   followGroupsEnabled: false,
   xbTopicPage: true,
   forceRedirectToFollowing: false,
+  firstLoadRedirect: 'for-you',
   homeTab: 'for-you',
   customThemeLightCss: '',
   customThemeDarkCss: '',
@@ -487,6 +489,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.forceRedirectToFollowing === 'boolean'
         ? candidate.forceRedirectToFollowing
         : DEFAULT_APP_SETTINGS.forceRedirectToFollowing,
+    firstLoadRedirect: isHomeTab(candidate.firstLoadRedirect)
+      ? candidate.firstLoadRedirect
+      : DEFAULT_APP_SETTINGS.firstLoadRedirect,
     homeTab: isHomeTab(candidate.homeTab) ? candidate.homeTab : DEFAULT_APP_SETTINGS.homeTab,
     customThemeLightCss:
       typeof candidate.customThemeLightCss === 'string'

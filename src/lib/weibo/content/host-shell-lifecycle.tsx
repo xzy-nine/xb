@@ -40,14 +40,22 @@ export async function mountWeiboHostShell({
   const settingsStore = getAppSettingsStore()
   await settingsStore.getState().hydrate()
 
-  // 强制跳转我关注的：当 window.history.length <= 2 且当前在首页时，重定向到 /mygroups
-  const { forceRedirectToFollowing } = settingsStore.getState()
+  // 首次加载跳转：当 window.history.length <= 2 且当前在首页时，重定向到用户选择的页面
+  const { firstLoadRedirect } = settingsStore.getState()
   if (
-    forceRedirectToFollowing &&
+    firstLoadRedirect &&
     window.history.length <= 2 &&
     (window.location.pathname === '/' || window.location.pathname === '')
   ) {
-    window.location.replace('/mygroups')
+    let redirectPath = '/'
+    if (firstLoadRedirect === 'following') {
+      redirectPath = '/mygroups'
+    } else if (firstLoadRedirect === 'special-follow') {
+      redirectPath = '/mygroups?gid=4192852076145461'
+    } else if (firstLoadRedirect === 'friend-circle') {
+      redirectPath = '/mygroups?gid=100096393557498'
+    }
+    window.location.replace(redirectPath)
     return null
   }
 

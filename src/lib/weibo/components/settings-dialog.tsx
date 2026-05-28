@@ -199,7 +199,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     contentWidth,
     followGroupsEnabled,
     xbTopicPage,
-    forceRedirectToFollowing,
+    firstLoadRedirect,
     selectedThemeType,
     selectedThemeId,
     userThemes,
@@ -236,7 +236,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       contentWidth: s.contentWidth,
       followGroupsEnabled: s.followGroupsEnabled,
       xbTopicPage: s.xbTopicPage,
-      forceRedirectToFollowing: s.forceRedirectToFollowing,
+      firstLoadRedirect: s.firstLoadRedirect,
       selectedThemeType: s.selectedThemeType,
       selectedThemeId: s.selectedThemeId,
       userThemes: s.userThemes,
@@ -663,16 +663,25 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Field>
                 </div>
                 <div>
-                  <Field
-                    label="强制跳转我关注的"
-                    description="打开后，进入首页时自动跳转到「我关注的」"
-                  >
-                    <Switch
-                      checked={forceRedirectToFollowing}
-                      onCheckedChange={(checked) =>
-                        void updateSettings({ forceRedirectToFollowing: checked })
+                  <Field label="首次加载跳转" description="打开后，进入首页时自动跳转到指定页面">
+                    <Select
+                      value={firstLoadRedirect}
+                      onValueChange={(value) =>
+                        void updateSettings({
+                          firstLoadRedirect: value as typeof firstLoadRedirect,
+                        })
                       }
-                    />
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for-you">推荐</SelectItem>
+                        <SelectItem value="following">我关注的</SelectItem>
+                        <SelectItem value="special-follow">特别关注</SelectItem>
+                        <SelectItem value="friend-circle">朋友圈</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </Field>
                 </div>
                 <div>
