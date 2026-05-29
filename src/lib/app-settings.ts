@@ -149,7 +149,6 @@ export interface AppSettings {
   imageGenCardStyle: CardStyle
   hotSearchType: HotSearchType
   xLayoutEnabled: boolean
-  browsingHistoryEnabled: boolean
   browsingHistoryLimit: BrowsingHistoryLimit
   followGroupsEnabled: boolean
   xbTopicPage: boolean
@@ -216,7 +215,6 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
   xLayoutEnabled: true,
-  browsingHistoryEnabled: true,
   browsingHistoryLimit: 200,
   followGroupsEnabled: false,
   xbTopicPage: true,
@@ -470,10 +468,6 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.xLayoutEnabled === 'boolean'
         ? candidate.xLayoutEnabled
         : DEFAULT_APP_SETTINGS.xLayoutEnabled,
-    browsingHistoryEnabled:
-      typeof candidate.browsingHistoryEnabled === 'boolean'
-        ? candidate.browsingHistoryEnabled
-        : DEFAULT_APP_SETTINGS.browsingHistoryEnabled,
     browsingHistoryLimit: isBrowsingHistoryLimit(candidate.browsingHistoryLimit)
       ? candidate.browsingHistoryLimit
       : DEFAULT_APP_SETTINGS.browsingHistoryLimit,

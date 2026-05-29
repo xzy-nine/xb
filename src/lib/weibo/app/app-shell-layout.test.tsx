@@ -65,7 +65,6 @@ describe('ShellFrame', () => {
             rewriteEnabled
             theme="system"
             contentWidth="standard"
-            browsingHistoryEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
