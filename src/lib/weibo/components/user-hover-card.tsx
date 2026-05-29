@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { useAppSettings } from '@/lib/app-settings-store'
 import {
   formatProfileCount,
   ProfileBanner,
   ProfileMutualFollowers,
 } from '@/lib/weibo/components/profile-shared'
+import { RatingPanel } from '@/lib/weibo/components/rating-panel'
 import { loadProfileHoverCard } from '@/lib/weibo/services/weibo-repository'
 
 import { FollowButton } from './follow-button'
@@ -64,6 +66,9 @@ export function UserHoverCard(props: UserHoverCardProps) {
     enabled: hasOpened,
   })
 
+  const profileUid = profile?.id ?? ''
+  const ratingEnabled = useAppSettings((s) => s.ratingEnabled)
+
   return (
     <HoverCard
       onOpenChange={(open) => {
@@ -98,7 +103,9 @@ export function UserHoverCard(props: UserHoverCardProps) {
                 />
               </div>
 
-              <p className="text-foreground text-base leading-tight font-bold">{profile.name}</p>
+              <p className="text-foreground truncate text-base leading-tight font-bold">
+                {profile.name}
+              </p>
 
               {profile.descText ? (
                 <p className="text-muted-foreground text-xs" title="认证信息">
@@ -145,6 +152,10 @@ export function UserHoverCard(props: UserHoverCardProps) {
                   </button>
                 ) : null}
               </div>
+
+              {profileUid && ratingEnabled ? (
+                <RatingPanel targetUid={profileUid} size="sm" />
+              ) : null}
 
               <ProfileMutualFollowers
                 followers={profile.mutualFollowers}

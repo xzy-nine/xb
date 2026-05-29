@@ -169,6 +169,7 @@ export interface AppSettings {
   feedToolbarButtonIds: FeedToolbarButtonId[]
   browsingHistoryLimit: BrowsingHistoryLimit
   xbTopicPage: boolean
+  ratingEnabled: boolean
   forceRedirectToFollowing?: boolean
   firstLoadRedirect: HomeTab
   homeTab: HomeTab
@@ -237,6 +238,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   feedToolbarButtonIds: [],
   browsingHistoryLimit: 200,
   xbTopicPage: true,
+  ratingEnabled: true,
   forceRedirectToFollowing: false,
   firstLoadRedirect: 'for-you',
   homeTab: 'for-you',
@@ -539,6 +541,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.xbTopicPage === 'boolean'
         ? candidate.xbTopicPage
         : DEFAULT_APP_SETTINGS.xbTopicPage,
+    ratingEnabled:
+      typeof candidate.ratingEnabled === 'boolean'
+        ? candidate.ratingEnabled
+        : DEFAULT_APP_SETTINGS.ratingEnabled,
     forceRedirectToFollowing:
       typeof candidate.forceRedirectToFollowing === 'boolean'
         ? candidate.forceRedirectToFollowing

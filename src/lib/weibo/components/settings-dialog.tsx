@@ -235,6 +235,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     feedToolbarButtonIds,
     contentWidth,
     xbTopicPage,
+    ratingEnabled,
     firstLoadRedirect,
     selectedThemeType,
     selectedThemeId,
@@ -272,6 +273,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       feedToolbarButtonIds: s.feedToolbarButtonIds,
       contentWidth: s.contentWidth,
       xbTopicPage: s.xbTopicPage,
+      ratingEnabled: s.ratingEnabled,
       firstLoadRedirect: s.firstLoadRedirect,
       selectedThemeType: s.selectedThemeType,
       selectedThemeId: s.selectedThemeId,
@@ -955,6 +957,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {activeGroup === 'advanced' && (
               <div className="divide-border/40 divide-y px-6 py-4">
+                <Field
+                  label="xb 评分系统"
+                  description="给用户评分并查看TA的分数，每小时计算一次分值（来自 BlackMirror · Nosedive 故事）"
+                >
+                  <Switch
+                    checked={ratingEnabled}
+                    onCheckedChange={(checked) => void updateSettings({ ratingEnabled: checked })}
+                  />
+                </Field>
                 <Field label="内置话题页" description="使用 xb 内置话题页，关闭则跳转原微博话题页">
                   <Switch
                     checked={xbTopicPage}

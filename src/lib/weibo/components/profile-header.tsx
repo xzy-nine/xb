@@ -3,12 +3,14 @@ import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { FollowButton } from '@/lib/weibo/components/follow-button'
 import {
   formatProfileCount,
   ProfileBanner,
   ProfileMutualFollowers as SharedProfileMutualFollowers,
 } from '@/lib/weibo/components/profile-shared'
+import { RatingPanel } from '@/lib/weibo/components/rating-panel'
 import type { UserProfile } from '@/lib/weibo/models/profile'
 
 function ProfileIdentity({ profile }: { profile: UserProfile }) {
@@ -129,6 +131,7 @@ function ProfileHeaderMutualFollowers({ profile }: { profile: UserProfile }) {
 }
 
 export function ProfileHeader({ profile }: { profile: UserProfile }) {
+  const ratingEnabled = useAppSettings((s) => s.ratingEnabled)
   return (
     <Card className="overflow-hidden py-0 shadow-none">
       <CardContent className="p-0">
@@ -140,6 +143,7 @@ export function ProfileHeader({ profile }: { profile: UserProfile }) {
         <div className="relative px-5 pb-5">
           <ProfileIdentity profile={profile} />
           <ProfileMetadata profile={profile} />
+          {ratingEnabled ? <RatingPanel targetUid={profile.id} size="md" className="mt-3" /> : null}
           <ProfileHeaderMutualFollowers profile={profile} />
         </div>
       </CardContent>

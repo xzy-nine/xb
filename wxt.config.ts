@@ -1,7 +1,17 @@
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
 import tailwindcss from '@tailwindcss/vite'
+import { loadEnv } from 'vite'
 import { defineConfig } from 'wxt'
+
+const projectRoot = fileURLToPath(new URL('.', import.meta.url))
+const envMode = process.env.MODE ?? process.env.NODE_ENV ?? 'development'
+const fileEnv = loadEnv(envMode, projectRoot, '')
+
+function getEnv(name: string): string | undefined {
+  return process.env[name] ?? fileEnv[name]
+}
 
 const packageJson = JSON.parse(
   readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
@@ -9,7 +19,7 @@ const packageJson = JSON.parse(
   version: string
 }
 
-const extensionVersion = process.env.EXTENSION_VERSION ?? packageJson.version
+const extensionVersion = getEnv('EXTENSION_VERSION') ?? packageJson.version
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -36,6 +46,8 @@ export default defineConfig({
       'https://*.weibocdn.com/*',
       // m.weibo.cn API for topic search (proxied via background SW)
       'https://m.weibo.cn/*',
+      // xb-server rating API
+      'https://xb-server.nnecec-3d5.workers.dev/*',
       // 'https://s.weibo.com/*',
     ],
     web_accessible_resources: [
@@ -50,7 +62,7 @@ export default defineConfig({
     ],
     browser_specific_settings: {
       gecko: {
-        id: process.env.FIREFOX_EXTENSION_ID ?? '@xb-weibo',
+        id: getEnv('FIREFOX_EXTENSION_ID') ?? '@xb-weibo',
         data_collection_permissions: {
           required: ['none'],
         },
@@ -62,6 +74,13 @@ export default defineConfig({
   },
   vite: () => ({
     plugins: [tailwindcss()],
+    define: {
+      'import.meta.env.VITE_XB_SIGN_SECRET': JSON.stringify(
+        getEnv('VITE_XB_SIGN_SECRET') ?? getEnv('XB_SIGN_SECRET') ?? '',
+      ),
+      'import.meta.env.XB_SIGN_SECRET': JSON.stringify(getEnv('XB_SIGN_SECRET') ?? ''),
+      'import.meta.env.XB_SERVER_URL': JSON.stringify(getEnv('XB_SERVER_URL') ?? ''),
+    },
   }),
   dev: {
     server: {

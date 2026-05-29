@@ -16,6 +16,8 @@ export default defineBackground(() => {
   })
 })
 
+// ─── m.weibo.cn fetch ───
+
 interface MweiboFetchMessage {
   type: 'mweibo-fetch'
   url: string
