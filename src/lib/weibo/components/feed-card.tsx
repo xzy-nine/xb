@@ -39,6 +39,7 @@ import {
 } from '@/lib/weibo/models/status-presentation'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
+  optimisticallyRemoveStatusFromFavorites,
   optimisticallyToggleStatusFavorite,
   optimisticallyToggleStatusLike,
   restoreStatusCacheMutation,
@@ -624,9 +625,6 @@ export const FeedCard = memo(function FeedCard({
     onSuccess: (_data, target) => {
       toast.success(target.favorited ? '取消收藏成功' : '收藏成功')
     },
-    meta: {
-      invalidates: [['weibo', 'favorites']],
-    },
     onError: (_error, target, context) => {
       restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
@@ -635,13 +633,12 @@ export const FeedCard = memo(function FeedCard({
 
   const unfavoriteMutation = useMutation({
     mutationFn: (targetId: string) => destroyFavorite(targetId),
+    onMutate: (targetId: string) => optimisticallyRemoveStatusFromFavorites(queryClient, targetId),
     onSuccess: () => {
       toast.success('取消收藏成功')
     },
-    meta: {
-      invalidates: [['weibo', 'favorites']],
-    },
-    onError: (error) => {
+    onError: (error, _targetId, context) => {
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(error instanceof Error ? error.message : '取消收藏失败')
     },
   })

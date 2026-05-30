@@ -127,6 +127,22 @@ function updateStatusEverywhere(
   updateStatusDetailCaches(queryClient, statusId, update)
 }
 
+function removeStatusFromFavorites(queryClient: QueryClient, statusId: string) {
+  queryClient.setQueriesData({ queryKey: ['weibo', 'favorites'] }, (old) => {
+    if (!hasInfinitePages<unknown>(old)) {
+      return old
+    }
+
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        items: page.items.filter((item) => !isFeedItem(item) || item.id !== statusId),
+      })),
+    }
+  })
+}
+
 function updateCommentInTree(
   comment: CommentItem,
   commentId: string,
@@ -179,6 +195,25 @@ export async function optimisticallyToggleStatusFavorite(
     ...item,
     favorited: !item.favorited,
   }))
+
+  if (target.favorited) {
+    removeStatusFromFavorites(queryClient, target.id)
+  }
+
+  return context
+}
+
+export async function optimisticallyRemoveStatusFromFavorites(
+  queryClient: QueryClient,
+  statusId: string,
+): Promise<StatusCacheMutationContext> {
+  const context = await prepareMutation(queryClient)
+
+  updateStatusEverywhere(queryClient, statusId, (item) => ({
+    ...item,
+    favorited: false,
+  }))
+  removeStatusFromFavorites(queryClient, statusId)
 
   return context
 }

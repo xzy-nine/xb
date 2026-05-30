@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 import type { CommentItem } from '@/lib/weibo/models/status'
 import {
+  optimisticallyRemoveStatusFromFavorites,
   optimisticallyIncrementStatusComments,
   optimisticallyToggleCommentLike,
   optimisticallyToggleStatusFavorite,
@@ -95,6 +96,62 @@ describe('status-cache', () => {
       queryClient.getQueryData<{ pages: Array<{ items: FeedItem[] }> }>(['weibo', 'timeline'])
         ?.pages[0]?.items[0]?.favorited,
     ).toBe(false)
+  })
+
+  it('removes unfavorited statuses from favorites pages and can restore the previous snapshot', async () => {
+    const queryClient = new QueryClient()
+    const item = createFeedItem({ id: 'status-1', favorited: true })
+    const other = createFeedItem({ id: 'status-2', favorited: true })
+    queryClient.setQueryData(['weibo', 'favorites', 'user-1'], {
+      pages: [{ items: [item, other] }],
+    })
+    queryClient.setQueryData(['weibo', 'timeline'], { pages: [{ items: [item] }] })
+
+    const context = await optimisticallyToggleStatusFavorite(queryClient, item)
+
+    expect(
+      queryClient
+        .getQueryData<{ pages: Array<{ items: FeedItem[] }> }>(['weibo', 'favorites', 'user-1'])
+        ?.pages[0]?.items.map((cachedItem) => cachedItem.id),
+    ).toEqual(['status-2'])
+    expect(
+      queryClient.getQueryData<{ pages: Array<{ items: FeedItem[] }> }>(['weibo', 'timeline'])
+        ?.pages[0]?.items[0]?.favorited,
+    ).toBe(false)
+
+    restoreStatusCacheMutation(queryClient, context)
+    expect(
+      queryClient
+        .getQueryData<{ pages: Array<{ items: FeedItem[] }> }>(['weibo', 'favorites', 'user-1'])
+        ?.pages[0]?.items.map((cachedItem) => cachedItem.id),
+    ).toEqual(['status-1', 'status-2'])
+  })
+
+  it('removes deleted statuses from favorites pages and can restore the previous snapshot', async () => {
+    const queryClient = new QueryClient()
+    const item = createFeedItem({ id: 'status-1', deleted: true, favorited: true })
+    queryClient.setQueryData(['weibo', 'favorites', 'user-1'], {
+      pages: [{ items: [item] }],
+    })
+
+    const context = await optimisticallyRemoveStatusFromFavorites(queryClient, item.id)
+
+    expect(
+      queryClient.getQueryData<{ pages: Array<{ items: FeedItem[] }> }>([
+        'weibo',
+        'favorites',
+        'user-1',
+      ])?.pages[0]?.items,
+    ).toEqual([])
+
+    restoreStatusCacheMutation(queryClient, context)
+    expect(
+      queryClient.getQueryData<{ pages: Array<{ items: FeedItem[] }> }>([
+        'weibo',
+        'favorites',
+        'user-1',
+      ])?.pages[0]?.items,
+    ).toEqual([item])
   })
 
   it('increments status comments in feed pages and status detail caches', async () => {
