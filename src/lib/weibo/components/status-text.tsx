@@ -1,10 +1,22 @@
 import { ChevronRightIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Link } from 'react-router'
+import remarkGfm from 'remark-gfm'
 
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { cn } from '@/lib/utils'
 import { useEmoticonConfigQuery } from '@/lib/weibo/app/emoticon-query'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
@@ -23,6 +35,19 @@ const LINK_TEXT_CLASS_NAME = 'underline underline-offset-2'
 const INLINE_EMOTICON_CLASS_NAME = 'inline h-[1.2em] w-auto align-[-0.22em]'
 const EMPTY_COMMENT_LABEL = 'No content.'
 const EMPTY_STATUS_LABEL = 'No text content.'
+
+function sanitizeMarkdownText(value: string) {
+  return value
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<span\b(?=[^>]*\bclass=(["'])[^"']*\bexpand\b[^"']*\1)[^>]*>.*?<\/span>/gi, '')
+}
+
+function withoutMarkdownNode<T extends { node?: unknown }>(props: T): Omit<T, 'node'> {
+  const { node, ...rest } = props
+  void node
+  return rest
+}
 
 type ReplyChainSegment = {
   screenName: string
@@ -221,6 +246,185 @@ function renderTextWithEntities(
       </span>
     )
   })
+}
+
+function MarkdownText({ text }: { text: string }) {
+  const safeText = sanitizeMarkdownText(text)
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      skipHtml
+      components={{
+        a: ({ className, href, children, ...props }) => (
+          <a
+            {...withoutMarkdownNode(props)}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className={cn('font-medium text-primary underline underline-offset-4', className)}
+          >
+            {children}
+          </a>
+        ),
+        blockquote: ({ className, children, ...props }) => (
+          <blockquote
+            {...withoutMarkdownNode(props)}
+            className={cn('mt-4 border-l-2 pl-4 italic', className)}
+          >
+            {children}
+          </blockquote>
+        ),
+        code: ({ className, children, ...props }) => (
+          <code
+            {...withoutMarkdownNode(props)}
+            className={cn(
+              'relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold',
+              className,
+            )}
+          >
+            {children}
+          </code>
+        ),
+        h1: ({ className, children, ...props }) => (
+          <h1
+            {...withoutMarkdownNode(props)}
+            className={cn(
+              'mt-5 scroll-m-20 text-xl font-semibold text-balance first:mt-0',
+              className,
+            )}
+          >
+            {children}
+          </h1>
+        ),
+        h2: ({ className, children, ...props }) => (
+          <h2
+            {...withoutMarkdownNode(props)}
+            className={cn(
+              'mt-5 scroll-m-20 border-b pb-1.5 text-lg font-semibold first:mt-0',
+              className,
+            )}
+          >
+            {children}
+          </h2>
+        ),
+        h3: ({ className, children, ...props }) => (
+          <h3
+            {...withoutMarkdownNode(props)}
+            className={cn('mt-4 scroll-m-20 text-[1.0625rem] font-semibold first:mt-0', className)}
+          >
+            {children}
+          </h3>
+        ),
+        h4: ({ className, children, ...props }) => (
+          <h4
+            {...withoutMarkdownNode(props)}
+            className={cn('mt-3 scroll-m-20 text-base font-semibold first:mt-0', className)}
+          >
+            {children}
+          </h4>
+        ),
+        hr: ({ className, ...props }) => (
+          <hr {...withoutMarkdownNode(props)} className={cn('border-border my-3', className)} />
+        ),
+        img: () => null,
+        li: ({ className, children, ...props }) => (
+          <li {...withoutMarkdownNode(props)} className={className}>
+            {children}
+          </li>
+        ),
+        ol: ({ className, children, ...props }) => (
+          <ol
+            {...withoutMarkdownNode(props)}
+            className={cn('my-4 ml-6 list-decimal [&>li]:mt-1.5', className)}
+          >
+            {children}
+          </ol>
+        ),
+        p: ({ className, children, ...props }) => (
+          <p
+            {...withoutMarkdownNode(props)}
+            className={cn('leading-7 [&:not(:first-child)]:mt-4', className)}
+          >
+            {children}
+          </p>
+        ),
+        pre: ({ className, children, ...props }) => (
+          <pre
+            {...withoutMarkdownNode(props)}
+            className={cn(
+              'bg-muted my-2 overflow-x-auto rounded-md p-3 font-mono text-[0.92em] whitespace-pre',
+              className,
+            )}
+          >
+            {children}
+          </pre>
+        ),
+        caption: ({ className, children, ...props }) => (
+          <TableCaption {...withoutMarkdownNode(props)} className={className}>
+            {children}
+          </TableCaption>
+        ),
+        table: ({ className, children, ...props }) => (
+          <div className="my-4 w-full overflow-y-auto">
+            <Table {...withoutMarkdownNode(props)} className={cn('w-full', className)}>
+              {children}
+            </Table>
+          </div>
+        ),
+        tbody: ({ className, children, ...props }) => (
+          <TableBody {...withoutMarkdownNode(props)} className={className}>
+            {children}
+          </TableBody>
+        ),
+        td: ({ className, children, ...props }) => (
+          <TableCell
+            {...withoutMarkdownNode(props)}
+            className={cn(
+              'border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right',
+              className,
+            )}
+          >
+            {children}
+          </TableCell>
+        ),
+        th: ({ className, children, ...props }) => (
+          <TableHead
+            {...withoutMarkdownNode(props)}
+            className={cn(
+              'border px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right',
+              className,
+            )}
+          >
+            {children}
+          </TableHead>
+        ),
+        thead: ({ className, children, ...props }) => (
+          <TableHeader {...withoutMarkdownNode(props)} className={className}>
+            {children}
+          </TableHeader>
+        ),
+        tr: ({ className, children, ...props }) => (
+          <TableRow
+            {...withoutMarkdownNode(props)}
+            className={cn('m-0 border-t p-0 even:bg-muted', className)}
+          >
+            {children}
+          </TableRow>
+        ),
+        ul: ({ className, children, ...props }) => (
+          <ul
+            {...withoutMarkdownNode(props)}
+            className={cn('my-4 ml-6 list-disc [&>li]:mt-1.5', className)}
+          >
+            {children}
+          </ul>
+        ),
+      }}
+    >
+      {safeText}
+    </ReactMarkdown>
+  )
 }
 
 function parseReplyChainText(text: string): ParsedReplyChainText {
@@ -446,9 +650,14 @@ export function MentionInlineText({ text }: { text: string }) {
 export function StatusText({
   item,
   text,
+  mode = 'plain',
 }: {
-  item: Pick<FeedItem, 'emoticons' | 'urlEntities' | 'topicEntities' | 'imageEntities'>
+  item: Pick<
+    FeedItem,
+    'emoticons' | 'urlEntities' | 'topicEntities' | 'imageEntities' | 'isMarkdown' | 'markdownText'
+  >
   text: string
+  mode?: 'plain' | 'markdown'
 }) {
   const emoticonQuery = useEmoticonConfigQuery()
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
@@ -460,6 +669,10 @@ export function StatusText({
   const raw = text ?? ''
   if (!raw) {
     return <>{EMPTY_STATUS_LABEL}</>
+  }
+
+  if (mode === 'markdown' && item.isMarkdown && item.markdownText) {
+    return <MarkdownText text={item.markdownText} />
   }
 
   const hasUrlEntities = Boolean(item.urlEntities && item.urlEntities.length > 0)

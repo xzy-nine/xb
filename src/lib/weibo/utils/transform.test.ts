@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { toFeedItem, toMedia } from './transform'
+import { mergeLongTextIntoFeedItem, toFeedItem, toMedia } from './transform'
 
 describe('toMedia', () => {
   describe('live type', () => {
@@ -305,5 +305,55 @@ describe('toFeedItem media images', () => {
         videoTitle: '混合视频',
       },
     ])
+  })
+})
+
+describe('toFeedItem markdown', () => {
+  it('preserves markdown raw text for truncated long-text markdown statuses', () => {
+    const result = toFeedItem({
+      idstr: 'md-1',
+      mblogid: 'R1yHQwdrn',
+      isMarkdown: true,
+      isLongText: true,
+      text: '# Heading<br />truncated<span class="expand">展开</span>',
+      text_raw: '# Heading\n\ntruncated',
+      user: { idstr: '1', screen_name: 'Alice' },
+    })
+
+    expect(result.isMarkdown).toBe(true)
+    expect(result.isLongText).toBe(true)
+    expect(result.text).toBe('# Heading\n\ntruncated')
+    expect(result.markdownText).toBe('# Heading\n\ntruncated')
+  })
+
+  it('normalizes html preview text when markdown raw text is missing', () => {
+    const result = toFeedItem({
+      idstr: 'md-2',
+      isMarkdown: true,
+      text: '# Heading<br />preview<span class="expand">展开</span>',
+      user: { idstr: '1', screen_name: 'Alice' },
+    })
+
+    expect(result.markdownText).toBe('# Heading\npreview')
+  })
+
+  it('keeps markdown rendering data after long text is merged', () => {
+    const item = toFeedItem({
+      idstr: 'md-3',
+      isMarkdown: true,
+      isLongText: true,
+      text_raw: '# Preview',
+      user: { idstr: '1', screen_name: 'Alice' },
+    })
+
+    const result = mergeLongTextIntoFeedItem(item, {
+      longTextContent: '# Full<br />**body**',
+      longTextContent_raw: '# Full\n\n**body**',
+    })
+
+    expect(result.isLongText).toBe(false)
+    expect(result.isMarkdown).toBe(true)
+    expect(result.text).toBe('# Full\n\n**body**')
+    expect(result.markdownText).toBe('# Full\n\n**body**')
   })
 })

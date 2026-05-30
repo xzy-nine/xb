@@ -357,6 +357,69 @@ describe('StatusText', () => {
     expect(container).not.toHaveTextContent('http://t.cn/PIC')
     expect(container).toHaveTextContent('这是正文')
   })
+
+  it('renders markdown text without enabling raw html', () => {
+    const { container } = renderWithProviders(
+      <StatusText
+        item={{
+          isMarkdown: true,
+          markdownText:
+            '# Markdown syntax guide\n\n**bold**\n\n- item\n\n<span class="expand">展开</span><script>alert(1)</script>',
+          urlEntities: [],
+          topicEntities: [],
+        }}
+        text="# Markdown syntax guide"
+        mode="markdown"
+      />,
+    )
+
+    const view = within(container)
+    expect(
+      view.getByRole('heading', { level: 1, name: 'Markdown syntax guide' }),
+    ).toBeInTheDocument()
+    expect(view.getByText('bold').tagName.toLowerCase()).toBe('strong')
+    expect(view.getByText('item').tagName.toLowerCase()).toBe('li')
+    expect(container).not.toHaveTextContent('alert(1)')
+    expect(container).not.toHaveTextContent('展开')
+    expect(container.querySelector('script')).toBeNull()
+    expect(container.querySelector('span.expand')).toBeNull()
+  })
+
+  it('renders markdown tables with shadcn table components', () => {
+    const { container } = renderWithProviders(
+      <StatusText
+        item={{
+          isMarkdown: true,
+          markdownText: '| Name | Count |\n| --- | ---: |\n| Alpha | 1 |',
+          urlEntities: [],
+          topicEntities: [],
+        }}
+        text="Name Count"
+        mode="markdown"
+      />,
+    )
+
+    expect(container.querySelector('[data-slot="table-container"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="table"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="table-header"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="table-body"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="table-row"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="table-head"]')).toHaveTextContent('Name')
+    expect(container.querySelector('[data-slot="table-cell"]')).toHaveTextContent('Alpha')
+  })
+
+  it('falls back to plain rendering when markdown mode is requested for non-markdown text', () => {
+    const { container } = renderWithProviders(
+      <StatusText
+        item={{ urlEntities: [], topicEntities: [] }}
+        text="普通文本 **不是粗体**"
+        mode="markdown"
+      />,
+    )
+
+    expect(container).toHaveTextContent('普通文本 **不是粗体**')
+    expect(container.querySelector('strong')).toBeNull()
+  })
 })
 
 describe('StatusText reply-chain collapsible', () => {

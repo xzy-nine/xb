@@ -96,6 +96,8 @@ export interface FeedItem {
   favorited?: boolean
   author: FeedAuthor
   text: string
+  isMarkdown?: boolean
+  markdownText?: string
   createdAt: string
   createdAtLabel: string
   stats: FeedStats
