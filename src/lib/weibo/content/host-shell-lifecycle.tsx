@@ -6,6 +6,8 @@ import { AppRoot } from '@/lib/weibo/app/app-root'
 import { waitForWeiboHostRegions } from '@/lib/weibo/content/host-selectors'
 import { markWeiboPageReady } from '@/lib/weibo/content/page-takeover'
 import { bindShellState } from '@/lib/weibo/content/shell-state'
+import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
+import { loadFollowGroups } from '@/lib/weibo/services/weibo-repository'
 
 interface MountedWeiboUi {
   root: Root
@@ -47,13 +49,14 @@ export async function mountWeiboHostShell({
     window.history.length <= 2 &&
     (window.location.pathname === '/' || window.location.pathname === '')
   ) {
-    let redirectPath = '/'
-    if (firstLoadRedirect === 'following') {
-      redirectPath = '/mygroups'
-    } else if (firstLoadRedirect === 'special-follow') {
-      redirectPath = '/mygroups?gid=4192852076145461'
-    } else if (firstLoadRedirect === 'friend-circle') {
-      redirectPath = '/mygroups?gid=100096393557498'
+    let redirectPath = homeTimelinePathFromTab(firstLoadRedirect)
+    if (firstLoadRedirect === 'special-follow' || firstLoadRedirect === 'friend-circle') {
+      try {
+        const groups = await loadFollowGroups()
+        redirectPath = homeTimelinePathFromTab(firstLoadRedirect, groups.defaultGroups)
+      } catch {
+        redirectPath = homeTimelinePathFromTab(firstLoadRedirect)
+      }
     }
     window.location.replace(redirectPath)
     return null

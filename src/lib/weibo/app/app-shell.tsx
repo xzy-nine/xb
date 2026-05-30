@@ -12,26 +12,14 @@ import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
+import { followGroupsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
+import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
 
 const GenImageDialog = lazy(() =>
   import('@/lib/weibo/components/gen-image-dialog').then((m) => ({ default: m.GenImageDialog })),
 )
-
-function getHomeTimelinePath(tab: 'for-you' | 'following' | 'special-follow' | 'friend-circle') {
-  switch (tab) {
-    case 'following':
-      return '/mygroups'
-    case 'special-follow':
-      return '/mygroups?gid=4192852076145461'
-    case 'friend-circle':
-      return '/mygroups?gid=100096393557498'
-    case 'for-you':
-    default:
-      return '/'
-  }
-}
 
 export interface AppShellContext {
   page: ReturnType<typeof useWeiboPage>
@@ -66,6 +54,7 @@ export function AppShell() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement | null>(null)
+  const homeTabNavigationRequestRef = useRef(0)
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
 
@@ -96,10 +85,27 @@ export function AppShell() {
 
   const onHomeTabChange = useCallback(
     (tab: HomeTab) => {
+      const requestId = ++homeTabNavigationRequestRef.current
       void updateSettings({ homeTab: tab })
-      navigate(getHomeTimelinePath(tab))
+      if (tab === 'special-follow' || tab === 'friend-circle') {
+        void queryClient
+          .ensureQueryData(followGroupsQueryOptions)
+          .then((groups) => {
+            if (requestId === homeTabNavigationRequestRef.current) {
+              navigate(homeTimelinePathFromTab(tab, groups.defaultGroups))
+            }
+          })
+          .catch(() => {
+            if (requestId === homeTabNavigationRequestRef.current) {
+              navigate(homeTimelinePathFromTab(tab))
+            }
+          })
+        return
+      }
+
+      navigate(homeTimelinePathFromTab(tab))
     },
-    [navigate, updateSettings],
+    [navigate, queryClient, updateSettings],
   )
 
   const onFollowGroupChange = useCallback(

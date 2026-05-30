@@ -10,6 +10,8 @@ import { HomeTimelinePage } from '@/lib/weibo/pages/home-timeline-page'
 import { ProfilePage } from '@/lib/weibo/pages/profile-page'
 import { StatusDetailPage } from '@/lib/weibo/pages/status-detail-page'
 import {
+  loadFollowGroups,
+  loadGroupTimeline,
   loadProfileHoverCard,
   loadHomeTimeline,
   loadProfilePosts,
@@ -34,6 +36,17 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
   return {
     ...actual,
     loadHomeTimeline: vi.fn(async () => ({
+      items: [],
+      nextCursor: null,
+    })),
+    loadFollowGroups: vi.fn(async () => ({
+      groups: [],
+      defaultGroups: {
+        specialFollow: { gid: 'special-dynamic', title: '特别关注' },
+        friendCircle: { gid: 'friend-dynamic', title: '互相关注' },
+      },
+    })),
+    loadGroupTimeline: vi.fn(async () => ({
       items: [],
       nextCursor: null,
     })),
@@ -136,6 +149,23 @@ describe('AppShell', () => {
 
     await waitFor(() => {
       expect(vi.mocked(loadHomeTimeline)).toHaveBeenLastCalledWith('following', { cursor: null })
+    })
+  })
+
+  it('navigates to the special-follow timeline with the gid from allGroups', async () => {
+    renderWeiboShell(['/'])
+
+    fireEvent.pointerDown(screen.getByRole('button', { name: '推荐' }), {
+      button: 0,
+      ctrlKey: false,
+    })
+    fireEvent.click(await screen.findByRole('menuitem', { name: '特别关注' }))
+
+    await waitFor(() => {
+      expect(vi.mocked(loadFollowGroups)).toHaveBeenCalled()
+      expect(vi.mocked(loadGroupTimeline)).toHaveBeenCalledWith('special-dynamic', {
+        cursor: null,
+      })
     })
   })
 

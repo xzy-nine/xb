@@ -93,7 +93,11 @@ export function homeTimelineInfiniteOptions(
   activeTimelineTab: HomeTimelineTab,
   groupListId?: string | null,
 ) {
-  const useGroupTimeline = activeTimelineTab === 'following' && groupListId
+  const useGroupTimeline =
+    (activeTimelineTab === 'following' ||
+      activeTimelineTab === 'special-follow' ||
+      activeTimelineTab === 'friend-circle') &&
+    groupListId
   return {
     queryKey: ['weibo', 'timeline', activeTimelineTab, groupListId ?? 'default'] as const,
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
