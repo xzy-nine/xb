@@ -18,6 +18,7 @@ export default defineContentScript({
       /* Search pages: reveal #pl_feed_main (contains #pl_feedlist_index) */
       // html[data-xb-weibo-ready] .wbs-feed { visibility: visible !important; }
     `
-    document.head.append(style)
+    const styleContainer = document.head ?? document.documentElement
+    styleContainer.append(style)
   },
 })
