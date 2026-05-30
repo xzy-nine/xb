@@ -38,6 +38,12 @@ import {
 import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
 
+import {
+  applyStoredVideoVolume,
+  registerVideoVolumeElement,
+  rememberVideoVolumeFromElement,
+} from './video-volume-store'
+
 import '@videojs/react/video/skin.css'
 
 const Player = createPlayer({ features: [...videoFeatures] })
@@ -136,6 +142,7 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
 
   const handlePlay = useCallback(() => {
     if (videoRef.current) {
+      applyStoredVideoVolume(videoRef.current)
       videoRef.current.src = streamUrl
       videoRef.current.play().catch(() => {})
     }
@@ -143,9 +150,26 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
 
   const handleLoadedMetadata = useCallback(() => {
     if (videoRef.current) {
+      applyStoredVideoVolume(videoRef.current)
       videoRef.current.currentTime = 0
     }
   }, [])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const unregister = registerVideoVolumeElement(video)
+    const handleVolumeChange = () => {
+      rememberVideoVolumeFromElement(video)
+    }
+
+    video.addEventListener('volumechange', handleVolumeChange)
+    return () => {
+      unregister()
+      video.removeEventListener('volumechange', handleVolumeChange)
+    }
+  }, [isLive, isReplay, streamUrl, replayUrl])
 
   useEffect(() => {
     const container = videoRef.current?.closest('.media-default-skin--video')
