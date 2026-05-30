@@ -2,11 +2,9 @@ import '@/lib/weibo/content/weibo-anti-flash.css'
 
 /**
  * Hides Weibo's native UI until the React app is ready.
- * For s.weibo.com (search), CSS overrides handle the rebrand directly —
- * this script only hides unwanted chrome outside #pl_feedlist_index.
  */
 export default defineContentScript({
-  matches: ['https://weibo.com/*', 'https://www.weibo.com/*', 'https://s.weibo.com/*'],
+  matches: ['https://weibo.com/*', 'https://www.weibo.com/*'],
   runAt: 'document_start',
   main() {
     const style = document.createElement('style')
