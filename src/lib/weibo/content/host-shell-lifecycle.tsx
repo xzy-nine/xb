@@ -1,6 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 
 import { setUiPortalContainer } from '@/components/ui/portal'
+import type { HomeTab } from '@/lib/app-settings'
 import { getAppSettingsStore } from '@/lib/app-settings-store'
 import { AppRoot } from '@/lib/weibo/app/app-root'
 import { waitForWeiboHostRegions } from '@/lib/weibo/content/host-selectors'
@@ -24,6 +25,20 @@ export function injectSonnerStyles(shadow: ShadowRoot, styles: string) {
   shadow.appendChild(style)
 }
 
+export function shouldRedirectInitialHomePage({
+  firstLoadRedirect,
+  historyLength,
+  pathname,
+}: {
+  firstLoadRedirect: HomeTab
+  historyLength: number
+  pathname: string
+}) {
+  return (
+    firstLoadRedirect !== 'for-you' && historyLength <= 2 && (pathname === '/' || pathname === '')
+  )
+}
+
 export async function mountWeiboHostShell({
   ctx,
   sonnerStyles,
@@ -45,9 +60,11 @@ export async function mountWeiboHostShell({
   // 首次加载跳转：当 window.history.length <= 2 且当前在首页时，重定向到用户选择的页面
   const { firstLoadRedirect } = settingsStore.getState()
   if (
-    firstLoadRedirect &&
-    window.history.length <= 2 &&
-    (window.location.pathname === '/' || window.location.pathname === '')
+    shouldRedirectInitialHomePage({
+      firstLoadRedirect,
+      historyLength: window.history.length,
+      pathname: window.location.pathname,
+    })
   ) {
     let redirectPath = homeTimelinePathFromTab(firstLoadRedirect)
     if (firstLoadRedirect === 'special-follow' || firstLoadRedirect === 'friend-circle') {

@@ -1,6 +1,6 @@
 {
   "name": "xb",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "xb enhances your Weibo.com experience",
   "keywords": [
     "browser",
@@ -63,8 +63,10 @@
     "react": "^19.2.6",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
     "react-photo-view": "^1.2.7",
     "react-router": "^7.15.1",
+    "remark-gfm": "^4.0.1",
     "shadcn": "^4.7.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",

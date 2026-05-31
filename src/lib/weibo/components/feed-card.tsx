@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bookmark, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
+import { Bookmark, Copy, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
 import { memo, useCallback, type MouseEvent, type ReactNode, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
@@ -38,6 +39,7 @@ import {
 } from '@/lib/weibo/models/status-presentation'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
+  optimisticallyRemoveStatusFromFavorites,
   optimisticallyToggleStatusFavorite,
   optimisticallyToggleStatusLike,
   restoreStatusCacheMutation,
@@ -69,6 +71,10 @@ function hasTextSelectionWithin(container: HTMLElement) {
 
 function getMediaDownloadFilename(item: Pick<FeedItem, 'author' | 'text'>) {
   return `${item.author.name} ${sanitizeFilename(item.text.slice(0, 15))}`
+}
+
+function getStatusCopyText(item: Pick<FeedItem, 'text' | 'markdownText'>) {
+  return item.markdownText || item.text
 }
 
 function FeedMediaBlock({ item }: { item: FeedItem }) {
@@ -255,11 +261,14 @@ function FeedTextBlock({
 }) {
   const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
     useFontSettings()
+  const [textMode, setTextMode] = useState<'markdown' | 'plain'>('markdown')
+  const canRenderMarkdown = item.isMarkdown && item.markdownText
+  const resolvedTextMode = canRenderMarkdown ? textMode : 'plain'
 
   return (
     <div
       className={cn(
-        'whitespace-pre-wrap text-foreground',
+        'text-foreground',
         fontSizeClass,
         fontWeightClass,
         letterSpacingClass,
@@ -267,7 +276,33 @@ function FeedTextBlock({
         fontFamilyClass,
       )}
     >
-      <StatusText item={item} text={item.text} onNavigateTopic={onNavigateTopic} />
+      {canRenderMarkdown ? (
+        <Tabs
+          value={resolvedTextMode}
+          onValueChange={(value) => setTextMode(value as 'markdown' | 'plain')}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <TabsList>
+            <TabsTrigger
+              value="markdown"
+              className="text-xs"
+              onClick={() => setTextMode('markdown')}
+            >
+              Markdown
+            </TabsTrigger>
+            <TabsTrigger value="plain" className="text-xs" onClick={() => setTextMode('plain')}>
+              原文
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      ) : null}
+
+      <StatusText
+        item={item}
+        text={item.text}
+        mode={resolvedTextMode}
+        onNavigateTopic={onNavigateTopic}
+      />
 
       {canLoadLongText ? (
         <Button
@@ -648,9 +683,6 @@ export const FeedCard = memo(function FeedCard({
     onSuccess: (_data, target) => {
       toast.success(target.favorited ? '取消收藏成功' : '收藏成功')
     },
-    meta: {
-      invalidates: [['weibo', 'favorites']],
-    },
     onError: (_error, target, context) => {
       restoreStatusCacheMutation(queryClient, context)
       toast.error(_error instanceof Error ? _error.message : '操作失败')
@@ -659,13 +691,12 @@ export const FeedCard = memo(function FeedCard({
 
   const unfavoriteMutation = useMutation({
     mutationFn: (targetId: string) => destroyFavorite(targetId),
+    onMutate: (targetId: string) => optimisticallyRemoveStatusFromFavorites(queryClient, targetId),
     onSuccess: () => {
       toast.success('取消收藏成功')
     },
-    meta: {
-      invalidates: [['weibo', 'favorites']],
-    },
-    onError: (error) => {
+    onError: (error, _targetId, context) => {
+      restoreStatusCacheMutation(queryClient, context)
       toast.error(error instanceof Error ? error.message : '取消收藏失败')
     },
   })
@@ -726,6 +757,27 @@ export const FeedCard = memo(function FeedCard({
   const handleCommentExpand = useCallback(() => {
     setCommentsExpanded((prev) => !prev)
   }, [])
+
+  const handleCopyText = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation()
+      const copyText = getStatusCopyText(resolvedItem)
+      if (!copyText) {
+        toast.error('没有可复制的文字')
+        return
+      }
+
+      void navigator.clipboard
+        .writeText(copyText)
+        .then(() => {
+          toast.success('已复制文字')
+        })
+        .catch(() => {
+          toast.error('复制失败，请稍后重试')
+        })
+    },
+    [resolvedItem],
+  )
 
   if (resolvedItem.deleted) {
     return (
@@ -792,7 +844,7 @@ export const FeedCard = memo(function FeedCard({
   return (
     <Card
       className={cn(
-        'py-4 relative',
+        'group/card py-4 relative',
         uniformHeight ? 'gap-0 flex-1' : 'gap-4',
         canNavigate && 'cursor-pointer',
         className,
@@ -800,18 +852,29 @@ export const FeedCard = memo(function FeedCard({
       data-testid="feed-card-body"
       onClick={handleCardClick}
     >
-      <FeedCardMoreMenu
-        type="status"
-        isOwner={showOwnerMenu}
-        item={resolvedItem}
-        favorited={resolvedItem.favorited}
-        onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
-        contentLabel="这条微博"
-        isDeleting={deleteMutation.isPending}
-        onDelete={() => deleteMutation.mutateAsync()}
-        className="absolute top-4 right-4"
-        xLayoutEnabled={xLayoutEnabled}
-      />
+      <div className="absolute top-4 right-4">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100"
+          aria-label="复制微博文字"
+          onClick={handleCopyText}
+        >
+          <Copy className="size-3" />
+        </Button>
+        <FeedCardMoreMenu
+          type="status"
+          isOwner={showOwnerMenu}
+          item={resolvedItem}
+          favorited={resolvedItem.favorited}
+          onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
+          contentLabel="这条微博"
+          isDeleting={deleteMutation.isPending}
+          onDelete={() => deleteMutation.mutateAsync()}
+          xLayoutEnabled={xLayoutEnabled}
+        />
+      </div>
       {resolvedItem.title ? (
         <div className={cn('px-4', uniformHeight && 'mb-4')}>
           <Badge variant="secondary">{resolvedItem.title.text}</Badge>

@@ -73,6 +73,12 @@ describe('FeedCard', () => {
         dispatchEvent: vi.fn(),
       })),
     })
+    Object.defineProperty(navigator, 'clipboard', {
+      writable: true,
+      value: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    })
     resetAppSettingsStoreForTest()
     const store = getAppSettingsStore({
       get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
@@ -206,6 +212,144 @@ describe('FeedCard', () => {
       document.querySelector('img[src="https://wx3.sinaimg.cn/large/pic1.jpg"]'),
     ).not.toBeNull()
     expect(screen.queryByText('http://t.cn/IMG')).not.toBeInTheDocument()
+  })
+
+  it('renders truncated markdown before loading full text and keeps markdown after expansion', async () => {
+    vi.mocked(loadStatusLongText).mockResolvedValueOnce({
+      longTextContent: '# Full<br />**body**',
+      longTextContent_raw: '# Full\n\n**body**',
+    })
+
+    const queryClient = new QueryClient()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GenImageDialogProvider>
+            <FeedCard
+              item={{
+                id: 'md-501',
+                mblogId: 'm-md-501',
+                isLongText: true,
+                isMarkdown: true,
+                markdownText: '# Preview\n\n**truncated**',
+                text: '# Preview\n\n**truncated**',
+                createdAt: '2024-01-01',
+                createdAtLabel: 'today',
+                author: { id: '1', name: 'Alice', avatarUrl: null },
+                stats: { likes: 1, comments: 2, reposts: 3 },
+                images: [],
+                media: null,
+                regionName: '',
+                source: '',
+              }}
+            />
+          </GenImageDialogProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Preview' })).toBeInTheDocument()
+    expect(screen.getByText('truncated').tagName.toLowerCase()).toBe('strong')
+
+    fireEvent.click(screen.getByRole('button', { name: '全文' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1, name: 'Full' })).toBeInTheDocument()
+    })
+    expect(screen.getByText('body').tagName.toLowerCase()).toBe('strong')
+  })
+
+  it('can switch a markdown status back to raw source text', async () => {
+    const queryClient = new QueryClient()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GenImageDialogProvider>
+            <FeedCard
+              item={{
+                id: 'md-502',
+                mblogId: 'm-md-502',
+                isLongText: false,
+                isMarkdown: true,
+                markdownText: '# Preview\n\n**raw marker**',
+                text: '# Preview\n\n**raw marker**',
+                createdAt: '2024-01-01',
+                createdAtLabel: 'today',
+                author: { id: '1', name: 'Alice', avatarUrl: null },
+                stats: { likes: 1, comments: 2, reposts: 3 },
+                images: [],
+                media: null,
+                regionName: '',
+                source: '',
+              }}
+            />
+          </GenImageDialogProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('tab', { name: '原文' }))
+
+    await waitFor(() => {
+      expect(document.body).toHaveTextContent('# Preview')
+    })
+    expect(document.body).toHaveTextContent('**raw marker**')
+    expect(screen.queryByRole('heading', { level: 1, name: 'Preview' })).not.toBeInTheDocument()
+  })
+
+  it('copies plain status text from the hover action without navigating', async () => {
+    const onNavigate = vi.fn()
+    renderCard({ onNavigate })
+
+    const copyButton = screen.getByRole('button', { name: '复制微博文字' })
+    expect(copyButton).toHaveClass('opacity-0')
+    expect(copyButton).toHaveClass('group-hover/card:opacity-100')
+
+    fireEvent.click(copyButton)
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('preview content')
+    })
+    expect(onNavigate).not.toHaveBeenCalled()
+  })
+
+  it('copies markdown status text from the hover action', async () => {
+    const queryClient = new QueryClient()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GenImageDialogProvider>
+            <FeedCard
+              item={{
+                id: 'md-copy-501',
+                mblogId: 'm-md-copy-501',
+                isLongText: false,
+                isMarkdown: true,
+                markdownText: '# Preview\n\n**markdown marker**',
+                text: 'Preview markdown marker',
+                createdAt: '2024-01-01',
+                createdAtLabel: 'today',
+                author: { id: '1', name: 'Alice', avatarUrl: null },
+                stats: { likes: 1, comments: 2, reposts: 3 },
+                images: [],
+                media: null,
+                regionName: '',
+                source: '',
+              }}
+            />
+          </GenImageDialogProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '复制微博文字' }))
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('# Preview\n\n**markdown marker**')
+    })
   })
 
   it('triggers detail callback when clicking card body', () => {

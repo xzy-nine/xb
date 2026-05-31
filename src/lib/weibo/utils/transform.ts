@@ -152,6 +152,7 @@ export interface WeiboStatus {
   created_at?: string
   deleted?: string
   idstr?: string
+  isMarkdown?: boolean
   isLongText?: boolean
   longText?: object
   mid?: number | string
@@ -187,7 +188,7 @@ export interface WeiboStatus {
 
 export interface WeiboLongTextData extends Pick<
   WeiboStatus,
-  'pic_ids' | 'pic_infos' | 'topic_struct' | 'url_struct'
+  'pic_ids' | 'pic_infos' | 'topic_struct' | 'url_struct' | 'isMarkdown'
 > {
   longTextContent?: string
   longTextContent_raw?: string
@@ -298,6 +299,19 @@ function stripEntityTokens(text: string, tokens: string[]) {
 
 function stripHtmlTags(text: string): string {
   return text.replace(/<[^>]+>/g, '').trim()
+}
+
+function normalizeMarkdownText(value: string | undefined): string {
+  if (!value) {
+    return ''
+  }
+
+  return decodeHtmlEntities(
+    value
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<span\b(?=[^>]*\bclass=(["'])[^"']*\bexpand\b[^"']*\1)[^>]*>.*?<\/span>/gi, '')
+      .replace(/<[^>]+>/g, ''),
+  ).trim()
 }
 
 function decodeHtmlEntities(value: string) {
@@ -691,6 +705,21 @@ function getStatusText(status: Pick<WeiboStatus, 'text_raw' | 'raw_text' | 'text
   return status.text_raw ?? status.raw_text ?? status.text ?? ''
 }
 
+function getStatusMarkdownText(
+  status: Pick<WeiboStatus, 'text_raw' | 'raw_text' | 'text' | 'isMarkdown'>,
+): string | undefined {
+  if (!status.isMarkdown) {
+    return undefined
+  }
+
+  const raw = status.text_raw ?? status.raw_text
+  if (raw?.trim()) {
+    return raw
+  }
+
+  return normalizeMarkdownText(status.text)
+}
+
 function getStatusAuthor(user: WeiboStatusUser | undefined): FeedAuthor {
   return {
     id: String(user?.idstr ?? user?.id ?? ''),
@@ -831,6 +860,7 @@ export function toFeedItem(status: WeiboStatus, includeRetweeted = true): FeedIt
   const urlEntities = toUrlEntities(status, { excludeImageEntities: hasImageEntities })
   const topicEntities = toTopicEntities(status)
   const emoticons = extractEmoticonsFromHtml(status.text)
+  const markdownText = getStatusMarkdownText(status)
 
   return {
     id: getStatusId(status),
@@ -840,6 +870,8 @@ export function toFeedItem(status: WeiboStatus, includeRetweeted = true): FeedIt
     liked: Boolean(status.attitudes_status),
     favorited: Boolean(status.favorited),
     text: getStatusText(status),
+    ...(status.isMarkdown ? { isMarkdown: true } : {}),
+    ...(markdownText ? { markdownText } : {}),
     createdAt: status.created_at ?? '',
     createdAtLabel: formatCreatedAt(status.created_at ?? ''),
     author: getStatusAuthor(status.user),
@@ -868,6 +900,7 @@ export function mergeLongTextIntoFeedItem(item: FeedItem, longText: WeiboLongTex
   const longTextStatus: WeiboStatus = {
     text: longText.longTextContent ?? '',
     text_raw: longText.longTextContent_raw ?? longText.longTextContent ?? '',
+    isMarkdown: longText.isMarkdown ?? item.isMarkdown,
     pic_ids: longText.pic_ids ?? [],
     pic_infos: longText.pic_infos ?? {},
     topic_struct: longText.topic_struct ?? [],
@@ -890,6 +923,7 @@ export function mergeLongTextIntoFeedItem(item: FeedItem, longText: WeiboLongTex
     (image) => image.id,
   )
   const text = getStatusText(longTextStatus)
+  const markdownText = getStatusMarkdownText(longTextStatus)
   const mergedUrlEntities = uniqueBy(
     [
       ...toUrlEntities(longTextStatus, { excludeImageEntities: hasImageEntities }),
@@ -915,6 +949,8 @@ export function mergeLongTextIntoFeedItem(item: FeedItem, longText: WeiboLongTex
     ...item,
     isLongText: false,
     text,
+    ...(item.isMarkdown || longText.isMarkdown ? { isMarkdown: true } : {}),
+    markdownText,
     images: mergedImages,
     imageEntities: hasImageEntities ? mergedImageEntities : undefined,
     emoticons: Object.keys(mergedEmoticons).length > 0 ? mergedEmoticons : undefined,

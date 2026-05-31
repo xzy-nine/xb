@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Search, X } from 'lucide-react'
+import { ArrowUpRightIcon, Search, X } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -67,6 +67,15 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
     setOpen(false)
   }
 
+  const handleRelatedWeiboClick = (searchTerm: string) => {
+    window.open(
+      `https://s.weibo.com/weibo?q=${encodeURIComponent(searchTerm)}`,
+      '_blank',
+      'noopener,noreferrer',
+    )
+    setOpen(false)
+  }
+
   const handleHotQueryClick = (suggestion: string) => {
     if (!xbTopicPage) {
       window.open(
@@ -80,9 +89,11 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
     setOpen(false)
   }
 
+  const relatedWeiboQuery = activeQuery.trim()
   const topHotQueries = searchQuery.data?.hotQueries.slice(0, 10) ?? []
   const users = searchQuery.data?.users ?? []
-  const hasResults = topHotQueries.length > 0 || users.length > 0
+  const hasRelatedWeibo = relatedWeiboQuery.length > 0
+  const hasSearchSuggestions = topHotQueries.length > 0 || users.length > 0
 
   return (
     <div className={cn('relative', className)}>
@@ -115,13 +126,25 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
         </div>
 
         <DropdownMenuContent align="end" className="w-80">
+          {hasRelatedWeibo && (
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onSelect={() => handleRelatedWeiboClick(relatedWeiboQuery)}
+                className="flex items-center gap-2"
+              >
+                <span className="truncate">“{relatedWeiboQuery}”相关微博</span>
+                <ArrowUpRightIcon className="size-3" />
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          )}
+
           {searchQuery.isLoading ? (
             <DropdownMenuItem>
               <Spinner />
             </DropdownMenuItem>
           ) : searchQuery.isError ? (
             <DropdownMenuItem>搜索失败</DropdownMenuItem>
-          ) : !hasResults ? (
+          ) : !hasRelatedWeibo && !hasSearchSuggestions ? (
             <DropdownMenuItem>无结果</DropdownMenuItem>
           ) : (
             <>

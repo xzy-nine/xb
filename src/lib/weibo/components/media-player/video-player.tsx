@@ -59,6 +59,11 @@ import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
 import { getPlaybackPositionStore } from './video-playback-position-store'
 import { registerPlayingVideo, unregisterPlayingVideo } from './video-playback-registry'
+import {
+  applyStoredVideoVolume,
+  registerVideoVolumeElement,
+  rememberVideoVolumeFromElement,
+} from './video-volume-store'
 
 import '@videojs/react/video/skin.css'
 import './video-player.css'
@@ -508,6 +513,22 @@ export function VideoPlayer({
     }
   }, [sourceKey])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const unregister = registerVideoVolumeElement(video)
+    const handleVolumeChange = () => {
+      rememberVideoVolumeFromElement(video)
+    }
+
+    video.addEventListener('volumechange', handleVolumeChange)
+    return () => {
+      unregister()
+      video.removeEventListener('volumechange', handleVolumeChange)
+    }
+  }, [sourceKey])
+
   // Save playback position periodically during playback (every 5 seconds)
   useInterval(() => {
     const video = videoRef.current
@@ -698,6 +719,8 @@ export function VideoPlayer({
     if (!video) {
       return
     }
+
+    applyStoredVideoVolume(video)
 
     // Restore playback position from store (only when NOT a quality switch)
     if (!pendingPlayback) {

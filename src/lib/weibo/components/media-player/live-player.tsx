@@ -41,6 +41,12 @@ import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
 
+import {
+  applyStoredVideoVolume,
+  registerVideoVolumeElement,
+  rememberVideoVolumeFromElement,
+} from './video-volume-store'
+
 import '@videojs/react/video/skin.css'
 
 const Player = createPlayer({ features: [...videoFeatures] })
@@ -142,6 +148,7 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
 
   const handlePlay = useCallback(() => {
     if (videoRef.current) {
+      applyStoredVideoVolume(videoRef.current)
       videoRef.current.src = streamUrl
       videoRef.current.play().catch(() => {})
     }
@@ -150,6 +157,7 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
   const handleLoadedMetadata = useCallback(() => {
     const video = videoRef.current
     if (!video) return
+    applyStoredVideoVolume(video)
     if (isReplay) {
       const pending = pendingPlaybackRef.current
       if (pending && Number.isFinite(pending.currentTime)) {
@@ -175,9 +183,29 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [inlineFullscreen])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const unregister = registerVideoVolumeElement(video)
+    const handleVolumeChange = () => {
+      rememberVideoVolumeFromElement(video)
+    }
+
+    video.addEventListener('volumechange', handleVolumeChange)
+    return () => {
+      unregister()
+      video.removeEventListener('volumechange', handleVolumeChange)
+    }
+  }, [isLive, isReplay, streamUrl, replayUrl])
+
   const handleToggleFullscreen = useCallback(() => {
     if (inlineFullscreen) {
       setInlineFullscreen(false)
+      return
+    }
+    const container = videoRef.current?.closest('.media-default-skin--video')
+    if (!container) {
       return
     }
     const video = videoRef.current
