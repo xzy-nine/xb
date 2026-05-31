@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { RefreshCw } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription } from '@/components/ui/card'
+import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import {
   Select,
   SelectContent,
@@ -142,7 +142,7 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
           disabled={currentQuery.isFetching}
           title="刷新热搜"
         >
-          <RefreshCw className={cn(currentQuery.isFetching && 'animate-spin')} />
+          <RefreshCWIcon className={cn(currentQuery.isFetching && 'animate-spin')} />
         </Button>
       </div>
       {currentQuery.isLoading ? (

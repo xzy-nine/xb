@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { RefreshCw } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription } from '@/components/ui/card'
+import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 import { followedSuperTopicsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
@@ -61,7 +61,7 @@ export function SuperTopicCard({ className }: SuperTopicCardProps) {
           disabled={superTopicsQuery.isFetching}
           title="刷新超话"
         >
-          <RefreshCw className={cn(superTopicsQuery.isFetching && 'animate-spin')} />
+          <RefreshCWIcon className={cn(superTopicsQuery.isFetching && 'animate-spin')} />
         </Button>
       </div>
       {superTopicsQuery.isLoading ? (

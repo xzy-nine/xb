@@ -1,10 +1,11 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, RefreshCw } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import {
   Select,
   SelectContent,
@@ -88,7 +89,7 @@ function StatusCommentsSection({
             }}
             disabled={commentsQuery.isFetching}
           >
-            <RefreshCw className={`size-3 ${commentsQuery.isFetching ? 'animate-spin' : ''}`} />
+            <RefreshCWIcon className={`size-3 ${commentsQuery.isFetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       ) : null}
