@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,6 +7,15 @@ import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
 import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
 import { CommentCard } from '@/lib/weibo/components/comment-card'
 import type { CommentItem } from '@/lib/weibo/models/status'
+import { loadNestedComments } from '@/lib/weibo/services/weibo-repository'
+
+vi.mock('@/lib/weibo/services/weibo-repository', () => ({
+  cancelCommentLike: vi.fn(),
+  deleteWeiboComment: vi.fn(),
+  loadEmoticonConfig: vi.fn(async () => ({ groups: [], phraseMap: {} })),
+  loadNestedComments: vi.fn(),
+  setCommentLike: vi.fn(),
+}))
 
 vi.mock('@/lib/weibo/hooks/use-font-settings', () => ({
   useFontSettings: () => ({
@@ -61,6 +70,7 @@ describe('CommentCard', () => {
   })
 
   afterEach(() => {
+    cleanup()
     resetAppSettingsStoreForTest()
   })
 
@@ -89,5 +99,76 @@ describe('CommentCard', () => {
     )
 
     expect(container.querySelectorAll('img.aspect-square')).toHaveLength(2)
+  })
+
+  it('keeps the root status id when replying from nested comments dialog', async () => {
+    const queryClient = new QueryClient()
+    const onCommentReply = vi.fn()
+    const item: CommentItem = {
+      id: 'c1',
+      text: 'parent',
+      createdAtLabel: 'now',
+      author: { id: '2', name: 'A', avatarUrl: null },
+      likeCount: 0,
+      images: [],
+      replyComment: null,
+      comments: [
+        {
+          id: 'c-preview',
+          text: 'preview reply',
+          createdAtLabel: 'now',
+          author: { id: '4', name: 'C', avatarUrl: null },
+          likeCount: 0,
+          images: [],
+          replyComment: null,
+          comments: [],
+        },
+      ],
+      moreInfoText: '查看更多回复',
+    }
+    vi.mocked(loadNestedComments).mockResolvedValue({
+      items: [
+        {
+          id: 'c2',
+          text: 'child reply',
+          createdAtLabel: 'now',
+          author: { id: '3', name: 'B', avatarUrl: null },
+          likeCount: 0,
+          images: [],
+          replyComment: null,
+          comments: [],
+        },
+      ],
+      nextCursor: null,
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CommentCard
+            item={item}
+            rootStatusId="status-1"
+            authorUid="root-author"
+            onCommentReply={onCommentReply}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '查看更多回复' }))
+    expect(await screen.findByText('child reply')).toBeInTheDocument()
+    const replyButtons = screen.getAllByRole('button', { name: '回复评论' })
+    fireEvent.click(replyButtons[replyButtons.length - 1])
+
+    await waitFor(() => {
+      expect(onCommentReply).toHaveBeenCalledWith({
+        kind: 'comment',
+        mode: 'comment',
+        statusId: 'status-1',
+        targetCommentId: 'c2',
+        authorName: 'B',
+        excerpt: 'child reply',
+      })
+    })
   })
 })

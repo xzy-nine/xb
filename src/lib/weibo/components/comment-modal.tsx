@@ -85,6 +85,12 @@ function CommentModalForm({
         void queryClient.invalidateQueries({
           queryKey: ['weibo', 'status-comments', target.statusId],
         })
+        void queryClient.invalidateQueries({
+          queryKey: ['weibo', 'feed-comments', target.statusId],
+        })
+        void queryClient.invalidateQueries({
+          queryKey: ['weibo', 'nested-comments'],
+        })
       }
     },
     onError: (error, _vars, context) => {

@@ -189,6 +189,7 @@ export const CommentCard = memo(function CommentCard({
 
         <CommentsDialog
           open={showNestedCommentsDialog}
+          rootStatusId={rootStatusId}
           statusId={item.id}
           authorUid={authorUid ?? ''}
           onOpenChange={setShowNestedCommentsDialog}

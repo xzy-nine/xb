@@ -18,6 +18,7 @@ import { CommentList } from './comment-list'
 
 interface CommentsDialogProps {
   open: boolean
+  rootStatusId: string
   statusId: string
   authorUid: string
   onOpenChange: (open: boolean) => void
@@ -26,6 +27,7 @@ interface CommentsDialogProps {
 
 export function CommentsDialog({
   open,
+  rootStatusId,
   statusId,
   authorUid,
   onOpenChange,
@@ -58,7 +60,7 @@ export function CommentsDialog({
             <CommentList
               comments={comments}
               emptyLabel="此微博暂无评论"
-              rootStatusId={statusId}
+              rootStatusId={rootStatusId}
               authorUid={authorUid ?? undefined}
               onCommentReply={onCommentReply}
             />
