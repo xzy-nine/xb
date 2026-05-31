@@ -59,9 +59,7 @@ export function AppShell() {
   const statusDetailPopupWidth = useAppSettings((state) => state.statusDetailPopupWidth)
   const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
   const contentWidth = useAppSettings((state) => state.contentWidth)
-  const setHomeTab = useAppSettings((state) => state.setHomeTab)
-  const setRewriteEnabled = useAppSettings((state) => state.setRewriteEnabled)
-  const setTheme = useAppSettings((state) => state.setTheme)
+  const updateSettings = useAppSettings((state) => state.updateSettings)
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -176,10 +174,10 @@ export function AppShell() {
 
   const onHomeTabChange = useCallback(
     (tab: HomeTab) => {
-      void setHomeTab(tab)
+      void updateSettings({ homeTab: tab })
       navigate(getHomeTimelinePath(tab))
     },
-    [navigate, setHomeTab],
+    [navigate, updateSettings],
   )
 
   const onFollowGroupChange = useCallback(
@@ -247,7 +245,7 @@ export function AppShell() {
   if (!rewriteEnabled) {
     return (
       <>
-        <RewritePausedCard onResume={() => void setRewriteEnabled(true)} />
+        <RewritePausedCard onResume={() => void updateSettings({ rewriteEnabled: true })} />
         {composeModal}
         <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
         <StatusDetailDialog
@@ -303,12 +301,12 @@ export function AppShell() {
         contentWidth={contentWidth}
         browsingHistoryEnabled={browsingHistoryEnabled}
         onRewriteEnabledChange={(enabled: boolean) => {
-          setRewriteEnabled(enabled)
+          void updateSettings({ rewriteEnabled: enabled })
           if (!enabled) {
             window.location.reload()
           }
         }}
-        onThemeChange={(nextTheme: typeof theme) => void setTheme(nextTheme)}
+        onThemeChange={(nextTheme: typeof theme) => void updateSettings({ theme: nextTheme })}
         onSettingsOpen={() => {
           setSettingsZIndex(getNextZIndex())
           setSettingsOpen(true)
@@ -334,7 +332,7 @@ export function AppShell() {
         <AuthRequiredDialog
           open={authDialogOpen}
           onLogin={async () => {
-            await setRewriteEnabled(false)
+            await updateSettings({ rewriteEnabled: false })
             window.location.href = 'https://weibo.com/newlogin'
           }}
         />

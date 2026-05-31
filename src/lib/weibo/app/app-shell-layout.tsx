@@ -67,6 +67,8 @@ export function ShellFrame({
   const savedMainScrollByRouteRef = useRef<Partial<Record<string, number>>>({})
   const locationRef = useRef(location)
   locationRef.current = location
+  const showRightRail = useAppSettings((state) => state.showRightRail)
+  const updateSettings = useAppSettings((state) => state.updateSettings)
 
   const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
   const assignShellRef = useCallback(
@@ -176,19 +178,24 @@ export function ShellFrame({
             onThemeChange={onThemeChange}
             onSettingsOpen={onSettingsOpen}
             onComposeOpen={onComposeOpen}
+            onSidebarCollapsedChange={(collapsed) =>
+              updateSettings({ sidebarCollapsed: collapsed })
+            }
           />
         </div>
         <main className="no-scrollbar min-w-0 flex-1 overflow-y-auto pb-8" ref={assignShellRef}>
           {children}
         </main>
-        <div
-          className={cn(
-            'sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]',
-            'h-screen',
-          )}
-        >
-          <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
-        </div>
+        {showRightRail && (
+          <div
+            className={cn(
+              'sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]',
+              'h-screen',
+            )}
+          >
+            <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
+          </div>
+        )}
         <BackToTop scrollRoot={mainScrollRoot} />
       </div>
     </div>

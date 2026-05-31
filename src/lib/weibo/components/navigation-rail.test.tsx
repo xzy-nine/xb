@@ -82,6 +82,7 @@ describe('NavigationRail', () => {
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
             onComposeOpen={vi.fn()}
+            onSidebarCollapsedChange={vi.fn()}
           />
         </MemoryRouter>
       </QueryClientProvider>,

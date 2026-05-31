@@ -21,11 +21,13 @@ export function ProfilePostsTabs({
   onNavigate,
   onCommentClick,
   onRepostClick,
+  onCommentReply,
 }: {
   profileId: string
   onNavigate: ReturnType<typeof useAppShellContext>['navigateToStatusDetail']
   onCommentClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
   onRepostClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
+  onCommentReply: ReturnType<typeof useAppShellContext>['setComposeTarget']
 }) {
   const postsQuery = useInfiniteQuery({
     ...profilePostsInfiniteOptions(profileId),
@@ -57,6 +59,8 @@ export function ProfilePostsTabs({
           onNavigate={onNavigate}
           onCommentClick={onCommentClick}
           onRepostClick={onRepostClick}
+          onCommentReply={onCommentReply}
+          className="flex flex-col gap-4"
         />
       </TabsContent>
 
@@ -116,6 +120,7 @@ export function ProfilePage() {
             onRepostClick={(item) =>
               ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
             }
+            onCommentReply={ctx.setComposeTarget}
           />
         </div>
       ) : null}

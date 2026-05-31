@@ -26,7 +26,7 @@ export class AppErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorB
 
   handleExitXb = async () => {
     const store = getAppSettingsStore()
-    await store.getState().setRewriteEnabled(false)
+    await store.getState().updateSettings({ rewriteEnabled: false })
     window.location.reload()
   }
 

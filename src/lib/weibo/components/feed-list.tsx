@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageEmptyState } from '@/lib/weibo/components/page-state'
+import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
 type ProfileLookup = { uid: string } | { screenName: string }
@@ -17,6 +18,7 @@ export function FeedList({
   onCommentClick,
   onRepostClick,
   onNavigateProfile,
+  onCommentReply,
 }: {
   items: FeedItem[]
   emptyLabel: string
@@ -24,6 +26,7 @@ export function FeedList({
   onCommentClick?: (item: FeedItem) => void
   onRepostClick?: (item: FeedItem) => void
   onNavigateProfile?: (lookup: ProfileLookup) => void
+  onCommentReply?: (target: ComposeTarget) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth] = useElementSize(containerRef)
@@ -50,6 +53,7 @@ export function FeedList({
               onCommentClick={onCommentClick}
               onRepostClick={onRepostClick}
               onNavigateProfile={onNavigateProfile}
+              onCommentReply={onCommentReply}
             />
           ))}
         </div>
@@ -71,6 +75,7 @@ export function FeedList({
               onCommentClick={onCommentClick}
               onRepostClick={onRepostClick}
               onNavigateProfile={onNavigateProfile}
+              onCommentReply={onCommentReply}
               uniformHeight
             />
           </div>

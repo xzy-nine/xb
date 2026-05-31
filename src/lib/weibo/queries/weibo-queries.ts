@@ -12,6 +12,7 @@ import {
   loadExploreGroups,
   loadExploreHot,
   loadFavorites,
+  loadFeedComments,
   loadFollowGroups,
   loadFollowedSuperTopics,
   loadGroupTimeline,
@@ -184,6 +185,14 @@ export function nestedCommentsQueryOptions(statusId: string, authorUid: string, 
   return {
     queryKey: ['weibo', 'nested-comments', statusId] as const,
     queryFn: () => loadNestedComments(statusId, authorUid),
+    enabled: enabled && statusId !== '' && authorUid !== '',
+  }
+}
+
+export function feedCommentsQueryOptions(statusId: string, authorUid: string, enabled = true) {
+  return {
+    queryKey: ['weibo', 'feed-comments', statusId] as const,
+    queryFn: () => loadFeedComments(statusId, authorUid),
     enabled: enabled && statusId !== '' && authorUid !== '',
   }
 }

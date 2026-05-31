@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bookmark, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
-import { memo, useCallback, type MouseEvent, type ReactNode, useRef } from 'react'
+import { memo, useCallback, type MouseEvent, type ReactNode, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -23,6 +23,7 @@ import {
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
+import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expanded'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { StatusText } from '@/lib/weibo/components/status-text'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
@@ -288,7 +289,9 @@ function FeedTextBlock({
 
 function FeedActions({
   item,
+  surface,
   onCommentClick,
+  onCommentExpand,
   onRepostClick,
   onLikeClick,
   likePending,
@@ -298,7 +301,9 @@ function FeedActions({
   favoritePending,
 }: {
   item: FeedItem
+  surface?: StatusFeedSurface
   onCommentClick?: (item: FeedItem) => void
+  onCommentExpand?: (item: FeedItem) => void
   onRepostClick?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePending?: boolean
@@ -309,6 +314,7 @@ function FeedActions({
 }) {
   const liked = item.liked === true
   const isBookmarked = favorited === true
+  const isDetail = surface === 'detail'
 
   const weiboUrl = `https://weibo.com/${item.author.id}/${item.mblogId}`
 
@@ -317,7 +323,7 @@ function FeedActions({
       toast.success('已复制链接')
     })
   }
-  const CommentButton = (
+  const CommentButton = isDetail ? (
     <Button
       type="button"
       variant="ghost"
@@ -326,6 +332,26 @@ function FeedActions({
       onClick={(event) => {
         event.stopPropagation()
         onCommentClick?.(item)
+      }}
+    >
+      <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
+      <span className="tabular-nums transition-colors group-hover:text-sky-500">
+        {formatWeiboCount(item.stats.comments)}
+      </span>
+    </Button>
+  ) : (
+    <Button
+      type="button"
+      variant="ghost"
+      aria-label="回复微博"
+      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
+      onClick={(event) => {
+        event.stopPropagation()
+        if (xLayoutEnabled) {
+          onCommentClick?.(item)
+        } else {
+          onCommentExpand?.(item)
+        }
       }}
     >
       <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
@@ -538,6 +564,7 @@ export const FeedCard = memo(function FeedCard({
   onRepostClick,
   onNavigateProfile,
   onNavigateTopic,
+  onCommentReply,
   onStatusDeleted,
   className,
   uniformHeight,
@@ -549,12 +576,14 @@ export const FeedCard = memo(function FeedCard({
   onRepostClick?: (item: FeedItem) => void
   onNavigateProfile?: (lookup: ProfileLookup) => void
   onNavigateTopic?: (topic: string) => void
+  onCommentReply?: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
   /** After deleting this status (owner only), e.g. navigate back from detail. */
   onStatusDeleted?: () => void
   className?: string
   uniformHeight?: boolean
 }) {
   const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
+  const [commentsExpanded, setCommentsExpanded] = useState(false)
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
   const {
@@ -694,6 +723,10 @@ export const FeedCard = memo(function FeedCard({
     onNavigate(resolvedItem)
   }
 
+  const handleCommentExpand = useCallback(() => {
+    setCommentsExpanded((prev) => !prev)
+  }, [])
+
   if (resolvedItem.deleted) {
     return (
       <Card className={cn('gap-4 py-4 relative', className)}>
@@ -799,7 +832,9 @@ export const FeedCard = memo(function FeedCard({
       <CardFooter className={cn(uniformHeight && 'mt-4 shrink-0')}>
         <FeedActions
           item={resolvedItem}
+          surface={surfaceProp}
           onCommentClick={onCommentClick}
+          onCommentExpand={handleCommentExpand}
           onRepostClick={onRepostClick}
           onLikeClick={(target) => likeMutation.mutate(target)}
           likePending={likePendingId === resolvedItem.id}
@@ -809,6 +844,9 @@ export const FeedCard = memo(function FeedCard({
           favoritePending={favoriteMutation.isPending}
         />
       </CardFooter>
+      {commentsExpanded && !xLayoutEnabled && onCommentReply ? (
+        <FeedCommentsExpanded item={resolvedItem} onCommentReply={onCommentReply} />
+      ) : null}
     </Card>
   )
 })

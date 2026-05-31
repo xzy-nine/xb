@@ -1,12 +1,30 @@
-import { Palette, Settings, Sparkles, SunMoon, Trash2, Type } from 'lucide-react'
+import {
+  Bookmark,
+  Compass,
+  History,
+  Home,
+  MessageSquare,
+  Palette,
+  PanelRight,
+  Pencil,
+  Settings,
+  Sparkles,
+  SunMoon,
+  Trash2,
+  Type,
+  User,
+  Bell,
+  PanelLeft,
+} from 'lucide-react'
 import React from 'react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import darkModeImageDimJpeg from '@/assets/images/dark-mode-image-dim.jpeg'
 import collapseReplyChain from '@/assets/images/quotechains-collapsible.jpeg'
 import quoteChainsJpeg from '@/assets/images/quotechains.jpeg'
 import xLayoutJpeg from '@/assets/images/x-layout.jpeg'
+import { TreeView, type TreeDataItem } from '@/components/tree-view'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,7 +48,11 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { BROWSING_HISTORY_LIMIT_OPTIONS, DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
+import {
+  BROWSING_HISTORY_LIMIT_OPTIONS,
+  DEFAULT_APP_SETTINGS,
+  type AppSettings,
+} from '@/lib/app-settings'
 import type {
   AppTheme,
   BrowsingHistoryLimit,
@@ -43,7 +65,7 @@ import type {
   StatusDetailPopupPosition,
   UserTheme,
 } from '@/lib/app-settings'
-import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
 import { cn } from '@/lib/utils'
 import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
@@ -60,6 +82,19 @@ const SIDEBAR_GROUPS = [
 ]
 
 type GroupId = (typeof SIDEBAR_GROUPS)[number]['id']
+
+const PAGE_VISIBILITY_KEYS = {
+  explore: 'showExplore',
+  favorites: 'showFavorites',
+  history: 'showHistory',
+  notifications: 'showNotifications',
+  dms: 'showDMs',
+  profile: 'showProfile',
+  compose: 'showCompose',
+  'right-rail': 'showRightRail',
+  'hot-search': 'showHotSearchCard',
+  'super-topic': 'showFollowedSuperTopicsCard',
+} as const satisfies Record<string, keyof AppSettings>
 
 interface SettingsDialogProps {
   open: boolean
@@ -98,7 +133,7 @@ function Field({
 }: {
   label: string
   description?: string
-  children: React.ReactNode
+  children?: React.ReactNode
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-[11px] first:pt-0 last:pb-0">
@@ -147,67 +182,97 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
   const [version, setVersion] = useState<string>('')
   const [activeGroup, setActiveGroup] = useState<GroupId>('appearance')
 
-  const fontSizeClass = useAppSettings((s) => s.fontSizeClass)
-  const fontWeightClass = useAppSettings((s) => s.fontWeightClass)
-  const letterSpacingClass = useAppSettings((s) => s.letterSpacingClass)
-  const lineHeightClass = useAppSettings((s) => s.lineHeightClass)
-  const fontFamilyClass = useAppSettings((s) => s.fontFamilyClass)
-  const showHotSearchCard = useAppSettings((s) => s.showHotSearchCard)
-  const showFollowedSuperTopicsCard = useAppSettings((s) => s.showFollowedSuperTopicsCard)
-  const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
-  const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
-  const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
-  const statusDetailPopupPosition = useAppSettings((s) => s.statusDetailPopupPosition)
-  const statusDetailPopupWidth = useAppSettings((s) => s.statusDetailPopupWidth)
-  const theme = useAppSettings((s) => s.theme)
-  const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
-  const glassOpacity = useAppSettings((s) => s.glassOpacity)
-  const glassBlur = useAppSettings((s) => s.glassBlur)
-  const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
-  const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
-  const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
-  const contentWidth = useAppSettings((s) => s.contentWidth)
-  const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
-  const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
-  const forceRedirectToFollowing = useAppSettings((s) => s.forceRedirectToFollowing)
-  const selectedThemeType = useAppSettings((s) => s.selectedThemeType)
-  const selectedThemeId = useAppSettings((s) => s.selectedThemeId)
-  const userThemes = useAppSettings((s) => s.userThemes)
-  const customThemeLightCss = useAppSettings((s) => s.customThemeLightCss)
-  const customThemeDarkCss = useAppSettings((s) => s.customThemeDarkCss)
-  const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
-  const setFontWeightClass = useAppSettings((s) => s.setFontWeightClass)
-  const setLetterSpacingClass = useAppSettings((s) => s.setLetterSpacingClass)
-  const setLineHeightClass = useAppSettings((s) => s.setLineHeightClass)
-  const setFontFamilyClass = useAppSettings((s) => s.setFontFamilyClass)
-  const setShowHotSearchCard = useAppSettings((s) => s.setShowHotSearchCard)
-  const setShowFollowedSuperTopicsCard = useAppSettings((s) => s.setShowFollowedSuperTopicsCard)
-  const setCollapseRepliesEnabled = useAppSettings((s) => s.setCollapseRepliesEnabled)
-  const setRenderReplyChainEnabled = useAppSettings((s) => s.setRenderReplyChainEnabled)
-  const setDarkModeImageDim = useAppSettings((s) => s.setDarkModeImageDim)
-  const setTheme = useAppSettings((s) => s.setTheme)
-  const setStatusDetailPopupEnabled = useAppSettings((s) => s.setStatusDetailPopupEnabled)
-  const setStatusDetailPopupPosition = useAppSettings((s) => s.setStatusDetailPopupPosition)
-  const setStatusDetailPopupWidth = useAppSettings((s) => s.setStatusDetailPopupWidth)
-  const setBackgroundEnabled = useAppSettings((s) => s.setBackgroundEnabled)
-  const setGlassOpacity = useAppSettings((s) => s.setGlassOpacity)
-  const setGlassBlur = useAppSettings((s) => s.setGlassBlur)
-  const setBackgroundImageUrl = useAppSettings((s) => s.setBackgroundImageUrl)
-  const setXLayoutEnabled = useAppSettings((s) => s.setXLayoutEnabled)
-  const setWaterfallColumnCount = useAppSettings((s) => s.setWaterfallColumnCount)
-  const setContentWidth = useAppSettings((s) => s.setContentWidth)
-  const browsingHistoryEnabled = useAppSettings((s) => s.browsingHistoryEnabled)
-  const browsingHistoryLimit = useAppSettings((s) => s.browsingHistoryLimit)
-  const setBrowsingHistoryEnabled = useAppSettings((s) => s.setBrowsingHistoryEnabled)
-  const setBrowsingHistoryLimit = useAppSettings((s) => s.setBrowsingHistoryLimit)
-  const setFollowGroupsEnabled = useAppSettings((s) => s.setFollowGroupsEnabled)
-  const setNativeTopicPage = useAppSettings((s) => s.setNativeTopicPage)
-  const setForceRedirectToFollowing = useAppSettings((s) => s.setForceRedirectToFollowing)
-  const setSelectedThemeType = useAppSettings((s) => s.setSelectedThemeType)
-  const setSelectedThemeId = useAppSettings((s) => s.setSelectedThemeId)
-  const setCustomThemeLightCss = useAppSettings((s) => s.setCustomThemeLightCss)
-  const setCustomThemeDarkCss = useAppSettings((s) => s.setCustomThemeDarkCss)
+  const {
+    fontSizeClass,
+    fontWeightClass,
+    letterSpacingClass,
+    lineHeightClass,
+    fontFamilyClass,
+    showHotSearchCard,
+    showFollowedSuperTopicsCard,
+    showExplore,
+    showFavorites,
+    showHistory,
+    showNotifications,
+    showDMs,
+    showProfile,
+    showCompose,
+    showRightRail,
+    collapseRepliesEnabled,
+    renderReplyChainEnabled,
+    darkModeImageDim,
+    statusDetailPopupEnabled,
+    statusDetailPopupPosition,
+    statusDetailPopupWidth,
+    theme,
+    backgroundEnabled,
+    backgroundImageUrl,
+    glassOpacity,
+    glassBlur,
+    xLayoutEnabled,
+    waterfallColumnCount,
+    contentWidth,
+    followGroupsEnabled,
+    xbTopicPage,
+    forceRedirectToFollowing,
+    selectedThemeType,
+    selectedThemeId,
+    userThemes,
+    customThemeLightCss,
+    customThemeDarkCss,
+    browsingHistoryEnabled,
+    browsingHistoryLimit,
+    updateSettings,
+    addUserTheme,
+    deleteUserTheme,
+    updateUserTheme,
+  } = useAppSettings(
+    useShallow((s) => ({
+      fontSizeClass: s.fontSizeClass,
+      fontWeightClass: s.fontWeightClass,
+      letterSpacingClass: s.letterSpacingClass,
+      lineHeightClass: s.lineHeightClass,
+      fontFamilyClass: s.fontFamilyClass,
+      showHotSearchCard: s.showHotSearchCard,
+      showFollowedSuperTopicsCard: s.showFollowedSuperTopicsCard,
+      showExplore: s.showExplore,
+      showFavorites: s.showFavorites,
+      showHistory: s.showHistory,
+      showNotifications: s.showNotifications,
+      showDMs: s.showDMs,
+      showProfile: s.showProfile,
+      showCompose: s.showCompose,
+      showRightRail: s.showRightRail,
+      collapseRepliesEnabled: s.collapseRepliesEnabled,
+      renderReplyChainEnabled: s.renderReplyChainEnabled,
+      darkModeImageDim: s.darkModeImageDim,
+      statusDetailPopupEnabled: s.statusDetailPopupEnabled,
+      statusDetailPopupPosition: s.statusDetailPopupPosition,
+      statusDetailPopupWidth: s.statusDetailPopupWidth,
+      theme: s.theme,
+      backgroundEnabled: s.backgroundEnabled,
+      backgroundImageUrl: s.backgroundImageUrl,
+      glassOpacity: s.glassOpacity,
+      glassBlur: s.glassBlur,
+      xLayoutEnabled: s.xLayoutEnabled,
+      waterfallColumnCount: s.waterfallColumnCount,
+      contentWidth: s.contentWidth,
+      followGroupsEnabled: s.followGroupsEnabled,
+      xbTopicPage: s.xbTopicPage,
+      forceRedirectToFollowing: s.forceRedirectToFollowing,
+      selectedThemeType: s.selectedThemeType,
+      selectedThemeId: s.selectedThemeId,
+      userThemes: s.userThemes,
+      customThemeLightCss: s.customThemeLightCss,
+      customThemeDarkCss: s.customThemeDarkCss,
+      browsingHistoryEnabled: s.browsingHistoryEnabled,
+      browsingHistoryLimit: s.browsingHistoryLimit,
+      updateSettings: s.updateSettings,
+      addUserTheme: s.addUserTheme,
+      deleteUserTheme: s.deleteUserTheme,
+      updateUserTheme: s.updateUserTheme,
+    })),
+  )
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -235,16 +300,95 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
 
   const handleBackgroundImageUrlChange = useCallback(
     (url: string) => {
-      setBackgroundImageUrl(url)
+      updateSettings({ backgroundImageUrl: url })
       validateImageUrl(url)
     },
-    [setBackgroundImageUrl, validateImageUrl],
+    [updateSettings, validateImageUrl],
   )
 
-  const addUserTheme = useAppSettings((s) => s.addUserTheme)
-  const deleteUserTheme = useAppSettings((s) => s.deleteUserTheme)
-  const updateUserTheme = useAppSettings((s) => s.updateUserTheme)
+  const pageElementTreeData = useMemo<TreeDataItem[]>(
+    () => [
+      {
+        id: 'left-rail',
+        name: '左侧边栏',
+        icon: PanelLeft,
+        disabled: true,
+        children: [
+          { id: 'home', name: '主页', icon: Home, disabled: true },
+          { id: 'explore', name: '探索', icon: Compass },
+          { id: 'favorites', name: '收藏', icon: Bookmark },
+          { id: 'history', name: '历史', icon: History },
+          { id: 'notifications', name: '通知', icon: Bell },
+          { id: 'dms', name: '私信', icon: MessageSquare },
+          { id: 'profile', name: '我的', icon: User },
+          { id: 'compose', name: '发微博', icon: Pencil },
+        ],
+      },
+      {
+        id: 'right-rail',
+        name: '右侧边栏',
+        icon: PanelRight,
+        children: [
+          { id: 'hot-search', name: '热搜卡片' },
+          { id: 'super-topic', name: '超话卡片' },
+        ],
+      },
+    ],
+    [],
+  )
 
+  const pageVisibility = {
+    showExplore,
+    showFavorites,
+    showHistory,
+    showNotifications,
+    showDMs,
+    showProfile,
+    showCompose,
+    showRightRail,
+    showHotSearchCard,
+    showFollowedSuperTopicsCard,
+  }
+
+  function getSwitchState(id: string): boolean {
+    if (id === 'home') {
+      return true
+    }
+
+    const key = PAGE_VISIBILITY_KEYS[id as keyof typeof PAGE_VISIBILITY_KEYS]
+    return key ? pageVisibility[key] : true
+  }
+
+  function setSwitchState(id: string, checked: boolean) {
+    const key = PAGE_VISIBILITY_KEYS[id as keyof typeof PAGE_VISIBILITY_KEYS]
+    if (key) {
+      void updateSettings({ [key]: checked })
+    }
+  }
+
+  function renderTreeItem({ item, isLeaf }: { item: TreeDataItem; isLeaf: boolean }) {
+    const isParent = !isLeaf && item.id !== 'home'
+    const isRightRailChild = item.id === 'hot-search' || item.id === 'super-topic'
+    const disabledByParent = isRightRailChild && !showRightRail
+
+    return (
+      <div className="flex flex-1 items-center justify-between">
+        <span className="flex items-center gap-2 text-sm">
+          {item.icon && <item.icon className="size-4 shrink-0" />}
+          {item.name}
+        </span>
+        {!item.disabled && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Switch
+              checked={getSwitchState(item.id)}
+              disabled={isParent ? false : disabledByParent}
+              onCheckedChange={(checked) => setSwitchState(item.id, checked)}
+            />
+          </div>
+        )}
+      </div>
+    )
+  }
   const [themeNameInput, setThemeNameInput] = useState<string>('')
   const activeThemeName =
     selectedThemeType === 'custom'
@@ -263,11 +407,13 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
   }, [])
 
   function resetFontSettings() {
-    setFontSizeClass(DEFAULT_APP_SETTINGS.fontSizeClass)
-    setFontWeightClass(DEFAULT_APP_SETTINGS.fontWeightClass)
-    setLetterSpacingClass(DEFAULT_APP_SETTINGS.letterSpacingClass)
-    setLineHeightClass(DEFAULT_APP_SETTINGS.lineHeightClass)
-    setFontFamilyClass(DEFAULT_APP_SETTINGS.fontFamilyClass)
+    void updateSettings({
+      fontSizeClass: DEFAULT_APP_SETTINGS.fontSizeClass,
+      fontWeightClass: DEFAULT_APP_SETTINGS.fontWeightClass,
+      letterSpacingClass: DEFAULT_APP_SETTINGS.letterSpacingClass,
+      lineHeightClass: DEFAULT_APP_SETTINGS.lineHeightClass,
+      fontFamilyClass: DEFAULT_APP_SETTINGS.fontFamilyClass,
+    })
   }
 
   useEffect(() => {
@@ -280,29 +426,28 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
     }
   }
 
-  function applyCustomThemePreset(presetKey: string) {
-    const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === presetKey)
-    if (preset) {
-      void setCustomThemeLightCss(preset.lightCss)
-      void setCustomThemeDarkCss(preset.darkCss)
-    }
-  }
-
   function handleThemeSelect(value: string) {
     const [type, ...rest] = value.split(':')
     const id = rest.join(':')
 
     if (type === 'preset') {
-      void setSelectedThemeType('preset')
-      void setSelectedThemeId(id)
-      applyCustomThemePreset(id)
+      const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === id)
+      void updateSettings({
+        selectedThemeType: 'preset',
+        selectedThemeId: id,
+        ...(preset
+          ? { customThemeLightCss: preset.lightCss, customThemeDarkCss: preset.darkCss }
+          : {}),
+      })
     } else if (type === 'user') {
       const theme = userThemes.find((t) => t.id === id)
       if (theme) {
-        void setSelectedThemeType('custom')
-        void setSelectedThemeId(id)
-        void setCustomThemeLightCss(theme.lightCss)
-        void setCustomThemeDarkCss(theme.darkCss)
+        void updateSettings({
+          selectedThemeType: 'custom',
+          selectedThemeId: id,
+          customThemeLightCss: theme.lightCss,
+          customThemeDarkCss: theme.darkCss,
+        })
       }
     }
   }
@@ -324,28 +469,35 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
       darkCss: customThemeDarkCss,
     }
     void addUserTheme(theme)
-    void setSelectedThemeType('custom')
-    void setSelectedThemeId(id)
+    void updateSettings({
+      selectedThemeType: 'custom',
+      selectedThemeId: id,
+    })
   }
 
   function handleDeleteCustomTheme() {
     if (selectedThemeType === 'custom') {
+      const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === 'default')
       void deleteUserTheme(selectedThemeId)
-      void setSelectedThemeType('preset')
-      void setSelectedThemeId('default')
-      applyCustomThemePreset('default')
+      void updateSettings({
+        selectedThemeType: 'preset',
+        selectedThemeId: 'default',
+        ...(preset
+          ? { customThemeLightCss: preset.lightCss, customThemeDarkCss: preset.darkCss }
+          : {}),
+      })
     }
   }
 
   function handleLightCssChange(value: string) {
-    void setCustomThemeLightCss(value)
+    void updateSettings({ customThemeLightCss: value })
     if (selectedThemeType === 'custom') {
       void updateUserTheme(selectedThemeId, { lightCss: value })
     }
   }
 
   function handleDarkCssChange(value: string) {
-    void setCustomThemeDarkCss(value)
+    void updateSettings({ customThemeDarkCss: value })
     if (selectedThemeType === 'custom') {
       void updateUserTheme(selectedThemeId, { darkCss: value })
     }
@@ -353,7 +505,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
 
   function handleBrowsingHistoryLimitChange(value: string) {
     const limit = Number(value) as BrowsingHistoryLimit
-    void setBrowsingHistoryLimit(limit).then(() => {
+    void updateSettings({ browsingHistoryLimit: limit }).then(() => {
       browsingHistoryStore.getState().trimToLimit(limit)
     })
   }
@@ -389,19 +541,49 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
 
           <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeGroup === 'appearance' && (
-              <div className="divide-border/40 divide-y px-6 py-4">
-                <Field label="深色模式" description="选择应用的配色方案">
-                  <Select value={theme} onValueChange={(v) => setTheme(v as AppTheme)}>
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="system">跟随系统</SelectItem>
-                      <SelectItem value="light">浅色</SelectItem>
-                      <SelectItem value="dark">深色</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+              <div className="flex flex-col">
+                <div className="divide-border/40 divide-y px-6 py-4">
+                  <Field label="深色模式" description="选择应用的配色方案">
+                    <Select
+                      value={theme}
+                      onValueChange={(v) => void updateSettings({ theme: v as AppTheme })}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system">跟随系统</SelectItem>
+                        <SelectItem value="light">浅色</SelectItem>
+                        <SelectItem value="dark">深色</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+                    <Select
+                      value={contentWidth}
+                      onValueChange={(v) =>
+                        void updateSettings({ contentWidth: v as ContentWidth })
+                      }
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">标准</SelectItem>
+                        <SelectItem value="wide">宽</SelectItem>
+                        <SelectItem value="wider">更宽</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+                <div className="border-border/40 border-t px-6 py-4">
+                  <Field label="页面元素设置" />
+                  <TreeView
+                    data={pageElementTreeData}
+                    className="max-h-[200px] overflow-y-auto"
+                    renderItem={renderTreeItem}
+                  />
+                </div>
               </div>
             )}
 
@@ -509,26 +691,12 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
             {activeGroup === 'personalize' && (
               <div className="space-y-3 px-6 py-4">
                 <div>
-                  <Field label="热搜卡片" description="在右侧边栏显示热搜内容">
-                    <Switch
-                      checked={showHotSearchCard}
-                      onCheckedChange={(checked) => setShowHotSearchCard(checked)}
-                    />
-                  </Field>
-                </div>
-                <div>
-                  <Field label="超话卡片" description="在右侧边栏显示我关注的超话">
-                    <Switch
-                      checked={showFollowedSuperTopicsCard}
-                      onCheckedChange={(checked) => setShowFollowedSuperTopicsCard(checked)}
-                    />
-                  </Field>
-                </div>
-                <div>
                   <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
                     <Switch
                       checked={darkModeImageDim}
-                      onCheckedChange={(checked) => setDarkModeImageDim(checked)}
+                      onCheckedChange={(checked) =>
+                        void updateSettings({ darkModeImageDim: checked })
+                      }
                     />
                   </Field>
                   {darkModeImageDim && (
@@ -541,7 +709,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="X 操作栏" description="使用 X 风格的操作栏（含收藏和分享按钮）">
                     <Switch
                       checked={xLayoutEnabled}
-                      onCheckedChange={(checked) => setXLayoutEnabled(checked)}
+                      onCheckedChange={(checked) =>
+                        void updateSettings({ xLayoutEnabled: checked })
+                      }
                     />
                   </Field>
                   {xLayoutEnabled && (
@@ -554,7 +724,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="关注分组" description="在我关注的中展示我的分组筛选">
                     <Switch
                       checked={followGroupsEnabled}
-                      onCheckedChange={(checked) => setFollowGroupsEnabled(checked)}
+                      onCheckedChange={(checked) =>
+                        void updateSettings({ followGroupsEnabled: checked })
+                      }
                     />
                   </Field>
                 </div>
@@ -565,7 +737,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   >
                     <Switch
                       checked={forceRedirectToFollowing}
-                      onCheckedChange={(checked) => setForceRedirectToFollowing(checked)}
+                      onCheckedChange={(checked) =>
+                        void updateSettings({ forceRedirectToFollowing: checked })
+                      }
                     />
                   </Field>
                 </div>
@@ -573,7 +747,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="QuoteChains 渲染" description='将 "//@ 用户名:" 格式渲染成引用样式'>
                     <Switch
                       checked={renderReplyChainEnabled}
-                      onCheckedChange={(checked) => setRenderReplyChainEnabled(checked)}
+                      onCheckedChange={(checked) =>
+                        void updateSettings({ renderReplyChainEnabled: checked })
+                      }
                     />
                   </Field>
                   {renderReplyChainEnabled && (
@@ -587,7 +763,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     <Field label="折叠 QuoteChains" description="超过2条时折叠中间的引用">
                       <Switch
                         checked={collapseRepliesEnabled}
-                        onCheckedChange={(checked) => setCollapseRepliesEnabled(checked)}
+                        onCheckedChange={(checked) =>
+                          void updateSettings({ collapseRepliesEnabled: checked })
+                        }
                       />
                     </Field>
                     <IllustrationPlaceholder>
@@ -612,7 +790,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="字体大小" description="微博正文和评论的字体大小">
                     <Select
                       value={fontSizeClass}
-                      onValueChange={(v) => setFontSizeClass(v as FontSizeClass)}
+                      onValueChange={(v) =>
+                        void updateSettings({ fontSizeClass: v as FontSizeClass })
+                      }
                     >
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
@@ -632,7 +812,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="字体粗细" description="微博正文和评论的字体粗细">
                     <Select
                       value={fontWeightClass}
-                      onValueChange={(v) => setFontWeightClass(v as FontWeightClass)}
+                      onValueChange={(v) =>
+                        void updateSettings({ fontWeightClass: v as FontWeightClass })
+                      }
                     >
                       <SelectTrigger className="w-[120px]">
                         <SelectValue />
@@ -653,7 +835,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="字间距" description="字符之间的间距">
                     <Select
                       value={letterSpacingClass}
-                      onValueChange={(v) => setLetterSpacingClass(v as LetterSpacingClass)}
+                      onValueChange={(v) =>
+                        void updateSettings({ letterSpacingClass: v as LetterSpacingClass })
+                      }
                     >
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
@@ -671,7 +855,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="行高" description="文本行之间的间距">
                     <Select
                       value={lineHeightClass}
-                      onValueChange={(v) => setLineHeightClass(v as LineHeightClass)}
+                      onValueChange={(v) =>
+                        void updateSettings({ lineHeightClass: v as LineHeightClass })
+                      }
                     >
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
@@ -690,7 +876,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   <Field label="字体样式" description="微博正文和评论的字体">
                     <Select
                       value={fontFamilyClass}
-                      onValueChange={(v) => setFontFamilyClass(v as FontFamilyClass)}
+                      onValueChange={(v) =>
+                        void updateSettings({ fontFamilyClass: v as FontFamilyClass })
+                      }
                     >
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />
@@ -733,7 +921,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                 <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
                   <Select
                     value={contentWidth}
-                    onValueChange={(v) => setContentWidth(v as ContentWidth)}
+                    onValueChange={(v) => void updateSettings({ contentWidth: v as ContentWidth })}
                   >
                     <SelectTrigger className="w-[100px]">
                       <SelectValue />
@@ -749,7 +937,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                 <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
                   <Switch
                     checked={statusDetailPopupEnabled}
-                    onCheckedChange={(checked) => setStatusDetailPopupEnabled(checked)}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ statusDetailPopupEnabled: checked })
+                    }
                   />
                 </Field>
 
@@ -758,7 +948,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     <Select
                       value={statusDetailPopupPosition}
                       onValueChange={(value) =>
-                        setStatusDetailPopupPosition(value as StatusDetailPopupPosition)
+                        updateSettings({
+                          statusDetailPopupPosition: value as StatusDetailPopupPosition,
+                        })
                       }
                     >
                       <SelectTrigger className="w-[100px]">
@@ -784,7 +976,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                       min={50}
                       max={80}
                       step={5}
-                      onValueChange={([value]) => setStatusDetailPopupWidth(value)}
+                      onValueChange={([value]) =>
+                        void updateSettings({ statusDetailPopupWidth: value })
+                      }
                     />
                   </div>
                 )}
@@ -800,14 +994,18 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     min={1}
                     max={5}
                     step={1}
-                    onValueChange={([value]) => setWaterfallColumnCount(value)}
+                    onValueChange={([value]) =>
+                      void updateSettings({ waterfallColumnCount: value })
+                    }
                   />
                 </div>
 
                 <Field label="自定义背景" description="为页面添加自定义背景图片">
                   <Switch
                     checked={backgroundEnabled}
-                    onCheckedChange={(checked) => setBackgroundEnabled(checked)}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ backgroundEnabled: checked })
+                    }
                   />
                 </Field>
 
@@ -851,7 +1049,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     min={0}
                     max={100}
                     step={5}
-                    onValueChange={([v]) => setGlassOpacity(v as number)}
+                    onValueChange={([v]) => void updateSettings({ glassOpacity: v })}
                   />
                 </div>
 
@@ -865,7 +1063,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     min={0}
                     max={20}
                     step={1}
-                    onValueChange={([v]) => setGlassBlur(v as number)}
+                    onValueChange={([v]) => void updateSettings({ glassBlur: v })}
                   />
                 </div>
 
@@ -874,15 +1072,17 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setContentWidth(DEFAULT_APP_SETTINGS.contentWidth)
-                      setStatusDetailPopupEnabled(DEFAULT_APP_SETTINGS.statusDetailPopupEnabled)
-                      setStatusDetailPopupPosition(DEFAULT_APP_SETTINGS.statusDetailPopupPosition)
-                      setStatusDetailPopupWidth(DEFAULT_APP_SETTINGS.statusDetailPopupWidth)
-                      setWaterfallColumnCount(DEFAULT_APP_SETTINGS.waterfallColumnCount)
-                      setBackgroundEnabled(DEFAULT_APP_SETTINGS.backgroundEnabled)
-                      setBackgroundImageUrl(DEFAULT_APP_SETTINGS.backgroundImageUrl)
-                      setGlassOpacity(DEFAULT_APP_SETTINGS.glassOpacity)
-                      setGlassBlur(DEFAULT_APP_SETTINGS.glassBlur)
+                      void updateSettings({
+                        contentWidth: DEFAULT_APP_SETTINGS.contentWidth,
+                        statusDetailPopupEnabled: DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
+                        statusDetailPopupPosition: DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
+                        statusDetailPopupWidth: DEFAULT_APP_SETTINGS.statusDetailPopupWidth,
+                        waterfallColumnCount: DEFAULT_APP_SETTINGS.waterfallColumnCount,
+                        backgroundEnabled: DEFAULT_APP_SETTINGS.backgroundEnabled,
+                        backgroundImageUrl: DEFAULT_APP_SETTINGS.backgroundImageUrl,
+                        glassOpacity: DEFAULT_APP_SETTINGS.glassOpacity,
+                        glassBlur: DEFAULT_APP_SETTINGS.glassBlur,
+                      })
                     }}
                   >
                     恢复默认
@@ -896,7 +1096,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                 <Field label="内置话题页" description="使用 xb 内置话题页，关闭则跳转原微博话题页">
                   <Switch
                     checked={xbTopicPage}
-                    onCheckedChange={(checked) => setNativeTopicPage(checked)}
+                    onCheckedChange={(checked) => void updateSettings({ xbTopicPage: checked })}
                   />
                 </Field>
                 <Field
@@ -905,7 +1105,9 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                 >
                   <Switch
                     checked={browsingHistoryEnabled}
-                    onCheckedChange={(checked) => setBrowsingHistoryEnabled(checked)}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ browsingHistoryEnabled: checked })
+                    }
                   />
                 </Field>
                 {browsingHistoryEnabled && (

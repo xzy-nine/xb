@@ -1,7 +1,8 @@
-import { useStore } from 'zustand'
-import { createStore, type StoreApi } from 'zustand/vanilla'
+import type { StoreApi } from 'zustand/vanilla'
+import { createStore } from 'zustand/vanilla'
 
 import type { AppSettingsStorageArea } from '@/lib/app-settings'
+import { createSingletonStoreAccess } from '@/lib/zustand-singleton-store'
 
 interface RecentEmoticonEntry {
   phrase: string
@@ -66,20 +67,27 @@ export function createRecentEmoticonsStore(
   }))
 }
 
-let recentEmoticonsStore: StoreApi<RecentEmoticonsState> | null = null
+let recentEmoticonsStorageArea: AppSettingsStorageArea | undefined
+
+const recentEmoticonsStoreAccess = createSingletonStoreAccess(() =>
+  createRecentEmoticonsStore(recentEmoticonsStorageArea),
+)
 
 function getRecentEmoticonsStore(storageArea?: AppSettingsStorageArea) {
-  if (!recentEmoticonsStore) {
-    recentEmoticonsStore = createRecentEmoticonsStore(storageArea)
+  if (storageArea) {
+    recentEmoticonsStorageArea = storageArea
   }
 
-  return recentEmoticonsStore
+  return recentEmoticonsStoreAccess.getStore()
 }
 
 export function resetRecentEmoticonsStoreForTest() {
-  recentEmoticonsStore = null
+  recentEmoticonsStorageArea = undefined
+  recentEmoticonsStoreAccess.resetForTest()
 }
 
 export function useRecentEmoticons<T>(selector: (state: RecentEmoticonsState) => T): T {
-  return useStore(getRecentEmoticonsStore(), selector)
+  return recentEmoticonsStoreAccess.useSingletonStore(selector)
 }
+
+export { getRecentEmoticonsStore }

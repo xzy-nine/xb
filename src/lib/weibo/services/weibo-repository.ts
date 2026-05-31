@@ -5,7 +5,7 @@ import type { WeiboEmoticonConfig } from '@/lib/weibo/models/emoticon'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { UserProfile } from '@/lib/weibo/models/profile'
-import type { StatusCommentsPage } from '@/lib/weibo/models/status'
+import type { CommentItem, StatusCommentsPage } from '@/lib/weibo/models/status'
 import type { StatusDetail } from '@/lib/weibo/models/status'
 import {
   adaptCommentsResponse,
@@ -249,6 +249,36 @@ export async function loadStatusComments(
   })
 
   return adaptStatusCommentsResponse(payload as Parameters<typeof adaptStatusCommentsResponse>[0])
+}
+
+export interface FeedCommentsResult {
+  items: CommentItem[]
+  totalNumber: number
+}
+
+export async function loadFeedComments(statusId: string, uid: string): Promise<FeedCommentsResult> {
+  const payload = await wbGet<unknown>(WEIBO_ENDPOINTS.statusComments, {
+    is_reload: 1,
+    id: statusId,
+    is_show_bulletin: 2,
+    is_mix: 0,
+    count: 20,
+    type: 'feed',
+    uid,
+    fetch_level: 0,
+    locale: 'en',
+  })
+
+  const adapted = adaptStatusCommentsResponse(
+    payload as Parameters<typeof adaptStatusCommentsResponse>[0],
+  )
+  const rawPayload = payload as Record<string, unknown>
+  const totalNumber = typeof rawPayload.total_number === 'number' ? rawPayload.total_number : 0
+
+  return {
+    items: adapted.items,
+    totalNumber,
+  }
 }
 
 function getProfileInfoParams(lookup: ProfileLookup) {

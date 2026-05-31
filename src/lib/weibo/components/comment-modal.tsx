@@ -118,26 +118,30 @@ function CommentModalForm({
         </DialogDescription>
       </DialogHeader>
 
-      <Textarea
-        ref={textareaRef}
-        aria-label="回复内容"
-        className="min-h-32"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-      />
+      <div className={`border-foreground/20 flex flex-col gap-2 rounded-2xl border p-2`}>
+        <Textarea
+          ref={textareaRef}
+          aria-label="回复内容"
+          className="h-32 resize-none border-none! bg-transparent! ring-transparent!"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder="发评论..."
+        />
 
-      <div className="flex items-center justify-between gap-3">
-        <EmoticonPicker onSelect={(item) => setText((value) => `${value}${item.phrase}`)} />
+        <div className="flex items-center justify-between gap-3">
+          <EmoticonPicker onSelect={(item) => setText((value) => `${value}${item.phrase}`)} />
 
-        <div className="flex gap-2">
-          <Checkbox
-            checked={alsoSecondaryAction}
-            onCheckedChange={(checked: boolean) => setAlsoSecondaryAction(checked)}
-            id="alsoSecondaryAction"
-          />
-          <Label htmlFor="alsoSecondaryAction">{copy.checkboxLabel}</Label>
+          <div className="flex gap-2">
+            <Checkbox
+              checked={alsoSecondaryAction}
+              onCheckedChange={(checked: boolean) => setAlsoSecondaryAction(checked)}
+              id="alsoSecondaryAction"
+            />
+            <Label htmlFor="alsoSecondaryAction">{copy.checkboxLabel}</Label>
+          </div>
         </div>
       </div>
+
       <DialogFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
           取消

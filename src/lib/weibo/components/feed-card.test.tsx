@@ -81,6 +81,7 @@ describe('FeedCard', () => {
     store.setState({
       ...store.getState(),
       collapseRepliesEnabled: false,
+      xLayoutEnabled: false,
       isHydrated: true,
     })
   })
@@ -246,7 +247,8 @@ describe('FeedCard', () => {
     fireEvent.click(repostButton)
 
     expect(onNavigate).not.toHaveBeenCalled()
-    expect(onCommentClick).toHaveBeenCalledWith(expect.objectContaining({ id: '501' }))
+    // In non-x-layout mode, clicking comment button expands comments instead of opening dialog
+    expect(onCommentClick).not.toHaveBeenCalled()
     expect(onRepostClick).toHaveBeenCalledWith(expect.objectContaining({ id: '501' }))
     expect(commentButton.className).toContain('rounded-full')
     expect(repostButton.className).toContain('rounded-full')

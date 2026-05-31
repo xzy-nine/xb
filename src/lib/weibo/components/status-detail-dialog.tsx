@@ -82,6 +82,8 @@ export function StatusDetailDialog({
               statusId={detail.status.id}
               authorId={authorId}
               zIndex={commentsZIndex}
+              authorName={detail.status.author.name}
+              statusText={detail.status.text}
               onCommentReply={setComposeTarget}
             />
           </div>

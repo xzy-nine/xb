@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import {
   CardBold,
@@ -146,16 +146,23 @@ export function GenImageDialog() {
   const { genImageItem, closeGenImage } = useGenImageDialog()
   const cardRef = useRef<HTMLDivElement>(null)
 
-  const imageGenTheme = useAppSettings((s) => s.imageGenTheme)
-  const setImageGenTheme = useAppSettings((s) => s.setImageGenTheme)
-  const imageGenShowDataArea = useAppSettings((s) => s.imageGenShowDataArea)
-  const imageGenShowFullImages = useAppSettings((s) => s.imageGenShowFullImages)
-  const imageGenShowWeiboLink = useAppSettings((s) => s.imageGenShowWeiboLink)
-  const imageGenCardStyle = useAppSettings((s) => s.imageGenCardStyle)
-  const setImageGenShowDataArea = useAppSettings((s) => s.setImageGenShowDataArea)
-  const setImageGenShowFullImages = useAppSettings((s) => s.setImageGenShowFullImages)
-  const setImageGenShowWeiboLink = useAppSettings((s) => s.setImageGenShowWeiboLink)
-  const setImageGenCardStyle = useAppSettings((s) => s.setImageGenCardStyle)
+  const {
+    imageGenTheme,
+    imageGenShowDataArea,
+    imageGenShowFullImages,
+    imageGenShowWeiboLink,
+    imageGenCardStyle,
+    updateSettings,
+  } = useAppSettings(
+    useShallow((s) => ({
+      imageGenTheme: s.imageGenTheme,
+      imageGenShowDataArea: s.imageGenShowDataArea,
+      imageGenShowFullImages: s.imageGenShowFullImages,
+      imageGenShowWeiboLink: s.imageGenShowWeiboLink,
+      imageGenCardStyle: s.imageGenCardStyle,
+      updateSettings: s.updateSettings,
+    })),
+  )
 
   const copyMutation = useMutation({
     mutationFn: async () => {
@@ -228,7 +235,9 @@ export function GenImageDialog() {
                   <ItemDescription>
                     <Select
                       value={imageGenCardStyle}
-                      onValueChange={(value) => setImageGenCardStyle(value as CardStyle)}
+                      onValueChange={(value) =>
+                        void updateSettings({ imageGenCardStyle: value as CardStyle })
+                      }
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue />
@@ -252,7 +261,9 @@ export function GenImageDialog() {
                 <ItemActions>
                   <Switch
                     checked={imageGenShowDataArea}
-                    onCheckedChange={(checked) => setImageGenShowDataArea(checked)}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ imageGenShowDataArea: checked })
+                    }
                   />
                 </ItemActions>
               </Item>
@@ -264,7 +275,9 @@ export function GenImageDialog() {
                 <ItemActions>
                   <Switch
                     checked={imageGenShowFullImages}
-                    onCheckedChange={(checked) => setImageGenShowFullImages(checked)}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ imageGenShowFullImages: checked })
+                    }
                   />
                 </ItemActions>
               </Item>
@@ -276,7 +289,9 @@ export function GenImageDialog() {
                 <ItemActions>
                   <Switch
                     checked={imageGenShowWeiboLink}
-                    onCheckedChange={(checked) => setImageGenShowWeiboLink(checked)}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ imageGenShowWeiboLink: checked })
+                    }
                   />
                 </ItemActions>
               </Item>
@@ -287,7 +302,9 @@ export function GenImageDialog() {
                 <ItemActions>
                   <Switch
                     checked={imageGenTheme === 'dark'}
-                    onCheckedChange={(checked) => setImageGenTheme(checked ? 'dark' : 'light')}
+                    onCheckedChange={(checked) =>
+                      void updateSettings({ imageGenTheme: checked ? 'dark' : 'light' })
+                    }
                   />
                 </ItemActions>
               </Item>

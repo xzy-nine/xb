@@ -70,6 +70,7 @@ export function ProfileDialog({
             onNavigate={onNavigateStatusDetail}
             onCommentClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
             onRepostClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
+            onCommentReply={setComposeTarget}
           />
         </div>
       ) : null}

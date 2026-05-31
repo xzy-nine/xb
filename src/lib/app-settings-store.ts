@@ -1,4 +1,5 @@
 import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 import { createStore, type StoreApi } from 'zustand/vanilla'
 
 import {
@@ -26,6 +27,8 @@ import {
   type UserTheme,
 } from '@/lib/app-settings'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
+
+const PERSISTED_KEYS = Object.keys(DEFAULT_APP_SETTINGS) as (keyof AppSettings)[]
 
 export interface AppSettingsStoreState extends AppSettings {
   isHydrated: boolean
@@ -73,6 +76,7 @@ export interface AppSettingsStoreState extends AppSettings {
   setCustomThemeDarkCss: (css: string) => Promise<void>
   setSelectedThemeType: (type: SelectedThemeType) => Promise<void>
   setSelectedThemeId: (id: string) => Promise<void>
+  updateSettings: (patch: Partial<AppSettings>) => Promise<void>
   addUserTheme: (theme: UserTheme) => Promise<void>
   deleteUserTheme: (id: string) => Promise<void>
   updateUserTheme: (
@@ -84,51 +88,9 @@ export interface AppSettingsStoreState extends AppSettings {
 export type AppSettingsStore = StoreApi<AppSettingsStoreState>
 
 function toPersistedSettings(state: AppSettingsStoreState): AppSettings {
-  return {
-    contentWidth: state.contentWidth,
-    theme: state.theme,
-    rewriteEnabled: state.rewriteEnabled,
-    fontSizeClass: state.fontSizeClass,
-    fontWeightClass: state.fontWeightClass,
-    letterSpacingClass: state.letterSpacingClass,
-    lineHeightClass: state.lineHeightClass,
-    fontFamilyClass: state.fontFamilyClass,
-    showHotSearchCard: state.showHotSearchCard,
-    showFollowedSuperTopicsCard: state.showFollowedSuperTopicsCard,
-    collapseRepliesEnabled: state.collapseRepliesEnabled,
-    renderReplyChainEnabled: state.renderReplyChainEnabled,
-    darkModeImageDim: state.darkModeImageDim,
-    lightModeBgColor: state.lightModeBgColor,
-    darkModeBgColor: state.darkModeBgColor,
-    imageGenEnabled: state.imageGenEnabled,
-    imageGenShowDataArea: state.imageGenShowDataArea,
-    imageGenShowFullImages: state.imageGenShowFullImages,
-    imageGenShowWeiboLink: state.imageGenShowWeiboLink,
-    imageGenTheme: state.imageGenTheme,
-    imageGenCardStyle: state.imageGenCardStyle,
-    hotSearchType: state.hotSearchType,
-    statusDetailPopupEnabled: state.statusDetailPopupEnabled,
-    statusDetailPopupPosition: state.statusDetailPopupPosition,
-    statusDetailPopupWidth: state.statusDetailPopupWidth,
-    backgroundEnabled: state.backgroundEnabled,
-    backgroundColor: state.backgroundColor,
-    backgroundImageUrl: state.backgroundImageUrl,
-    glassOpacity: state.glassOpacity,
-    glassBlur: state.glassBlur,
-    xLayoutEnabled: state.xLayoutEnabled,
-    waterfallColumnCount: state.waterfallColumnCount,
-    browsingHistoryEnabled: state.browsingHistoryEnabled,
-    browsingHistoryLimit: state.browsingHistoryLimit,
-    followGroupsEnabled: state.followGroupsEnabled,
-    xbTopicPage: state.xbTopicPage,
-    forceRedirectToFollowing: state.forceRedirectToFollowing,
-    homeTab: state.homeTab,
-    customThemeLightCss: state.customThemeLightCss,
-    customThemeDarkCss: state.customThemeDarkCss,
-    selectedThemeType: state.selectedThemeType,
-    selectedThemeId: state.selectedThemeId,
-    userThemes: state.userThemes,
-  }
+  return Object.fromEntries(
+    PERSISTED_KEYS.map((key) => [key, state[key]]),
+  ) as unknown as AppSettings
 }
 
 export function createAppSettingsStore(
@@ -152,7 +114,6 @@ export function createAppSettingsStore(
       async hydrate() {
         const settings = await loadAppSettings(storageArea)
 
-        // If a preset is selected but CSS is empty, fill from the preset definition
         if (
           settings.selectedThemeType === 'preset' &&
           !settings.customThemeLightCss.trim() &&
@@ -296,6 +257,7 @@ export function createAppSettingsStore(
       async setSelectedThemeId(selectedThemeId) {
         await updateAndPersist({ selectedThemeId })
       },
+      updateSettings: updateAndPersist,
       async addUserTheme(theme) {
         const current = get()
         await updateAndPersist({
@@ -335,3 +297,9 @@ export function resetAppSettingsStoreForTest() {
 export function useAppSettings<T>(selector: (state: AppSettingsStoreState) => T): T {
   return useStore(getAppSettingsStore(), selector)
 }
+
+export function useUpdateAppSettings() {
+  return useAppSettings((state) => state.updateSettings)
+}
+
+export { useShallow }

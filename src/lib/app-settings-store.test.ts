@@ -44,7 +44,7 @@ describe('app-settings-store', () => {
     const storage = createStorageArea()
     const store = createAppSettingsStore(storage)
 
-    await store.getState().setRewriteEnabled(false)
+    await store.getState().updateSettings({ rewriteEnabled: false })
 
     expect(store.getState().rewriteEnabled).toBe(false)
     expect(storage.read()).toEqual({
