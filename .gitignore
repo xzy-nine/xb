@@ -25,10 +25,8 @@ docs
 *.sln
 *.sw?
 
-.agents/
 .claude/
 .cursor/
-skills*
 .superpowers/
 docs/
 .sisyphus
