@@ -10,9 +10,11 @@ vi.mock('react-photo-view', () => ({
   PhotoProvider: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PhotoView: ({
     children,
+    src,
     render: renderPhoto,
   }: {
     children: ReactNode
+    src?: string
     render?: (params: {
       attrs: {
         style: Record<string, never>
@@ -20,18 +22,16 @@ vi.mock('react-photo-view', () => ({
       scale: number
     }) => ReactNode
   }) => (
-    <div>
+    <div data-testid={renderPhoto ? 'photo-render' : 'photo-view'} data-src={src}>
       {children}
-      {renderPhoto ? (
-        <div data-testid="photo-render">
-          {renderPhoto({
+      {renderPhoto
+        ? renderPhoto({
             attrs: {
               style: {},
             },
             scale: 1,
-          })}
-        </div>
-      ) : null}
+          })
+        : null}
     </div>
   ),
 }))
@@ -59,6 +59,29 @@ describe('ImageCarousel', () => {
       ...store.getState(),
       isHydrated: true,
     })
+  })
+
+  it('uses default PhotoView for long images so drag-to-pan works in the lightbox', () => {
+    render(
+      <ImageCarousel
+        images={[
+          {
+            id: 'long-pic',
+            thumbnailUrl: 'https://example.com/thumb.jpg',
+            largeUrl: 'https://example.com/large.jpg',
+            width: 400,
+            height: 2000,
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText('长图')).toBeInTheDocument()
+    expect(screen.getByTestId('photo-view')).toHaveAttribute(
+      'data-src',
+      'https://example.com/large.jpg',
+    )
+    expect(screen.queryByTestId('photo-render')).not.toBeInTheDocument()
   })
 
   it('auto-plays the live photo in the lightbox and switches to replay when video ends', () => {

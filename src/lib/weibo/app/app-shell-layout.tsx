@@ -184,6 +184,7 @@ export function ShellFrame({
         <div
           className={cn(
             'sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]',
+            'h-screen',
           )}
         >
           <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
