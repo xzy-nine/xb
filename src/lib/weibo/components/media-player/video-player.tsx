@@ -646,6 +646,7 @@ export function VideoPlayer({
     if (!video) return
     pendingPlaybackRef.current = {
       currentTime: video.currentTime,
+      playbackRate: video.playbackRate,
       shouldResume: !video.paused && !video.ended,
     }
     setInlineFullscreen(true)
