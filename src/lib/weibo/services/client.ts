@@ -65,6 +65,10 @@ window.addEventListener('message', (event: MessageEvent) => {
     pendingRequests.delete(event.data.id)
     clearTimeout(pending.timer)
 
+    if (typeof pending.resolve !== 'function' || typeof pending.reject !== 'function') {
+      return
+    }
+
     if (event.data.error) {
       const { status, message } = event.data.error
       if (status) {

@@ -42,7 +42,7 @@ export const CommentCard = memo(function CommentCard({
   const appCtx = useAppShellContext()
   const handleOpenNestedComments = useCallback(() => {
     if (appCtx) {
-      setCommentsDialogZIndex(appCtx.getNextZIndex())
+      setCommentsDialogZIndex(appCtx.getNextZIndex?.() ?? zIndex)
     } else {
       setCommentsDialogZIndex(zIndex)
     }

@@ -18,7 +18,11 @@ import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
-  requestAnimationFrame(resetMainScroll)
+  requestAnimationFrame(() => {
+    if (typeof resetMainScroll === 'function') {
+      resetMainScroll()
+    }
+  })
 }
 
 export function ExplorePage() {
@@ -55,7 +59,7 @@ export function ExplorePage() {
 
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      ctx.scrollMainToTop()
+      ctx?.scrollMainToTop?.()
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])
@@ -63,7 +67,7 @@ export function ExplorePage() {
   const handleGroupClick = (group: ExploreGroup) => {
     if (group.gid === groupId) return
     navigate(`/hot/weibo/${group.gid}`)
-    resetMainScrollAfterRouteChange(ctx.resetMainScroll)
+    resetMainScrollAfterRouteChange(ctx?.resetMainScroll)
   }
 
   const groupOptions =

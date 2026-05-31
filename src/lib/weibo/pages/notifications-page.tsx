@@ -26,7 +26,11 @@ const TAB_ROUTES: Record<NotificationTab, string> = {
 }
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
-  requestAnimationFrame(resetMainScroll)
+  requestAnimationFrame(() => {
+    if (typeof resetMainScroll === 'function') {
+      resetMainScroll()
+    }
+  })
 }
 
 function NotificationTabContent({
@@ -134,7 +138,7 @@ export function NotificationsPage() {
   const wasRefreshingRef = useRef(false)
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      ctx.scrollMainToTop()
+      ctx?.scrollMainToTop?.()
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])

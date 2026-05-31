@@ -96,9 +96,9 @@ export function ProfilePage() {
   })
 
   useEffect(() => {
-    ctx.onProfileUserIdChange(profileQuery.data?.id ?? null)
+    ctx?.onProfileUserIdChange?.(profileQuery.data?.id ?? null)
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-  }, [ctx.onProfileUserIdChange, profileQuery.data?.id])
+  }, [ctx?.onProfileUserIdChange, profileQuery.data?.id])
 
   const errorMessage = profileQuery.error instanceof Error ? profileQuery.error.message : null
 
@@ -113,14 +113,14 @@ export function ProfilePage() {
           <ProfileHeader profile={profileQuery.data} />
           <ProfilePostsTabs
             profileId={profileQuery.data.id}
-            onNavigate={ctx.navigateToStatusDetail}
+            onNavigate={ctx?.navigateToStatusDetail}
             onCommentClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
+              ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
             }
             onRepostClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
+              ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))
             }
-            onCommentReply={ctx.setComposeTarget}
+            onCommentReply={ctx?.setComposeTarget}
           />
         </div>
       ) : null}

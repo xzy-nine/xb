@@ -63,10 +63,12 @@ export function LikedStatusesPage() {
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={likedStatusesQuery.fetchNextPage}
         onRetry={() => void likedStatusesQuery.refetch()}
-        onNavigate={ctx.navigateToStatusDetail}
-        onCommentClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
-        onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-        onCommentReply={ctx.setComposeTarget}
+        onNavigate={ctx?.navigateToStatusDetail}
+        onCommentClick={(item) =>
+          ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
+        }
+        onRepostClick={(item) => ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))}
+        onCommentReply={ctx?.setComposeTarget}
       />
     </div>
   )

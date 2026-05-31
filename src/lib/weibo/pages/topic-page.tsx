@@ -134,10 +134,12 @@ export function TopicPage() {
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={topicQuery.fetchNextPage}
         onRetry={() => void topicQuery.refetch()}
-        onNavigate={ctx.navigateToStatusDetail}
-        onCommentClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
-        onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-        onCommentReply={ctx.setComposeTarget}
+        onNavigate={ctx?.navigateToStatusDetail}
+        onCommentClick={(item) =>
+          ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
+        }
+        onRepostClick={(item) => ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))}
+        onCommentReply={ctx?.setComposeTarget}
       />
     </div>
   )

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { ArrowUpRightIcon } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,14 @@ interface ComposeDialogProps {
 export function ComposeDialog({ open, zIndex, onOpenChange }: ComposeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]" style={{ zIndex }} overlayStyle={{ zIndex }}>
+      <DialogContent
+        className="sm:max-w-xl"
+        style={{ zIndex }}
+        overlayStyle={{ zIndex }}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault()
+        }}
+      >
         <ComposeForm onClose={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
@@ -56,14 +63,12 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
 
   const isSubmitDisabled = mutation.isPending || text.trim().length === 0
 
+  useEffect(() => {
+    textareaRef.current?.focus()
+  }, [])
+
   return (
-    <DialogContent
-      className="sm:max-w-xl"
-      onOpenAutoFocus={(e) => {
-        e.preventDefault()
-        textareaRef.current?.focus()
-      }}
-    >
+    <>
       <DialogHeader>
         <DialogTitle>发微博</DialogTitle>
         <DialogDescription>有什么新鲜事想分享给大家？</DialogDescription>
@@ -95,6 +100,6 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
           {mutation.isPending ? '发送中...' : '发布'}
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </>
   )
 }

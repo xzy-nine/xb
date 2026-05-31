@@ -39,7 +39,7 @@ export function FavoritesPage() {
   const wasRefreshingRef = useRef(false)
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      ctx.scrollMainToTop()
+      ctx?.scrollMainToTop?.()
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])
@@ -72,10 +72,12 @@ export function FavoritesPage() {
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={favoritesQuery.fetchNextPage}
         onRetry={() => void favoritesQuery.refetch()}
-        onNavigate={ctx.navigateToStatusDetail}
-        onCommentClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
-        onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-        onCommentReply={ctx.setComposeTarget}
+        onNavigate={ctx?.navigateToStatusDetail}
+        onCommentClick={(item) =>
+          ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
+        }
+        onRepostClick={(item) => ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))}
+        onCommentReply={ctx?.setComposeTarget}
       />
     </div>
   )

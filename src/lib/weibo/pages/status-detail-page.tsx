@@ -138,7 +138,7 @@ export function StatusDetailPage() {
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
 
   useEffect(() => {
-    ctx?.resetMainScroll()
+    ctx?.resetMainScroll?.()
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
   }, [ctx?.resetMainScroll])
 
@@ -177,12 +177,12 @@ export function StatusDetailPage() {
           <FeedCard
             item={detail.status}
             surface="detail"
-            onNavigate={ctx.navigateToStatusDetail}
+            onNavigate={ctx?.navigateToStatusDetail}
             onCommentClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
+              ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
             }
             onRepostClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
+              ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))
             }
             onStatusDeleted={() => navigate(-1)}
           />
@@ -192,7 +192,7 @@ export function StatusDetailPage() {
               authorId={authorId}
               authorName={detail.status.author.name}
               statusText={detail.status.text}
-              onCommentReply={ctx.setComposeTarget}
+              onCommentReply={ctx?.setComposeTarget}
             />
           ) : null}
         </div>

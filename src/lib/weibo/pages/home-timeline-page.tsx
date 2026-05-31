@@ -22,7 +22,11 @@ const HOME_TIMELINE_OPTIONS: TimelineTopBarOption[] = [
 ]
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
-  requestAnimationFrame(resetMainScroll)
+  requestAnimationFrame(() => {
+    if (typeof resetMainScroll === 'function') {
+      resetMainScroll()
+    }
+  })
 }
 
 export function HomeTimelinePage() {
@@ -69,7 +73,7 @@ export function HomeTimelinePage() {
   // ─── Scroll to top after refresh completes ───
   useEffect(() => {
     if (wasRefreshingRef.current && !isRefreshing) {
-      ctx.scrollMainToTop()
+      ctx?.scrollMainToTop?.()
     }
     wasRefreshingRef.current = isRefreshing
   }, [isRefreshing, ctx])
@@ -80,7 +84,6 @@ export function HomeTimelinePage() {
   const newPostsCheckQuery = useQuery({
     ...followingNewPostsCheckOptions(followingFirstItemId, groupListId),
     enabled: isEnabled && activeTab === 'following' && followingFirstItemId !== null,
-    refetchOnWindowFocus: true,
   })
 
   const dismissedNewPostsCheckAtByGroup = useRef<Record<string, number>>({})
