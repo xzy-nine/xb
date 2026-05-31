@@ -214,13 +214,12 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
     contentWidth,
     followGroupsEnabled,
     xbTopicPage,
-    forceRedirectToFollowing,
+    firstLoadRedirect,
     selectedThemeType,
     selectedThemeId,
     userThemes,
     customThemeLightCss,
     customThemeDarkCss,
-    browsingHistoryEnabled,
     browsingHistoryLimit,
     updateSettings,
     addUserTheme,
@@ -259,13 +258,12 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
       contentWidth: s.contentWidth,
       followGroupsEnabled: s.followGroupsEnabled,
       xbTopicPage: s.xbTopicPage,
-      forceRedirectToFollowing: s.forceRedirectToFollowing,
+      firstLoadRedirect: s.firstLoadRedirect,
       selectedThemeType: s.selectedThemeType,
       selectedThemeId: s.selectedThemeId,
       userThemes: s.userThemes,
       customThemeLightCss: s.customThemeLightCss,
       customThemeDarkCss: s.customThemeDarkCss,
-      browsingHistoryEnabled: s.browsingHistoryEnabled,
       browsingHistoryLimit: s.browsingHistoryLimit,
       updateSettings: s.updateSettings,
       addUserTheme: s.addUserTheme,
@@ -731,16 +729,25 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                   </Field>
                 </div>
                 <div>
-                  <Field
-                    label="强制跳转我关注的"
-                    description="打开后，进入首页时自动跳转到「我关注的」"
-                  >
-                    <Switch
-                      checked={forceRedirectToFollowing}
-                      onCheckedChange={(checked) =>
-                        void updateSettings({ forceRedirectToFollowing: checked })
+                  <Field label="首次加载跳转" description="打开后，进入首页时自动跳转到指定页面">
+                    <Select
+                      value={firstLoadRedirect}
+                      onValueChange={(value) =>
+                        void updateSettings({
+                          firstLoadRedirect: value as typeof firstLoadRedirect,
+                        })
                       }
-                    />
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for-you">推荐</SelectItem>
+                        <SelectItem value="following">我关注的</SelectItem>
+                        <SelectItem value="special-follow">特别关注</SelectItem>
+                        <SelectItem value="friend-circle">朋友圈</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </Field>
                 </div>
                 <div>
@@ -1099,38 +1106,25 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                     onCheckedChange={(checked) => void updateSettings({ xbTopicPage: checked })}
                   />
                 </Field>
-                <Field
-                  label="浏览历史"
-                  description={`记录最近访问过的${browsingHistoryLimit}条微博（储存在本地）`}
-                >
-                  <Switch
-                    checked={browsingHistoryEnabled}
-                    onCheckedChange={(checked) =>
-                      void updateSettings({ browsingHistoryEnabled: checked })
-                    }
-                  />
+                <Field label="浏览历史条数" description="超过上限后自动删除最早的记录">
+                  <Select
+                    value={String(browsingHistoryLimit)}
+                    onValueChange={handleBrowsingHistoryLimitChange}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {BROWSING_HISTORY_LIMIT_OPTIONS.map((limit) => (
+                          <SelectItem key={limit} value={String(limit)}>
+                            {limit} 条
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </Field>
-                {browsingHistoryEnabled && (
-                  <Field label="保留条数" description="超过上限后自动删除最早的记录">
-                    <Select
-                      value={String(browsingHistoryLimit)}
-                      onValueChange={handleBrowsingHistoryLimitChange}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {BROWSING_HISTORY_LIMIT_OPTIONS.map((limit) => (
-                            <SelectItem key={limit} value={String(limit)}>
-                              {limit} 条
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
               </div>
             )}
           </main>

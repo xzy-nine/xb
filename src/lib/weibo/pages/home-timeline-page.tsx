@@ -11,14 +11,20 @@ import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import {
   flattenInfiniteItems,
   followingNewPostsCheckOptions,
-  homeTimelineInfiniteOptions,
   followGroupsQueryOptions,
+  homeTimelineInfiniteOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+import {
+  getDefaultFollowGroupForHomeTab,
+  getHomeTabForDefaultFollowGroupId,
+} from '@/lib/weibo/services/adapters/explore-groups'
 
 const HOME_TIMELINE_OPTIONS: TimelineTopBarOption[] = [
   { value: 'for-you', label: '推荐' },
   { value: 'following', label: '我关注的' },
+  { value: 'special-follow', label: '特别关注' },
+  { value: 'friend-circle', label: '朋友圈' },
 ]
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
@@ -36,25 +42,42 @@ export function HomeTimelinePage() {
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
   const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
 
-  const activeTab = page.kind === 'home' ? page.tab : 'for-you'
+  const pageTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && page.kind === 'home'
 
   const groupIdFromUrl = page.kind === 'home' && page.groupId ? page.groupId : null
   const selectedGroupGid = groupIdFromUrl ?? 'default'
 
-  const showGroupSelect = followGroupsEnabled && activeTab === 'following'
-
   const groupsQuery = useQuery({
     ...followGroupsQueryOptions,
-    enabled: showGroupSelect,
+    enabled:
+      isEnabled &&
+      ((followGroupsEnabled && pageTab === 'following') ||
+        Boolean(groupIdFromUrl) ||
+        pageTab === 'special-follow' ||
+        pageTab === 'friend-circle'),
   })
 
-  const groupListId = showGroupSelect && selectedGroupGid !== 'default' ? selectedGroupGid : null
+  const defaultGroups = groupsQuery.data?.defaultGroups
+  const activeTab = getHomeTabForDefaultFollowGroupId(defaultGroups, groupIdFromUrl) ?? pageTab
+  const showGroupSelect = followGroupsEnabled && activeTab === 'following'
+  const defaultTimelineGroup =
+    activeTab === 'special-follow' || activeTab === 'friend-circle'
+      ? getDefaultFollowGroupForHomeTab(defaultGroups, activeTab)
+      : null
+  const groupListId =
+    activeTab === 'following'
+      ? showGroupSelect && selectedGroupGid !== 'default'
+        ? selectedGroupGid
+        : null
+      : (defaultTimelineGroup?.gid ?? null)
   const followingNewPostsGroupKey = groupListId ?? 'default'
+  const isResolvingGroupIdFromUrl =
+    pageTab === 'following' && groupIdFromUrl !== null && groupsQuery.isPending
 
   const timelineQuery = useInfiniteQuery({
     ...homeTimelineInfiniteOptions(activeTab, groupListId),
-    enabled: isEnabled,
+    enabled: isEnabled && !isResolvingGroupIdFromUrl,
   })
 
   const items = useMemo(
@@ -119,14 +142,25 @@ export function HomeTimelinePage() {
   const handleTimelineChange = useCallback(
     (value: string) => {
       if (value === activeTab) return
-      ctx.onHomeTabChange(value as 'for-you' | 'following')
+      ctx.onHomeTabChange(value as 'for-you' | 'following' | 'special-follow' | 'friend-circle')
       resetMainScrollAfterRouteChange(ctx.resetMainScroll)
     },
     [activeTab, ctx],
   )
 
-  const groups = groupsQuery.data ?? []
-  const activeTitle = activeTab === 'following' ? '我关注的' : '推荐'
+  const groups = groupsQuery.data?.groups ?? []
+  const activeTitle = (() => {
+    switch (activeTab) {
+      case 'for-you':
+        return '推荐'
+      case 'following':
+        return '我关注的'
+      case 'special-follow':
+        return '特别关注'
+      case 'friend-circle':
+        return '朋友圈'
+    }
+  })()
   const groupOptions = showGroupSelect
     ? [
         { value: 'default', label: '全部分组' },

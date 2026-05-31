@@ -34,7 +34,6 @@ interface ShellFrameProps {
   rewriteEnabled: boolean
   theme: AppTheme
   contentWidth: ContentWidth
-  browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
@@ -54,7 +53,6 @@ export function ShellFrame({
   rewriteEnabled,
   theme,
   contentWidth,
-  browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
@@ -173,7 +171,6 @@ export function ShellFrame({
             viewingProfileUserId={viewingProfileUserId}
             rewriteEnabled={rewriteEnabled}
             theme={theme}
-            browsingHistoryEnabled={browsingHistoryEnabled}
             onRewriteEnabledChange={onRewriteEnabledChange}
             onThemeChange={onThemeChange}
             onSettingsOpen={onSettingsOpen}

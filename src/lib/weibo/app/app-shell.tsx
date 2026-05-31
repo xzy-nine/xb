@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
+import { useShallow } from 'zustand/react/shallow'
 
 import type { HomeTab } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -15,6 +16,8 @@ import { StatusDetailDialog } from '@/lib/weibo/components/status-detail-dialog'
 import { TopicDialog } from '@/lib/weibo/components/topic-dialog'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
+import { followGroupsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
+import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
 
@@ -23,10 +26,6 @@ type ProfileLookup = { uid: string } | { screenName: string }
 const GenImageDialog = lazy(() =>
   import('@/lib/weibo/components/gen-image-dialog').then((m) => ({ default: m.GenImageDialog })),
 )
-
-function getHomeTimelinePath(tab: 'for-you' | 'following') {
-  return tab === 'following' ? '/mygroups' : '/'
-}
 
 export interface AppShellContext {
   page: ReturnType<typeof useWeiboPage>
@@ -52,14 +51,25 @@ export function AppShell() {
   const page = useWeiboPage()
   const queryClient = useQueryClient()
 
-  const theme = useAppSettings((state) => state.theme)
-  const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
-  const statusDetailPopupEnabled = useAppSettings((state) => state.statusDetailPopupEnabled)
-  const statusDetailPopupPosition = useAppSettings((state) => state.statusDetailPopupPosition)
-  const statusDetailPopupWidth = useAppSettings((state) => state.statusDetailPopupWidth)
-  const browsingHistoryEnabled = useAppSettings((state) => state.browsingHistoryEnabled)
-  const contentWidth = useAppSettings((state) => state.contentWidth)
-  const updateSettings = useAppSettings((state) => state.updateSettings)
+  const {
+    theme,
+    rewriteEnabled,
+    contentWidth,
+    statusDetailPopupEnabled,
+    statusDetailPopupPosition,
+    statusDetailPopupWidth,
+    updateSettings,
+  } = useAppSettings(
+    useShallow((state) => ({
+      theme: state.theme,
+      rewriteEnabled: state.rewriteEnabled,
+      contentWidth: state.contentWidth,
+      statusDetailPopupEnabled: state.statusDetailPopupEnabled,
+      statusDetailPopupPosition: state.statusDetailPopupPosition,
+      statusDetailPopupWidth: state.statusDetailPopupWidth,
+      updateSettings: state.updateSettings,
+    })),
+  )
   const [composeTarget, setComposeTarget] = useState<ComposeTarget | null>(null)
   const [viewingProfileUserId, setViewingProfileUserId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -79,6 +89,7 @@ export function AppShell() {
   const [commentModalZIndex, setCommentModalZIndex] = useState(40)
   const zIndexCounterRef = useRef(40)
   const mainRef = useRef<HTMLDivElement | null>(null)
+  const homeTabNavigationRequestRef = useRef(0)
 
   const getNextZIndex = useCallback(() => {
     zIndexCounterRef.current += 1
@@ -174,10 +185,27 @@ export function AppShell() {
 
   const onHomeTabChange = useCallback(
     (tab: HomeTab) => {
+      const requestId = ++homeTabNavigationRequestRef.current
       void updateSettings({ homeTab: tab })
-      navigate(getHomeTimelinePath(tab))
+      if (tab === 'special-follow' || tab === 'friend-circle') {
+        void queryClient
+          .ensureQueryData(followGroupsQueryOptions)
+          .then((groups) => {
+            if (requestId === homeTabNavigationRequestRef.current) {
+              navigate(homeTimelinePathFromTab(tab, groups.defaultGroups))
+            }
+          })
+          .catch(() => {
+            if (requestId === homeTabNavigationRequestRef.current) {
+              navigate(homeTimelinePathFromTab(tab))
+            }
+          })
+        return
+      }
+
+      navigate(homeTimelinePathFromTab(tab))
     },
-    [navigate, updateSettings],
+    [navigate, queryClient, updateSettings],
   )
 
   const onFollowGroupChange = useCallback(
@@ -299,7 +327,6 @@ export function AppShell() {
         rewriteEnabled={rewriteEnabled}
         theme={theme}
         contentWidth={contentWidth}
-        browsingHistoryEnabled={browsingHistoryEnabled}
         onRewriteEnabledChange={(enabled: boolean) => {
           void updateSettings({ rewriteEnabled: enabled })
           if (!enabled) {

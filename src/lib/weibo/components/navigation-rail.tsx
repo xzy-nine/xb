@@ -112,7 +112,6 @@ interface NavigationRailProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
-  browsingHistoryEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
@@ -125,7 +124,6 @@ export function NavigationRail({
   viewingProfileUserId,
   rewriteEnabled,
   theme,
-  browsingHistoryEnabled,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
@@ -223,7 +221,7 @@ export function NavigationRail({
               </NavButton>
             )}
 
-            {showHistorySetting && browsingHistoryEnabled && (
+            {showHistorySetting && (
               <NavButton
                 label="历史"
                 showLabel={!isCollapsed}

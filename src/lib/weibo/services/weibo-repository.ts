@@ -21,10 +21,11 @@ import {
 } from '@/lib/weibo/services/adapters/explore'
 import {
   adaptExploreGroupsResponse,
-  adaptFollowGroupsResponse,
+  adaptFollowGroupsDataResponse,
   type ExploreGroupsPayload,
   type ExploreGroup,
-  type FollowGroup,
+  type FollowGroups,
+  getDefaultFollowGroupForHomeTab,
 } from '@/lib/weibo/services/adapters/explore-groups'
 import {
   adaptEntertainmentBandResponse,
@@ -77,12 +78,13 @@ import { WEIBO_ENDPOINTS } from '@/lib/weibo/services/endpoints'
 import { buildTopicSearchUrl, mweiboFetch } from '@/lib/weibo/services/m-weibo-client'
 import type { WeiboLongTextData } from '@/lib/weibo/utils/transform'
 
-export type HomeTimelineTab = 'for-you' | 'following'
+export type HomeTimelineTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 type ProfileLookup = { uid: string } | { screenName: string }
 
 export interface LoadTimelineOptions {
   cursor?: string | null
   existingCount?: number
+  groupListId?: string | null
 }
 
 function getTimelinePath(tab: HomeTimelineTab): WeiboEndpointPath {
@@ -117,6 +119,30 @@ export async function loadHomeTimeline(
   options: LoadTimelineOptions = {},
 ): Promise<TimelinePage> {
   const isFirstPage = !options.cursor
+
+  // Special follow (特别关注) and friend circle (朋友圈) use the groupstimeline endpoint
+  if (tab === 'special-follow') {
+    const listId = options.groupListId ?? (await loadHomeTimelineDefaultGroupId(tab))
+    return loadTimeline(WEIBO_ENDPOINTS.groupTimeline, {
+      list_id: listId,
+      refresh: 4,
+      fast_refresh: 1,
+      count: 25,
+      ...(isFirstPage ? {} : { max_id: options.cursor }),
+    })
+  }
+
+  if (tab === 'friend-circle') {
+    const listId = options.groupListId ?? (await loadHomeTimelineDefaultGroupId(tab))
+    return loadTimeline(WEIBO_ENDPOINTS.groupTimeline, {
+      list_id: listId,
+      refresh: 4,
+      fast_refresh: 1,
+      count: 25,
+      ...(isFirstPage ? {} : { max_id: options.cursor }),
+    })
+  }
+
   if (tab === 'following') {
     return loadTimeline(getTimelinePath(tab), {
       list_id: '110001768015440',
@@ -132,12 +158,27 @@ export async function loadHomeTimeline(
   })
 }
 
-export async function loadFollowGroups(): Promise<FollowGroup[]> {
+export async function loadFollowGroups(): Promise<FollowGroups> {
   const payload = await wbGet<ExploreGroupsPayload>(WEIBO_ENDPOINTS.exploreGroups, {
     is_new_segment: 1,
     fetch_hot: 1,
   })
-  return adaptFollowGroupsResponse(payload)
+  return adaptFollowGroupsDataResponse(payload)
+}
+
+export async function loadHomeTimelineDefaultGroupId(
+  tab: Extract<HomeTimelineTab, 'special-follow' | 'friend-circle'>,
+): Promise<string> {
+  const groups = await loadFollowGroups()
+  const group = getDefaultFollowGroupForHomeTab(groups.defaultGroups, tab)
+
+  if (!group) {
+    throw new Error(
+      tab === 'special-follow' ? '未找到默认分组「特别关注」' : '未找到默认分组「互相关注」',
+    )
+  }
+
+  return group.gid
 }
 
 export async function loadGroupTimeline(

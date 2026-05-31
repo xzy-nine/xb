@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,7 +7,11 @@ import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
 import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
 import { AppShell } from '@/lib/weibo/app/app-shell'
 import { HomeTimelinePage } from '@/lib/weibo/pages/home-timeline-page'
-import { loadHomeTimeline } from '@/lib/weibo/services/weibo-repository'
+import {
+  loadFollowGroups,
+  loadGroupTimeline,
+  loadHomeTimeline,
+} from '@/lib/weibo/services/weibo-repository'
 
 vi.mock('@/lib/weibo/services/weibo-repository', async () => {
   const actual = await vi.importActual<typeof import('@/lib/weibo/services/weibo-repository')>(
@@ -32,6 +36,17 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
           source: '',
         },
       ],
+      nextCursor: null,
+    })),
+    loadFollowGroups: vi.fn(async () => ({
+      groups: [],
+      defaultGroups: {
+        specialFollow: { gid: 'special-dynamic', title: '特别关注' },
+        friendCircle: { gid: 'friend-dynamic', title: '互相关注' },
+      },
+    })),
+    loadGroupTimeline: vi.fn(async () => ({
+      items: [],
       nextCursor: null,
     })),
   }
@@ -84,6 +99,7 @@ describe('HomeTimelinePage', () => {
           <Routes>
             <Route path="*" element={<AppShell />}>
               <Route index element={<HomeTimelinePage />} />
+              <Route path="mygroups" element={<HomeTimelinePage />} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -93,5 +109,29 @@ describe('HomeTimelinePage', () => {
     expect(screen.getByRole('button', { name: '推荐' })).toBeInTheDocument()
     expect(await screen.findByText('hello world')).toBeInTheDocument()
     expect(vi.mocked(loadHomeTimeline)).toHaveBeenCalled()
+  })
+
+  it('maps default group gids from the URL to special timeline tabs', async () => {
+    const queryClient = new QueryClient()
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/mygroups?gid=special-dynamic']}>
+          <Routes>
+            <Route path="*" element={<AppShell />}>
+              <Route path="mygroups" element={<HomeTimelinePage />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByRole('button', { name: '特别关注' })).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(vi.mocked(loadGroupTimeline)).toHaveBeenCalledWith('special-dynamic', {
+        cursor: null,
+      })
+    })
+    expect(vi.mocked(loadFollowGroups)).toHaveBeenCalled()
   })
 })

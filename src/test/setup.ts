@@ -35,5 +35,11 @@ Object.defineProperty(globalThis, 'browser', {
     runtime: {
       getManifest: () => ({ version: '0.0.0-test' }),
     },
+    storage: {
+      local: {
+        get: vi.fn(async () => ({})),
+        set: vi.fn(async () => {}),
+      },
+    },
   },
 })

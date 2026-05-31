@@ -50,6 +50,66 @@ describe('weibo-repository', () => {
     })
   })
 
+  it('loads the special-follow tab with the gid from default follow groups', async () => {
+    vi.mocked(wbGet)
+      .mockResolvedValueOnce({
+        groups: [
+          {
+            title: '默认分组',
+            group: [
+              { gid: 'special-dynamic', title: '特别关注' },
+              { gid: 'friend-dynamic', title: '互相关注' },
+            ],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({})
+
+    await expect(loadHomeTimeline('special-follow')).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    })
+
+    expect(wbGet).toHaveBeenNthCalledWith(1, '/ajax/feed/allGroups', {
+      fetch_hot: 1,
+      is_new_segment: 1,
+    })
+    expect(wbGet).toHaveBeenNthCalledWith(2, '/ajax/feed/groupstimeline', {
+      count: 25,
+      fast_refresh: 1,
+      list_id: 'special-dynamic',
+      refresh: 4,
+    })
+  })
+
+  it('loads the friend-circle tab with the mutual follow gid from default follow groups', async () => {
+    vi.mocked(wbGet)
+      .mockResolvedValueOnce({
+        groups: [
+          {
+            title: '默认分组',
+            group: [
+              { gid: 'special-dynamic', title: '特别关注' },
+              { gid: 'friend-dynamic', title: '互相关注' },
+            ],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({})
+
+    await expect(loadHomeTimeline('friend-circle')).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    })
+
+    expect(wbGet).toHaveBeenNthCalledWith(2, '/ajax/feed/groupstimeline', {
+      count: 25,
+      fast_refresh: 1,
+      list_id: 'friend-dynamic',
+      refresh: 4,
+    })
+  })
+
   it('loads liked statuses from likelist', async () => {
     await expect(loadLikedStatuses('6393557498')).resolves.toEqual({
       items: [],

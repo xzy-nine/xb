@@ -6,6 +6,8 @@ import { AppRoot } from '@/lib/weibo/app/app-root'
 import { waitForWeiboHostRegions } from '@/lib/weibo/content/host-selectors'
 import { markWeiboPageReady } from '@/lib/weibo/content/page-takeover'
 import { bindShellState } from '@/lib/weibo/content/shell-state'
+import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
+import { loadFollowGroups } from '@/lib/weibo/services/weibo-repository'
 
 interface MountedWeiboUi {
   root: Root
@@ -40,14 +42,23 @@ export async function mountWeiboHostShell({
   const settingsStore = getAppSettingsStore()
   await settingsStore.getState().hydrate()
 
-  // 强制跳转我关注的：当 window.history.length <= 2 且当前在首页时，重定向到 /mygroups
-  const { forceRedirectToFollowing } = settingsStore.getState()
+  // 首次加载跳转：当 window.history.length <= 2 且当前在首页时，重定向到用户选择的页面
+  const { firstLoadRedirect } = settingsStore.getState()
   if (
-    forceRedirectToFollowing &&
+    firstLoadRedirect &&
     window.history.length <= 2 &&
     (window.location.pathname === '/' || window.location.pathname === '')
   ) {
-    window.location.replace('/mygroups')
+    let redirectPath = homeTimelinePathFromTab(firstLoadRedirect)
+    if (firstLoadRedirect === 'special-follow' || firstLoadRedirect === 'friend-circle') {
+      try {
+        const groups = await loadFollowGroups()
+        redirectPath = homeTimelinePathFromTab(firstLoadRedirect, groups.defaultGroups)
+      } catch {
+        redirectPath = homeTimelinePathFromTab(firstLoadRedirect)
+      }
+    }
+    window.location.replace(redirectPath)
     return null
   }
 
