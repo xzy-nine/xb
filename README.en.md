@@ -52,6 +52,8 @@ Visit [Landing Page](https://xb-extension.vercel.app/) for more.
 8. 🎨 **Custom Theme** — Customize theme colors. See
    [Tutorial](https://github.com/nnecec/xb/discussions/54).
 9. 📅 **Browsing History** — The history is recorded locally.
+10. ⬇️ **Free to downloads** - Supports download and batch download of Weibo
+    images and videos.
 
 ## Supported Pages
 
