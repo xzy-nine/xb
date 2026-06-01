@@ -18,7 +18,7 @@ vi.mock('@/lib/weibo/components/right-rail', () => ({
 }))
 
 vi.mock('@/lib/app-settings-store', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = (await importOriginal()) as typeof import('@/lib/app-settings-store')
   const noop = vi.fn()
   return {
     ...actual,
