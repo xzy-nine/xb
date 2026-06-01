@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, MessageCircle } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
@@ -28,18 +29,21 @@ import {
   statusDetailQueryOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
 
 function StatusCommentsSection({
   statusId,
   authorId,
   authorName,
   statusText,
+  commentsCount,
   onCommentReply,
 }: {
   statusId: string
   authorId: string
   authorName: string
   statusText: string
+  commentsCount: number
   onCommentReply: ReturnType<typeof useAppShellContext>['setComposeTarget']
 }) {
   const [filter, setFilter] = useState<string | undefined>(undefined)
@@ -53,36 +57,41 @@ function StatusCommentsSection({
   const errorMessage = commentsQuery.error instanceof Error ? commentsQuery.error.message : null
 
   return (
-    <>
-      <CommentBox
-        target={{
-          kind: 'status',
-          mode: 'comment',
-          statusId,
-          targetCommentId: null,
-          authorName,
-          excerpt: statusText.trim().slice(0, 80),
-        }}
-        placeholder="写评论..."
-      />
+    <section className="bg-card/70 border-border/55 rounded-xl border shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
+      <div className="border-border/60 flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+            <MessageCircle className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-foreground text-base leading-5 font-semibold">评论</h2>
+            <p className="text-muted-foreground truncate text-xs tabular-nums">
+              {formatWeiboCount(commentsCount)} 条互动
+            </p>
+          </div>
+        </div>
 
-      {filterGroup && filterGroup.length > 0 && selectedFilter ? (
-        <div className="flex items-center gap-2">
-          <Select value={selectedFilter.param} onValueChange={(value) => setFilter(value)}>
-            <SelectTrigger size="sm" className="min-w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {filterGroup.map((item) => (
-                <SelectItem key={item.param} value={item.param}>
-                  {item.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2 sm:justify-end">
+          {filterGroup && filterGroup.length > 0 && selectedFilter ? (
+            <Select value={selectedFilter.param} onValueChange={(value) => setFilter(value)}>
+              <SelectTrigger size="sm" className="min-w-32 sm:min-w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {filterGroup.map((item) => (
+                  <SelectItem key={item.param} value={item.param}>
+                    {item.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
           <Button
+            type="button"
             variant="ghost"
             size="icon"
+            aria-label="刷新评论"
+            className="active:scale-[0.96]"
             onClick={async () => {
               await commentsQuery.refetch()
               toast.success('评论刷新成功')
@@ -92,32 +101,49 @@ function StatusCommentsSection({
             <RefreshCWIcon className={`size-3 ${commentsQuery.isFetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-      ) : null}
+      </div>
 
-      {commentsQuery.isLoading ? <PageLoadingState label="正在加载评论..." /> : null}
-      {!commentsQuery.isLoading && errorMessage ? (
-        <PageErrorState description={errorMessage} />
-      ) : null}
-      {!commentsQuery.isLoading && !errorMessage ? (
-        <CommentList
-          comments={comments}
-          emptyLabel="此微博暂无评论"
-          rootStatusId={statusId}
-          authorUid={authorId}
-          onCommentReply={onCommentReply}
+      <div className="flex flex-col gap-4 p-4">
+        <CommentBox
+          target={{
+            kind: 'status',
+            mode: 'comment',
+            statusId,
+            targetCommentId: null,
+            authorName,
+            excerpt: statusText.trim().slice(0, 80),
+          }}
+          placeholder="写评论..."
         />
-      ) : null}
 
-      {commentsQuery.hasNextPage ? (
-        <Button
-          variant="outline"
-          onClick={() => void commentsQuery.fetchNextPage()}
-          disabled={commentsQuery.isFetchingNextPage}
-        >
-          {commentsQuery.isFetchingNextPage ? '加载中...' : '加载更多评论'}
-        </Button>
-      ) : null}
-    </>
+        <div className="pt-4">
+          {commentsQuery.isLoading ? <PageLoadingState label="正在加载评论..." /> : null}
+          {!commentsQuery.isLoading && errorMessage ? (
+            <PageErrorState description={errorMessage} />
+          ) : null}
+          {!commentsQuery.isLoading && !errorMessage ? (
+            <CommentList
+              comments={comments}
+              emptyLabel="此微博暂无评论"
+              rootStatusId={statusId}
+              authorUid={authorId}
+              onCommentReply={onCommentReply}
+            />
+          ) : null}
+        </div>
+
+        {commentsQuery.hasNextPage ? (
+          <Button
+            variant="outline"
+            className="w-full active:scale-[0.99]"
+            onClick={() => void commentsQuery.fetchNextPage()}
+            disabled={commentsQuery.isFetchingNextPage}
+          >
+            {commentsQuery.isFetchingNextPage ? '加载中...' : '加载更多评论'}
+          </Button>
+        ) : null}
+      </div>
+    </section>
   )
 }
 
@@ -129,11 +155,79 @@ function handleGoBack() {
   }
 }
 
+function StatusDetailTopBar({
+  showStatusSummary,
+  authorName,
+  createdAtLabel,
+  statusText,
+}: {
+  showStatusSummary: boolean
+  authorName?: string
+  createdAtLabel?: string
+  statusText?: string
+}) {
+  return (
+    <div className="bg-background/85 border-border/45 sticky top-0 z-10 border-b backdrop-blur-lg">
+      <div className="relative flex min-h-16 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="返回"
+            className="shrink-0 active:scale-[0.96]"
+            onClick={handleGoBack}
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          <div className="relative min-w-0 flex-1 overflow-hidden">
+            <AnimatePresence initial={false} mode="wait">
+              {showStatusSummary ? (
+                <motion.div
+                  key="status-summary"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="min-w-0"
+                >
+                  <h1 className="text-foreground truncate text-lg leading-6 font-semibold">
+                    {authorName ?? '正文'}
+                  </h1>
+                  <p className="text-muted-foreground line-clamp-1 truncate text-xs">
+                    {createdAtLabel && statusText ? `${createdAtLabel} · ${statusText}` : '详情页'}
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="default-title"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="min-w-0"
+                >
+                  <h1 className="text-foreground truncate text-lg leading-6 font-semibold">
+                    微博正文
+                  </h1>
+                  <p className="text-muted-foreground truncate text-xs">详情页</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function StatusDetailPage() {
   const ctx = useAppShellContext()
   const navigate = useNavigate()
   const page = useWeiboPage()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const statusArticleRef = useRef<HTMLElement | null>(null)
+  const [showStatusSummary, setShowStatusSummary] = useState(false)
 
   useEffect(() => {
     ctx.resetMainScroll()
@@ -155,41 +249,67 @@ export function StatusDetailPage() {
     }
   }, [detail])
 
+  useEffect(() => {
+    const article = statusArticleRef.current
+    if (!article || !detail) {
+      setShowStatusSummary(false)
+      return
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setShowStatusSummary(false)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setShowStatusSummary(entries[0]?.isIntersecting === false)
+      },
+      { threshold: 0 },
+    )
+
+    observer.observe(article)
+    return () => observer.disconnect()
+  }, [detail])
+
   return (
-    <div className="">
-      <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-lg">
-        <div className="relative flex min-h-14 items-end justify-between gap-3 py-2">
-          <Button variant="ghost" onClick={handleGoBack}>
-            <ArrowLeft className="size-4" />
-            <span className="text-foreground truncate font-semibold">返回</span>
-          </Button>
-        </div>
-      </div>
+    <div className="relative pb-8">
+      <StatusDetailTopBar
+        showStatusSummary={showStatusSummary}
+        authorName={detail?.status.author.name}
+        createdAtLabel={detail?.status.createdAtLabel}
+        statusText={detail?.status.text}
+      />
 
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
       {detailQuery.error instanceof Error ? (
         <PageErrorState description={detailQuery.error.message} />
       ) : null}
       {detail ? (
-        <div className="flex flex-col gap-4">
-          <FeedCard
-            item={detail.status}
-            surface="detail"
-            onNavigate={ctx.navigateToStatusDetail}
-            onCommentClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
-            }
-            onRepostClick={(item) =>
-              ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
-            }
-            onStatusDeleted={() => navigate(-1)}
-          />
+        <div className="mx-auto flex max-w-[720px] flex-col gap-4 pt-4">
+          <article ref={statusArticleRef} className="relative">
+            <div className="bg-primary/70 absolute top-5 bottom-5 left-0 hidden w-px sm:block" />
+            <FeedCard
+              item={detail.status}
+              surface="detail"
+              className="border-border/55 bg-card/95 shadow-[0_16px_40px_rgb(0_0_0/0.08)] dark:shadow-black/20"
+              onNavigate={ctx.navigateToStatusDetail}
+              onCommentClick={(item) =>
+                ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
+              }
+              onRepostClick={(item) =>
+                ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))
+              }
+              onStatusDeleted={() => navigate(-1)}
+            />
+          </article>
           {authorId ? (
             <StatusCommentsSection
               statusId={detail.status.id}
               authorId={authorId}
               authorName={detail.status.author.name}
               statusText={detail.status.text}
+              commentsCount={detail.status.stats.comments}
               onCommentReply={ctx.setComposeTarget}
             />
           ) : null}
