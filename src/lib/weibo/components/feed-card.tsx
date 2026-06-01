@@ -696,7 +696,7 @@ export const FeedCard = memo(function FeedCard({
     pointerDownPositionRef.current = null
   }
 
-  const canNavigate = onNavigate && statusAllowsCardNavigate(surfaceProp, 'root')
+  const canNavigate = xLayoutEnabled && onNavigate && statusAllowsCardNavigate(surfaceProp, 'root')
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation()
