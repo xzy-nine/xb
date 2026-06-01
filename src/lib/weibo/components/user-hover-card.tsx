@@ -164,7 +164,7 @@ export function UserHoverCard(props: UserHoverCardProps) {
 
               <Button
                 variant="outline"
-                className="w-full flex-1 gap-1.5"
+                className="w-full flex-1 gap-1.5 py-2"
                 onClick={() => navigate(`/n/${encodeURIComponent(profile.name)}`)}
               >
                 <UserRound className="size-3.5" />

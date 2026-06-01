@@ -353,6 +353,8 @@ describe('FeedCard', () => {
   })
 
   it('triggers detail callback when clicking card body', () => {
+    const store = getAppSettingsStore()
+    store.setState({ xLayoutEnabled: true })
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
@@ -367,6 +369,8 @@ describe('FeedCard', () => {
   })
 
   it('does not trigger detail callback after dragging across card body text', () => {
+    const store = getAppSettingsStore()
+    store.setState({ xLayoutEnabled: true })
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 

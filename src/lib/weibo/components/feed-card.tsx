@@ -487,6 +487,8 @@ function FeedActions({
 function RetweetedFeedBlock({
   item,
   onNavigate,
+  onCommentClick,
+  onRepostClick,
   onLikeClick,
   likePendingForId,
   xLayoutEnabled,
@@ -495,6 +497,8 @@ function RetweetedFeedBlock({
 }: {
   item: NonNullable<FeedItem['retweetedStatus']>
   onNavigate?: (item: FeedItem) => void
+  onCommentClick?: (item: FeedItem) => void
+  onRepostClick?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePendingForId: string | null
   xLayoutEnabled: boolean
@@ -555,6 +559,9 @@ function RetweetedFeedBlock({
         {!isDeletedAuthor && (
           <FeedActions
             item={resolvedItem}
+            onCommentClick={onCommentClick}
+            onCommentExpand={onNavigate}
+            onRepostClick={onRepostClick}
             onLikeClick={onLikeClick}
             likePending={likePendingForId === resolvedItem.id}
             xLayoutEnabled={xLayoutEnabled}
@@ -833,6 +840,8 @@ export const FeedCard = memo(function FeedCard({
           <RetweetedFeedBlock
             item={resolvedItem.retweetedStatus}
             onNavigate={onNavigate}
+            onCommentClick={onCommentClick}
+            onRepostClick={onRepostClick}
             onLikeClick={(target) => likeMutation.mutate(target)}
             likePendingForId={likePendingId}
             xLayoutEnabled={xLayoutEnabled}
