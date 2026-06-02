@@ -44,6 +44,31 @@ describe('app-settings', () => {
     ).toBe('modern')
   })
 
+  it('migrates the old x layout setting to the feed interaction mode', () => {
+    expect(normalizeAppSettings({ xLayoutEnabled: true }).feedInteractionMode).toBe('x')
+    expect(normalizeAppSettings({ xLayoutEnabled: false }).feedInteractionMode).toBe('weibo')
+  })
+
+  it('normalizes feed toolbar settings', () => {
+    expect(
+      normalizeAppSettings({
+        feedPrimaryActionOrder: ['like', 'comment', 'repost'],
+        feedToolbarButtonIds: ['copy-text', 'unknown', 'favorite', 'favorite'],
+      }).feedPrimaryActionOrder,
+    ).toEqual(['like', 'comment', 'repost'])
+    expect(
+      normalizeAppSettings({
+        feedPrimaryActionOrder: ['like', 'comment'],
+        feedToolbarButtonIds: ['copy-text', 'unknown', 'favorite', 'favorite'],
+      }).feedPrimaryActionOrder,
+    ).toEqual(DEFAULT_APP_SETTINGS.feedPrimaryActionOrder)
+    expect(
+      normalizeAppSettings({
+        feedToolbarButtonIds: ['copy-text', 'unknown', 'favorite', 'favorite'],
+      }).feedToolbarButtonIds,
+    ).toEqual(['copy-text', 'favorite'])
+  })
+
   it('loads and persists settings through storage', async () => {
     const storage = createStorageArea({
       theme: 'dark',
@@ -85,7 +110,9 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'hot',
-      xLayoutEnabled: true,
+      feedInteractionMode: 'x',
+      feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+      feedToolbarButtonIds: [],
       browsingHistoryLimit: 200,
       xbTopicPage: true,
       forceRedirectToFollowing: false,
@@ -132,7 +159,9 @@ describe('app-settings', () => {
         imageGenTheme: 'light',
         imageGenCardStyle: 'default',
         hotSearchType: 'mine',
-        xLayoutEnabled: true,
+        feedInteractionMode: 'x',
+        feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+        feedToolbarButtonIds: [],
         browsingHistoryLimit: 300,
         xbTopicPage: true,
         forceRedirectToFollowing: false,
@@ -180,7 +209,9 @@ describe('app-settings', () => {
       imageGenTheme: 'light',
       imageGenCardStyle: 'default',
       hotSearchType: 'mine',
-      xLayoutEnabled: true,
+      feedInteractionMode: 'x',
+      feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+      feedToolbarButtonIds: [],
       browsingHistoryLimit: 300,
       xbTopicPage: true,
       forceRedirectToFollowing: false,

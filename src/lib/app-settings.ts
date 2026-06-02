@@ -112,6 +112,22 @@ export interface UserTheme {
 
 export type SelectedThemeType = 'preset' | 'custom'
 
+export type FeedInteractionMode = 'x' | 'weibo'
+
+export const FEED_PRIMARY_ACTION_IDS = ['comment', 'repost', 'like'] as const
+
+export type FeedPrimaryActionId = (typeof FEED_PRIMARY_ACTION_IDS)[number]
+
+export const FEED_TOOLBAR_BUTTON_IDS = [
+  'gen-image',
+  'download-media',
+  'favorite',
+  'copy-link',
+  'copy-text',
+] as const
+
+export type FeedToolbarButtonId = (typeof FEED_TOOLBAR_BUTTON_IDS)[number]
+
 export const BROWSING_HISTORY_LIMIT_OPTIONS = [200, 300, 500] as const
 
 export type BrowsingHistoryLimit = (typeof BROWSING_HISTORY_LIMIT_OPTIONS)[number]
@@ -148,7 +164,9 @@ export interface AppSettings {
   imageGenTheme: GenImageCardTheme
   imageGenCardStyle: CardStyle
   hotSearchType: HotSearchType
-  xLayoutEnabled: boolean
+  feedInteractionMode: FeedInteractionMode
+  feedPrimaryActionOrder: FeedPrimaryActionId[]
+  feedToolbarButtonIds: FeedToolbarButtonId[]
   browsingHistoryLimit: BrowsingHistoryLimit
   xbTopicPage: boolean
   forceRedirectToFollowing?: boolean
@@ -214,7 +232,9 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenTheme: 'light' as GenImageCardTheme,
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
-  xLayoutEnabled: true,
+  feedInteractionMode: 'x',
+  feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+  feedToolbarButtonIds: [],
   browsingHistoryLimit: 200,
   xbTopicPage: true,
   forceRedirectToFollowing: false,
@@ -244,6 +264,44 @@ function isHotSearchType(value: unknown): value is HotSearchType {
     value === 'life' ||
     value === 'social'
   )
+}
+
+function isFeedInteractionMode(value: unknown): value is FeedInteractionMode {
+  return value === 'x' || value === 'weibo'
+}
+
+function isFeedPrimaryActionId(value: unknown): value is FeedPrimaryActionId {
+  return FEED_PRIMARY_ACTION_IDS.includes(value as FeedPrimaryActionId)
+}
+
+function normalizeFeedPrimaryActionOrder(value: unknown): FeedPrimaryActionId[] {
+  if (!Array.isArray(value)) {
+    return DEFAULT_APP_SETTINGS.feedPrimaryActionOrder
+  }
+
+  const unique = value.filter(isFeedPrimaryActionId).filter((id, index, list) => {
+    return list.indexOf(id) === index
+  })
+
+  if (unique.length !== FEED_PRIMARY_ACTION_IDS.length) {
+    return DEFAULT_APP_SETTINGS.feedPrimaryActionOrder
+  }
+
+  return unique
+}
+
+function isFeedToolbarButtonId(value: unknown): value is FeedToolbarButtonId {
+  return FEED_TOOLBAR_BUTTON_IDS.includes(value as FeedToolbarButtonId)
+}
+
+function normalizeFeedToolbarButtonIds(value: unknown): FeedToolbarButtonId[] {
+  if (!Array.isArray(value)) {
+    return DEFAULT_APP_SETTINGS.feedToolbarButtonIds
+  }
+
+  return value.filter(isFeedToolbarButtonId).filter((id, index, list) => {
+    return list.indexOf(id) === index
+  })
 }
 
 function isLightBgColorPreset(value: unknown): value is LightBgColorPreset {
@@ -352,6 +410,7 @@ export function normalizeAppSettings(value: unknown): AppSettings {
   }
 
   const candidate = value as Partial<AppSettings>
+  const legacyCandidate = value as Record<string, unknown>
 
   return {
     contentWidth: isContentWidth(candidate.contentWidth)
@@ -464,10 +523,15 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     hotSearchType: isHotSearchType(candidate.hotSearchType)
       ? candidate.hotSearchType
       : DEFAULT_APP_SETTINGS.hotSearchType,
-    xLayoutEnabled:
-      typeof candidate.xLayoutEnabled === 'boolean'
-        ? candidate.xLayoutEnabled
-        : DEFAULT_APP_SETTINGS.xLayoutEnabled,
+    feedInteractionMode: isFeedInteractionMode(candidate.feedInteractionMode)
+      ? candidate.feedInteractionMode
+      : typeof legacyCandidate.xLayoutEnabled === 'boolean'
+        ? legacyCandidate.xLayoutEnabled
+          ? 'x'
+          : 'weibo'
+        : DEFAULT_APP_SETTINGS.feedInteractionMode,
+    feedPrimaryActionOrder: normalizeFeedPrimaryActionOrder(candidate.feedPrimaryActionOrder),
+    feedToolbarButtonIds: normalizeFeedToolbarButtonIds(candidate.feedToolbarButtonIds),
     browsingHistoryLimit: isBrowsingHistoryLimit(candidate.browsingHistoryLimit)
       ? candidate.browsingHistoryLimit
       : DEFAULT_APP_SETTINGS.browsingHistoryLimit,

@@ -87,7 +87,9 @@ describe('FeedCard', () => {
     store.setState({
       ...store.getState(),
       collapseRepliesEnabled: false,
-      xLayoutEnabled: false,
+      feedInteractionMode: 'weibo',
+      feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+      feedToolbarButtonIds: [],
       isHydrated: true,
     })
   })
@@ -299,14 +301,13 @@ describe('FeedCard', () => {
     expect(screen.queryByRole('heading', { level: 1, name: 'Preview' })).not.toBeInTheDocument()
   })
 
-  it('copies plain status text from the hover action without navigating', async () => {
+  it('copies plain status text from the toolbar action without navigating', async () => {
+    const store = getAppSettingsStore()
+    store.setState({ feedToolbarButtonIds: ['copy-text'] })
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
-    const copyButton = screen.getByRole('button', { name: '复制微博文字' })
-    expect(copyButton).toHaveClass('opacity-0')
-    expect(copyButton).toHaveClass('group-hover/card:opacity-100')
-
+    const copyButton = screen.getByRole('button', { name: '复制微博内容' })
     fireEvent.click(copyButton)
 
     await waitFor(() => {
@@ -315,7 +316,9 @@ describe('FeedCard', () => {
     expect(onNavigate).not.toHaveBeenCalled()
   })
 
-  it('copies markdown status text from the hover action', async () => {
+  it('copies markdown status text from the toolbar action', async () => {
+    const store = getAppSettingsStore()
+    store.setState({ feedToolbarButtonIds: ['copy-text'] })
     const queryClient = new QueryClient()
 
     render(
@@ -345,7 +348,7 @@ describe('FeedCard', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '复制微博文字' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制微博内容' }))
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('# Preview\n\n**markdown marker**')
@@ -354,7 +357,7 @@ describe('FeedCard', () => {
 
   it('triggers detail callback when clicking card body', () => {
     const store = getAppSettingsStore()
-    store.setState({ xLayoutEnabled: true })
+    store.setState({ feedInteractionMode: 'x' })
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
@@ -370,7 +373,7 @@ describe('FeedCard', () => {
 
   it('does not trigger detail callback after dragging across card body text', () => {
     const store = getAppSettingsStore()
-    store.setState({ xLayoutEnabled: true })
+    store.setState({ feedInteractionMode: 'x' })
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
