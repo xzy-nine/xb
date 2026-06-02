@@ -15,6 +15,7 @@
 [![Chrome Web Store users](https://img.shields.io/chrome-web-store/users/ffhppkcianllofhhjohbfbobjfppbeao?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
 [![Firefox Add-ons version](https://img.shields.io/amo/v/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/zh-CN/firefox/addon/xb/)
 [![Firefox Add-ons users](https://img.shields.io/amo/users/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/zh-CN/firefox/addon/xb/)
+[![Edge Add-ons version](https://img.shields.io/badge/dynamic/json?label=microsoft%20edge%20add-on&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fmojlbnkiahdmnfaffmelfcefohpfjjla)](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla)
 [![Landing page](https://img.shields.io/badge/website-xb--extension.vercel.app-000000?logo=vercel&logoColor=white)](https://xb-extension.vercel.app/)
 
 [![Bun](https://img.shields.io/badge/bun-1.3.14-000000?logo=bun&logoColor=white)](https://bun.sh)
@@ -36,6 +37,8 @@ xb 是一个浏览器插件。安装后，正常浏览微博，就能享受到�
 [Chrome 网上应用店](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
 
 [Firefox 插件](https://addons.mozilla.org/zh-CN/firefox/addon/xb/)
+
+[Edge 插件](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla)
 
 ## 功能特点
 
