@@ -145,15 +145,16 @@ export function NotificationsPage() {
   )
   const errorMessage =
     notificationsQuery.error instanceof Error ? notificationsQuery.error.message : null
+  const activeTitle =
+    NOTIFICATION_OPTIONS.find((option) => option.value === activeTab)?.label ?? '@我'
 
   return (
     <div className="flex flex-col">
       <TimelineTopBar
-        title="通知"
-        filterLabel={NOTIFICATION_OPTIONS.find((option) => option.value === activeTab)?.label}
-        filterOptions={NOTIFICATION_OPTIONS}
-        filterValue={activeTab}
-        onFilterChange={handleTabChange}
+        title={activeTitle}
+        titleOptions={NOTIFICATION_OPTIONS}
+        titleValue={activeTab}
+        onTitleChange={handleTabChange}
         onRefresh={() => void notificationsQuery.refetch()}
         isRefreshing={isRefreshing}
       />

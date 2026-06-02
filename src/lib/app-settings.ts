@@ -150,11 +150,11 @@ export interface AppSettings {
   hotSearchType: HotSearchType
   xLayoutEnabled: boolean
   browsingHistoryLimit: BrowsingHistoryLimit
-  followGroupsEnabled: boolean
   xbTopicPage: boolean
   forceRedirectToFollowing?: boolean
   firstLoadRedirect: HomeTab
   homeTab: HomeTab
+  homeGroupId: string | null
   customThemeLightCss: string
   customThemeDarkCss: string
   selectedThemeType: SelectedThemeType
@@ -216,11 +216,11 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   hotSearchType: 'hot' as HotSearchType,
   xLayoutEnabled: true,
   browsingHistoryLimit: 200,
-  followGroupsEnabled: false,
   xbTopicPage: true,
   forceRedirectToFollowing: false,
   firstLoadRedirect: 'for-you',
   homeTab: 'for-you',
+  homeGroupId: null,
   customThemeLightCss: '',
   customThemeDarkCss: '',
   selectedThemeType: 'preset',
@@ -471,10 +471,6 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     browsingHistoryLimit: isBrowsingHistoryLimit(candidate.browsingHistoryLimit)
       ? candidate.browsingHistoryLimit
       : DEFAULT_APP_SETTINGS.browsingHistoryLimit,
-    followGroupsEnabled:
-      typeof candidate.followGroupsEnabled === 'boolean'
-        ? candidate.followGroupsEnabled
-        : DEFAULT_APP_SETTINGS.followGroupsEnabled,
     xbTopicPage:
       typeof candidate.xbTopicPage === 'boolean'
         ? candidate.xbTopicPage
@@ -487,6 +483,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       ? candidate.firstLoadRedirect
       : DEFAULT_APP_SETTINGS.firstLoadRedirect,
     homeTab: isHomeTab(candidate.homeTab) ? candidate.homeTab : DEFAULT_APP_SETTINGS.homeTab,
+    homeGroupId:
+      typeof candidate.homeGroupId === 'string' && candidate.homeGroupId.trim()
+        ? candidate.homeGroupId
+        : null,
     customThemeLightCss:
       typeof candidate.customThemeLightCss === 'string'
         ? candidate.customThemeLightCss

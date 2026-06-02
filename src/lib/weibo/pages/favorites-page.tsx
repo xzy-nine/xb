@@ -53,11 +53,10 @@ export function FavoritesPage() {
   return (
     <div className="flex flex-col">
       <TimelineTopBar
-        title="收藏"
-        filterLabel="我的收藏"
-        filterOptions={SAVED_LIST_OPTIONS}
-        filterValue="favorites"
-        onFilterChange={handleSavedListChange}
+        title="我的收藏"
+        titleOptions={SAVED_LIST_OPTIONS}
+        titleValue="favorites"
+        onTitleChange={handleSavedListChange}
         onRefresh={() => void favoritesQuery.refetch()}
         isRefreshing={isRefreshing}
       />

@@ -1,79 +1,99 @@
 import { Check, ChevronDown } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import { cn } from '@/lib/utils'
 
-export interface TimelineTopBarOption {
-  value: string
+export interface TimelineTopBarOption<Value extends string = string> {
+  value: Value
   label: string
 }
 
-interface TimelineTopBarProps {
+export interface TimelineTopBarOptionGroup<Value extends string = string> {
+  label?: string
+  className?: string
+  options: TimelineTopBarOption<Value>[]
+}
+
+interface TimelineTopBarProps<TitleValue extends string = string> {
   title: string
   description?: string
-  titleValue?: string
-  titleOptions?: TimelineTopBarOption[]
-  onTitleChange?: (value: string) => void
-  filterLabel?: string
-  filterOptions?: TimelineTopBarOption[]
-  filterValue?: string
-  onFilterChange?: (value: string) => void
+  titleValue?: TitleValue
+  titleOptions?: TimelineTopBarOption<TitleValue>[]
+  titleOptionGroups?: TimelineTopBarOptionGroup<TitleValue>[]
+  onTitleChange?: (value: TitleValue) => void
   onRefresh?: () => void
   isRefreshing?: boolean
   rightAction?: ReactNode
   children?: ReactNode
 }
 
-export function TimelineTopBar({
+export function TimelineTopBar<TitleValue extends string = string>({
   title,
   description,
   titleValue,
   titleOptions,
+  titleOptionGroups,
   onTitleChange,
-  filterLabel,
-  filterOptions,
-  filterValue,
-  onFilterChange,
   onRefresh,
   isRefreshing = false,
   rightAction,
   children,
-}: TimelineTopBarProps) {
+}: TimelineTopBarProps<TitleValue>) {
   const activeTitleValue =
     titleValue ?? titleOptions?.find((option) => option.label === title)?.value ?? title
-  const showTitleMenu = titleOptions && titleOptions.length > 1 && onTitleChange
-  const showFilterMenu = filterOptions && filterOptions.length > 0 && filterValue && onFilterChange
+  const menuGroups =
+    titleOptionGroups ??
+    (titleOptions && titleOptions.length > 1 ? [{ options: titleOptions }] : [])
+  const visibleMenuGroups = onTitleChange
+    ? menuGroups.filter((group) => group.options.length > 0)
+    : []
+  const showMenu = visibleMenuGroups.length > 0
 
   return (
     <div className="bg-background/70 border-border/40 sticky top-0 z-50 border-b backdrop-blur-lg">
       <div className="relative flex min-h-16 items-center justify-between">
         <div className="flex min-w-0 items-center">
-          {showTitleMenu ? (
+          {showMenu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost">
+                <Button variant="ghost" className="min-w-0">
                   <span className="text-foreground truncate text-lg font-semibold">{title}</span>
                   <ChevronDown className="text-muted-foreground size-4 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-40">
-                {titleOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onSelect={() => onTitleChange(option.value)}
-                    className="justify-between"
-                  >
-                    {option.label}
-                    {option.value === activeTitleValue ? <Check className="size-4" /> : null}
-                  </DropdownMenuItem>
+              <DropdownMenuContent align="start" className="w-56">
+                {visibleMenuGroups.map((group, groupIndex) => (
+                  <Fragment key={group.label ?? groupIndex}>
+                    {groupIndex > 0 ? <DropdownMenuSeparator /> : null}
+                    <DropdownMenuGroup className={group.className}>
+                      {group.label ? (
+                        <DropdownMenuLabel className="text-muted-foreground text-xs">
+                          {group.label}
+                        </DropdownMenuLabel>
+                      ) : null}
+                      {group.options.map((option) => (
+                        <DropdownMenuItem
+                          key={option.value}
+                          onSelect={() => onTitleChange?.(option.value)}
+                          className="justify-between"
+                        >
+                          <span className="truncate">{option.label}</span>
+                          {option.value === activeTitleValue ? <Check className="size-4" /> : null}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </Fragment>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -82,28 +102,6 @@ export function TimelineTopBar({
           )}
 
           <div className="flex h-full flex-col items-center justify-end gap-1">
-            {showFilterMenu ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="opacity-80">
-                    <span className="truncate">{filterLabel}</span>
-                    <ChevronDown className="size-3 shrink-0" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {filterOptions.map((option) => (
-                    <DropdownMenuItem
-                      key={option.value}
-                      onSelect={() => onFilterChange(option.value)}
-                      className="justify-between"
-                    >
-                      <span className="truncate">{option.label}</span>
-                      {option.value === filterValue ? <Check className="size-4" /> : null}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
             {description ? (
               <p className="text-muted-foreground truncate px-2 text-xs leading-4">{description}</p>
             ) : null}

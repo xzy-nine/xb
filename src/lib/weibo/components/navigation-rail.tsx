@@ -132,6 +132,7 @@ export function NavigationRail({
 }: NavigationRailProps) {
   const {
     homeTab,
+    homeGroupId,
     showExplore,
     showFavorites,
     showHistory: showHistorySetting,
@@ -143,6 +144,7 @@ export function NavigationRail({
   } = useAppSettings(
     useShallow((state) => ({
       homeTab: state.homeTab,
+      homeGroupId: state.homeGroupId,
       showExplore: state.showExplore,
       showFavorites: state.showFavorites,
       showHistory: state.showHistory,
@@ -194,7 +196,13 @@ export function NavigationRail({
               label="主页"
               showLabel={!isCollapsed}
               isActive={!isOwnProfileActive && pageKind === 'home'}
-              onClick={() => navigate(homeTab === 'following' ? '/mygroups' : '/')}
+              onClick={() => {
+                if (homeGroupId) {
+                  navigate('/mygroups?gid=' + homeGroupId)
+                  return
+                }
+                navigate(homeTab === 'for-you' ? '/' : '/mygroups')
+              }}
             >
               <HomeIcon aria-hidden="true" className="size-4 shrink-0" />
             </NavButton>

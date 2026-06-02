@@ -76,11 +76,10 @@ export function ExplorePage() {
   return (
     <div className="flex flex-col">
       <TimelineTopBar
-        title="探索"
-        filterLabel={activeGroupLabel}
-        filterOptions={groupOptions}
-        filterValue={groupId}
-        onFilterChange={(value) => {
+        title={activeGroupLabel}
+        titleOptions={groupOptions}
+        titleValue={groupId}
+        onTitleChange={(value) => {
           const group = groups.find((g) => g.gid === value)
           if (group) {
             handleGroupClick(group)

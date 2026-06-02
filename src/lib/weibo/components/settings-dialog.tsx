@@ -197,7 +197,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     theme,
     xLayoutEnabled,
     contentWidth,
-    followGroupsEnabled,
     xbTopicPage,
     firstLoadRedirect,
     selectedThemeType,
@@ -233,7 +232,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       theme: s.theme,
       xLayoutEnabled: s.xLayoutEnabled,
       contentWidth: s.contentWidth,
-      followGroupsEnabled: s.followGroupsEnabled,
       xbTopicPage: s.xbTopicPage,
       firstLoadRedirect: s.firstLoadRedirect,
       selectedThemeType: s.selectedThemeType,
@@ -649,16 +647,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <IllustrationPlaceholder>
                     <img src={xLayoutJpeg} alt="X 操作栏布局" className="h-auto w-full" />
                   </IllustrationPlaceholder>
-                </div>
-                <div>
-                  <Field label="关注分组" description="在我关注的中展示我的分组筛选">
-                    <Switch
-                      checked={followGroupsEnabled}
-                      onCheckedChange={(checked) =>
-                        void updateSettings({ followGroupsEnabled: checked })
-                      }
-                    />
-                  </Field>
                 </div>
                 <div>
                   <Field label="首次加载跳转" description="打开后，进入首页时自动跳转到指定页面">
