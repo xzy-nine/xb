@@ -37,6 +37,7 @@ import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expanded'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
+import { RatingSummaryBadge } from '@/lib/weibo/components/rating-panel'
 import { StatusText } from '@/lib/weibo/components/status-text'
 import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
@@ -151,6 +152,7 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
 
 function FeedAuthorHeader({
   item,
+  trailing,
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
   trailing?: ReactNode
@@ -184,6 +186,14 @@ function FeedAuthorHeader({
                 </Link>
               </UserHoverCard>
               <CreatedAtBadge label={item.createdAtLabel} />
+              {trailing ? (
+                <div
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  {trailing}
+                </div>
+              ) : null}
             </div>
             <CardDescription className="text-xs">
               {item.source ? `${item.source}` : ''} {item.regionName ? `${item.regionName}` : ''}
@@ -705,13 +715,15 @@ export const FeedCard = memo(function FeedCard({
   onStatusDeleted?: () => void
   className?: string
 }) {
-  const { feedInteractionMode, feedPrimaryActionOrder, feedToolbarButtonIds } = useAppSettings(
-    useShallow((s) => ({
-      feedInteractionMode: s.feedInteractionMode,
-      feedPrimaryActionOrder: s.feedPrimaryActionOrder,
-      feedToolbarButtonIds: s.feedToolbarButtonIds,
-    })),
-  )
+  const { feedInteractionMode, feedPrimaryActionOrder, feedToolbarButtonIds, ratingEnabled } =
+    useAppSettings(
+      useShallow((s) => ({
+        feedInteractionMode: s.feedInteractionMode,
+        feedPrimaryActionOrder: s.feedPrimaryActionOrder,
+        feedToolbarButtonIds: s.feedToolbarButtonIds,
+        ratingEnabled: s.ratingEnabled,
+      })),
+    )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
@@ -931,7 +943,12 @@ export const FeedCard = memo(function FeedCard({
           <Badge variant="secondary">{resolvedItem.title.text}</Badge>
         </div>
       ) : null}
-      <FeedAuthorHeader item={resolvedItem} />
+      <FeedAuthorHeader
+        item={resolvedItem}
+        trailing={
+          ratingEnabled ? <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" /> : null
+        }
+      />
       <CardContent
         className="flex flex-col gap-4"
         onMouseDown={handleCardMouseDown}

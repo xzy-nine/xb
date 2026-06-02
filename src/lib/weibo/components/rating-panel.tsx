@@ -10,6 +10,13 @@ import {
   userRatingQueryOptions,
 } from '@/lib/weibo/queries/rating-queries'
 
+export interface RatingSummaryBadgeProps {
+  /** UID of the user whose public rating is shown. */
+  targetUid: string
+  size?: 'sm' | 'md'
+  className?: string
+}
+
 export interface RatingPanelProps {
   /** UID of the user being rated. */
   targetUid: string
@@ -35,6 +42,39 @@ function getRatingSizes(size: 'sm' | 'md') {
     starSize: size === 'sm' ? 13 : 15,
     starSlotClassName: size === 'sm' ? 'w-18' : 'w-20',
   }
+}
+
+/** Read-only average rating for feed cards (batch summary cache). */
+export function RatingSummaryBadge({ targetUid, size = 'sm', className }: RatingSummaryBadgeProps) {
+  const summaryQuery = useQuery({
+    ...userRatingQueryOptions(targetUid),
+  })
+
+  const sizes = getRatingSizes(size)
+  const averageScore = summaryQuery.isError ? null : (summaryQuery.data?.avg ?? null)
+  const averageDisplayScore = formatRatingScore(averageScore)
+  const averageDisplayStars = ratingScoreToDisplayStars(averageScore ?? 0)
+
+  return (
+    <div
+      className={cn('inline-flex h-7 items-center gap-1.5 rounded-md px-2 leading-none', className)}
+      aria-label={`评分 ${averageDisplayScore} 分`}
+    >
+      <div className={cn('flex shrink-0 items-center', sizes.starSlotClassName)}>
+        <Rating
+          value={averageDisplayStars}
+          max={5}
+          size={sizes.starSize}
+          precision={0.5}
+          readOnly
+          aria-label={`评分 ${averageDisplayScore} 分`}
+        />
+      </div>
+      <span className={cn('font-semibold tabular-nums', sizes.scoreTextClassName)}>
+        {averageDisplayScore}
+      </span>
+    </div>
+  )
 }
 
 export function RatingPanel({ targetUid, size = 'sm', className }: RatingPanelProps) {

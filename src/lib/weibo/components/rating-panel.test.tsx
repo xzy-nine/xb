@@ -1,9 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { RatingPanel, ratingScoreToDisplayStars } from '@/lib/weibo/components/rating-panel'
+import {
+  RatingPanel,
+  RatingSummaryBadge,
+  ratingScoreToDisplayStars,
+} from '@/lib/weibo/components/rating-panel'
 import {
   getMyUserRating,
   getUserRatingSummary,
@@ -43,6 +47,7 @@ describe('ratingScoreToDisplayStars', () => {
 
 describe('RatingPanel', () => {
   beforeEach(() => {
+    cleanup()
     vi.clearAllMocks()
   })
 
@@ -50,17 +55,17 @@ describe('RatingPanel', () => {
     renderWithClient(<RatingPanel targetUid="1001" />)
 
     expect(await screen.findByText('8.2')).toBeInTheDocument()
-    expect(screen.getByText('我的')).toBeInTheDocument()
-    expect(await screen.findByText('8.0')).toBeInTheDocument()
+    expect(screen.getByText('我评')).toBeInTheDocument()
+    expect(await screen.findByText('4')).toBeInTheDocument()
     expect(vi.mocked(getUserRatingSummary)).toHaveBeenCalledWith('1001')
     expect(vi.mocked(getMyUserRating)).toHaveBeenCalledWith('1001')
   })
 
   it('turns the same star area into an integer rating control on hover', async () => {
-    const { container } = renderWithClient(<RatingPanel targetUid="1001" />)
+    const view = renderWithClient(<RatingPanel targetUid="1001" />)
 
-    await screen.findByText('8.2')
-    const starArea = container.querySelector('[aria-label="rating star control"]')
+    await within(view.container).findByText('8.2')
+    const starArea = view.container.querySelector('[aria-label="rating star control"]')
     expect(starArea).toBeInTheDocument()
     fireEvent.mouseEnter(starArea!)
     fireEvent.keyDown(screen.getByRole('radiogroup', { name: '我的 rating' }), {
@@ -71,5 +76,21 @@ describe('RatingPanel', () => {
       expect(vi.mocked(rateUser)).toHaveBeenCalledWith({ target_uid: '1001', stars: 5 })
     })
     expect(vi.mocked(getMyUserRating)).toHaveBeenCalledWith('1001')
+  })
+})
+
+describe('RatingSummaryBadge', () => {
+  beforeEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  it('shows only the public average score without fetching my rating', async () => {
+    renderWithClient(<RatingSummaryBadge targetUid="1001" />)
+
+    expect(await screen.findByText('8.2')).toBeInTheDocument()
+    expect(screen.queryByText('我评')).not.toBeInTheDocument()
+    expect(vi.mocked(getUserRatingSummary)).toHaveBeenCalledWith('1001')
+    expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
   })
 })

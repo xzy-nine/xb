@@ -27,7 +27,7 @@ const XB_SERVER_BASE = (
 async function xbFetch<T>(
   method: 'GET' | 'POST',
   path: string,
-  options?: { body?: unknown; requireAuth?: boolean },
+  options?: { body?: unknown },
 ): Promise<T> {
   const url = `${XB_SERVER_BASE}${path}`
 
@@ -36,13 +36,11 @@ async function xbFetch<T>(
     Accept: 'application/json',
   }
 
-  if (options?.requireAuth) {
-    const uid = getCurrentUserUid()
-    if (!uid) throw new Error('xb-rating-not-logged-in')
+  const uid = getCurrentUserUid()
+  if (!uid) throw new Error('xb-rating-not-logged-in')
 
-    const signHeaders = await signXbServerRequest(uid, path)
-    Object.assign(headers, signHeaders)
-  }
+  const signHeaders = await signXbServerRequest(uid, path)
+  Object.assign(headers, signHeaders)
 
   const response = await fetch(url, {
     method,
@@ -65,19 +63,17 @@ async function xbFetch<T>(
   return data
 }
 
-// ─── Read APIs (no auth required) ───
+// ─── Read APIs ───
 
 export async function getUserRatingSummary(uid: string): Promise<RatingSummary> {
   return xbFetch<RatingSummary>('GET', `/api/ratings/user/${uid}`)
 }
 
 export async function getMyUserRating(targetUid: string): Promise<MyRatingResponse> {
-  return xbFetch<MyRatingResponse>('GET', `/api/ratings/user/${targetUid}/me`, {
-    requireAuth: true,
-  })
+  return xbFetch<MyRatingResponse>('GET', `/api/ratings/user/${targetUid}/me`)
 }
 
-// ─── Batch APIs (no auth required) ───
+// ─── Batch APIs ───
 
 export async function batchGetUserRatingSummaries(
   uids: string[],
@@ -87,12 +83,11 @@ export async function batchGetUserRatingSummaries(
   })
 }
 
-// ─── Write APIs (auth required) ───
+// ─── Write APIs ───
 
 export async function rateUser(payload: RateUserPayload): Promise<RateResponse> {
   return xbFetch<RateResponse>('POST', '/api/ratings/user', {
     body: payload,
-    requireAuth: true,
   })
 }
 

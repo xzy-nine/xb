@@ -8,6 +8,10 @@ vi.mock('@/lib/weibo/components/feed-card', () => ({
   FeedCard: ({ item }: { item: FeedItem }) => <article>{item.text}</article>,
 }))
 
+vi.mock('@/lib/weibo/queries/rating-queries', () => ({
+  useFeedRatingBatchSync: vi.fn(),
+}))
+
 class TestIntersectionObserver {
   static instances: TestIntersectionObserver[] = []
 

@@ -5,6 +5,7 @@ import { FeedList } from '@/lib/weibo/components/feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { FeedItem } from '@/lib/weibo/models/feed'
+import { useFeedRatingBatchSync } from '@/lib/weibo/queries/rating-queries'
 import { flattenInfiniteItems } from '@/lib/weibo/queries/weibo-queries'
 
 interface InfiniteFeedListProps {
@@ -45,6 +46,8 @@ export function InfiniteFeedList({
   fetchNextPageRef.current = fetchNextPage
 
   const items = useMemo(() => flattenInfiniteItems<FeedItem>(pages), [pages])
+
+  useFeedRatingBatchSync(pages)
 
   useEffect(() => {
     const el = loadMoreRef.current
