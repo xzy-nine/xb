@@ -24,7 +24,7 @@
 [![WXT](https://img.shields.io/badge/WXT-0.20-000000)](https://wxt.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
-![preview](./assets/xb_0.26.0.jpeg)
+![preview](./assets/xb_1.9.0.webp)
 
 xb 旨在浏览微博时去除噪音，打造一个专注、无干扰的阅读体验——就像 X 那样清爽。
 
