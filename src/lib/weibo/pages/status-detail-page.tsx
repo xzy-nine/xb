@@ -164,7 +164,7 @@ function StatusDetailTopBar({
   statusText?: string
 }) {
   return (
-    <div className="bg-background/85 border-border/45 sticky top-0 z-10 border-b backdrop-blur-lg">
+    <div className="bg-background/85 border-border/45 sticky top-0 z-50 border-b backdrop-blur-lg">
       <div className="relative flex min-h-16 items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <Button
@@ -283,7 +283,7 @@ export function StatusDetailPage() {
         <PageErrorState description={detailQuery.error.message} />
       ) : null}
       {detail ? (
-        <div className="mx-auto flex max-w-[720px] flex-col gap-4 pt-4">
+        <div className="mx-auto flex max-w-[720px] flex-col gap-4">
           <article ref={statusArticleRef} className="relative">
             <div className="bg-primary/70 absolute top-5 bottom-5 left-0 hidden w-px sm:block" />
             <FeedCard

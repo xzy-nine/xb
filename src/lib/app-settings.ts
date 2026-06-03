@@ -99,9 +99,14 @@ export type CustomThemePreset =
   | 'vercel'
   | 'twitter'
   | 'supabase'
-  | 'mono'
   | 'modern'
   | 'claude'
+  | 'amethyst-haze'
+  | 'bubblegum'
+  | 'caffeine'
+  | 'candyland'
+  | 'claymorphism'
+  | 'nature'
 
 export interface UserTheme {
   id: string
@@ -258,6 +263,18 @@ function isFontFamilyClass(value: unknown): value is FontFamilyClass {
   return FONT_FAMILY_CLASSES.includes(value as FontFamilyClass)
 }
 
+function normalizeFontFamilyClass(value: unknown): FontFamilyClass {
+  if (value === 'font-lxgw-neo-xihei') {
+    return 'font-lxgw-marker-gothic'
+  }
+
+  if (value === 'font-sarasa-gothic' || value === 'font-ibm-plex-sans-sc') {
+    return DEFAULT_APP_SETTINGS.fontFamilyClass
+  }
+
+  return isFontFamilyClass(value) ? value : DEFAULT_APP_SETTINGS.fontFamilyClass
+}
+
 function isHotSearchType(value: unknown): value is HotSearchType {
   return (
     value === 'hot' ||
@@ -392,15 +409,24 @@ function isCustomThemePreset(value: unknown): value is CustomThemePreset {
     value === 'vercel' ||
     value === 'twitter' ||
     value === 'supabase' ||
-    value === 'mono' ||
     value === 'modern' ||
-    value === 'claude'
+    value === 'claude' ||
+    value === 'amethyst-haze' ||
+    value === 'bubblegum' ||
+    value === 'caffeine' ||
+    value === 'candyland' ||
+    value === 'claymorphism' ||
+    value === 'nature'
   )
 }
 
 function normalizeCustomThemePreset(value: unknown): CustomThemePreset {
   if (value === 'modern-minimal') {
     return 'modern'
+  }
+
+  if (value === 'mono') {
+    return 'default'
   }
 
   return isCustomThemePreset(value) ? value : 'default'
@@ -435,9 +461,7 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     lineHeightClass: isLineHeightClass(candidate.lineHeightClass)
       ? candidate.lineHeightClass
       : DEFAULT_APP_SETTINGS.lineHeightClass,
-    fontFamilyClass: isFontFamilyClass(candidate.fontFamilyClass)
-      ? candidate.fontFamilyClass
-      : DEFAULT_APP_SETTINGS.fontFamilyClass,
+    fontFamilyClass: normalizeFontFamilyClass(candidate.fontFamilyClass),
     showExplore:
       typeof candidate.showExplore === 'boolean'
         ? candidate.showExplore
@@ -572,7 +596,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
         : DEFAULT_APP_SETTINGS.selectedThemeType,
     selectedThemeId:
       typeof candidate.selectedThemeId === 'string' && candidate.selectedThemeId.length > 0
-        ? candidate.selectedThemeId
+        ? candidate.selectedThemeId === 'mono'
+          ? 'default'
+          : candidate.selectedThemeId
         : typeof (candidate as Record<string, unknown>).customThemePreset === 'string'
           ? normalizeCustomThemePreset((candidate as Record<string, unknown>).customThemePreset)
           : DEFAULT_APP_SETTINGS.selectedThemeId,

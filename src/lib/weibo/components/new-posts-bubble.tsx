@@ -36,7 +36,7 @@ export function NewPostsBubble({ authors, count, onClick }: NewPostsBubbleProps)
           transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           onClick={handleClick}
           className={cn(
-            'bg-foreground text-background',
+            'bg-popover-foreground text-popover',
             'inline-flex items-center gap-2 rounded-full px-4 py-2',
             'shadow-lg shadow-black/20',
             'cursor-pointer border-none',

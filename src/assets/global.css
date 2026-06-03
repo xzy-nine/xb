@@ -67,6 +67,8 @@
   --font-source-han-sans: 'Source Han Sans SC', sans-serif;
   --font-fz-kai: 'FZ Kai-Z-03', 方正楷体, serif;
   --font-canger-jinkai: 'CangErJinKai05', 仓耳今楷, serif;
+  --font-lxgw-marker-gothic: 'LXGW Marker Gothic', sans-serif;
+  --font-lxgw-neo-zhisong: 'LXGW Neo ZhiSong', serif;
 }
 
 :root {

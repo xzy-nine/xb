@@ -18,7 +18,6 @@ import {
   Settings,
   Sparkles,
   SunMoon,
-  Trash2,
   Type,
   User,
   Bell,
@@ -26,7 +25,7 @@ import {
 } from 'lucide-react'
 import { Reorder } from 'motion/react'
 import React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import darkModeImageDimJpeg from '@/assets/images/dark-mode-image-dim.jpeg'
 import collapseReplyChain from '@/assets/images/quotechains-collapsible.jpeg'
@@ -53,7 +52,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import {
   BROWSING_HISTORY_LIMIT_OPTIONS,
   DEFAULT_APP_SETTINGS,
@@ -76,9 +74,11 @@ import type {
 } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
+import { cn } from '@/lib/utils'
 import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 
 import { FontPreviewCard } from './settings-font-preview'
+import { SettingsThemePicker } from './settings-theme-picker'
 
 const SIDEBAR_GROUPS = [
   { id: 'appearance' as const, label: '外观', icon: SunMoon },
@@ -206,9 +206,67 @@ function StackedField({
   )
 }
 
+function OptionPills<T extends string>({
+  value,
+  options,
+  onChange,
+  className,
+}: {
+  value: T
+  options: Array<{ value: T; label: string }>
+  onChange: (value: T) => void
+  className?: string
+}) {
+  return (
+    <div
+      role="radiogroup"
+      className={cn(
+        'bg-muted inline-flex max-w-full shrink-0 flex-wrap rounded-lg p-0.5',
+        className,
+      )}
+    >
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            'rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+            value === option.value
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const FEED_INTERACTION_OPTIONS: Array<{
+  value: FeedInteractionMode
+  label: string
+  description: string
+}> = [
+  {
+    value: 'x',
+    label: 'X 风格',
+    description: '点击卡片进入详情，评论按钮独立响应',
+  },
+  {
+    value: 'weibo',
+    label: '微博原生',
+    description: '保持微博默认的跳转与交互行为',
+  },
+]
+
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [version, setVersion] = useState<string>('')
   const [activeGroup, setActiveGroup] = useState<GroupId>('appearance')
+  const settingsMainRef = useRef<HTMLElement>(null)
 
   const {
     fontSizeClass,
@@ -371,12 +429,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       </div>
     )
   }
-  const [themeNameInput, setThemeNameInput] = useState<string>('')
-  const activeThemeName =
-    selectedThemeType === 'custom'
-      ? (userThemes.find((t) => t.id === selectedThemeId)?.name ?? '')
-      : ''
-
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
       setVersion(browser.runtime.getManifest().version)
@@ -393,52 +445,32 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     })
   }
 
-  useEffect(() => {
-    setThemeNameInput(activeThemeName)
-  }, [activeThemeName])
-
-  function handleSaveThemeName() {
-    if (selectedThemeType === 'custom' && themeNameInput.trim().length > 0) {
-      void updateUserTheme(selectedThemeId, { name: themeNameInput.trim() })
-    }
+  function handleSelectPresetTheme(presetKey: string) {
+    const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === presetKey)
+    void updateSettings({
+      selectedThemeType: 'preset',
+      selectedThemeId: presetKey,
+      ...(preset
+        ? { customThemeLightCss: preset.lightCss, customThemeDarkCss: preset.darkCss }
+        : {}),
+    })
   }
 
-  function handleThemeSelect(value: string) {
-    const [type, ...rest] = value.split(':')
-    const id = rest.join(':')
-
-    if (type === 'preset') {
-      const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === id)
+  function handleSelectUserTheme(themeId: string) {
+    const theme = userThemes.find((item) => item.id === themeId)
+    if (theme) {
       void updateSettings({
-        selectedThemeType: 'preset',
-        selectedThemeId: id,
-        ...(preset
-          ? { customThemeLightCss: preset.lightCss, customThemeDarkCss: preset.darkCss }
-          : {}),
+        selectedThemeType: 'custom',
+        selectedThemeId: themeId,
+        customThemeLightCss: theme.lightCss,
+        customThemeDarkCss: theme.darkCss,
       })
-    } else if (type === 'user') {
-      const theme = userThemes.find((t) => t.id === id)
-      if (theme) {
-        void updateSettings({
-          selectedThemeType: 'custom',
-          selectedThemeId: id,
-          customThemeLightCss: theme.lightCss,
-          customThemeDarkCss: theme.darkCss,
-        })
-      }
     }
   }
 
-  function getCurrentSelectValue(): string {
-    if (selectedThemeType === 'preset') {
-      return `preset:${selectedThemeId}`
-    }
-    return `user:${selectedThemeId}`
-  }
-
-  function handleAddCustomTheme() {
+  function handleAddCustomTheme(): string {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-    const count = userThemes.filter((t) => t.name.startsWith('自定义主题')).length + 1
+    const count = userThemes.filter((theme) => theme.name.startsWith('自定义主题')).length + 1
     const theme: UserTheme = {
       id,
       name: `自定义主题 ${count}`,
@@ -450,12 +482,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       selectedThemeType: 'custom',
       selectedThemeId: id,
     })
+    return id
   }
 
-  function handleDeleteCustomTheme() {
-    if (selectedThemeType === 'custom') {
-      const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === 'default')
-      void deleteUserTheme(selectedThemeId)
+  function handleDeleteUserTheme(themeId: string) {
+    const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === 'default')
+    void deleteUserTheme(themeId)
+    if (selectedThemeType === 'custom' && selectedThemeId === themeId) {
       void updateSettings({
         selectedThemeType: 'preset',
         selectedThemeId: 'default',
@@ -507,7 +540,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[520px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[640px]">
+      <DialogContent className="flex h-[560px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]">
         <DialogHeader>
           <DialogTitle className="px-6 pt-5 text-base tracking-tight">设置</DialogTitle>
           <VisuallyHidden>
@@ -530,57 +563,33 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </aside>
 
-          <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+          <main ref={settingsMainRef} className="flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeGroup === 'appearance' && (
               <div className="flex flex-col">
                 <div className="divide-border/40 divide-y px-6 py-4">
                   <Field label="深色模式" description="选择应用的配色方案">
-                    <Select
+                    <OptionPills
                       value={theme}
-                      onValueChange={(v) => void updateSettings({ theme: v as AppTheme })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="system">跟随系统</SelectItem>
-                        <SelectItem value="light">浅色</SelectItem>
-                        <SelectItem value="dark">深色</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      options={[
+                        { value: 'system', label: '跟随系统' },
+                        { value: 'light', label: '浅色' },
+                        { value: 'dark', label: '深色' },
+                      ]}
+                      onChange={(value) => void updateSettings({ theme: value as AppTheme })}
+                    />
                   </Field>
                   <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
-                    <Select
+                    <OptionPills
                       value={contentWidth}
-                      onValueChange={(v) =>
-                        void updateSettings({ contentWidth: v as ContentWidth })
+                      options={[
+                        { value: 'standard', label: '标准' },
+                        { value: 'wide', label: '宽' },
+                        { value: 'wider', label: '更宽' },
+                      ]}
+                      onChange={(value) =>
+                        void updateSettings({ contentWidth: value as ContentWidth })
                       }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">标准</SelectItem>
-                        <SelectItem value="wide">宽</SelectItem>
-                        <SelectItem value="wider">更宽</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field label="跳转逻辑" description="控制微博卡片点击和评论按钮行为">
-                    <Select
-                      value={feedInteractionMode}
-                      onValueChange={(v) =>
-                        void updateSettings({ feedInteractionMode: v as FeedInteractionMode })
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="x">X</SelectItem>
-                        <SelectItem value="weibo">微博</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    />
                   </Field>
                   <StackedField
                     label="控制栏顺序"
@@ -647,108 +656,46 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             )}
 
             {activeGroup === 'theme' && (
-              <div className="divide-border/40 divide-y px-6 py-4">
-                <div className="flex items-center justify-between gap-4 py-[11px] first:pt-0 last:pb-0">
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <Select value={getCurrentSelectValue()} onValueChange={handleThemeSelect}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>预设主题</SelectLabel>
-                          {CUSTOM_THEME_PRESETS.map((preset) => (
-                            <SelectItem key={`preset:${preset.key}`} value={`preset:${preset.key}`}>
-                              {preset.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                        {userThemes.length > 0 && (
-                          <SelectGroup>
-                            <SelectLabel>自定义主题</SelectLabel>
-                            {userThemes.map((theme) => (
-                              <SelectItem key={`user:${theme.id}`} value={`user:${theme.id}`}>
-                                {theme.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {selectedThemeType === 'custom' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleDeleteCustomTheme}
-                        className="text-muted-foreground hover:text-destructive shrink-0"
-                        aria-label="删除主题"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    )}
-                  </div>
-                  <Button variant="secondary" size="sm" onClick={handleAddCustomTheme}>
-                    添加自定义主题
-                  </Button>
-                </div>
-                {selectedThemeType === 'custom' && (
-                  <>
-                    <div className="flex items-center gap-2 py-[11px] first:pt-0 last:pb-0">
-                      <Label className="shrink-0 text-sm leading-snug font-medium">主题名称</Label>
-                      <input
-                        type="text"
-                        value={themeNameInput}
-                        onChange={(e) => setThemeNameInput(e.target.value)}
-                        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
-                      />
-                      <Button
-                        variant="default"
-                        size="sm"
-                        disabled={themeNameInput === activeThemeName}
-                        onClick={handleSaveThemeName}
-                      >
-                        保存
-                      </Button>
-                    </div>
-                    <StackedField
-                      label="浅色主题样式变量"
-                      description="每行输入一个 CSS 变量声明，例如 --foreground: #333333;"
-                    >
-                      <Textarea
-                        value={customThemeLightCss}
-                        onChange={(event) => {
-                          handleLightCssChange(event.target.value)
-                        }}
-                        rows={10}
-                        spellCheck={false}
-                        className="min-h-[210px] resize-none font-mono text-xs leading-relaxed"
-                        placeholder="--background: oklch(1.0000 0 0);
---foreground: #333333;"
-                      />
-                    </StackedField>
-                    <StackedField
-                      label="深色主题样式变量"
-                      description="每行输入一个 CSS 变量声明，例如 --background: #000000;"
-                    >
-                      <Textarea
-                        value={customThemeDarkCss}
-                        onChange={(event) => {
-                          handleDarkCssChange(event.target.value)
-                        }}
-                        rows={10}
-                        spellCheck={false}
-                        className="min-h-[210px] resize-none font-mono text-xs leading-relaxed"
-                        placeholder="--background: oklch(0.1450 0 0);
---foreground: #ffffff;"
-                      />
-                    </StackedField>
-                  </>
-                )}
-              </div>
+              <SettingsThemePicker
+                scrollContainerRef={settingsMainRef}
+                selectedThemeType={selectedThemeType}
+                selectedThemeId={selectedThemeId}
+                userThemes={userThemes}
+                onSelectPreset={handleSelectPresetTheme}
+                onSelectUserTheme={handleSelectUserTheme}
+                onAddCustomTheme={handleAddCustomTheme}
+                onDeleteUserTheme={handleDeleteUserTheme}
+                onUpdateUserTheme={(themeId, patch) => void updateUserTheme(themeId, patch)}
+                onLightCssChange={handleLightCssChange}
+                onDarkCssChange={handleDarkCssChange}
+              />
             )}
 
             {activeGroup === 'personalize' && (
               <div className="space-y-3 px-6 py-4">
+                <StackedField label="跳转逻辑" description="控制微博卡片点击和评论按钮的行为">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup">
+                    {FEED_INTERACTION_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={feedInteractionMode === option.value}
+                        onClick={() => void updateSettings({ feedInteractionMode: option.value })}
+                        className={cn(
+                          'border-border bg-background hover:bg-accent/30 rounded-lg border p-3 text-left transition-[box-shadow,border-color]',
+                          feedInteractionMode === option.value &&
+                            'border-primary ring-primary/30 ring-2',
+                        )}
+                      >
+                        <p className="text-sm font-medium">{option.label}</p>
+                        <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                          {option.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </StackedField>
                 <div>
                   <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
                     <Switch
@@ -934,6 +881,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         </SelectGroup>
                         <SelectGroup>
                           <SelectLabel>远程字体</SelectLabel>
+                          <SelectItem value="font-lxgw-marker-gothic">霞鹜新晰黑</SelectItem>
+                          <SelectItem value="font-lxgw-neo-zhisong">霞鹜新致宋</SelectItem>
                           <SelectItem value="font-lxgw-wenkai">霞鹜文楷</SelectItem>
                           <SelectItem value="font-smiley-sans">得意黑</SelectItem>
                           <SelectItem value="font-zhuque">朱雀仿宋</SelectItem>
@@ -959,7 +908,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <div className="divide-border/40 divide-y px-6 py-4">
                 <Field
                   label="xb 评分系统"
-                  description="给用户评分并查看TA的分数，每小时计算一次分值（来自 BlackMirror · Nosedive 故事）"
+                  description="给用户评分，每小时计算一次分值（来自 BlackMirror · Nosedive）"
                 >
                   <Switch
                     checked={ratingEnabled}
@@ -973,23 +922,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   />
                 </Field>
                 <Field label="浏览历史条数" description="超过上限后自动删除最早的记录">
-                  <Select
+                  <OptionPills
                     value={String(browsingHistoryLimit)}
-                    onValueChange={handleBrowsingHistoryLimitChange}
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {BROWSING_HISTORY_LIMIT_OPTIONS.map((limit) => (
-                          <SelectItem key={limit} value={String(limit)}>
-                            {limit} 条
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    options={BROWSING_HISTORY_LIMIT_OPTIONS.map((limit) => ({
+                      value: String(limit),
+                      label: `${limit} 条`,
+                    }))}
+                    onChange={handleBrowsingHistoryLimitChange}
+                  />
                 </Field>
               </div>
             )}
