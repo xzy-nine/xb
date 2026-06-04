@@ -44,6 +44,14 @@ export function userRatingQueryOptions(uid: string) {
   }
 }
 
+/** Read batch-seeded summary cache only; never hits the single-user API. */
+export function userRatingCacheOnlyQueryOptions(uid: string) {
+  return {
+    ...userRatingQueryOptions(uid),
+    enabled: false,
+  }
+}
+
 export function myUserRatingQueryOptions(uid: string) {
   return {
     queryKey: myUserRatingQueryKey(uid),

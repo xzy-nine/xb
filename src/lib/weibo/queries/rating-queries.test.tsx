@@ -12,6 +12,7 @@ import {
   seedUserRatingSummaries,
   useFeedRatingBatchSync,
   useRateUser,
+  userRatingCacheOnlyQueryOptions,
   userRatingQueryKey,
   userRatingQueryOptions,
 } from '@/lib/weibo/queries/rating-queries'
@@ -86,6 +87,7 @@ describe('rating query options', () => {
     expect(userRatingQueryOptions('1001').gcTime).toBe(oneDay)
     expect(userRatingQueryOptions('1001').refetchOnWindowFocus).toBe(false)
     expect(userRatingQueryOptions('1001').refetchOnReconnect).toBe(false)
+    expect(userRatingCacheOnlyQueryOptions('1001').enabled).toBe(false)
     expect(batchRatingQueryOptions(['1001']).staleTime).toBe(oneHour)
     expect(batchRatingQueryOptions(['1001']).gcTime).toBe(oneDay)
     expect(myUserRatingQueryOptions('1001').staleTime).toBe(Number.POSITIVE_INFINITY)
