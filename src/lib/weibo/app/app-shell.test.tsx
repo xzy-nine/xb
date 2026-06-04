@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
 import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
@@ -75,8 +75,13 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
   }
 })
 
+let activeQueryClient: QueryClient | undefined
+
 function renderWeiboShell(initialEntries: string[]) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  activeQueryClient = queryClient
   return {
     queryClient,
     ...render(
@@ -98,6 +103,12 @@ function renderWeiboShell(initialEntries: string[]) {
 }
 
 describe('AppShell', () => {
+  afterEach(() => {
+    activeQueryClient?.clear()
+    activeQueryClient = undefined
+    cleanup()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     resetAppSettingsStoreForTest()
