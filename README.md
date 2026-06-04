@@ -1,8 +1,21 @@
-# xb
+<table>
+  <tr>
+    <td width="128" align="center" valign="middle">
+      <img src="./public/icon/rounded_image.png" alt="xb" width="96" />
+    </td>
+    <td valign="middle">
+      <h1 style="margin: 0 0 0.25em">xb</h1>
+      <p style="margin: 0 0 0.35em; font-size: 1.15em"><strong>Redesign Weibo</strong></p>
+      <p style="margin: 0; opacity: 0.85">like X but even better.</p>
+    </td>
+  </tr>
+</table>
 
-🥷 xb - Redesign Weibo, like X but even better.
-
-[English](./README.en.md)
+<p align="right">
+  <a href="./README.en.md">English</a>
+  ·
+  <a href="https://xb-extension.vercel.app/">官网</a>
+</p>
 
 [![CI](https://github.com/nnecec/xb/actions/workflows/test.yml/badge.svg)](https://github.com/nnecec/xb/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/nnecec/xb)](https://github.com/nnecec/xb/blob/main/LICENSE)
@@ -23,6 +36,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![WXT](https://img.shields.io/badge/WXT-0.20-000000)](https://wxt.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+
+---
 
 ![preview](./assets/xb_1.9.0.webp)
 
