@@ -53,7 +53,7 @@ export function FeedCommentsExpanded({ item, onCommentReply }: FeedCommentsExpan
           />
           {totalNumber > 0 && (
             <Link to={`/${item.author.id}/${item.mblogId}`} className="block">
-              <Button variant="ghost" className="text-primary w-full gap-2" size="sm">
+              <Button variant="ghost" className="text-primary w-full gap-2">
                 <MessageCircle className="size-3.5" />
                 查看全部 {totalNumber} 条评论
               </Button>

@@ -1,11 +1,16 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
+import type { HomeTab } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { NewPostsBubble } from '@/lib/weibo/components/new-posts-bubble'
-import { TimelineTopBar, type TimelineTopBarOption } from '@/lib/weibo/components/timeline-top-bar'
+import {
+  TimelineTopBar,
+  type TimelineTopBarOption,
+  type TimelineTopBarOptionGroup,
+} from '@/lib/weibo/components/timeline-top-bar'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import {
@@ -20,11 +25,21 @@ import {
   getHomeTabForDefaultFollowGroupId,
 } from '@/lib/weibo/services/adapters/explore-groups'
 
-const HOME_TIMELINE_OPTIONS: TimelineTopBarOption[] = [
-  { value: 'for-you', label: '推荐' },
-  { value: 'following', label: '我关注的' },
-  { value: 'special-follow', label: '特别关注' },
-  { value: 'friend-circle', label: '朋友圈' },
+type HomeTimelineMenuValue = `tab:${HomeTab}` | `group:${string}`
+
+function tabMenuValue(tab: HomeTab): HomeTimelineMenuValue {
+  return `tab:${tab}`
+}
+
+function groupMenuValue(gid: string): HomeTimelineMenuValue {
+  return `group:${gid}`
+}
+
+const HOME_TIMELINE_OPTIONS: TimelineTopBarOption<HomeTimelineMenuValue>[] = [
+  { value: tabMenuValue('for-you'), label: '推荐' },
+  { value: tabMenuValue('following'), label: '我关注的' },
+  { value: tabMenuValue('special-follow'), label: '特别关注' },
+  { value: tabMenuValue('friend-circle'), label: '朋友圈' },
 ]
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
@@ -40,7 +55,6 @@ export function HomeTimelinePage() {
   const page = useWeiboPage()
   const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
-  const followGroupsEnabled = useAppSettings((s) => s.followGroupsEnabled)
 
   const pageTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && page.kind === 'home'
@@ -50,24 +64,18 @@ export function HomeTimelinePage() {
 
   const groupsQuery = useQuery({
     ...followGroupsQueryOptions,
-    enabled:
-      isEnabled &&
-      ((followGroupsEnabled && pageTab === 'following') ||
-        Boolean(groupIdFromUrl) ||
-        pageTab === 'special-follow' ||
-        pageTab === 'friend-circle'),
+    enabled: isEnabled,
   })
 
   const defaultGroups = groupsQuery.data?.defaultGroups
   const activeTab = getHomeTabForDefaultFollowGroupId(defaultGroups, groupIdFromUrl) ?? pageTab
-  const showGroupSelect = followGroupsEnabled && activeTab === 'following'
   const defaultTimelineGroup =
     activeTab === 'special-follow' || activeTab === 'friend-circle'
       ? getDefaultFollowGroupForHomeTab(defaultGroups, activeTab)
       : null
   const groupListId =
     activeTab === 'following'
-      ? showGroupSelect && selectedGroupGid !== 'default'
+      ? selectedGroupGid !== 'default'
         ? selectedGroupGid
         : null
       : (defaultTimelineGroup?.gid ?? null)
@@ -130,57 +138,60 @@ export function HomeTimelinePage() {
     })
   }, [queryClient, followingNewPostsGroupKey, newPostsCheckQuery.dataUpdatedAt])
 
-  const handleGroupSelect = useCallback(
-    (gid: string) => {
-      if (gid === selectedGroupGid) return
-      ctx.onFollowGroupChange(gid === 'default' ? null : gid)
-      resetMainScrollAfterRouteChange(ctx.resetMainScroll)
-    },
-    [ctx, selectedGroupGid],
-  )
+  const isCustomGroupRoute = activeTab === 'following' && selectedGroupGid !== 'default'
+  const handleTimelineMenuChange = useCallback(
+    (value: HomeTimelineMenuValue) => {
+      if (value.startsWith('group:')) {
+        const gid = value.slice('group:'.length)
+        if (gid === selectedGroupGid) return
+        ctx.onFollowGroupChange(gid)
+        resetMainScrollAfterRouteChange(ctx.resetMainScroll)
+        return
+      }
 
-  const handleTimelineChange = useCallback(
-    (value: string) => {
-      if (value === activeTab) return
-      ctx.onHomeTabChange(value as 'for-you' | 'following' | 'special-follow' | 'friend-circle')
+      const tab = value.slice('tab:'.length) as HomeTab
+      if (!isCustomGroupRoute && tab === activeTab) return
+      ctx.onHomeTabChange(tab)
       resetMainScrollAfterRouteChange(ctx.resetMainScroll)
     },
-    [activeTab, ctx],
+    [activeTab, ctx, isCustomGroupRoute, selectedGroupGid],
   )
 
   const groups = groupsQuery.data?.groups ?? []
-  const activeTitle = (() => {
-    switch (activeTab) {
-      case 'for-you':
-        return '推荐'
-      case 'following':
-        return '我关注的'
-      case 'special-follow':
-        return '特别关注'
-      case 'friend-circle':
-        return '朋友圈'
-    }
-  })()
-  const groupOptions = showGroupSelect
-    ? [
-        { value: 'default', label: '全部分组' },
-        ...groups.map((group) => ({ value: group.gid, label: group.title })),
-      ]
-    : []
-  const selectedGroupLabel =
-    groupOptions.find((option) => option.value === selectedGroupGid)?.label ?? '全部分组'
+  const customGroupOptions: TimelineTopBarOption<HomeTimelineMenuValue>[] = groups.map((group) => ({
+    value: groupMenuValue(group.gid),
+    label: group.title,
+  }))
+  const activeCustomGroup = isCustomGroupRoute
+    ? customGroupOptions.find((option) => option.value === groupMenuValue(selectedGroupGid))
+    : undefined
+  const activeDefaultTitle =
+    HOME_TIMELINE_OPTIONS.find((option) => option.value === tabMenuValue(activeTab))?.label ??
+    '推荐'
+  const activeTitle =
+    activeCustomGroup?.label ?? (isCustomGroupRoute ? '自定义分组' : activeDefaultTitle)
+  const activeMenuValue = isCustomGroupRoute
+    ? groupMenuValue(selectedGroupGid)
+    : tabMenuValue(activeTab)
+  const titleOptionGroups: TimelineTopBarOptionGroup<HomeTimelineMenuValue>[] = [
+    {
+      label: '默认分组',
+      options: HOME_TIMELINE_OPTIONS,
+    },
+    {
+      label: '自定义分组',
+      className: 'max-h-[200px] overflow-y-auto',
+      options: customGroupOptions,
+    },
+  ]
 
   return (
     <div className="relative">
       <TimelineTopBar
         title={activeTitle}
-        titleValue={activeTab}
-        titleOptions={HOME_TIMELINE_OPTIONS}
-        onTitleChange={handleTimelineChange}
-        filterLabel={showGroupSelect && groupOptions.length > 0 ? selectedGroupLabel : undefined}
-        filterOptions={groupOptions}
-        filterValue={showGroupSelect ? selectedGroupGid : undefined}
-        onFilterChange={handleGroupSelect}
+        titleValue={activeMenuValue}
+        titleOptionGroups={titleOptionGroups}
+        onTitleChange={handleTimelineMenuChange}
         onRefresh={() => void timelineQuery.refetch()}
         isRefreshing={isRefreshing}
       >

@@ -44,11 +44,10 @@ export function LikedStatusesPage() {
   return (
     <div className="flex flex-col">
       <TimelineTopBar
-        title="收藏"
-        filterLabel="我的赞"
-        filterOptions={SAVED_LIST_OPTIONS}
-        filterValue="liked"
-        onFilterChange={handleSavedListChange}
+        title="我的赞"
+        titleOptions={SAVED_LIST_OPTIONS}
+        titleValue="liked"
+        onTitleChange={handleSavedListChange}
         onRefresh={() => void likedStatusesQuery.refetch()}
         isRefreshing={isRefreshing}
       />

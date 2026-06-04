@@ -1,12 +1,20 @@
 import {
   Bookmark,
   Compass,
+  Copy,
+  Download,
+  GripVertical,
+  Heart,
   History,
   Home,
+  Image,
+  LinkIcon,
   MessageSquare,
+  MessageCircle,
   Palette,
   PanelRight,
   Pencil,
+  Repeat2,
   Settings,
   Sparkles,
   SunMoon,
@@ -16,6 +24,7 @@ import {
   Bell,
   PanelLeft,
 } from 'lucide-react'
+import { Reorder } from 'motion/react'
 import React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -23,9 +32,9 @@ import { toast } from 'sonner'
 import darkModeImageDimJpeg from '@/assets/images/dark-mode-image-dim.jpeg'
 import collapseReplyChain from '@/assets/images/quotechains-collapsible.jpeg'
 import quoteChainsJpeg from '@/assets/images/quotechains.jpeg'
-import xLayoutJpeg from '@/assets/images/x-layout.jpeg'
 import { TreeView, type TreeDataItem } from '@/components/tree-view'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -51,12 +60,16 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   BROWSING_HISTORY_LIMIT_OPTIONS,
   DEFAULT_APP_SETTINGS,
+  FEED_TOOLBAR_BUTTON_IDS,
   type AppSettings,
 } from '@/lib/app-settings'
 import type {
   AppTheme,
   BrowsingHistoryLimit,
   ContentWidth,
+  FeedInteractionMode,
+  FeedPrimaryActionId,
+  FeedToolbarButtonId,
   FontFamilyClass,
   FontSizeClass,
   FontWeightClass,
@@ -95,6 +108,28 @@ const PAGE_VISIBILITY_KEYS = {
   'hot-search': 'showHotSearchCard',
   'super-topic': 'showFollowedSuperTopicsCard',
 } as const satisfies Record<string, keyof AppSettings>
+
+const PRIMARY_ACTION_OPTIONS: Array<{
+  id: FeedPrimaryActionId
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}> = [
+  { id: 'comment', label: '评论', icon: MessageCircle },
+  { id: 'repost', label: '转发', icon: Repeat2 },
+  { id: 'like', label: '点赞', icon: Heart },
+]
+
+const TOOLBAR_BUTTON_OPTIONS: Array<{
+  id: FeedToolbarButtonId
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}> = [
+  { id: 'favorite', label: '收藏', icon: Bookmark },
+  { id: 'copy-link', label: '复制链接', icon: LinkIcon },
+  { id: 'copy-text', label: '复制微博内容', icon: Copy },
+  { id: 'download-media', label: '批量下载', icon: Download },
+  { id: 'gen-image', label: '生图', icon: Image },
+]
 
 interface SettingsDialogProps {
   open: boolean
@@ -211,8 +246,10 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
     glassBlur,
     xLayoutEnabled,
     waterfallColumnCount,
+    feedInteractionMode,
+    feedPrimaryActionOrder,
+    feedToolbarButtonIds,
     contentWidth,
-    followGroupsEnabled,
     xbTopicPage,
     firstLoadRedirect,
     selectedThemeType,
@@ -255,8 +292,10 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
       glassBlur: s.glassBlur,
       xLayoutEnabled: s.xLayoutEnabled,
       waterfallColumnCount: s.waterfallColumnCount,
+      feedInteractionMode: s.feedInteractionMode,
+      feedPrimaryActionOrder: s.feedPrimaryActionOrder,
+      feedToolbarButtonIds: s.feedToolbarButtonIds,
       contentWidth: s.contentWidth,
-      followGroupsEnabled: s.followGroupsEnabled,
       xbTopicPage: s.xbTopicPage,
       firstLoadRedirect: s.firstLoadRedirect,
       selectedThemeType: s.selectedThemeType,
@@ -508,6 +547,24 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
     })
   }
 
+  function handlePrimaryActionOrderChange(value: FeedPrimaryActionId[]) {
+    void updateSettings({ feedPrimaryActionOrder: value })
+  }
+
+  function handleToolbarButtonToggle(id: FeedToolbarButtonId, checked: boolean) {
+    const selected = new Set(feedToolbarButtonIds)
+
+    if (checked) {
+      selected.add(id)
+    } else {
+      selected.delete(id)
+    }
+
+    void updateSettings({
+      feedToolbarButtonIds: FEED_TOOLBAR_BUTTON_IDS.filter((buttonId) => selected.has(buttonId)),
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -546,7 +603,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                       value={theme}
                       onValueChange={(v) => void updateSettings({ theme: v as AppTheme })}
                     >
-                      <SelectTrigger className="w-[100px]">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -573,6 +630,74 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
                       </SelectContent>
                     </Select>
                   </Field>
+                  <Field label="跳转逻辑" description="控制微博卡片点击和评论按钮行为">
+                    <Select
+                      value={feedInteractionMode}
+                      onValueChange={(v) =>
+                        void updateSettings({ feedInteractionMode: v as FeedInteractionMode })
+                      }
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="x">X</SelectItem>
+                        <SelectItem value="weibo">微博</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <StackedField
+                    label="控制栏顺序"
+                    description="拖动调整评论、转发、点赞三个主按钮的顺序"
+                  >
+                    <Reorder.Group
+                      axis="x"
+                      values={feedPrimaryActionOrder}
+                      onReorder={handlePrimaryActionOrderChange}
+                      className="grid grid-cols-3 gap-2"
+                    >
+                      {feedPrimaryActionOrder.map((id) => {
+                        const option = PRIMARY_ACTION_OPTIONS.find((item) => item.id === id)
+                        if (!option) return null
+
+                        return (
+                          <Reorder.Item
+                            key={id}
+                            value={id}
+                            className="border-border bg-background hover:bg-accent/50 flex cursor-grab items-center justify-between rounded-md border px-2.5 py-2 text-sm active:cursor-grabbing"
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <option.icon className="size-4 shrink-0" />
+                              <span className="truncate">{option.label}</span>
+                            </span>
+                            <GripVertical className="text-muted-foreground size-4 shrink-0" />
+                          </Reorder.Item>
+                        )
+                      })}
+                    </Reorder.Group>
+                  </StackedField>
+                  <StackedField
+                    label="控制栏按钮"
+                    description="勾选后显示在控制栏右侧，未勾选则放入更多菜单"
+                  >
+                    <div className="grid grid-cols-2 gap-2">
+                      {TOOLBAR_BUTTON_OPTIONS.map((option) => (
+                        <label
+                          key={option.id}
+                          className="border-border hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={feedToolbarButtonIds.includes(option.id)}
+                            onCheckedChange={(checked) =>
+                              handleToolbarButtonToggle(option.id, checked === true)
+                            }
+                          />
+                          <option.icon className="size-4 shrink-0" />
+                          <span>{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </StackedField>
                 </div>
                 <div className="border-border/40 border-t px-6 py-4">
                   <Field label="页面元素设置" />

@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, MessageCircle } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -65,9 +65,6 @@ export function StatusCommentsSection({
     >
       <div className="border-border/60 flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
-            <MessageCircle className="size-4" />
-          </span>
           <div className="min-w-0">
             <h2 className="text-foreground text-base leading-5 font-semibold">评论</h2>
             <p className="text-muted-foreground truncate text-xs tabular-nums">

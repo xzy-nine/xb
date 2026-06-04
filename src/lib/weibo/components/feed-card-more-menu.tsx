@@ -1,4 +1,4 @@
-import { Download, Image, Link, MoreHorizontal, Star, Trash } from 'lucide-react'
+import { Copy, Download, Image, Link, MoreHorizontal, Star, Trash } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -17,14 +17,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { type FeedToolbarButtonId, FEED_TOOLBAR_BUTTON_IDS } from '@/lib/app-settings'
 import { cn } from '@/lib/utils'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
+import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
 import type { FeedItem } from '@/lib/weibo/models/feed'
-import {
-  downloadAsZip,
-  estimateTotalSize,
-  extractMediaUrls,
-} from '@/lib/weibo/utils/download-media'
 
 type ContentType = 'status' | 'comment'
 
@@ -37,8 +34,9 @@ export interface FeedCardMoreMenuProps {
   onDelete: () => void | Promise<void>
   isDeleting?: boolean
   contentLabel?: string
+  visibleActionIds?: FeedToolbarButtonId[]
+  onCopyText?: () => void
   className?: string
-  xLayoutEnabled?: boolean
 }
 
 export function FeedCardMoreMenu({
@@ -50,95 +48,32 @@ export function FeedCardMoreMenu({
   onDelete,
   isDeleting,
   contentLabel = '这条内容',
+  visibleActionIds = [...FEED_TOOLBAR_BUTTON_IDS],
+  onCopyText,
   className,
-  xLayoutEnabled = false,
 }: FeedCardMoreMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
-  const [downloadLoading, setDownloadLoading] = useState(false)
-  const [sizeWarningOpen, setSizeWarningOpen] = useState(false)
-  const [pendingDownload, setPendingDownload] = useState<{ urls: any[]; filename: string } | null>(
-    null,
-  )
   const { openGenImage } = useGenImageDialog()
+  const { downloadDialog, downloadLoading, handleDownload } = useFeedCardMediaDownload(item)
 
-  const showFavorite = type === 'status' && onFavorite !== undefined && !xLayoutEnabled
-  const showGenImage = item && type === 'status'
-  const showCopyLink = type === 'status' && !xLayoutEnabled && item?.mblogId
+  const showFavorite =
+    visibleActionIds.includes('favorite') && type === 'status' && onFavorite !== undefined
+  const showGenImage = visibleActionIds.includes('gen-image') && item && type === 'status'
+  const showCopyLink = visibleActionIds.includes('copy-link') && type === 'status' && item?.mblogId
+  const showCopyText =
+    visibleActionIds.includes('copy-text') && type === 'status' && onCopyText !== undefined
   const showDownload =
+    visibleActionIds.includes('download-media') &&
     item &&
     type === 'status' &&
     (item.images.length > 0 || item.media !== null || (item.mixMediaInfo?.length ?? 0) > 0)
+  const hasVisibleMenuItem =
+    showGenImage || showDownload || showFavorite || showCopyLink || showCopyText || isOwner
 
-  const handleDownload = async () => {
-    if (!item) return
-
-    setMenuOpen(false)
-    setDownloadLoading(true)
-
-    try {
-      const urls = extractMediaUrls(item)
-
-      if (urls.length === 0) {
-        toast.error('没有可下载的媒体资源')
-        return
-      }
-
-      // 检查总大小
-      const totalSize = await estimateTotalSize(urls)
-      const sizeMB = totalSize / (1024 * 1024)
-
-      if (sizeMB > 100) {
-        // 超过 100MB，弹窗确认
-        const author = item.author.name
-        const text = item.text
-          .replace(/<[^>]*>/g, '')
-          .replace(/[<>:"/\\|?*\n\r]/g, '')
-          .slice(0, 10)
-        const zipFilename = `${author}_${text}.zip`
-        setPendingDownload({ urls, filename: zipFilename })
-        setSizeWarningOpen(true)
-        return
-      }
-
-      // 直接下载
-      await performDownload(urls, item)
-    } catch (error) {
-      console.error('下载失败:', error)
-      toast.error('下载失败，请稍后重试')
-    } finally {
-      setDownloadLoading(false)
-    }
-  }
-
-  const performDownload = async (urls: any[], feedItem: FeedItem) => {
-    const author = feedItem.author.name
-    const text = feedItem.text
-      .replace(/<[^>]*>/g, '')
-      .replace(/[<>:"/\\|?*\n\r]/g, '')
-      .slice(0, 10)
-    const zipFilename = `${author}_${text}.zip`
-
-    await downloadAsZip(urls, zipFilename)
-    toast.success(`已下载 ${urls.length} 个文件`)
-  }
-
-  const confirmLargeDownload = async () => {
-    if (!pendingDownload || !item) return
-
-    setSizeWarningOpen(false)
-    setDownloadLoading(true)
-
-    try {
-      await performDownload(pendingDownload.urls, item)
-    } catch (error) {
-      console.error('下载失败:', error)
-      toast.error('下载失败，请稍后重试')
-    } finally {
-      setDownloadLoading(false)
-      setPendingDownload(null)
-    }
+  if (!hasVisibleMenuItem) {
+    return null
   }
 
   return (
@@ -173,7 +108,13 @@ export function FeedCardMoreMenu({
             </DropdownMenuItem>
           ) : null}
           {showDownload && (
-            <DropdownMenuItem onSelect={handleDownload} disabled={downloadLoading}>
+            <DropdownMenuItem
+              onSelect={() => {
+                setMenuOpen(false)
+                void handleDownload()
+              }}
+              disabled={downloadLoading}
+            >
               <Download className="mr-2 size-4" />
               批量下载
             </DropdownMenuItem>
@@ -202,6 +143,7 @@ export function FeedCardMoreMenu({
           {showCopyLink && (
             <DropdownMenuItem
               onSelect={() => {
+                setMenuOpen(false)
                 const url = `https://weibo.com/${item!.author.id}/${item!.mblogId}`
                 void navigator.clipboard.writeText(url).then(() => {
                   toast.success('已复制链接')
@@ -210,6 +152,17 @@ export function FeedCardMoreMenu({
             >
               <Link className="mr-2 size-4" />
               复制链接
+            </DropdownMenuItem>
+          )}
+          {showCopyText && (
+            <DropdownMenuItem
+              onSelect={() => {
+                setMenuOpen(false)
+                onCopyText?.()
+              }}
+            >
+              <Copy className="mr-2 size-4" />
+              复制微博内容
             </DropdownMenuItem>
           )}
           {isOwner && (
@@ -256,31 +209,7 @@ export function FeedCardMoreMenu({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={sizeWarningOpen} onOpenChange={setSizeWarningOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>文件较大</DialogTitle>
-            <DialogDescription>
-              该微博的媒体文件总大小超过 100MB，下载可能需要较长时间。确定要继续吗？
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setSizeWarningOpen(false)
-                setPendingDownload(null)
-              }}
-            >
-              取消
-            </Button>
-            <Button type="button" onClick={confirmLargeDownload} disabled={downloadLoading}>
-              {downloadLoading ? '下载中…' : '继续下载'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {downloadDialog}
     </>
   )
 }

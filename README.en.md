@@ -15,6 +15,7 @@
 [![Chrome Web Store users](https://img.shields.io/chrome-web-store/users/ffhppkcianllofhhjohbfbobjfppbeao?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
 [![Firefox Add-ons version](https://img.shields.io/amo/v/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/xb/)
 [![Firefox Add-ons users](https://img.shields.io/amo/users/xb?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/xb/)
+[![Edge Add-ons version](https://img.shields.io/badge/dynamic/json?label=microsoft%20edge%20add-on&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fmojlbnkiahdmnfaffmelfcefohpfjjla)](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla)
 [![Landing page](https://img.shields.io/badge/website-xb--extension.vercel.app-000000?logo=vercel&logoColor=white)](https://xb-extension.vercel.app/)
 
 [![Bun](https://img.shields.io/badge/bun-1.3.14-000000?logo=bun&logoColor=white)](https://bun.sh)
@@ -39,6 +40,8 @@ Visit [Landing Page](https://xb-extension.vercel.app/) for more.
 
 [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb)
 
+[Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla)
+
 ## Features
 
 1. ✨ **X like Style** — Clean, reading-first.
@@ -54,19 +57,6 @@ Visit [Landing Page](https://xb-extension.vercel.app/) for more.
 9. 📅 **Browsing History** — The history is recorded locally.
 10. ⬇️ **Free to downloads** - Supports download and batch download of Weibo
     images and videos.
-
-## Supported Pages
-
-xb currently enhances the following pages:
-
-- [x] Home Timeline
-- [x] Profile Page
-- [x] Weibo Detail
-- [x] Notifications
-- [x] Favorites
-- [x] Search
-- [x] Explore(hot topic)
-- [ ] Articles
 
 ## Credits
 

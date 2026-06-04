@@ -44,6 +44,31 @@ describe('app-settings', () => {
     ).toBe('modern')
   })
 
+  it('migrates the old x layout setting to the feed interaction mode', () => {
+    expect(normalizeAppSettings({ xLayoutEnabled: true }).feedInteractionMode).toBe('x')
+    expect(normalizeAppSettings({ xLayoutEnabled: false }).feedInteractionMode).toBe('weibo')
+  })
+
+  it('normalizes feed toolbar settings', () => {
+    expect(
+      normalizeAppSettings({
+        feedPrimaryActionOrder: ['like', 'comment', 'repost'],
+        feedToolbarButtonIds: ['copy-text', 'unknown', 'favorite', 'favorite'],
+      }).feedPrimaryActionOrder,
+    ).toEqual(['like', 'comment', 'repost'])
+    expect(
+      normalizeAppSettings({
+        feedPrimaryActionOrder: ['like', 'comment'],
+        feedToolbarButtonIds: ['copy-text', 'unknown', 'favorite', 'favorite'],
+      }).feedPrimaryActionOrder,
+    ).toEqual(DEFAULT_APP_SETTINGS.feedPrimaryActionOrder)
+    expect(
+      normalizeAppSettings({
+        feedToolbarButtonIds: ['copy-text', 'unknown', 'favorite', 'favorite'],
+      }).feedToolbarButtonIds,
+    ).toEqual(['copy-text', 'favorite'])
+  })
+
   it('loads and persists settings through storage', async () => {
     const storage = createStorageArea({
       theme: 'dark',
@@ -96,12 +121,15 @@ describe('app-settings', () => {
       xLayoutEnabled: true,
       waterfallColumnCount: 1,
       browsingHistoryEnabled: true,
+      feedInteractionMode: 'x',
+      feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+      feedToolbarButtonIds: [],
       browsingHistoryLimit: 200,
-      followGroupsEnabled: false,
       xbTopicPage: true,
       forceRedirectToFollowing: false,
       firstLoadRedirect: 'for-you',
       homeTab: 'for-you',
+      homeGroupId: null,
       customThemeLightCss: '',
       customThemeDarkCss: '',
       selectedThemeType: 'preset',
@@ -153,12 +181,15 @@ describe('app-settings', () => {
         xLayoutEnabled: true,
         waterfallColumnCount: 1,
         browsingHistoryEnabled: true,
+        feedInteractionMode: 'x',
+        feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+        feedToolbarButtonIds: [],
         browsingHistoryLimit: 300,
-        followGroupsEnabled: false,
         xbTopicPage: true,
         forceRedirectToFollowing: false,
         firstLoadRedirect: 'for-you',
         homeTab: 'for-you',
+        homeGroupId: null,
         customThemeLightCss: '--primary: #1d9bf0;',
         customThemeDarkCss: '--primary: #1d9bf0;',
         selectedThemeType: 'preset',
@@ -211,12 +242,15 @@ describe('app-settings', () => {
       xLayoutEnabled: true,
       waterfallColumnCount: 1,
       browsingHistoryEnabled: true,
+      feedInteractionMode: 'x',
+      feedPrimaryActionOrder: ['comment', 'repost', 'like'],
+      feedToolbarButtonIds: [],
       browsingHistoryLimit: 300,
-      followGroupsEnabled: false,
       xbTopicPage: true,
       forceRedirectToFollowing: false,
       firstLoadRedirect: 'for-you',
       homeTab: 'for-you',
+      homeGroupId: null,
       customThemeLightCss: '--primary: #1d9bf0;',
       customThemeDarkCss: '--primary: #1d9bf0;',
       selectedThemeType: 'preset',

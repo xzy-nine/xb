@@ -1,5 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bookmark, Copy, Heart, MessageCircle, Repeat2, Share } from 'lucide-react'
+import {
+  Bookmark,
+  Copy,
+  Download,
+  Heart,
+  Image,
+  LinkIcon,
+  MessageCircle,
+  Repeat2,
+} from 'lucide-react'
 import { memo, useCallback, type MouseEvent, type ReactNode, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -14,19 +23,21 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useAppSettings } from '@/lib/app-settings-store'
+import {
+  type FeedInteractionMode,
+  type FeedPrimaryActionId,
+  type FeedToolbarButtonId,
+  FEED_TOOLBAR_BUTTON_IDS,
+} from '@/lib/app-settings'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expanded'
+import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { StatusText } from '@/lib/weibo/components/status-text'
+import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
 import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
@@ -330,10 +341,17 @@ function FeedActions({
   onRepostClick,
   onLikeClick,
   likePending,
-  xLayoutEnabled,
+  feedInteractionMode,
+  primaryActionOrder,
+  toolbarButtonIds,
   favorited,
   onFavorite,
   favoritePending,
+  onCopyLink,
+  onCopyText,
+  onGenImage,
+  onDownload,
+  downloadPending,
 }: {
   item: FeedItem
   surface?: StatusFeedSurface
@@ -342,162 +360,215 @@ function FeedActions({
   onRepostClick?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePending?: boolean
-  xLayoutEnabled: boolean
+  feedInteractionMode: FeedInteractionMode
+  primaryActionOrder: FeedPrimaryActionId[]
+  toolbarButtonIds: FeedToolbarButtonId[]
   favorited?: boolean
   onFavorite?: () => void | Promise<void>
   favoritePending?: boolean
+  onCopyLink?: () => void
+  onCopyText?: () => void
+  onGenImage?: () => void
+  onDownload?: () => void
+  downloadPending?: boolean
 }) {
   const liked = item.liked === true
   const isBookmarked = favorited === true
   const isDetail = surface === 'detail'
+  const canDownload =
+    item.images.length > 0 || item.media !== null || (item.mixMediaInfo?.length ?? 0) > 0
 
-  const weiboUrl = `https://weibo.com/${item.author.id}/${item.mblogId}`
+  function renderPrimaryAction(id: FeedPrimaryActionId) {
+    if (id === 'comment') {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label="回复微博"
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            if (isDetail || feedInteractionMode === 'x') {
+              onCommentClick?.(item)
+            } else {
+              onCommentExpand?.(item)
+            }
+          }}
+        >
+          <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
+          <span className="tabular-nums transition-colors group-hover:text-sky-500">
+            {formatWeiboCount(item.stats.comments)}
+          </span>
+        </Button>
+      )
+    }
 
-  const handleCopyLink = () => {
-    void navigator.clipboard.writeText(weiboUrl).then(() => {
-      toast.success('已复制链接')
-    })
-  }
-  const CommentButton = isDetail ? (
-    <Button
-      type="button"
-      variant="ghost"
-      aria-label="回复微博"
-      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
-      onClick={(event) => {
-        event.stopPropagation()
-        onCommentClick?.(item)
-      }}
-    >
-      <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
-      <span className="tabular-nums transition-colors group-hover:text-sky-500">
-        {formatWeiboCount(item.stats.comments)}
-      </span>
-    </Button>
-  ) : (
-    <Button
-      type="button"
-      variant="ghost"
-      aria-label="回复微博"
-      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
-      onClick={(event) => {
-        event.stopPropagation()
-        if (xLayoutEnabled) {
-          onCommentClick?.(item)
-        } else {
-          onCommentExpand?.(item)
-        }
-      }}
-    >
-      <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
-      <span className="tabular-nums transition-colors group-hover:text-sky-500">
-        {formatWeiboCount(item.stats.comments)}
-      </span>
-    </Button>
-  )
-  const RepostButton = (
-    <Button
-      type="button"
-      variant="ghost"
-      aria-label="转发微博"
-      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
-      onClick={(event) => {
-        event.stopPropagation()
-        onRepostClick?.(item)
-      }}
-    >
-      <Repeat2 className="size-3.5 transition-colors group-hover:text-emerald-500" />
-      <span className="tabular-nums transition-colors group-hover:text-emerald-500">
-        {formatWeiboCount(item.stats.reposts)}
-      </span>
-    </Button>
-  )
-  const LikeButton = (
-    <Button
-      type="button"
-      variant="ghost"
-      aria-label={liked ? '取消点赞' : '点赞微博'}
-      aria-pressed={liked}
-      disabled={likePending}
-      className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
-      onClick={(event) => {
-        event.stopPropagation()
-        onLikeClick?.(item)
-      }}
-    >
-      <Heart
-        className={cn(
-          'size-3.5 transition-colors group-hover:text-rose-500',
-          liked && 'fill-rose-500 text-rose-500',
-        )}
-      />
-      <span
-        className={cn(
-          'tabular-nums transition-colors group-hover:text-rose-500',
-          liked && 'text-rose-500',
-        )}
-      >
-        {formatWeiboCount(item.stats.likes)}
-      </span>
-    </Button>
-  )
+    if (id === 'repost') {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label="转发微博"
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            onRepostClick?.(item)
+          }}
+        >
+          <Repeat2 className="size-3.5 transition-colors group-hover:text-emerald-500" />
+          <span className="tabular-nums transition-colors group-hover:text-emerald-500">
+            {formatWeiboCount(item.stats.reposts)}
+          </span>
+        </Button>
+      )
+    }
 
-  if (xLayoutEnabled) {
     return (
-      <div className="text-muted-foreground grid w-full grid-cols-4 gap-2 text-xs">
-        {CommentButton}
-        {RepostButton}
-        {LikeButton}
-        <div className="flex h-full items-center justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label={isBookmarked ? '取消收藏' : '收藏'}
-            aria-pressed={isBookmarked}
-            disabled={favoritePending}
-            className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
-            onClick={(event) => {
-              event.stopPropagation()
-              onFavorite?.()
-            }}
-          >
-            <Bookmark
-              className={cn(
-                'size-3.5 transition-colors group-hover:text-amber-500',
-                isBookmarked && 'fill-amber-500 text-amber-500',
-              )}
-            />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                aria-label="分享"
-                className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <Share className="size-3.5 transition-colors group-hover:text-violet-500" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              onCloseAutoFocus={(event) => event.preventDefault()}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DropdownMenuItem onSelect={handleCopyLink}>复制链接</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+      <Button
+        key={id}
+        type="button"
+        variant="ghost"
+        aria-label={liked ? '取消点赞' : '点赞微博'}
+        aria-pressed={liked}
+        disabled={likePending}
+        className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
+        onClick={(event) => {
+          event.stopPropagation()
+          onLikeClick?.(item)
+        }}
+      >
+        <Heart
+          className={cn(
+            'size-3.5 transition-colors group-hover:text-rose-500',
+            liked && 'fill-rose-500 text-rose-500',
+          )}
+        />
+        <span
+          className={cn(
+            'tabular-nums transition-colors group-hover:text-rose-500',
+            liked && 'text-rose-500',
+          )}
+        >
+          {formatWeiboCount(item.stats.likes)}
+        </span>
+      </Button>
     )
   }
 
+  function renderToolbarButton(id: FeedToolbarButtonId) {
+    if (id === 'gen-image' && onGenImage) {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label="生图"
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            onGenImage()
+          }}
+        >
+          <Image className="size-3.5 transition-colors group-hover:text-violet-500" />
+        </Button>
+      )
+    }
+
+    if (id === 'download-media' && canDownload && onDownload) {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label="批量下载"
+          disabled={downloadPending}
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            onDownload()
+          }}
+        >
+          <Download className="size-3.5 transition-colors group-hover:text-indigo-500" />
+        </Button>
+      )
+    }
+
+    if (id === 'favorite' && onFavorite) {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label={isBookmarked ? '取消收藏' : '收藏'}
+          aria-pressed={isBookmarked}
+          disabled={favoritePending}
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            void onFavorite()
+          }}
+        >
+          <Bookmark
+            className={cn(
+              'size-3.5 transition-colors group-hover:text-amber-500',
+              isBookmarked && 'fill-amber-500 text-amber-500',
+            )}
+          />
+        </Button>
+      )
+    }
+
+    if (id === 'copy-link' && item.mblogId && onCopyLink) {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label="复制链接"
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            onCopyLink()
+          }}
+        >
+          <LinkIcon className="size-3.5 transition-colors group-hover:text-cyan-500" />
+        </Button>
+      )
+    }
+
+    if (id === 'copy-text' && onCopyText) {
+      return (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          aria-label="复制微博内容"
+          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
+          onClick={(event) => {
+            event.stopPropagation()
+            onCopyText()
+          }}
+        >
+          <Copy className="size-3.5 transition-colors group-hover:text-slate-500" />
+        </Button>
+      )
+    }
+
+    return null
+  }
+
+  const toolbarButtons = toolbarButtonIds.map(renderToolbarButton).filter(Boolean)
+
   return (
-    <div className="text-muted-foreground grid w-full grid-cols-3 gap-2 text-xs">
-      {RepostButton}
-      {CommentButton}
-      {LikeButton}
+    <div className="text-muted-foreground flex w-full items-center gap-2 text-xs">
+      <div className="grid min-w-0 flex-1 grid-cols-3 gap-2">
+        {primaryActionOrder.map(renderPrimaryAction)}
+      </div>
+      {toolbarButtons.length > 0 ? (
+        <div className="flex shrink-0 items-center justify-end gap-0.5 px-3">{toolbarButtons}</div>
+      ) : null}
     </div>
   )
 }
@@ -507,9 +578,13 @@ function RetweetedFeedBlock({
   onNavigate,
   onNavigateProfile,
   onNavigateTopic,
+  onCommentClick,
+  onRepostClick,
   onLikeClick,
   likePendingForId,
-  xLayoutEnabled,
+  feedInteractionMode,
+  primaryActionOrder,
+  toolbarButtonIds,
   onFavorite,
   favoritePendingForId,
 }: {
@@ -517,9 +592,13 @@ function RetweetedFeedBlock({
   onNavigate?: (item: FeedItem) => void
   onNavigateProfile?: (lookup: ProfileLookup) => void
   onNavigateTopic?: (topic: string) => void
+  onCommentClick?: (item: FeedItem) => void
+  onRepostClick?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePendingForId: string | null
-  xLayoutEnabled: boolean
+  feedInteractionMode: FeedInteractionMode
+  primaryActionOrder: FeedPrimaryActionId[]
+  toolbarButtonIds: FeedToolbarButtonId[]
   onFavorite?: (target: FeedItem) => void | Promise<void>
   favoritePendingForId: string | null
 }) {
@@ -530,27 +609,54 @@ function RetweetedFeedBlock({
     hasLongTextError,
     onLoadLongText,
   } = useFeedLongText(item)
+  const { openGenImage } = useGenImageDialog()
+  const { downloadDialog, downloadLoading, handleDownload } = useFeedCardMediaDownload(resolvedItem)
 
   const addEntry = useCallback(() => {
     browsingHistoryStore.getState().addEntry(resolvedItem)
   }, [resolvedItem])
 
   const isDeletedAuthor = !resolvedItem.author.id
+  const canNavigate = feedInteractionMode === 'x' && onNavigate !== undefined
+
+  const handleCopyLink = () => {
+    const weiboUrl = `https://weibo.com/${resolvedItem.author.id}/${resolvedItem.mblogId}`
+    void navigator.clipboard.writeText(weiboUrl).then(() => {
+      toast.success('已复制链接')
+    })
+  }
+
+  const handleCopyText = () => {
+    const copyText = getStatusCopyText(resolvedItem)
+    if (!copyText) {
+      toast.error('没有可复制的文字')
+      return
+    }
+
+    void navigator.clipboard
+      .writeText(copyText)
+      .then(() => {
+        toast.success('已复制文字')
+      })
+      .catch(() => {
+        toast.error('复制失败，请稍后重试')
+      })
+  }
 
   const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
-    if (!onNavigate) {
+    if (!canNavigate) {
       return
     }
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
-    onNavigate(resolvedItem)
+    onNavigate?.(resolvedItem)
   }
 
   return (
     <Card
-      className={cn('gap-3 py-4', onNavigate && 'cursor-pointer')}
+      className={cn('gap-3 py-4', canNavigate && 'cursor-pointer')}
       onClick={handleRetweetedClick}
     >
       <CardHeader>
@@ -578,15 +684,26 @@ function RetweetedFeedBlock({
         {!isDeletedAuthor && (
           <FeedActions
             item={resolvedItem}
+            onCommentClick={onCommentClick}
+            onCommentExpand={onNavigate}
+            onRepostClick={onRepostClick}
             onLikeClick={onLikeClick}
             likePending={likePendingForId === resolvedItem.id}
-            xLayoutEnabled={xLayoutEnabled}
+            feedInteractionMode={feedInteractionMode}
+            primaryActionOrder={primaryActionOrder}
+            toolbarButtonIds={toolbarButtonIds}
             favorited={resolvedItem.favorited}
             onFavorite={onFavorite ? () => onFavorite(resolvedItem) : undefined}
             favoritePending={favoritePendingForId === resolvedItem.id}
+            onCopyLink={handleCopyLink}
+            onCopyText={handleCopyText}
+            onGenImage={() => openGenImage(resolvedItem)}
+            onDownload={() => void handleDownload()}
+            downloadPending={downloadLoading}
           />
         )}
       </CardContent>
+      {downloadDialog}
     </Card>
   )
 }
@@ -617,7 +734,13 @@ export const FeedCard = memo(function FeedCard({
   className?: string
   uniformHeight?: boolean
 }) {
-  const xLayoutEnabled = useAppSettings((s) => s.xLayoutEnabled)
+  const { feedInteractionMode, feedPrimaryActionOrder, feedToolbarButtonIds } = useAppSettings(
+    useShallow((s) => ({
+      feedInteractionMode: s.feedInteractionMode,
+      feedPrimaryActionOrder: s.feedPrimaryActionOrder,
+      feedToolbarButtonIds: s.feedToolbarButtonIds,
+    })),
+  )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
@@ -636,6 +759,11 @@ export const FeedCard = memo(function FeedCard({
   const uid = getCurrentUserUid()
   const showOwnerMenu = uid !== null && uid === resolvedItem.author.id
   const queryClient = useQueryClient()
+  const { openGenImage } = useGenImageDialog()
+  const { downloadDialog, downloadLoading, handleDownload } = useFeedCardMediaDownload(resolvedItem)
+  const moreMenuActionIds = FEED_TOOLBAR_BUTTON_IDS.filter(
+    (id) => !feedToolbarButtonIds.includes(id),
+  )
 
   const likeMutation = useMutation({
     mutationFn: async (target: FeedItem) => {
@@ -725,7 +853,10 @@ export const FeedCard = memo(function FeedCard({
     pointerDownPositionRef.current = null
   }
 
-  const canNavigate = onNavigate && statusAllowsCardNavigate(surfaceProp, 'root')
+  const canNavigate =
+    feedInteractionMode === 'x' &&
+    onNavigate !== undefined &&
+    statusAllowsCardNavigate(surfaceProp, 'root')
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation()
@@ -751,33 +882,36 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    onNavigate(resolvedItem)
+    onNavigate?.(resolvedItem)
   }
 
   const handleCommentExpand = useCallback(() => {
     setCommentsExpanded((prev) => !prev)
   }, [])
 
-  const handleCopyText = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation()
-      const copyText = getStatusCopyText(resolvedItem)
-      if (!copyText) {
-        toast.error('没有可复制的文字')
-        return
-      }
+  const handleCopyLink = useCallback((target: FeedItem) => {
+    const weiboUrl = `https://weibo.com/${target.author.id}/${target.mblogId}`
+    void navigator.clipboard.writeText(weiboUrl).then(() => {
+      toast.success('已复制链接')
+    })
+  }, [])
 
-      void navigator.clipboard
-        .writeText(copyText)
-        .then(() => {
-          toast.success('已复制文字')
-        })
-        .catch(() => {
-          toast.error('复制失败，请稍后重试')
-        })
-    },
-    [resolvedItem],
-  )
+  const handleCopyText = useCallback((target: FeedItem) => {
+    const copyText = getStatusCopyText(target)
+    if (!copyText) {
+      toast.error('没有可复制的文字')
+      return
+    }
+
+    void navigator.clipboard
+      .writeText(copyText)
+      .then(() => {
+        toast.success('已复制文字')
+      })
+      .catch(() => {
+        toast.error('复制失败，请稍后重试')
+      })
+  }, [])
 
   if (resolvedItem.deleted) {
     return (
@@ -853,16 +987,6 @@ export const FeedCard = memo(function FeedCard({
       onClick={handleCardClick}
     >
       <div className="absolute top-4 right-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100"
-          aria-label="复制微博文字"
-          onClick={handleCopyText}
-        >
-          <Copy className="size-3" />
-        </Button>
         <FeedCardMoreMenu
           type="status"
           isOwner={showOwnerMenu}
@@ -872,7 +996,8 @@ export const FeedCard = memo(function FeedCard({
           contentLabel="这条微博"
           isDeleting={deleteMutation.isPending}
           onDelete={() => deleteMutation.mutateAsync()}
-          xLayoutEnabled={xLayoutEnabled}
+          visibleActionIds={moreMenuActionIds}
+          onCopyText={() => handleCopyText(resolvedItem)}
         />
       </div>
       {resolvedItem.title ? (
@@ -892,7 +1017,47 @@ export const FeedCard = memo(function FeedCard({
           {cardContentElement}
         </>
       )}
-      <CardFooter className={cn(uniformHeight && 'mt-4 shrink-0')}>
+      <CardContent
+        className="flex flex-col gap-4"
+        onMouseDown={handleCardMouseDown}
+        onMouseUp={handleCardMouseUp}
+      >
+        <FeedTextBlock
+          item={resolvedItem}
+          canLoadLongText={shouldShowLoadLongText}
+          isLongTextLoading={isLongTextLoading}
+          hasLongTextError={hasLongTextError}
+          onLoadLongText={onLoadLongText}
+        />
+
+        <FeedMediaBlock item={resolvedItem} />
+
+        <ImageCarousel
+          images={resolvedItem.images}
+          mixMediaItems={resolvedItem.mixMediaInfo}
+          downloadFilename={getMediaDownloadFilename(resolvedItem)}
+          onOpen={addEntry}
+        />
+
+        {resolvedItem.retweetedStatus ? (
+          <RetweetedFeedBlock
+            item={resolvedItem.retweetedStatus}
+            onNavigate={onNavigate}
+            onCommentClick={onCommentClick}
+            onRepostClick={onRepostClick}
+            onLikeClick={(target) => likeMutation.mutate(target)}
+            likePendingForId={likePendingId}
+            feedInteractionMode={feedInteractionMode}
+            primaryActionOrder={feedPrimaryActionOrder}
+            toolbarButtonIds={feedToolbarButtonIds}
+            onFavorite={(target) => favoriteMutation.mutate(target)}
+            favoritePendingForId={
+              favoriteMutation.isPending ? resolvedItem.retweetedStatus.id : null
+            }
+          />
+        ) : null}
+      </CardContent>
+      <CardFooter>
         <FeedActions
           item={resolvedItem}
           surface={surfaceProp}
@@ -901,15 +1066,23 @@ export const FeedCard = memo(function FeedCard({
           onRepostClick={onRepostClick}
           onLikeClick={(target) => likeMutation.mutate(target)}
           likePending={likePendingId === resolvedItem.id}
-          xLayoutEnabled={xLayoutEnabled}
+          feedInteractionMode={feedInteractionMode}
+          primaryActionOrder={feedPrimaryActionOrder}
+          toolbarButtonIds={feedToolbarButtonIds}
           favorited={resolvedItem.favorited}
           onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
           favoritePending={favoriteMutation.isPending}
+          onCopyLink={() => handleCopyLink(resolvedItem)}
+          onCopyText={() => handleCopyText(resolvedItem)}
+          onGenImage={() => openGenImage(resolvedItem)}
+          onDownload={() => void handleDownload()}
+          downloadPending={downloadLoading}
         />
       </CardFooter>
-      {commentsExpanded && !xLayoutEnabled && onCommentReply ? (
+      {commentsExpanded && feedInteractionMode === 'weibo' && onCommentReply ? (
         <FeedCommentsExpanded item={resolvedItem} onCommentReply={onCommentReply} />
       ) : null}
+      {downloadDialog}
     </Card>
   )
 })

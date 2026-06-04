@@ -19,6 +19,7 @@ import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { followGroupsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+import { getDefaultFollowGroupForHomeTab } from '@/lib/weibo/services/adapters/explore-groups'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
 
 type ProfileLookup = { uid: string } | { screenName: string }
@@ -186,23 +187,27 @@ export function AppShell() {
   const onHomeTabChange = useCallback(
     (tab: HomeTab) => {
       const requestId = ++homeTabNavigationRequestRef.current
-      void updateSettings({ homeTab: tab })
       if (tab === 'special-follow' || tab === 'friend-circle') {
+        void updateSettings({ homeTab: tab, homeGroupId: null })
         void queryClient
           .ensureQueryData(followGroupsQueryOptions)
           .then((groups) => {
             if (requestId === homeTabNavigationRequestRef.current) {
-              navigate(homeTimelinePathFromTab(tab, groups.defaultGroups))
+              const group = getDefaultFollowGroupForHomeTab(groups.defaultGroups, tab)
+              void updateSettings({ homeTab: tab, homeGroupId: group?.gid ?? null })
+              navigate(group ? `/mygroups?gid=${group.gid}` : '/mygroups')
             }
           })
           .catch(() => {
             if (requestId === homeTabNavigationRequestRef.current) {
+              void updateSettings({ homeTab: tab, homeGroupId: null })
               navigate(homeTimelinePathFromTab(tab))
             }
           })
         return
       }
 
+      void updateSettings({ homeTab: tab, homeGroupId: null })
       navigate(homeTimelinePathFromTab(tab))
     },
     [navigate, queryClient, updateSettings],
@@ -210,13 +215,15 @@ export function AppShell() {
 
   const onFollowGroupChange = useCallback(
     (gid: string | null) => {
+      ++homeTabNavigationRequestRef.current
+      void updateSettings({ homeTab: 'following', homeGroupId: gid })
       if (gid) {
         navigate('/mygroups?gid=' + gid)
       } else {
         navigate('/mygroups')
       }
     },
-    [navigate],
+    [navigate, updateSettings],
   )
 
   const context: AppShellContext = useMemo(
