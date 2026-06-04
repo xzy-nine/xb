@@ -1,23 +1,32 @@
 # AGENTS.md
 
+文档地图：`AGENTS.md`（本文，HOW）· `PRODUCT.md`（产品边界）· `DESIGN.md` /
+`DESIGN.json`（UI 规则与 token）· `README.md` / `README.en.md`（面向用户）·
+`src/lib/app-settings.ts`（设置项默认值）
+
 ## Project Overview
 
 xb is a browser extension that rewrites weibo.com into a cleaner X-like reading
 experience. Built with WXT, React 19, TypeScript, Tailwind CSS 4, shadcn/ui,
-motion(same as framer-motion) Zustand, TanStack Query, and `@reactuses/core`.
+motion (same as framer-motion), Zustand, TanStack Query, and `@reactuses/core`.
 
 ## Developer Commands
 
 ```bash
-npm run dev          # Start dev server (Chrome)
-npm run dev:firefox  # Start dev server (Firefox)
-npm run build        # Build for Chrome/Chromium
-npm run build:firefox # Build for Firefox
-npm run test:unit    # Run unit tests (Vitest + jsdom)
-npm run test:watch   # Run tests in watch mode
-npm run compile      # TypeScript type check only
-npm run zip          # Package as .zip (Chrome)
-npm run zip:firefox  # Package as .zip (Firefox)
+bun run dev           # Start dev server (Chrome)
+bun run dev:edge      # Start dev server (Edge)
+bun run dev:firefox   # Start dev server (Firefox)
+bun run build         # Build for Chrome/Chromium
+bun run build:edge    # Build for Edge
+bun run build:firefox # Build for Firefox
+bun run test:unit     # Run unit tests (Vitest + jsdom)
+bun run test:watch    # Run tests in watch mode
+bun run compile       # TypeScript type check only
+bun run lint          # Format + lint with oxfmt/oxlint
+bun run knip          # Find unused files/exports/dependencies
+bun run zip           # Package as .zip (Chrome)
+bun run zip:edge      # Package as .zip (Edge)
+bun run zip:firefox   # Package as .zip (Firefox)
 ```
 
 - 包管理器使用 **bun**（项目已配置 `only-allow bun`）
@@ -30,89 +39,66 @@ lint → typecheck → test → build
 
 ```
 src/
-├── entrypoints/          # Extension entry points
-│   ├── weibo.content.tsx      # Main content script (weibo.com)
-│   ├── weibo-main-world.ts    # Runs in page context, installs history bridge
-│   ├── weibo-hide.content.ts  # Hides original Weibo UI
-│   ├── weibo-search.pending.ts # Search pending handler
-│   └── options/               # Options page (theme.ts)
-├── lib/                  # Core library
-│   ├── app-settings-store.ts  # Zustand settings store (hydrate before use)
-│   ├── app-settings.ts        # Settings types and defaults
-│   ├── font-loader.ts         # Font loading utility
-│   ├── utils.ts               # Shared utilities (cn helper, etc.)
-│   ├── weibo/                 # Core weibo feature code
-│   │   ├── app/               # App shell, root, layout components
-│   │   ├── components/        # Feature-specific components
-│   │   │   ├── gen-image/     # Share card generation (9 templates)
-│   │   │   └── media-player/  # Audio/video/live players
-│   │   ├── hooks/             # Feature-specific hooks (useFontSettings, etc.)
-│   │   ├── pages/             # Page-level components
-│   │   ├── services/          # API clients, adapters, repositories
-│   │   │   ├── client.ts           # Axios-based API client
-│   │   │   ├── endpoints.ts       # API endpoint definitions
-│   │   │   ├── weibo-repository.ts # Repository layer
-│   │   │   ├── adapters/          # Response adapters
-│   │   │   └── auth-events.ts     # Auth event handling
-│   │   ├── models/            # Data models
-│   │   ├── queries/           # TanStack Query definitions
-│   │   ├── route/             # Router sync, page descriptors, URL parsing
-│   │   ├── content/           # Host selectors, shell state, page takeover
-│   │   ├── inject/            # Script injection (history bridge, API bridge)
-│   │   ├── platform/          # Platform-specific code (messages, current user)
-│   │   └── utils/             # Utility functions (transform, date, etc.)
-├── components/ui/        # shadcn/ui components
-├── hooks/                # Shared React hooks
-└── test/                 # Test setup (vitest + jsdom)
+├── entrypoints/       # weibo.content, weibo-main-world, weibo-hide, options, …
+├── lib/
+│   ├── app-settings.ts / app-settings-store.ts
+│   ├── custom-theme.ts / font-loader.ts / utils.ts
+│   └── weibo/
+│       ├── app/          # shell, root, layout
+│       ├── components/   # feed, profile, gen-image, media-player, …
+│       ├── content/      # host selectors, shell state, page takeover, lifecycle
+│       ├── hooks/ pages/ route/ inject/ platform/ stores/ utils/
+│       ├── services/     # client, adapters, weibo-repository, xb-server-*
+│       ├── models/ queries/
+├── components/ui/     # shadcn
+├── hooks/
+└── test/
 ```
 
 ## Architecture Notes
 
-- **Content Script UI**: Uses WXT's `createShadowRootUi` with
-  `cssInjectionMode: 'ui'` to mount React into a shadow root, keeping styles
-  isolated from Weibo's global CSS.
-- **weibo-main-world.ts**: Runs as an **unlisted script** directly in the page
-  context (not a content script), installs a history bridge for router sync.
-- **Settings Store**: Zustand store (`lib/app-settings-store.ts`) that persists
-  to `chrome.storage`. Must call `hydrate()` before use.
-- **API Layer**: Axios-based client (`lib/weibo/services/client.ts`) with
-  adapters in `lib/weibo/services/adapters/` that transform Weibo's API
-  responses into internal models.
-- **Query Layer**: TanStack Query definitions in
-  `lib/weibo/queries/weibo-queries.ts` wrapping repository functions.
+- **Content Script UI**: WXT `createShadowRootUi` + `cssInjectionMode: 'ui'` —
+  React in shadow root, isolated from Weibo CSS.
+- **weibo-main-world.ts**: Unlisted script in page context; history + API
+  bridges.
+- **Settings Store**: `app-settings-store.ts` → `chrome.storage`; call
+  `hydrate()` before use.
+- **Host Shell Lifecycle**: `host-shell-lifecycle.tsx` — inject bridge, wait for
+  host DOM, hydrate, first-load redirect, mount UI, cleanup.
+- **API Layer**: `client.ts` + `adapters/` → internal models.
+- **Query Layer**: `weibo-queries.ts` wraps repository.
+- **Status Cache**: `status-cache.ts` — optimistic like/favorite/comment count
+  across timeline/detail/comment caches.
+- **xb Rating**: `xb-server-client.ts` + `xb-server-sign.ts` +
+  `rating-queries.ts`.
 
 ## Key Patterns
 
-- **Hooks 优先级**: 开发中需要常规 hooks（如 useDebounce、useLocalStorage、useWindowSize 等）时，先检查
-  `@reactuses/core` 是否提供，优先使用已有的，避免自行重复实现
-- **Host selectors** in `lib/weibo/content/host-selectors.ts` wait for Weibo DOM
-  elements before mounting
-- **Shell state** (`lib/weibo/content/shell-state.ts`) binds React app to
-  Weibo's existing DOM structure
-- **Page takeover** (`lib/weibo/content/page-takeover.ts`) marks pages as
-  handled
-- **Router sync** (`lib/weibo/route/router-sync.ts`) keeps extension in sync
-  with Weibo's navigation
-- **URL parsing** (`lib/weibo/route/parse-weibo-url.ts`) parses Weibo URLs into
-  page descriptors
-- **API bridge** (`lib/weibo/inject/install-api-bridge.ts`) injects API bridge
-  into page context
+- **Hooks**: Prefer `@reactuses/core` over reimplementing common hooks.
+- **Routing**: `parse-weibo-url.ts` → `page-descriptor.ts` (home, profile,
+  follows, favorites, liked, notifications, explore, history, topics).
+- **Mounting**: `host-selectors.ts` waits for DOM; `shell-state.ts` binds to
+  host; `page-takeover.ts` marks handled pages.
+- **API bridge**: `install-api-bridge.ts` in page context; **m.weibo.cn**
+  fallback for topic/search when desktop API is weak.
+- **Media**: `download-media.ts` + `jszip` for batch; **themes**:
+  `custom-theme.ts` → CSS variables via `shell-state.ts`.
 
-## Component Patterns
+## Code Patterns
 
-### Settings Dialog
+### Settings
 
-设置面板使用 Zustand store + Select/Switch 控件，通过 `useAppSettings`
-选择性订阅状态：
+`useAppSettings` 选择性订阅；开关与默认值以 `app-settings.ts` 为准。
 
 ```typescript
-const fontSizeClass = useAppSettings((s) => s.fontSizeClass)
-const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
+const fontSizeClass = useAppSettings(s => s.fontSizeClass)
+const setFontSizeClass = useAppSettings(s => s.setFontSizeClass)
 ```
 
 ### Mutations
 
-当使用 TanStack Query `useMutation`，通过 `invalidates` meta 刷新相关查询缓存：
+- 跨页面乐观更新 → `status-cache.ts`
+- 仅刷新查询 → mutation `meta.invalidates`
 
 ```typescript
 const followMutation = useMutation({
@@ -126,55 +112,31 @@ const followMutation = useMutation({
 })
 ```
 
-### Profile Components
+### Shared UI
 
-Profile 页面共享组件在 `lib/weibo/components/profile-shared.tsx`：
-
-- `ProfileBanner` - 横幅图片或备用背景
-- `ProfileMutualFollowers` - 共同关注者头像列表
-- `formatProfileCount` - 数字格式化（支持万为单位的中文格式，如 `1.2万`）
-
-### Font Settings
-
-字体系统由 `font-loader.ts` 和 `use-font-settings.ts` 组成，支持：
-
-- 预装字体（宋体、仿宋、黑体、楷体）
-- 可下载开源字体（霞鹜文楷、得意黑、朱雀仿宋、思源宋体、思源黑体、方正楷体、仓耳今楷）
-
-### Theme & Background
-
-应用支持三种主题模式（light / dark / system）和多种背景色预设，配置在
-`app-settings.ts`：
-
-- 亮色预设：纯白、纸张、护眼黄、浅灰
-- 暗色预设：深灰、纯黑、暗灰、暖黑
-
-组件通过 `useAppSettings` 读取 `appTheme` / `bgColorPreset` 应用样式。
-
-### Reply Chain Rendering
-
-转发链渲染通过 `app-settings.ts` 中的 `renderReplyChainEnabled` 配置控制：
-
-- 开启时：`//@ 用户名:` 渲染为引用样式（blockquote）
-- 关闭时：保持原文本格式
+- Profile 共享：`profile-shared.tsx`（`ProfileBanner`、`ProfileMutualFollowers`、`formatProfileCount`）
+- 产品范围与 UI 原则：见 `PRODUCT.md`、`DESIGN.md`；评分/env 见下文 Extension
+  Notes
 
 ## Testing
 
-- Vitest with `jsdom` environment
-- Setup file: `src/test/setup.ts` (imports jest-dom)
-- Test files: `*.test.ts` or `*.spec.ts` alongside source files
-- Component tests use `@testing-library/react`
+- Vitest + `jsdom`; setup: `src/test/setup.ts`
+- Tests: `*.test.ts` / `*.spec.ts` alongside source; components use
+  `@testing-library/react`
 
 ## Code Quality
 
-- **Linter**: oxlint (strict mode, TypeScript/React/unicorn plugins)
-- **Formatter**: oxfmt (semicolon: false, single quotes, sorted imports)
-- **TypeScript**: Extends `.wxt/tsconfig.json`
+- **Linter**: oxlint (strict, TS/React/unicorn)
+- **Formatter**: oxfmt (no semicolons, single quotes, sorted imports)
+- **TypeScript**: extends `.wxt/tsconfig.json`
 
 ## Browser Extension Notes
 
-- Manifest v3 (WXT default)
-- Permissions: `storage`
+- Manifest v3 (WXT)
+- Permissions: `storage`, `cookies`
 - Host permissions: `https://weibo.com/*`, `https://www.weibo.com/*`,
-  `https://*.sinaimg.cn/*`, `https://*.sinajs.cn/*`, `https://*.weibocdn.com/*`
-- Web accessible resource: `weibo-main-world.js` (injected at runtime)
+  `https://*.sinaimg.cn/*`, `https://*.sinajs.cn/*`, `https://*.weibocdn.com/*`,
+  `https://m.weibo.cn/*`, `https://xb-server.nnecec-3d5.workers.dev/*`
+- Web accessible resource: `weibo-main-world.js`
+- Rating build env: `XB_SIGN_SECRET` / `VITE_XB_SIGN_SECRET`; optional
+  `XB_SERVER_URL`

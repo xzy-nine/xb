@@ -32,15 +32,15 @@ experience — similar to X.
 xb is a chrome extension. Once installed, simply browse Weibo as usual and enjoy
 the beautifully redesigned interface.
 
-Visit [Landing Page](https://xb-extension.vercel.app/) for more.
+👉 Screenshots and more: [xb website](https://xb-extension.vercel.app/)
 
 ## Install
 
-[Chrome Web Store](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
-
-[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb)
-
-[Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla)
+| Browser | Link                                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------------------- |
+| Chrome  | [Chrome Web Store](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)      |
+| Firefox | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb/)                                 |
+| Edge    | [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla) |
 
 ## Features
 
