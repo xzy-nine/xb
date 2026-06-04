@@ -1,4 +1,5 @@
 import type { CustomThemePreset } from '@/lib/app-settings'
+import { TWEAKCN_THEME_PRESETS } from '@/lib/tweakcn-theme-presets'
 
 export interface CustomThemePresetDef {
   key: CustomThemePreset
@@ -237,48 +238,6 @@ export const CUSTOM_THEME_PRESETS: CustomThemePresetDef[] = [
 --ring: #3ecf8e;`,
   },
   {
-    key: 'mono',
-    name: 'Mono',
-    description: '克制的单色阅读主题',
-    lightCss: `--radius: 0.25rem;
---background: #fafafa;
---foreground: #18181b;
---card: #ffffff;
---card-foreground: #18181b;
---popover: #ffffff;
---popover-foreground: #18181b;
---primary: #27272a;
---primary-foreground: #fafafa;
---secondary: #f4f4f5;
---secondary-foreground: #27272a;
---muted: #f4f4f5;
---muted-foreground: #71717a;
---accent: #e4e4e7;
---accent-foreground: #18181b;
---destructive: #dc2626;
---border: #e4e4e7;
---input: #d4d4d8;
---ring: #71717a;`,
-    darkCss: `--background: #09090b;
---foreground: #fafafa;
---card: #18181b;
---card-foreground: #fafafa;
---popover: #18181b;
---popover-foreground: #fafafa;
---primary: #fafafa;
---primary-foreground: #18181b;
---secondary: #27272a;
---secondary-foreground: #fafafa;
---muted: #27272a;
---muted-foreground: #a1a1aa;
---accent: #3f3f46;
---accent-foreground: #fafafa;
---destructive: #f87171;
---border: #27272a;
---input: #3f3f46;
---ring: #a1a1aa;`,
-  },
-  {
     key: 'modern',
     name: 'Modern',
     description: '明亮蓝色强调的现代主题',
@@ -427,10 +386,70 @@ export const CUSTOM_THEME_PRESETS: CustomThemePresetDef[] = [
 --input: #51443a;
 --ring: #e09b78;`,
   },
+  ...TWEAKCN_THEME_PRESETS,
 ]
 
 function cleanValue(value: string) {
   return value.replace(/!important/g, '').trim()
+}
+
+export interface ThemePreviewColors {
+  background: string
+  foreground: string
+  card: string
+  primary: string
+  secondary: string
+  accent: string
+  destructive: string
+  muted: string
+  border: string
+}
+
+export interface ThemePreviewSwatches {
+  light: [string, string, string, string]
+  dark: [string, string, string, string]
+}
+
+function readPreviewColor(variables: Record<string, string>, key: string, fallback: string) {
+  return variables[key] ?? fallback
+}
+
+export function getThemePreviewColors(css: string): ThemePreviewColors {
+  const variables = parseCustomThemeVariables(css)
+  const background = readPreviewColor(variables, '--background', '#ffffff')
+  const foreground = readPreviewColor(variables, '--foreground', '#333333')
+  const card = readPreviewColor(variables, '--card', background)
+  const primary = readPreviewColor(variables, '--primary', '#666666')
+  const secondary = readPreviewColor(variables, '--secondary', '#eeeeee')
+  const accent = readPreviewColor(variables, '--accent', primary)
+  const destructive = readPreviewColor(variables, '--destructive', '#ef4444')
+  const muted = readPreviewColor(variables, '--muted', secondary)
+  const border = readPreviewColor(variables, '--border', '#e5e5e5')
+
+  return {
+    background,
+    foreground,
+    card,
+    primary,
+    secondary,
+    accent,
+    destructive,
+    muted,
+    border,
+  }
+}
+
+function pickPreviewSwatches(css: string): [string, string, string, string] {
+  const colors = getThemePreviewColors(css)
+
+  return [colors.background, colors.foreground, colors.primary, colors.muted]
+}
+
+export function getThemePreviewSwatches(lightCss: string, darkCss: string): ThemePreviewSwatches {
+  return {
+    light: pickPreviewSwatches(lightCss),
+    dark: pickPreviewSwatches(darkCss),
+  }
 }
 
 export function parseCustomThemeVariables(css: string): Record<string, string> {

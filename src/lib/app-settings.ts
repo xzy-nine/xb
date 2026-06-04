@@ -100,9 +100,14 @@ export type CustomThemePreset =
   | 'vercel'
   | 'twitter'
   | 'supabase'
-  | 'mono'
   | 'modern'
   | 'claude'
+  | 'amethyst-haze'
+  | 'bubblegum'
+  | 'caffeine'
+  | 'candyland'
+  | 'claymorphism'
+  | 'nature'
 
 export interface UserTheme {
   id: string
@@ -181,6 +186,7 @@ export interface AppSettings {
   feedToolbarButtonIds: FeedToolbarButtonId[]
   browsingHistoryLimit: BrowsingHistoryLimit
   xbTopicPage: boolean
+  ratingEnabled: boolean
   forceRedirectToFollowing?: boolean
   firstLoadRedirect: HomeTab
   homeTab: HomeTab
@@ -190,6 +196,7 @@ export interface AppSettings {
   selectedThemeType: SelectedThemeType
   selectedThemeId: string
   userThemes: UserTheme[]
+  followGroupsEnabled: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -260,6 +267,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   feedToolbarButtonIds: [],
   browsingHistoryLimit: 200,
   xbTopicPage: true,
+  ratingEnabled: true,
   forceRedirectToFollowing: false,
   firstLoadRedirect: 'for-you',
   homeTab: 'for-you',
@@ -269,6 +277,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   selectedThemeType: 'preset',
   selectedThemeId: 'default',
   userThemes: [],
+  followGroupsEnabled: true,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -277,6 +286,18 @@ function isAppTheme(value: unknown): value is AppTheme {
 
 function isFontFamilyClass(value: unknown): value is FontFamilyClass {
   return FONT_FAMILY_CLASSES.includes(value as FontFamilyClass)
+}
+
+function normalizeFontFamilyClass(value: unknown): FontFamilyClass {
+  if (value === 'font-lxgw-neo-xihei') {
+    return 'font-lxgw-marker-gothic'
+  }
+
+  if (value === 'font-sarasa-gothic' || value === 'font-ibm-plex-sans-sc') {
+    return DEFAULT_APP_SETTINGS.fontFamilyClass
+  }
+
+  return isFontFamilyClass(value) ? value : DEFAULT_APP_SETTINGS.fontFamilyClass
 }
 
 function isHotSearchType(value: unknown): value is HotSearchType {
@@ -421,15 +442,24 @@ function isCustomThemePreset(value: unknown): value is CustomThemePreset {
     value === 'vercel' ||
     value === 'twitter' ||
     value === 'supabase' ||
-    value === 'mono' ||
     value === 'modern' ||
-    value === 'claude'
+    value === 'claude' ||
+    value === 'amethyst-haze' ||
+    value === 'bubblegum' ||
+    value === 'caffeine' ||
+    value === 'candyland' ||
+    value === 'claymorphism' ||
+    value === 'nature'
   )
 }
 
 function normalizeCustomThemePreset(value: unknown): CustomThemePreset {
   if (value === 'modern-minimal') {
     return 'modern'
+  }
+
+  if (value === 'mono') {
+    return 'default'
   }
 
   return isCustomThemePreset(value) ? value : 'default'
@@ -464,9 +494,7 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     lineHeightClass: isLineHeightClass(candidate.lineHeightClass)
       ? candidate.lineHeightClass
       : DEFAULT_APP_SETTINGS.lineHeightClass,
-    fontFamilyClass: isFontFamilyClass(candidate.fontFamilyClass)
-      ? candidate.fontFamilyClass
-      : DEFAULT_APP_SETTINGS.fontFamilyClass,
+    fontFamilyClass: normalizeFontFamilyClass(candidate.fontFamilyClass),
     showExplore:
       typeof candidate.showExplore === 'boolean'
         ? candidate.showExplore
@@ -618,6 +646,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.xbTopicPage === 'boolean'
         ? candidate.xbTopicPage
         : DEFAULT_APP_SETTINGS.xbTopicPage,
+    ratingEnabled:
+      typeof candidate.ratingEnabled === 'boolean'
+        ? candidate.ratingEnabled
+        : DEFAULT_APP_SETTINGS.ratingEnabled,
     forceRedirectToFollowing:
       typeof candidate.forceRedirectToFollowing === 'boolean'
         ? candidate.forceRedirectToFollowing
@@ -645,7 +677,9 @@ export function normalizeAppSettings(value: unknown): AppSettings {
         : DEFAULT_APP_SETTINGS.selectedThemeType,
     selectedThemeId:
       typeof candidate.selectedThemeId === 'string' && candidate.selectedThemeId.length > 0
-        ? candidate.selectedThemeId
+        ? candidate.selectedThemeId === 'mono'
+          ? 'default'
+          : candidate.selectedThemeId
         : typeof (candidate as Record<string, unknown>).customThemePreset === 'string'
           ? normalizeCustomThemePreset((candidate as Record<string, unknown>).customThemePreset)
           : DEFAULT_APP_SETTINGS.selectedThemeId,
@@ -658,6 +692,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
             typeof (t as UserTheme).name === 'string',
         )
       : DEFAULT_APP_SETTINGS.userThemes,
+    followGroupsEnabled:
+      typeof candidate.followGroupsEnabled === 'boolean'
+        ? candidate.followGroupsEnabled
+        : DEFAULT_APP_SETTINGS.followGroupsEnabled,
   }
 }
 

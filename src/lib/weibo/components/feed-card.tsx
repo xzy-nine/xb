@@ -36,6 +36,7 @@ import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expanded'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
+import { RatingSummaryBadge } from '@/lib/weibo/components/rating-panel'
 import { StatusText } from '@/lib/weibo/components/status-text'
 import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
@@ -153,6 +154,7 @@ type ProfileLookup = { uid: string } | { screenName: string }
 function FeedAuthorHeader({
   item,
   onNavigateProfile,
+  trailing,
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
   trailing?: ReactNode
@@ -193,6 +195,14 @@ function FeedAuthorHeader({
                 </button>
               </UserHoverCard>
               <CreatedAtBadge label={item.createdAtLabel} />
+              {trailing ? (
+                <div
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  {trailing}
+                </div>
+              ) : null}
             </div>
             <CardDescription className="text-xs">
               {item.source ? `${item.source}` : ''} {item.regionName ? `${item.regionName}` : ''}
@@ -734,13 +744,15 @@ export const FeedCard = memo(function FeedCard({
   className?: string
   uniformHeight?: boolean
 }) {
-  const { feedInteractionMode, feedPrimaryActionOrder, feedToolbarButtonIds } = useAppSettings(
-    useShallow((s) => ({
-      feedInteractionMode: s.feedInteractionMode,
-      feedPrimaryActionOrder: s.feedPrimaryActionOrder,
-      feedToolbarButtonIds: s.feedToolbarButtonIds,
-    })),
-  )
+  const { feedInteractionMode, feedPrimaryActionOrder, feedToolbarButtonIds, ratingEnabled } =
+    useAppSettings(
+      useShallow((s) => ({
+        feedInteractionMode: s.feedInteractionMode,
+        feedPrimaryActionOrder: s.feedPrimaryActionOrder,
+        feedToolbarButtonIds: s.feedToolbarButtonIds,
+        ratingEnabled: s.ratingEnabled,
+      })),
+    )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
@@ -967,7 +979,9 @@ export const FeedCard = memo(function FeedCard({
           onNavigateTopic={onNavigateTopic}
           onLikeClick={(target) => likeMutation.mutate(target)}
           likePendingForId={likePendingId}
-          xLayoutEnabled={xLayoutEnabled}
+          feedInteractionMode={feedInteractionMode}
+          primaryActionOrder={feedPrimaryActionOrder}
+          toolbarButtonIds={feedToolbarButtonIds}
           onFavorite={(target) => favoriteMutation.mutate(target)}
           favoritePendingForId={favoriteMutation.isPending ? resolvedItem.retweetedStatus.id : null}
         />
@@ -1007,56 +1021,32 @@ export const FeedCard = memo(function FeedCard({
       ) : null}
       {uniformHeight ? (
         <div className="flex min-h-0 flex-1 flex-col gap-4 px-0">
-          <FeedAuthorHeader item={resolvedItem} onNavigateProfile={onNavigateProfile} />
+          <FeedAuthorHeader
+            item={resolvedItem}
+            onNavigateProfile={onNavigateProfile}
+            trailing={
+              ratingEnabled ? (
+                <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" />
+              ) : null
+            }
+          />
           {cardContentElement}
           <div className="flex-1" />
         </div>
       ) : (
         <>
-          <FeedAuthorHeader item={resolvedItem} onNavigateProfile={onNavigateProfile} />
+          <FeedAuthorHeader
+            item={resolvedItem}
+            onNavigateProfile={onNavigateProfile}
+            trailing={
+              ratingEnabled ? (
+                <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" />
+              ) : null
+            }
+          />
           {cardContentElement}
         </>
       )}
-      <CardContent
-        className="flex flex-col gap-4"
-        onMouseDown={handleCardMouseDown}
-        onMouseUp={handleCardMouseUp}
-      >
-        <FeedTextBlock
-          item={resolvedItem}
-          canLoadLongText={shouldShowLoadLongText}
-          isLongTextLoading={isLongTextLoading}
-          hasLongTextError={hasLongTextError}
-          onLoadLongText={onLoadLongText}
-        />
-
-        <FeedMediaBlock item={resolvedItem} />
-
-        <ImageCarousel
-          images={resolvedItem.images}
-          mixMediaItems={resolvedItem.mixMediaInfo}
-          downloadFilename={getMediaDownloadFilename(resolvedItem)}
-          onOpen={addEntry}
-        />
-
-        {resolvedItem.retweetedStatus ? (
-          <RetweetedFeedBlock
-            item={resolvedItem.retweetedStatus}
-            onNavigate={onNavigate}
-            onCommentClick={onCommentClick}
-            onRepostClick={onRepostClick}
-            onLikeClick={(target) => likeMutation.mutate(target)}
-            likePendingForId={likePendingId}
-            feedInteractionMode={feedInteractionMode}
-            primaryActionOrder={feedPrimaryActionOrder}
-            toolbarButtonIds={feedToolbarButtonIds}
-            onFavorite={(target) => favoriteMutation.mutate(target)}
-            favoritePendingForId={
-              favoriteMutation.isPending ? resolvedItem.retweetedStatus.id : null
-            }
-          />
-        ) : null}
-      </CardContent>
       <CardFooter>
         <FeedActions
           item={resolvedItem}

@@ -24,7 +24,7 @@
 [![WXT](https://img.shields.io/badge/WXT-0.20-000000)](https://wxt.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
-![preview](./assets/xb_0.26.0.jpeg)
+![preview](./assets/xb_1.9.0.webp)
 
 xb strips away the noise and gives you a focused, distraction-free reading
 experience — similar to X.

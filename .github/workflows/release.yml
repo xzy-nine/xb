@@ -123,7 +123,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ needs.release.outputs.release_git_tag }}" \
-            .output/xb-*.zip --clobber
+            .output/*-chrome.zip \
+            .output/*-edge.zip \
+            .output/*-firefox.zip \
+            --clobber
 
       - name: Submit to stores
         env:

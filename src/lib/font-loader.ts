@@ -29,6 +29,14 @@ const REMOTE_FONTS: Record<RemoteFontFamily, { url: string; family: string }> = 
     url: 'https://cdn.hycqwq.top/font/CangErJinKai-05-W04.ttf',
     family: 'CangErJinKai05',
   },
+  'font-lxgw-marker-gothic': {
+    url: 'https://cdn.jsdelivr.net/fontsource/fonts/lxgw-marker-gothic@latest/latin-400-normal.woff2',
+    family: 'LXGW Marker Gothic',
+  },
+  'font-lxgw-neo-zhisong': {
+    url: 'https://cdn.jsdelivr.net/npm/lxgw-neo-zhisong-webfont@1.0.0/fonts/LXGWNeoZhiSong.woff2',
+    family: 'LXGW Neo ZhiSong',
+  },
 }
 
 const LOADED_FONTS_KEY = 'xb:loaded-fonts'
@@ -143,6 +151,8 @@ const remoteFonts = [
   'font-source-han-sans',
   'font-fz-kai',
   'font-canger-jinkai',
+  'font-lxgw-marker-gothic',
+  'font-lxgw-neo-zhisong',
 ] as const
 // 可下载开源字体
 export type RemoteFontFamily = (typeof remoteFonts)[number]
