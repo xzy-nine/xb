@@ -308,20 +308,41 @@ function FeedTextBlock({
       <StatusText item={item} text={item.text} mode={resolvedTextMode} />
 
       {canLoadLongText ? (
-        <Button
-          className="inline-flex"
-          size="xs"
-          variant="secondary"
+        <LongTextButton
           onClick={(event) => {
             event.stopPropagation()
             onLoadLongText()
           }}
-          disabled={isLongTextLoading}
-        >
-          {isLongTextLoading ? '加载中...' : hasLongTextError ? '重试全文' : '全文'}
-        </Button>
+          isLoading={isLongTextLoading}
+          hasError={hasLongTextError}
+        />
       ) : null}
     </div>
+  )
+}
+
+function LongTextButton({
+  onClick,
+  isLoading,
+  hasError,
+}: {
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void
+  isLoading: boolean
+  hasError: boolean
+}) {
+  const label = isLoading ? '加载全文' : hasError ? '重试全文' : '阅读全文'
+
+  return (
+    <Button
+      type="button"
+      variant={hasError ? 'destructive' : 'secondary'}
+      className={cn(isLoading && 'cursor-wait')}
+      onClick={onClick}
+      disabled={isLoading}
+      aria-busy={isLoading}
+    >
+      {label}
+    </Button>
   )
 }
 
@@ -946,7 +967,9 @@ export const FeedCard = memo(function FeedCard({
       <FeedAuthorHeader
         item={resolvedItem}
         trailing={
-          ratingEnabled ? <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" /> : null
+          ratingEnabled ? (
+            <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" useBatchCache />
+          ) : null
         }
       />
       <CardContent

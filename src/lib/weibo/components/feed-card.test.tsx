@@ -146,7 +146,7 @@ describe('FeedCard', () => {
 
     renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: '全文' }))
+    fireEvent.click(screen.getByRole('button', { name: '阅读全文' }))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: '重试全文' })).toBeInTheDocument()
@@ -197,7 +197,7 @@ describe('FeedCard', () => {
 
     renderCard()
 
-    fireEvent.click(screen.getByRole('button', { name: '全文' }))
+    fireEvent.click(screen.getByRole('button', { name: '阅读全文' }))
 
     await waitFor(() => {
       expect(screen.getByRole('link', { name: '#话题#' })).toHaveAttribute(
@@ -254,7 +254,7 @@ describe('FeedCard', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Preview' })).toBeInTheDocument()
     expect(screen.getByText('truncated').tagName.toLowerCase()).toBe('strong')
 
-    fireEvent.click(screen.getByRole('button', { name: '全文' }))
+    fireEvent.click(screen.getByRole('button', { name: '阅读全文' }))
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 1, name: 'Full' })).toBeInTheDocument()
