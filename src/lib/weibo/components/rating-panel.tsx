@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   myUserRatingQueryOptions,
   useRateUser,
+  userRatingCacheOnlyQueryOptions,
   userRatingQueryOptions,
 } from '@/lib/weibo/queries/rating-queries'
 
@@ -15,6 +16,8 @@ export interface RatingSummaryBadgeProps {
   targetUid: string
   size?: 'sm' | 'md'
   className?: string
+  /** When true, only read batch-seeded cache (for feed cards). */
+  useBatchCache?: boolean
 }
 
 export interface RatingPanelProps {
@@ -45,9 +48,16 @@ function getRatingSizes(size: 'sm' | 'md') {
 }
 
 /** Read-only average rating for feed cards (batch summary cache). */
-export function RatingSummaryBadge({ targetUid, size = 'sm', className }: RatingSummaryBadgeProps) {
+export function RatingSummaryBadge({
+  targetUid,
+  size = 'sm',
+  className,
+  useBatchCache = false,
+}: RatingSummaryBadgeProps) {
   const summaryQuery = useQuery({
-    ...userRatingQueryOptions(targetUid),
+    ...(useBatchCache
+      ? userRatingCacheOnlyQueryOptions(targetUid)
+      : userRatingQueryOptions(targetUid)),
   })
 
   const sizes = getRatingSizes(size)

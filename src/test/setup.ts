@@ -1,3 +1,4 @@
+import { notifyManager } from '@tanstack/query-core'
 import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 
@@ -11,6 +12,10 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
   writable: true,
   configurable: true,
   value: ResizeObserverStub,
+})
+
+notifyManager.setScheduler((run) => {
+  run()
 })
 
 Object.defineProperty(window, 'matchMedia', {

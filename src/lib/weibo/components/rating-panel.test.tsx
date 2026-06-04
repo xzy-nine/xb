@@ -8,6 +8,7 @@ import {
   RatingSummaryBadge,
   ratingScoreToDisplayStars,
 } from '@/lib/weibo/components/rating-panel'
+import { userRatingQueryKey } from '@/lib/weibo/queries/rating-queries'
 import {
   getMyUserRating,
   getUserRatingSummary,
@@ -24,14 +25,15 @@ vi.mock('@/lib/weibo/services/xb-server-client', () => ({
   rateUser: vi.fn(async () => ({ ok: true })),
 }))
 
-function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient({
+function renderWithClient(
+  ui: ReactElement,
+  queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
-  })
-
+  }),
+) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
@@ -91,6 +93,26 @@ describe('RatingSummaryBadge', () => {
     expect(await screen.findByText('8.2')).toBeInTheDocument()
     expect(screen.queryByText('我评')).not.toBeInTheDocument()
     expect(vi.mocked(getUserRatingSummary)).toHaveBeenCalledWith('1001')
+    expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
+  })
+
+  it('reads batch-seeded cache without calling the single-user API', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+    queryClient.setQueryData(userRatingQueryKey('1001'), {
+      avg: 7.5,
+      count: 2,
+      distribution: {},
+    })
+
+    renderWithClient(<RatingSummaryBadge targetUid="1001" useBatchCache />, queryClient)
+
+    expect(await screen.findByText('7.5')).toBeInTheDocument()
+    expect(vi.mocked(getUserRatingSummary)).not.toHaveBeenCalled()
     expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
   })
 })

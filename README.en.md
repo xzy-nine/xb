@@ -1,8 +1,21 @@
-# xb
+<table>
+  <tr>
+    <td width="128" align="center" valign="middle">
+      <img src="./public/icon/rounded_image.png" alt="xb" width="96" />
+    </td>
+    <td valign="middle">
+      <h1 style="margin: 0 0 0.25em">xb</h1>
+      <p style="margin: 0 0 0.35em; font-size: 1.15em"><strong>Redesign Weibo</strong></p>
+      <p style="margin: 0; opacity: 0.85">like X but even better.</p>
+    </td>
+  </tr>
+</table>
 
-🥷 xb - Redesign Weibo, like X but even better.
-
-[中文](./README.md)
+<p align="right">
+  <a href="./README.md">中文</a>
+  ·
+  <a href="https://xb-extension.vercel.app/">Website</a>
+</p>
 
 [![CI](https://github.com/nnecec/xb/actions/workflows/test.yml/badge.svg)](https://github.com/nnecec/xb/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/nnecec/xb)](https://github.com/nnecec/xb/blob/main/LICENSE)
@@ -24,6 +37,8 @@
 [![WXT](https://img.shields.io/badge/WXT-0.20-000000)](https://wxt.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
+---
+
 ![preview](./assets/xb_1.9.0.webp)
 
 xb strips away the noise and gives you a focused, distraction-free reading
@@ -32,15 +47,15 @@ experience — similar to X.
 xb is a chrome extension. Once installed, simply browse Weibo as usual and enjoy
 the beautifully redesigned interface.
 
-Visit [Landing Page](https://xb-extension.vercel.app/) for more.
+👉 Screenshots and more: [xb website](https://xb-extension.vercel.app/)
 
 ## Install
 
-[Chrome Web Store](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)
-
-[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb)
-
-[Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla)
+| Browser | Link                                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------------------- |
+| Chrome  | [Chrome Web Store](https://chromewebstore.google.com/detail/xb/ffhppkcianllofhhjohbfbobjfppbeao)      |
+| Firefox | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/xb/)                                 |
+| Edge    | [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/xb/mojlbnkiahdmnfaffmelfcefohpfjjla) |
 
 ## Features
 
