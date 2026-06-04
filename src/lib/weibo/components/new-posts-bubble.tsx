@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUp } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useState } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
