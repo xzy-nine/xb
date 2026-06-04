@@ -54,6 +54,9 @@ export function CommentBox({
         void queryClient.invalidateQueries({
           queryKey: ['weibo', 'feed-comments', target.statusId],
         })
+        void queryClient.invalidateQueries({
+          queryKey: ['weibo', 'nested-comments'],
+        })
       }
       onSubmitSuccess?.()
     },

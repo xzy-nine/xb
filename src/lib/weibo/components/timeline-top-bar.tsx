@@ -1,4 +1,4 @@
-import { Check, ChevronDown, RefreshCw } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import { cn } from '@/lib/utils'
 
 export interface TimelineTopBarOption {
@@ -120,7 +121,7 @@ export function TimelineTopBar({
               onClick={onRefresh}
               disabled={isRefreshing}
             >
-              <RefreshCw className={cn('size-3', isRefreshing && 'animate-spin')} />
+              <RefreshCWIcon className={cn('size-3', isRefreshing && 'animate-spin')} />
             </Button>
           ) : null}
         </div>

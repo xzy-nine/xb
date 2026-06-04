@@ -190,4 +190,33 @@ describe('status-cache', () => {
     expect(comments?.pages[0]?.items[0]?.comments[0]?.liked).toBe(true)
     expect(comments?.pages[0]?.items[0]?.comments[0]?.likeCount).toBe(5)
   })
+
+  it('toggles comment like in feed and nested comment item caches', async () => {
+    const queryClient = new QueryClient()
+    const child = createCommentItem({ id: 'child', likeCount: 4, liked: false })
+    const parent = createCommentItem({ id: 'parent', comments: [child] })
+    queryClient.setQueryData(['weibo', 'feed-comments', 'status-1'], {
+      items: [parent],
+      totalNumber: 1,
+    })
+    queryClient.setQueryData(['weibo', 'nested-comments', 'parent'], {
+      items: [child],
+      nextCursor: null,
+    })
+
+    await optimisticallyToggleCommentLike(queryClient, child)
+
+    const feedComments = queryClient.getQueryData<{
+      items: CommentItem[]
+      totalNumber: number
+    }>(['weibo', 'feed-comments', 'status-1'])
+    const nestedComments = queryClient.getQueryData<{
+      items: CommentItem[]
+      nextCursor: string | null
+    }>(['weibo', 'nested-comments', 'parent'])
+    expect(feedComments?.items[0]?.comments[0]?.liked).toBe(true)
+    expect(feedComments?.items[0]?.comments[0]?.likeCount).toBe(5)
+    expect(nestedComments?.items[0]?.liked).toBe(true)
+    expect(nestedComments?.items[0]?.likeCount).toBe(5)
+  })
 })

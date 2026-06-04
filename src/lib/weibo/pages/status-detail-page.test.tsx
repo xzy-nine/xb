@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -60,6 +60,21 @@ import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-set
 import { StatusDetailPage } from '@/lib/weibo/pages/status-detail-page'
 import { loadStatusComments, loadStatusDetail } from '@/lib/weibo/services/weibo-repository'
 
+class TestIntersectionObserver {
+  static instances: TestIntersectionObserver[] = []
+  readonly callback: IntersectionObserverCallback
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback
+    TestIntersectionObserver.instances.push(this)
+  }
+
+  observe = vi.fn()
+  disconnect = vi.fn()
+  unobserve = vi.fn()
+  takeRecords = vi.fn(() => [])
+}
+
 describe('StatusDetailPage', () => {
   afterEach(() => {
     cleanup()
@@ -67,6 +82,8 @@ describe('StatusDetailPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    TestIntersectionObserver.instances = []
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver)
     Object.defineProperty(globalThis, 'browser', {
       writable: true,
       value: {
@@ -189,6 +206,34 @@ describe('StatusDetailPage', () => {
     expect(await screen.findByText('reply')).toBeInTheDocument()
     expect(await screen.findByText('nested reply')).toBeInTheDocument()
     expect(await screen.findByText('third level reply')).toBeInTheDocument()
+  })
+
+  it('shows the status summary in the top bar only after the status leaves view', async () => {
+    const queryClient = new QueryClient()
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/1/501']}>
+          <StatusDetailPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByRole('heading', { name: '微博正文' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Alice' })).not.toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(TestIntersectionObserver.instances).toHaveLength(1)
+    })
+
+    act(() => {
+      TestIntersectionObserver.instances[0]?.callback(
+        [{ isIntersecting: false } as IntersectionObserverEntry],
+        TestIntersectionObserver.instances[0] as unknown as IntersectionObserver,
+      )
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Alice' })).toBeInTheDocument()
+    expect(screen.getByText('today · main post')).toBeInTheDocument()
   })
 
   it('supports reply/repost for status and reply entry for nested comments', async () => {

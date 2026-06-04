@@ -11,6 +11,10 @@ type InfinitePagesData<PageItem> = {
   pages: Array<{ items: PageItem[] }>
 }
 
+type ItemsData<Item> = {
+  items: Item[]
+}
+
 function snapshotWeiboQueries(queryClient: QueryClient): StatusCacheMutationContext {
   return {
     previousItems: queryClient.getQueriesData({ queryKey: ['weibo'] }),
@@ -40,6 +44,10 @@ function hasInfinitePages<Item>(value: unknown): value is InfinitePagesData<Item
     Array.isArray(value.pages) &&
     value.pages.every((page) => isObject(page) && Array.isArray(page.items))
   )
+}
+
+function hasItems<Item>(value: unknown): value is ItemsData<Item> {
+  return isObject(value) && Array.isArray(value.items)
 }
 
 function isFeedItem(value: unknown): value is FeedItem {
@@ -241,26 +249,35 @@ export async function optimisticallyToggleCommentLike(
 ): Promise<StatusCacheMutationContext> {
   const context = await prepareMutation(queryClient)
 
+  const updateComment = (comment: CommentItem) => ({
+    ...comment,
+    liked: !comment.liked,
+    likeCount: comment.likeCount + (comment.liked ? -1 : 1),
+  })
+
   queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-    if (!hasInfinitePages<unknown>(old)) {
-      return old
+    if (hasInfinitePages<unknown>(old)) {
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          items: page.items.map((item) =>
+            isCommentItem(item) ? updateCommentInTree(item, target.id, updateComment) : item,
+          ),
+        })),
+      }
     }
 
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        items: page.items.map((item) =>
-          isCommentItem(item)
-            ? updateCommentInTree(item, target.id, (comment) => ({
-                ...comment,
-                liked: !comment.liked,
-                likeCount: comment.likeCount + (comment.liked ? -1 : 1),
-              }))
-            : item,
+    if (hasItems<unknown>(old)) {
+      return {
+        ...old,
+        items: old.items.map((item) =>
+          isCommentItem(item) ? updateCommentInTree(item, target.id, updateComment) : item,
         ),
-      })),
+      }
     }
+
+    return old
   })
 
   return context
