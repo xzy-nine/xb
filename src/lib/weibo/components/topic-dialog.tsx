@@ -28,7 +28,6 @@ interface TopicDialogProps {
   topic: string | null
   position: string
   width?: number
-  zIndex?: number
   onOpenChange: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
   onNavigate: (item: StatusDetailNavigationItem) => void
@@ -88,7 +87,6 @@ export function TopicDialog({
   topic,
   position,
   width,
-  zIndex,
   onOpenChange,
   setComposeTarget,
   onNavigate,
@@ -160,7 +158,6 @@ export function TopicDialog({
       open={open}
       position={position as any}
       width={width}
-      zIndex={zIndex}
       onOpenChange={onOpenChange}
     >
       <div className="flex flex-col gap-3">

@@ -18,17 +18,14 @@ import { publishWeiboStatus } from '@/lib/weibo/services/weibo-repository'
 
 interface ComposeDialogProps {
   open: boolean
-  zIndex?: number
   onOpenChange: (open: boolean) => void
 }
 
-export function ComposeDialog({ open, zIndex, onOpenChange }: ComposeDialogProps) {
+export function ComposeDialog({ open, onOpenChange }: ComposeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-xl"
-        style={{ zIndex }}
-        overlayStyle={{ zIndex }}
         onOpenAutoFocus={(e) => {
           e.preventDefault()
         }}

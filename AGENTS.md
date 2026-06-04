@@ -91,8 +91,8 @@ src/
 `useAppSettings` 选择性订阅；开关与默认值以 `app-settings.ts` 为准。
 
 ```typescript
-const fontSizeClass = useAppSettings(s => s.fontSizeClass)
-const setFontSizeClass = useAppSettings(s => s.setFontSizeClass)
+const fontSizeClass = useAppSettings((s) => s.fontSizeClass)
+const setFontSizeClass = useAppSettings((s) => s.setFontSizeClass)
 ```
 
 ### Mutations（变更）

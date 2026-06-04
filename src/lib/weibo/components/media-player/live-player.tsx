@@ -40,6 +40,7 @@ import { createPortal } from 'react-dom'
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 import {
   applyStoredVideoVolume,
@@ -136,6 +137,7 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
   const pendingPlaybackRef = useRef<{ currentTime: number; shouldResume: boolean } | null>(null)
 
   const portalTarget = useMemo(() => getUiPortalContainer(), [])
+  const fullscreenZIndex = useMemo(() => getNextZIndex(), [])
 
   const isLive = liveStatus === 1
   const isReplay = liveStatus === 3
@@ -407,7 +409,10 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
       <Player.Provider>
         {inlineFullscreen && portalTarget
           ? createPortal(
-              <div className="bg-background fixed inset-0 z-[2147483647] flex items-center justify-center">
+              <div
+                className="bg-background fixed inset-0 flex items-center justify-center"
+                style={{ zIndex: fullscreenZIndex }}
+              >
                 <Player.Container
                   key="live-player-fullscreen"
                   className="media-default-skin media-default-skin--video h-full w-full overflow-hidden"

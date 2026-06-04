@@ -34,7 +34,6 @@ import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
 export function StatusCommentsSection({
   statusId,
   authorId,
-  zIndex,
   authorName,
   statusText,
   commentsCount,
@@ -42,7 +41,6 @@ export function StatusCommentsSection({
 }: {
   statusId: string
   authorId: string
-  zIndex?: number
   authorName: string
   statusText: string
   commentsCount: number
@@ -59,10 +57,7 @@ export function StatusCommentsSection({
   const errorMessage = commentsQuery.error instanceof Error ? commentsQuery.error.message : null
 
   return (
-    <section
-      className="bg-card/70 border-border/55 rounded-xl border shadow-[0_1px_2px_rgb(0_0_0/0.04)]"
-      style={zIndex !== undefined ? { zIndex } : undefined}
-    >
+    <section className="bg-card/70 border-border/55 rounded-xl border shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
       <div className="border-border/60 flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="min-w-0">

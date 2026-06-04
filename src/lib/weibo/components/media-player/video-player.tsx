@@ -55,6 +55,7 @@ import { toast } from 'sonner'
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
 import { getPlaybackPositionStore } from './video-playback-position-store'
@@ -411,6 +412,8 @@ export function VideoPlayer({
   qualityRef.current = qualityId
 
   const portalTarget = useMemo(() => getUiPortalContainer(), [])
+
+  const fullscreenZIndex = useMemo(() => getNextZIndex(), [])
 
   const qualities: QualityOption[] =
     dash?.type === 'mpd'
@@ -999,7 +1002,10 @@ export function VideoPlayer({
     <PlayerProvider>
       {inlineFullscreen && portalTarget
         ? createPortal(
-            <div className="bg-background fixed inset-0 z-[2147483647] flex items-center justify-center">
+            <div
+              className="bg-background fixed inset-0 flex items-center justify-center"
+              style={{ zIndex: fullscreenZIndex }}
+            >
               {playerContainer}
             </div>,
             portalTarget,

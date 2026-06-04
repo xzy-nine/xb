@@ -1,5 +1,5 @@
 import { PlayIcon, SquarePlay } from 'lucide-react'
-import React, { memo } from 'react'
+import React, { memo, useMemo } from 'react'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
 import type { PhotoRenderParams } from 'react-photo-view/dist/types'
 
@@ -178,7 +178,7 @@ export const ImageCarousel = memo(function ImageCarousel({
   downloadFilename,
   onOpen,
 }: ImageCarouselProps) {
-  const container = React.useMemo(() => getUiPortalContainer(), [])
+  const container = useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
 
   const gridItems = React.useMemo<GridItem[]>(() => {

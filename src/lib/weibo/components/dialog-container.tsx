@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import type { StatusDetailPopupPosition } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 interface DialogContainerProps {
   open: boolean
@@ -29,6 +30,7 @@ export function DialogContainer({
 
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
+  const resolvedZIndex = zIndex ?? getNextZIndex()
 
   const glassPanelStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -69,7 +71,7 @@ export function DialogContainer({
   )
 
   return (
-    <div className="fixed inset-0 flex" style={{ zIndex: zIndex ?? 40 }}>
+    <div className="fixed inset-0 flex" style={{ zIndex: resolvedZIndex }}>
       <div
         className="absolute inset-0 bg-black/50"
         style={glassOverlayStyle}

@@ -41,12 +41,10 @@ function getModalCopy(target: ComposeTarget) {
 export function CommentModal({
   open,
   target,
-  zIndex,
   onOpenChange,
 }: {
   open: boolean
   target: ComposeTarget | null
-  zIndex?: number
   onOpenChange: (open: boolean) => void
 }) {
   if (!target) {
@@ -57,18 +55,16 @@ export function CommentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <CommentModalForm key={formKey} target={target} zIndex={zIndex} onOpenChange={onOpenChange} />
+      <CommentModalForm key={formKey} target={target} onOpenChange={onOpenChange} />
     </Dialog>
   )
 }
 
 function CommentModalForm({
   target,
-  zIndex,
   onOpenChange,
 }: {
   target: ComposeTarget
-  zIndex?: number
   onOpenChange: (open: boolean) => void
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -110,8 +106,6 @@ function CommentModalForm({
   return (
     <DialogContent
       className="sm:max-w-xl"
-      style={{ zIndex }}
-      overlayStyle={{ zIndex }}
       onOpenAutoFocus={(e) => {
         e.preventDefault()
         textareaRef.current?.focus()

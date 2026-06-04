@@ -133,7 +133,6 @@ const TOOLBAR_BUTTON_OPTIONS: Array<{
 
 interface SettingsDialogProps {
   open: boolean
-  zIndex?: number
   onOpenChange: (open: boolean) => void
 }
 
@@ -270,7 +269,7 @@ const FEED_INTERACTION_OPTIONS: Array<{
   },
 ]
 
-export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [version, setVersion] = useState<string>('')
   const [activeGroup, setActiveGroup] = useState<GroupId>('appearance')
   const settingsMainRef = useRef<HTMLElement>(null)
@@ -604,11 +603,7 @@ export function SettingsDialog({ open, zIndex, onOpenChange }: SettingsDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex h-[560px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]"
-        style={{ zIndex }}
-        overlayStyle={{ zIndex }}
-      >
+      <DialogContent className="flex h-[560px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]">
         <DialogHeader>
           <DialogTitle className="px-6 pt-5 text-base tracking-tight">设置</DialogTitle>
           <VisuallyHidden>

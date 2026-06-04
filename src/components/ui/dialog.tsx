@@ -6,6 +6,7 @@ import * as React from 'react'
 import { Button } from '@/components/ui/button'
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 function VisuallyHidden({ children }: { children: React.ReactNode }) {
   return <VisuallyHiddenPrimitive.Root>{children}</VisuallyHiddenPrimitive.Root>
@@ -29,15 +30,17 @@ function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.C
 
 function DialogOverlay({
   className,
+  zIndex,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+}: React.ComponentProps<typeof DialogPrimitive.Overlay> & { zIndex?: number }) {
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+        'fixed inset-0 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
         className,
       )}
+      style={{ zIndex }}
       {...props}
     />
   )
@@ -48,24 +51,26 @@ function DialogContent({
   children,
   showCloseButton = true,
   overlayClassName,
-  overlayStyle,
+  zIndex,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   overlayClassName?: string
-  overlayStyle?: React.CSSProperties
+  zIndex?: number
 }) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
+  const resolvedZIndex = zIndex ?? getNextZIndex()
 
   return (
     <DialogPortal data-slot="dialog-portal" container={container}>
-      <DialogOverlay className={overlayClassName} style={overlayStyle}>
+      <DialogOverlay className={overlayClassName} zIndex={resolvedZIndex}>
         <DialogPrimitive.Content
           data-slot="dialog-content"
           className={cn(
-            'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg',
+            'fixed top-[50%] left-[50%] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg',
             className,
           )}
+          style={{ zIndex: resolvedZIndex + 1 }}
           {...props}
         >
           {children}

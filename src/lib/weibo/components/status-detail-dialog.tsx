@@ -16,7 +16,6 @@ interface StatusDetailDialogProps {
   item: StatusDetailNavigationItem | null
   position: string
   width?: number
-  zIndex?: number
   onOpenChange: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
   onNavigate?: (item: FeedItem) => void
@@ -29,7 +28,6 @@ export function StatusDetailDialog({
   item,
   position,
   width,
-  zIndex,
   onOpenChange,
   setComposeTarget,
   onNavigate,
@@ -50,14 +48,12 @@ export function StatusDetailDialog({
   })
 
   const detail = detailQuery.data
-  const commentsZIndex = zIndex != null ? zIndex + 1 : undefined
 
   return (
     <DialogContainer
       open={open}
       position={position as any}
       width={width}
-      zIndex={zIndex}
       onOpenChange={onOpenChange}
     >
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
@@ -81,7 +77,6 @@ export function StatusDetailDialog({
             <StatusCommentsSection
               statusId={detail.status.id}
               authorId={authorId}
-              zIndex={commentsZIndex}
               authorName={detail.status.author.name}
               statusText={detail.status.text}
               commentsCount={detail.status.stats.comments}

@@ -10,14 +10,12 @@ export function CommentList({
   emptyLabel,
   rootStatusId,
   authorUid,
-  zIndex,
   onCommentReply,
 }: {
   comments: CommentItem[]
   emptyLabel: string
   rootStatusId: string
   authorUid?: string
-  zIndex?: number
   onCommentReply?: (target: ComposeTarget) => void
 }) {
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
@@ -54,7 +52,6 @@ export function CommentList({
               item={item}
               rootStatusId={rootStatusId}
               authorUid={authorUid}
-              zIndex={zIndex}
               onCommentReply={onCommentReply}
             />
           </div>

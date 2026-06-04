@@ -21,7 +21,6 @@ interface CommentsDialogProps {
   rootStatusId: string
   statusId: string
   authorUid: string
-  zIndex?: number
   onOpenChange: (open: boolean) => void
   onCommentReply?: (target: ComposeTarget) => void
 }
@@ -31,7 +30,6 @@ export function CommentsDialog({
   rootStatusId,
   statusId,
   authorUid,
-  zIndex,
   onOpenChange,
   onCommentReply,
 }: CommentsDialogProps) {
@@ -43,11 +41,7 @@ export function CommentsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-xl"
-        style={zIndex ? { zIndex } : undefined}
-        overlayStyle={zIndex ? { zIndex } : undefined}
-      >
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>评论详情</DialogTitle>
           <DialogDescription>共 {data?.items.length ?? 0} 条回复</DialogDescription>
