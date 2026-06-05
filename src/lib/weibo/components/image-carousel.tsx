@@ -1,5 +1,5 @@
 import { PlayIcon, SquarePlay } from 'lucide-react'
-import React, { memo, useMemo } from 'react'
+import React, { memo, useMemo, useCallback } from 'react'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
 import type { PhotoRenderParams } from 'react-photo-view/dist/types'
 
@@ -11,6 +11,7 @@ import { getUiPortalContainer } from '@/components/ui/portal'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import type { FeedImage, FeedMixMediaItem } from '@/lib/weibo/models/feed'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 import { VideoPlayer } from './media-player/video-player'
 
@@ -181,6 +182,25 @@ export const ImageCarousel = memo(function ImageCarousel({
   const container = useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
 
+  const handlePhotoVisibleChange = useCallback(
+    (visible: boolean) => {
+      if (visible) {
+        onOpen?.()
+        const zIndex = getNextZIndex()
+        // 在下一个动画帧中查找并设置PhotoView portal的z-index
+        requestAnimationFrame(() => {
+          if (container) {
+            const portalElements = container.querySelectorAll('.PhotoView-Portal')
+            portalElements.forEach((el) => {
+              ;(el as HTMLElement).style.zIndex = String(zIndex)
+            })
+          }
+        })
+      }
+    },
+    [container, onOpen],
+  )
+
   const gridItems = React.useMemo<GridItem[]>(() => {
     const items: GridItem[] = images.map((image) => ({
       kind: 'image',
@@ -209,9 +229,7 @@ export const ImageCarousel = memo(function ImageCarousel({
       <PhotoProvider
         portalContainer={container}
         photoClosable={true}
-        onVisibleChange={(visible) => {
-          if (visible) onOpen?.()
-        }}
+        onVisibleChange={handlePhotoVisibleChange}
       >
         <div className={cn('grid gap-2', gridClassName(gridItems.length))}>
           {gridItems.map((item) => {
