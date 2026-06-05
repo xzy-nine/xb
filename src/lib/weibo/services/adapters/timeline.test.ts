@@ -254,6 +254,11 @@ describe('adaptTimelineResponse', () => {
           id: 'pic-inline',
           thumbnailUrl: 'https://img/inline-large.jpg',
           largeUrl: 'https://img/inline-original.jpg',
+          downloadUrls: [
+            'https://img/inline-original.jpg',
+            'https://img/inline-large.jpg',
+            'https://img/inline-thumb.jpg',
+          ],
         },
       ],
     })
@@ -308,6 +313,11 @@ describe('adaptTimelineResponse', () => {
           id: 'repost-pic',
           thumbnailUrl: 'https://img/repost-large.jpg',
           largeUrl: 'https://img/repost-original.jpg',
+          downloadUrls: [
+            'https://img/repost-original.jpg',
+            'https://img/repost-large.jpg',
+            'https://img/repost-thumb.jpg',
+          ],
         },
       ],
     })
@@ -316,6 +326,11 @@ describe('adaptTimelineResponse', () => {
         id: 'retweet-pic',
         thumbnailUrl: 'https://img/retweet-large.jpg',
         largeUrl: 'https://img/retweet-original.jpg',
+        downloadUrls: [
+          'https://img/retweet-original.jpg',
+          'https://img/retweet-large.jpg',
+          'https://img/retweet-thumb.jpg',
+        ],
       },
     ])
     expect(result.items[0]?.retweetedStatus?.imageEntities).toBeUndefined()

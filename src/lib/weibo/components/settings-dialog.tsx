@@ -120,7 +120,7 @@ const TOOLBAR_BUTTON_OPTIONS: Array<{
 }> = [
   { id: 'favorite', label: '收藏', icon: Bookmark },
   { id: 'copy-link', label: '复制链接', icon: LinkIcon },
-  { id: 'copy-text', label: '复制微博内容', icon: Copy },
+  { id: 'copy-text', label: '复制内容', icon: Copy },
   { id: 'download-media', label: '批量下载', icon: Download },
   { id: 'gen-image', label: '生图', icon: Image },
 ]
@@ -254,12 +254,12 @@ const FEED_INTERACTION_OPTIONS: Array<{
   {
     value: 'x',
     label: 'X 风格',
-    description: '点击卡片进入详情，评论按钮独立响应',
+    description: '点击卡片进入详情，评论按钮弹出评论框',
   },
   {
     value: 'weibo',
-    label: '微博原生',
-    description: '保持微博默认的跳转与交互行为',
+    label: '微博风格',
+    description: '评论按钮展开精选评论，点击查看更多进入详情',
   },
 ]
 

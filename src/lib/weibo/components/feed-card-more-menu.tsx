@@ -162,7 +162,7 @@ export function FeedCardMoreMenu({
               }}
             >
               <Copy className="mr-2 size-4" />
-              复制微博内容
+              复制内容
             </DropdownMenuItem>
           )}
           {isOwner && (

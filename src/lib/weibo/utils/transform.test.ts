@@ -261,6 +261,10 @@ describe('toFeedItem media images', () => {
         id: 'live-pic',
         thumbnailUrl: 'https://wx3.sinaimg.cn/orj960/live-pic.jpg',
         largeUrl: 'https://wx3.sinaimg.cn/large/live-pic.jpg',
+        downloadUrls: [
+          'https://wx3.sinaimg.cn/large/live-pic.jpg',
+          'https://wx3.sinaimg.cn/orj960/live-pic.jpg',
+        ],
         width: 2048,
         height: 2730,
         type: 'livephoto',

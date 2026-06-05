@@ -307,7 +307,7 @@ describe('FeedCard', () => {
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
-    const copyButton = screen.getByRole('button', { name: '复制微博内容' })
+    const copyButton = screen.getByRole('button', { name: '复制内容' })
     fireEvent.click(copyButton)
 
     await waitFor(() => {
@@ -348,7 +348,7 @@ describe('FeedCard', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '复制微博内容' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制内容' }))
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('# Preview\n\n**markdown marker**')

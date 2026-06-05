@@ -392,11 +392,21 @@ describe('adaptStatusCommentsResponse', () => {
         id: 'pic-b',
         thumbnailUrl: 'https://img/pic-b-large.jpg',
         largeUrl: 'https://img/pic-b-large.jpg',
+        downloadUrls: [
+          'https://img/pic-b-large.jpg',
+          'https://img/pic-b-bmiddle.jpg',
+          'https://img/pic-b-thumb.jpg',
+        ],
       },
       {
         id: 'pic-a',
         thumbnailUrl: 'https://img/pic-a-large.jpg',
         largeUrl: 'https://img/pic-a-original.jpg',
+        downloadUrls: [
+          'https://img/pic-a-original.jpg',
+          'https://img/pic-a-large.jpg',
+          'https://img/pic-a-thumb.jpg',
+        ],
       },
     ])
     expect(result.items[0]?.replyComment?.text).toBe('回复内容')
@@ -406,6 +416,11 @@ describe('adaptStatusCommentsResponse', () => {
         id: 'reply-pic',
         thumbnailUrl: 'https://img/reply-large.jpg',
         largeUrl: 'https://img/reply-original.jpg',
+        downloadUrls: [
+          'https://img/reply-original.jpg',
+          'https://img/reply-large.jpg',
+          'https://img/reply-thumb.jpg',
+        ],
       },
     ])
   })

@@ -15,6 +15,7 @@ import {
   downloadAsZip,
   estimateTotalSize,
   extractMediaUrls,
+  type MediaUrl,
 } from '@/lib/weibo/utils/download-media'
 
 function getMediaZipFilename(item: FeedItem) {
@@ -30,11 +31,16 @@ function getMediaZipFilename(item: FeedItem) {
 export function useFeedCardMediaDownload(item?: FeedItem) {
   const [downloadLoading, setDownloadLoading] = useState(false)
   const [sizeWarningOpen, setSizeWarningOpen] = useState(false)
-  const [pendingDownload, setPendingDownload] = useState<{ urls: any[] } | null>(null)
+  const [pendingDownload, setPendingDownload] = useState<{ urls: MediaUrl[] } | null>(null)
 
-  const performDownload = async (urls: any[], feedItem: FeedItem) => {
-    await downloadAsZip(urls, getMediaZipFilename(feedItem))
-    toast.success(`已下载 ${urls.length} 个文件`)
+  const performDownload = async (urls: MediaUrl[], feedItem: FeedItem) => {
+    const result = await downloadAsZip(urls, getMediaZipFilename(feedItem))
+    if (result.failCount > 0) {
+      toast.warning(`已下载 ${result.successCount} 个文件，${result.failCount} 个失败`)
+      return
+    }
+
+    toast.success(`已下载 ${result.successCount} 个文件`)
   }
 
   const handleDownload = async () => {

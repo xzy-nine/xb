@@ -557,7 +557,7 @@ function FeedActions({
           key={id}
           type="button"
           variant="ghost"
-          aria-label="复制微博内容"
+          aria-label="复制内容"
           className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()

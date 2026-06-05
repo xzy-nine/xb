@@ -14,6 +14,7 @@ export interface FeedImage {
   id: string
   thumbnailUrl: string
   largeUrl: string
+  downloadUrls?: string[]
   width?: number
   height?: number
   type?: 'image' | 'livephoto'

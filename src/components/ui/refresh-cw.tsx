@@ -36,7 +36,7 @@ const RefreshCWIcon = forwardRef<RefreshCWIconHandle, RefreshCWIconProps>(
           controls.start('animate')
         }
       },
-      [controls, onMouseEnter]
+      [controls, onMouseEnter],
     )
 
     const handleMouseLeave = useCallback(
@@ -47,7 +47,7 @@ const RefreshCWIcon = forwardRef<RefreshCWIconHandle, RefreshCWIconProps>(
           controls.start('normal')
         }
       },
-      [controls, onMouseLeave]
+      [controls, onMouseLeave],
     )
 
     return (
@@ -77,7 +77,7 @@ const RefreshCWIcon = forwardRef<RefreshCWIconHandle, RefreshCWIconProps>(
         </motion.svg>
       </div>
     )
-  }
+  },
 )
 
 RefreshCWIcon.displayName = 'RefreshCWIcon'

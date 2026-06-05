@@ -48,8 +48,6 @@ body:
       label: 页面地址
       description: 如果涉及特定页面，请提供页面地址
       placeholder: '例如：https://weibo.com/u/1234567890'
-    validations:
-      required: true
 
   - type: textarea
     attributes:
