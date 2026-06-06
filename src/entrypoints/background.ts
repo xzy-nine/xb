@@ -110,8 +110,35 @@ interface MediaFetchResponse {
 
 const allowedMediaHostSuffixes = ['sinaimg.cn', 'sinajs.cn', 'weibocdn.com', 'weibo.com']
 const mediaRequestHeaderRuleId = 10_401
+const backgroundRequestTabId = -1
 
 let mediaRequestHeaderRulesPromise: Promise<void> | null = null
+
+export function createMediaRequestHeaderRule(): Browser.declarativeNetRequest.Rule {
+  return {
+    id: mediaRequestHeaderRuleId,
+    priority: 1,
+    action: {
+      type: 'modifyHeaders',
+      requestHeaders: [
+        {
+          header: 'referer',
+          operation: 'set',
+          value: 'https://weibo.com/',
+        },
+        {
+          header: 'Origin',
+          operation: 'remove',
+        },
+      ],
+    },
+    condition: {
+      regexFilter: '^https://[^/]+\\.(sinaimg\\.cn|sinajs\\.cn|weibocdn\\.com)/',
+      resourceTypes: ['xmlhttprequest'],
+      tabIds: [backgroundRequestTabId],
+    },
+  }
+}
 
 async function ensureMediaRequestHeaderRules(): Promise<void> {
   if (!mediaRequestHeaderRulesPromise) {
@@ -122,35 +149,20 @@ async function ensureMediaRequestHeaderRules(): Promise<void> {
 }
 
 async function installMediaRequestHeaderRules(): Promise<void> {
-  if (!browser.declarativeNetRequest?.updateDynamicRules) return
+  if (!browser.declarativeNetRequest?.updateSessionRules) return
 
   try {
-    await browser.declarativeNetRequest.updateDynamicRules({
+    await browser.declarativeNetRequest.updateDynamicRules?.({
       removeRuleIds: [mediaRequestHeaderRuleId],
-      addRules: [
-        {
-          id: mediaRequestHeaderRuleId,
-          priority: 1,
-          action: {
-            type: 'modifyHeaders',
-            requestHeaders: [
-              {
-                header: 'referer',
-                operation: 'set',
-                value: 'https://weibo.com/',
-              },
-              {
-                header: 'Origin',
-                operation: 'remove',
-              },
-            ],
-          },
-          condition: {
-            regexFilter: '^https://[^/]+\\.(sinaimg\\.cn|sinajs\\.cn|weibocdn\\.com)/',
-            resourceTypes: ['xmlhttprequest', 'image', 'media', 'other'],
-          },
-        },
-      ],
+    })
+  } catch (error) {
+    console.warn('清理旧媒体下载动态请求头规则失败', error)
+  }
+
+  try {
+    await browser.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [mediaRequestHeaderRuleId],
+      addRules: [createMediaRequestHeaderRule()],
     })
   } catch (error) {
     console.warn('安装媒体下载请求头规则失败', error)
