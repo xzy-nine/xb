@@ -9,7 +9,7 @@ interface FollowButtonProps {
   following: boolean
   followMe: boolean
   onFollowingChange?: (following: boolean, followMe: boolean) => void
-  size?: 'sm' | 'default'
+  size?: 'sm' | 'default' | 'lg'
   className?: string
 }
 

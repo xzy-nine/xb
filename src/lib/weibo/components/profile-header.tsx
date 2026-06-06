@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { FollowButton } from '@/lib/weibo/components/follow-button'
+import { ProfileGroupButton } from '@/lib/weibo/components/profile-group-button'
 import {
   formatProfileCount,
   ProfileBanner,
@@ -38,13 +39,14 @@ function ProfileIdentity({ profile }: { profile: UserProfile }) {
             <p className="text-muted-foreground truncate text-sm">@{profile.name}</p>
           </div>
         </div>
-        <div className="flex shrink-0 pb-1 sm:justify-end">
+        <div className="flex shrink-0 gap-2 pb-1 sm:justify-end">
           <FollowButton
             uid={profile.id}
             following={profile.following}
             followMe={profile.followMe}
-            className="min-w-20 rounded-full px-5"
+            size="lg"
           />
+          <ProfileGroupButton uid={profile.id} following={profile.following} />
         </div>
       </div>
 

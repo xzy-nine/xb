@@ -19,3 +19,12 @@ export interface UserProfile {
   /** 对方是否关注我 */
   followMe: boolean
 }
+
+export interface ProfileFollowGroup {
+  id: string
+  idstr: string
+  name: string
+  mode: string | null
+  memberCount: number | null
+  exist: boolean
+}

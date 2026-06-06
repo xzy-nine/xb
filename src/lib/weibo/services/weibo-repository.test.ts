@@ -2,8 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import {
+  createProfileGroup,
+  loadProfileAssignedGroups,
+  loadProfileAvailableGroups,
   loadHomeTimeline,
   loadLikedStatuses,
+  setProfileGroups,
   submitComposeAction,
 } from '@/lib/weibo/services/weibo-repository'
 
@@ -132,6 +136,106 @@ describe('weibo-repository', () => {
     expect(wbGet).toHaveBeenCalledWith('/ajax/statuses/likelist', {
       uid: '6393557498',
       page: 2,
+    })
+  })
+
+  it('loads assigned profile groups', async () => {
+    vi.mocked(wbGet).mockResolvedValue({
+      ok: 1,
+      data: [{ id: 5300067436070242, idstr: '5300067436070242', name: '特别厉害' }],
+    })
+
+    await expect(loadProfileAssignedGroups('1783497251')).resolves.toEqual([
+      {
+        id: '5300067436070242',
+        idstr: '5300067436070242',
+        name: '特别厉害',
+        mode: null,
+        memberCount: null,
+        exist: false,
+      },
+    ])
+    expect(wbGet).toHaveBeenCalledWith('/ajax/profile/getGroupList', {
+      uid: '1783497251',
+    })
+  })
+
+  it('loads available profile groups and filters id zero', async () => {
+    vi.mocked(wbGet).mockResolvedValue({
+      ok: 1,
+      data: {
+        lists: [
+          { id: 0, idstr: '0', name: '数码', mode: 'private', recom: 1 },
+          {
+            id: 5300067436070242,
+            idstr: '5300067436070242',
+            name: '特别厉害',
+            mode: 'public',
+            member_count: 3,
+            exist: 1,
+          },
+        ],
+      },
+    })
+
+    await expect(loadProfileAvailableGroups('1783497251')).resolves.toEqual([
+      {
+        id: '5300067436070242',
+        idstr: '5300067436070242',
+        name: '特别厉害',
+        mode: 'public',
+        memberCount: 3,
+        exist: true,
+      },
+    ])
+    expect(wbGet).toHaveBeenCalledWith('/ajax/profile/getGroups', {
+      target_uid: '1783497251',
+      filterType: 'system',
+      hasRecom: 'true',
+    })
+  })
+
+  it('sets profile groups by posting selected and origin ids', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(
+      setProfileGroups(
+        '1783497251',
+        ['5300067436070242'],
+        ['5300067436070242', '5300073389099937'],
+      ),
+    ).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/profile/setGroup', {
+      uids: '1783497251',
+      list_ids: '5300067436070242',
+      origin_list_ids: '5300067436070242,5300073389099937',
+    })
+  })
+
+  it('creates a profile group', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({
+      ok: 1,
+      data: {
+        id: 5306878706060026,
+        idstr: '5306878706060026',
+        name: '超级厉害',
+        mode: 'public',
+      },
+    })
+
+    await expect(createProfileGroup('超级厉害', true)).resolves.toEqual({
+      id: '5306878706060026',
+      idstr: '5306878706060026',
+      name: '超级厉害',
+      mode: 'public',
+      memberCount: null,
+      exist: false,
+    })
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/profile/createGroup', {
+      name: '超级厉害',
+      isOpen: 'true',
     })
   })
 })
