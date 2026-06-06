@@ -158,6 +158,17 @@
   }
 }
 
+@layer components {
+  .xb-feed-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
+
+  .xb-feed-card--compact {
+    contain-intrinsic-size: auto 420px;
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

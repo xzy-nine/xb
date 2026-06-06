@@ -11,11 +11,12 @@ import type { CommentItem } from '@/lib/weibo/models/status'
 import { feedCommentsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 
 interface FeedCommentsExpandedProps {
+  id?: string
   item: FeedItem
   onCommentReply: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
 }
 
-export function FeedCommentsExpanded({ item, onCommentReply }: FeedCommentsExpandedProps) {
+export function FeedCommentsExpanded({ id, item, onCommentReply }: FeedCommentsExpandedProps) {
   const commentsQuery = useQuery(feedCommentsQueryOptions(item.id, item.author.id))
 
   const comments = (commentsQuery.data?.items ?? []) as CommentItem[]
@@ -23,6 +24,7 @@ export function FeedCommentsExpanded({ item, onCommentReply }: FeedCommentsExpan
 
   return (
     <div
+      id={id}
       className="flex cursor-default flex-col gap-3 border-t px-4 pt-3"
       onClick={(e) => e.stopPropagation()}
     >
