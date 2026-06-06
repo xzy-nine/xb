@@ -35,7 +35,7 @@ export function FeedCommentsExpanded({ item, onCommentReply }: FeedCommentsExpan
           authorName: item.author.name,
           excerpt: item.text.trim().slice(0, 80),
         }}
-        placeholder="写评论..."
+        placeholder="写下你的评论"
         compact
       />
 

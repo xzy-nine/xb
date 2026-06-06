@@ -34,8 +34,8 @@ export function CommentBox({
   const queryClient = useQueryClient()
 
   const isRepost = target.mode === 'repost'
-  const checkboxLabel = isRepost ? '同时回复' : '同时转发'
-  const submitLabel = isRepost ? '转发' : '发送'
+  const checkboxLabel = isRepost ? '同时评论原微博' : '同时转发原微博'
+  const submitLabel = isRepost ? '转发微博' : '发布评论'
 
   const mutation = useMutation({
     mutationFn: submitComposeAction,
@@ -44,7 +44,7 @@ export function CommentBox({
       return optimisticallyIncrementStatusComments(queryClient, target.statusId)
     },
     onSuccess: () => {
-      toast.success(isRepost ? '转发成功' : '回复成功')
+      toast.success(isRepost ? '微博已转发' : '评论已发布')
       setText('')
       setAlsoSecondaryAction(false)
       if (target.mode === 'comment') {
@@ -62,7 +62,7 @@ export function CommentBox({
     },
     onError: (error, _vars, context) => {
       restoreStatusCacheMutation(queryClient, context)
-      toast.error(error instanceof Error ? error.message : '发送失败，请稍后重试')
+      toast.error(error instanceof Error ? error.message : '发布失败，请稍后再试')
     },
   })
 
@@ -81,8 +81,8 @@ export function CommentBox({
     <div className={`border-foreground/20 flex flex-col gap-2 rounded-2xl border p-2`}>
       <Textarea
         ref={textareaRef}
-        aria-label={isRepost ? '转发内容' : '回复内容'}
-        placeholder={placeholder || (isRepost ? '说点什么...' : '写评论...')}
+        aria-label={isRepost ? '转发内容' : '评论内容'}
+        placeholder={placeholder || (isRepost ? '补充转发内容' : '写下你的评论')}
         className={cn(
           'bg-transparent! ring-transparent! border-none! resize-none',
           compact ? 'h-12' : 'h-16',
@@ -118,7 +118,7 @@ export function CommentBox({
           </div>
 
           <Button type="button" size="sm" disabled={isSubmitDisabled} onClick={handleSubmit}>
-            {mutation.isPending ? '发送中...' : submitLabel}
+            {mutation.isPending ? '发布中...' : submitLabel}
           </Button>
         </div>
       </div>

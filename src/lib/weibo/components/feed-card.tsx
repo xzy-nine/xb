@@ -648,7 +648,7 @@ function RetweetedFeedBlock({
         toast.success('已复制文字')
       })
       .catch(() => {
-        toast.error('复制失败，请稍后重试')
+        toast.error('复制失败，请稍后再试')
       })
   }
 
@@ -913,7 +913,7 @@ export const FeedCard = memo(function FeedCard({
         toast.success('已复制文字')
       })
       .catch(() => {
-        toast.error('复制失败，请稍后重试')
+        toast.error('复制失败，请稍后再试')
       })
   }, [])
 

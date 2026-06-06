@@ -666,7 +666,7 @@ export async function publishWeiboStatus(content: string): Promise<void> {
   })
 
   if (response.ok !== 1) {
-    throw new Error(response.msg || response.message || '发布失败，请稍后重试')
+    throw new Error(response.msg || response.message || '发布失败，请稍后再试')
   }
 }
 

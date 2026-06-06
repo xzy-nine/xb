@@ -26,15 +26,15 @@ function getModalCopy(target: ComposeTarget) {
   if (target.mode === 'repost') {
     return {
       title: '转发微博',
-      checkboxLabel: '同时回复',
-      submitLabel: '转发',
+      checkboxLabel: '同时评论原微博',
+      submitLabel: '转发微博',
     }
   }
 
   return {
     title: target.kind === 'status' ? '回复微博' : '回复评论',
-    checkboxLabel: '同时转发',
-    submitLabel: '发送',
+    checkboxLabel: '同时转发原微博',
+    submitLabel: target.kind === 'status' ? '发布评论' : '回复评论',
   }
 }
 
@@ -79,7 +79,7 @@ function CommentModalForm({
       return optimisticallyIncrementStatusComments(queryClient, target.statusId)
     },
     onSuccess: () => {
-      toast.success(target.mode === 'repost' ? '转发成功' : '回复成功')
+      toast.success(target.mode === 'repost' ? '微博已转发' : '评论已发布')
       onOpenChange(false)
       if (target.mode === 'comment') {
         void queryClient.invalidateQueries({
@@ -95,7 +95,7 @@ function CommentModalForm({
     },
     onError: (error, _vars, context) => {
       restoreStatusCacheMutation(queryClient, context)
-      toast.error(error instanceof Error ? error.message : '发送失败，请稍后重试')
+      toast.error(error instanceof Error ? error.message : '发布失败，请稍后再试')
     },
   })
 
@@ -114,18 +114,18 @@ function CommentModalForm({
       <DialogHeader>
         <DialogTitle>{copy.title}</DialogTitle>
         <DialogDescription>
-          @{target.authorName} · {target.excerpt || '没有可预览的内容'}
+          @{target.authorName} · {target.excerpt || '这条内容没有可预览的正文'}
         </DialogDescription>
       </DialogHeader>
 
       <div className={`border-foreground/20 flex flex-col gap-2 rounded-2xl border p-2`}>
         <Textarea
           ref={textareaRef}
-          aria-label="回复内容"
+          aria-label={target.mode === 'repost' ? '转发内容' : '评论内容'}
           className="h-32 resize-none border-none! bg-transparent! ring-transparent!"
           value={text}
           onChange={(event) => setText(event.target.value)}
-          placeholder="发评论..."
+          placeholder={target.mode === 'repost' ? '补充转发内容' : '写下你的评论'}
         />
 
         <div className="flex items-center justify-between gap-3">
@@ -144,7 +144,7 @@ function CommentModalForm({
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-          取消
+          关闭
         </Button>
         <Button
           type="button"
@@ -157,7 +157,7 @@ function CommentModalForm({
             })
           }
         >
-          {mutation.isPending ? '发送中...' : copy.submitLabel}
+          {mutation.isPending ? '发布中...' : copy.submitLabel}
         </Button>
       </DialogFooter>
     </DialogContent>

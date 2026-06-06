@@ -441,10 +441,10 @@ export function VideoPlayer({
           document.body.appendChild(a)
           a.click()
           a.remove()
-          toast.success(`已下载：${name}`)
+          toast.success(`视频已下载：${name}`)
         } catch (error) {
           console.error(error)
-          toast.error('下载失败，请稍后重试')
+          toast.error('视频下载失败，请稍后再试')
         }
         return
       }
@@ -460,14 +460,14 @@ export function VideoPlayer({
         a.download = name
         a.click()
         URL.revokeObjectURL(blobUrl)
-        toast.success(`已下载：${name}`)
+        toast.success(`视频已下载：${name}`)
         a.remove()
       } catch (error) {
         console.error(error)
-        toast.error('下载失败，请稍后重试')
+        toast.error('视频下载失败，请稍后再试')
       }
     } catch {
-      toast.error('下载失败，请稍后重试')
+      toast.error('视频下载失败，请稍后再试')
     } finally {
       setDownloading(false)
     }
