@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
 import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
+import { useInlineFullscreen } from './inline-fullscreen'
 import { getPlaybackPositionStore } from './video-playback-position-store'
 import { registerPlayingVideo, unregisterPlayingVideo } from './video-playback-registry'
 import {
@@ -643,42 +644,7 @@ export function VideoPlayer({
     applyVideoQuality(player, qualityId)
   }, [isMpd, qualityId])
 
-  useEffect(() => {
-    const container = videoRef.current?.closest('.media-default-skin--video')
-    if (!container) {
-      return
-    }
-
-    const el = container as HTMLElement
-    if (inlineFullscreen) {
-      el.style.position = 'fixed'
-      el.style.inset = '0'
-      el.style.zIndex = '9999'
-      el.style.width = '100vw'
-      el.style.height = '100vh'
-
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          setInlineFullscreen(false)
-        }
-      }
-      window.addEventListener('keydown', handleKeyDown)
-      return () => {
-        el.style.position = ''
-        el.style.inset = ''
-        el.style.zIndex = ''
-        el.style.width = ''
-        el.style.height = ''
-        window.removeEventListener('keydown', handleKeyDown)
-      }
-    } else {
-      el.style.position = ''
-      el.style.inset = ''
-      el.style.zIndex = ''
-      el.style.width = ''
-      el.style.height = ''
-    }
-  }, [inlineFullscreen])
+  useInlineFullscreen(videoRef, inlineFullscreen, () => setInlineFullscreen(false))
 
   const ensureLoaded = useCallback(() => {
     setShouldLoad(true)

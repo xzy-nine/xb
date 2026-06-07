@@ -38,6 +38,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
 
+import { useInlineFullscreen } from './inline-fullscreen'
 import {
   applyStoredVideoVolume,
   registerVideoVolumeElement,
@@ -45,6 +46,7 @@ import {
 } from './video-volume-store'
 
 import '@videojs/react/video/skin.css'
+import './video-player.css'
 
 const Player = createPlayer({ features: [...videoFeatures] })
 
@@ -171,42 +173,7 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
     }
   }, [isLive, isReplay, streamUrl, replayUrl])
 
-  useEffect(() => {
-    const container = videoRef.current?.closest('.media-default-skin--video')
-    if (!container) {
-      return
-    }
-
-    const el = container as HTMLElement
-    if (inlineFullscreen) {
-      el.style.position = 'fixed'
-      el.style.inset = '0'
-      el.style.zIndex = '9999'
-      el.style.width = '100vw'
-      el.style.height = '100vh'
-
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          setInlineFullscreen(false)
-        }
-      }
-      window.addEventListener('keydown', handleKeyDown)
-      return () => {
-        el.style.position = ''
-        el.style.inset = ''
-        el.style.zIndex = ''
-        el.style.width = ''
-        el.style.height = ''
-        window.removeEventListener('keydown', handleKeyDown)
-      }
-    } else {
-      el.style.position = ''
-      el.style.inset = ''
-      el.style.zIndex = ''
-      el.style.width = ''
-      el.style.height = ''
-    }
-  }, [inlineFullscreen])
+  useInlineFullscreen(videoRef, inlineFullscreen, () => setInlineFullscreen(false))
 
   if (!isLive && !isReplay) {
     return (
