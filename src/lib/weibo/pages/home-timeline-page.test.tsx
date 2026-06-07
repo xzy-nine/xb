@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -27,6 +27,7 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
           isLongText: false,
           mblogId: null,
           text: 'hello world',
+          createdAt: '2024-01-01',
           createdAtLabel: 'just now',
           author: { id: '1', name: 'Alice', avatarUrl: null },
           stats: { likes: 7, comments: 3, reposts: 1 },
@@ -53,7 +54,16 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
 })
 
 describe('HomeTimelinePage', () => {
+  let scrollToMock: ReturnType<typeof vi.fn>
+
   beforeEach(() => {
+    vi.clearAllMocks()
+    scrollToMock = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollTo', {
+      configurable: true,
+      writable: true,
+      value: scrollToMock,
+    })
     Object.defineProperty(globalThis, 'browser', {
       writable: true,
       value: {
@@ -133,5 +143,101 @@ describe('HomeTimelinePage', () => {
       })
     })
     expect(vi.mocked(loadFollowGroups)).toHaveBeenCalled()
+  })
+
+  it('scrolls to top immediately when the new posts bubble is clicked', async () => {
+    let timelineRequestCount = 0
+    let resolveRefresh: ((value: Awaited<ReturnType<typeof loadHomeTimeline>>) => void) | undefined
+    const refreshPromise = new Promise<Awaited<ReturnType<typeof loadHomeTimeline>>>((resolve) => {
+      resolveRefresh = resolve
+    })
+
+    vi.mocked(loadHomeTimeline).mockImplementation(async (_tab, options) => {
+      if (!options) {
+        return {
+          items: [
+            {
+              id: '502',
+              isLongText: false,
+              mblogId: null,
+              text: 'fresh post',
+              createdAt: '2024-01-02',
+              createdAtLabel: 'just now',
+              author: { id: '2', name: 'Bob', avatarUrl: null },
+              stats: { likes: 0, comments: 0, reposts: 0 },
+              images: [],
+              media: null,
+              regionName: '',
+              source: '',
+            },
+            {
+              id: '501',
+              isLongText: false,
+              mblogId: null,
+              text: 'old post',
+              createdAt: '2024-01-01',
+              createdAtLabel: 'just now',
+              author: { id: '1', name: 'Alice', avatarUrl: null },
+              stats: { likes: 7, comments: 3, reposts: 1 },
+              images: [],
+              media: null,
+              regionName: '',
+              source: '',
+            },
+          ],
+          nextCursor: null,
+        }
+      }
+
+      timelineRequestCount += 1
+      if (timelineRequestCount > 1) {
+        return refreshPromise
+      }
+
+      return {
+        items: [
+          {
+            id: '501',
+            isLongText: false,
+            mblogId: null,
+            text: 'old post',
+            createdAt: '2024-01-01',
+            createdAtLabel: 'just now',
+            author: { id: '1', name: 'Alice', avatarUrl: null },
+            stats: { likes: 7, comments: 3, reposts: 1 },
+            images: [],
+            media: null,
+            regionName: '',
+            source: '',
+          },
+        ],
+        nextCursor: null,
+      }
+    })
+
+    const queryClient = new QueryClient()
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/mygroups']}>
+          <Routes>
+            <Route path="*" element={<AppShell />}>
+              <Route path="mygroups" element={<HomeTimelinePage />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    const bubble = await screen.findByRole('button', { name: /1条新微博/ })
+    fireEvent.click(bubble)
+
+    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+    expect(timelineRequestCount).toBe(2)
+
+    resolveRefresh?.({
+      items: [],
+      nextCursor: null,
+    })
+    queryClient.clear()
   })
 })
