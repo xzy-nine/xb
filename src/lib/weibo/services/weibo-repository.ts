@@ -6,6 +6,7 @@ import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { ProfileFollowGroup, UserProfile } from '@/lib/weibo/models/profile'
 import type { CommentItem, StatusCommentsPage } from '@/lib/weibo/models/status'
 import type { StatusDetail } from '@/lib/weibo/models/status'
+import type { ProfileSearchFilters } from '@/lib/weibo/route/profile-search-params'
 import {
   adaptCommentsResponse,
   type WeiboCommentsPayload,
@@ -79,6 +80,18 @@ import type { WeiboLongTextData } from '@/lib/weibo/utils/transform'
 
 export type HomeTimelineTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 type ProfileLookup = { uid: string } | { screenName: string }
+
+export interface ProfileSearchPage extends TimelinePage {
+  total?: string
+  matchedQuery?: string
+}
+
+export interface LoadProfileSearchParams {
+  query: string
+  starttime: number | null
+  endtime: number
+  filters: ProfileSearchFilters
+}
 
 interface ProfileFollowGroupPayload {
   id?: string | number
@@ -402,6 +415,34 @@ export async function loadProfilePosts(profileId: string, page: number): Promise
     feature: 0,
   })
   return adaptTimelineResponse(payload, page)
+}
+
+export async function loadProfileSearchPosts(
+  uid: string,
+  params: LoadProfileSearchParams,
+  page: number,
+): Promise<ProfileSearchPage> {
+  const payload = await wbGet<
+    WeiboTimelinePayload & { data?: { total?: string; absstr?: string } }
+  >(WEIBO_ENDPOINTS.profileSearch, {
+    uid,
+    page,
+    q: params.query,
+    ...(params.starttime !== null ? { starttime: params.starttime } : {}),
+    endtime: params.endtime,
+    hasori: params.filters.hasori ? 1 : 0,
+    hasret: params.filters.hasret ? 1 : 0,
+    hastext: params.filters.hastext ? 1 : 0,
+    haspic: params.filters.haspic ? 1 : 0,
+    hasvideo: params.filters.hasvideo ? 1 : 0,
+    hasmusic: params.filters.hasmusic ? 1 : 0,
+  })
+  const pageData = adaptTimelineResponse(payload, page)
+  return {
+    ...pageData,
+    total: payload.data?.total,
+    matchedQuery: payload.data?.absstr,
+  }
 }
 
 export async function loadProfileAssignedGroups(uid: string): Promise<ProfileFollowGroup[]> {

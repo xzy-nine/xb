@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   longTextQueryOptions,
   nestedCommentsQueryOptions,
+  profileSearchInfiniteOptions,
   statusCommentsInfiniteOptions,
   statusDetailQueryOptions,
 } from '@/lib/weibo/queries/weibo-queries'
@@ -45,5 +46,48 @@ describe('weibo query options', () => {
     expect(options.retry).toBe(false)
     expect(longTextQueryOptions(null, true).enabled).toBe(false)
     expect(longTextQueryOptions('mblog-1', false).enabled).toBe(false)
+  })
+
+  it('centralizes profile search cache and pagination semantics', () => {
+    const options = profileSearchInfiniteOptions('1783497251', {
+      query: '烧鸡',
+      starttime: 1780588800,
+      endtime: 1780848000,
+      filters: {
+        hasori: true,
+        hasret: true,
+        hastext: true,
+        haspic: false,
+        hasvideo: true,
+        hasmusic: true,
+      },
+    })
+
+    expect(options.queryKey).toEqual([
+      'weibo',
+      'profile',
+      'search',
+      '1783497251',
+      '烧鸡',
+      1780588800,
+      1780848000,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+    ])
+    expect(
+      options.getNextPageParam({ items: [{ id: '2' } as never], nextCursor: '2', total: '2' }, [
+        { items: [{ id: '1' } as never], nextCursor: '2', total: '2' },
+        { items: [{ id: '2' } as never], nextCursor: '3', total: '2' },
+      ]),
+    ).toBeUndefined()
+    expect(
+      options.getNextPageParam({ items: [{ id: '1' } as never], nextCursor: '2', total: '3' }, [
+        { items: [{ id: '1' } as never], nextCursor: '2', total: '3' },
+      ]),
+    ).toBe('2')
   })
 })

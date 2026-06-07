@@ -296,7 +296,7 @@ export function ProfileGroupButton({ uid, following }: ProfileGroupButtonProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="lg">
+        <Button type="button" variant="secondary" size="lg">
           分组
         </Button>
       </DialogTrigger>

@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import {
   createProfileGroup,
-  loadProfileAssignedGroups,
-  loadProfileAvailableGroups,
   loadHomeTimeline,
   loadLikedStatuses,
+  loadProfileAssignedGroups,
+  loadProfileAvailableGroups,
+  loadProfileSearchPosts,
   setProfileGroups,
   submitComposeAction,
 } from '@/lib/weibo/services/weibo-repository'
@@ -192,6 +193,55 @@ describe('weibo-repository', () => {
       target_uid: '1783497251',
       filterType: 'system',
       hasRecom: 'true',
+    })
+  })
+
+  it('searches profile posts with original profile search params', async () => {
+    vi.mocked(wbGet).mockResolvedValue({
+      data: {
+        total: '436',
+        absstr: '烧鸡',
+        list: [],
+      },
+    })
+
+    await expect(
+      loadProfileSearchPosts(
+        '1783497251',
+        {
+          query: '烧鸡',
+          starttime: 1780588800,
+          endtime: 1780848000,
+          filters: {
+            hasori: true,
+            hasret: true,
+            hastext: true,
+            haspic: true,
+            hasvideo: false,
+            hasmusic: true,
+          },
+        },
+        1,
+      ),
+    ).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+      total: '436',
+      matchedQuery: '烧鸡',
+    })
+
+    expect(wbGet).toHaveBeenCalledWith('/ajax/statuses/searchProfile', {
+      uid: '1783497251',
+      page: 1,
+      q: '烧鸡',
+      starttime: 1780588800,
+      endtime: 1780848000,
+      hasori: 1,
+      hasret: 1,
+      hastext: 1,
+      haspic: 1,
+      hasvideo: 0,
+      hasmusic: 1,
     })
   })
 
