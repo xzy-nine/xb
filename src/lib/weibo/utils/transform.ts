@@ -215,8 +215,8 @@ function toImagesFromParts(picIds?: string[], picInfos?: Record<string, WeiboPic
       info?.largest ??
       info?.mw2000 ??
       info?.woriginal ??
-      info?.large ??
       info?.original ??
+      info?.large ??
       info?.bmiddle ??
       info?.thumbnail
     const largeUrl = largeImage?.url
@@ -224,11 +224,13 @@ function toImagesFromParts(picIds?: string[], picInfos?: Record<string, WeiboPic
       continue
     }
 
+    const downloadUrls = imageDownloadUrlsFromInfo(info)
     const livePhotoVideoUrl = pickNonEmptyUrl(info?.video) ?? pickNonEmptyUrl(info?.video_hd)
     images.push({
       id: picId,
       thumbnailUrl,
       largeUrl,
+      ...(downloadUrls.length > 1 ? { downloadUrls } : {}),
       ...(typeof largeImage?.width === 'number' ? { width: largeImage.width } : {}),
       ...(typeof largeImage?.height === 'number' ? { height: largeImage.height } : {}),
       ...(info?.type === 'livephoto' ? { type: 'livephoto' as const } : {}),
@@ -361,6 +363,25 @@ function uniqueBy<T>(items: T[], keyFor: (item: T) => string) {
 function pickNonEmptyUrl(value?: string | null): string | undefined {
   const t = value?.trim()
   return t || undefined
+}
+
+function uniqueNonEmptyUrls(urls: Array<string | null | undefined>): string[] {
+  return uniqueBy(
+    urls.map((url) => url?.trim()).filter((url): url is string => Boolean(url)),
+    (url) => url,
+  )
+}
+
+function imageDownloadUrlsFromInfo(info: WeiboPicInfo | undefined): string[] {
+  return uniqueNonEmptyUrls([
+    info?.largest?.url,
+    info?.mw2000?.url,
+    info?.woriginal?.url,
+    info?.original?.url,
+    info?.large?.url,
+    info?.bmiddle?.url,
+    info?.thumbnail?.url,
+  ])
 }
 
 function getMpdXml(mediaInfo: WeiboMediaInfo | undefined): string | undefined {
@@ -793,6 +814,15 @@ function toMixMediaInfo(
         continue
       }
 
+      const downloadUrls = uniqueNonEmptyUrls([
+        item.data.largest?.url,
+        item.data.mw2000?.url,
+        item.data.original?.url,
+        item.data.large?.url,
+        item.data.bmiddle?.url,
+        item.data.thumbnail?.url,
+      ])
+
       results.push({
         type: 'pic',
         id: item.id,
@@ -800,6 +830,7 @@ function toMixMediaInfo(
           id: item.id,
           thumbnailUrl,
           largeUrl,
+          ...(downloadUrls.length > 1 ? { downloadUrls } : {}),
           width: largeImage?.width,
           height: largeImage?.height,
         },

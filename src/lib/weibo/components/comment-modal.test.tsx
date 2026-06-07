@@ -65,7 +65,7 @@ describe('CommentModal', () => {
     })
 
     expect(screen.getByRole('heading', { name: '回复评论' })).toBeInTheDocument()
-    expect(screen.getByLabelText('同时转发')).toBeInTheDocument()
+    expect(screen.getByLabelText('同时转发原微博')).toBeInTheDocument()
   })
 
   it('renders reply toggle copy for repost mode', () => {
@@ -83,7 +83,7 @@ describe('CommentModal', () => {
     })
 
     expect(screen.getByRole('heading', { name: '转发微博' })).toBeInTheDocument()
-    expect(screen.getByLabelText('同时回复')).toBeInTheDocument()
+    expect(screen.getByLabelText('同时评论原微博')).toBeInTheDocument()
   })
 
   it('disables submit button when text is empty', () => {
@@ -100,7 +100,7 @@ describe('CommentModal', () => {
       },
     })
 
-    expect(screen.getByRole('button', { name: '发送' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '发布评论' })).toBeDisabled()
   })
 
   it('submits textarea text and closes on success', async () => {
@@ -120,11 +120,11 @@ describe('CommentModal', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: '选择表情' }))
-    fireEvent.change(screen.getByRole('textbox', { name: '回复内容' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: '评论内容' }), {
       target: { value: '太酷了[色]' },
     })
-    fireEvent.click(screen.getByLabelText('同时转发'))
-    fireEvent.click(screen.getByRole('button', { name: '发送' }))
+    fireEvent.click(screen.getByLabelText('同时转发原微博'))
+    fireEvent.click(screen.getByRole('button', { name: '发布评论' }))
 
     const { submitComposeAction } = await import('@/lib/weibo/services/weibo-repository')
 
@@ -165,7 +165,7 @@ describe('CommentModal', () => {
       },
     })
 
-    fireEvent.change(screen.getByRole('textbox', { name: '回复内容' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: '评论内容' }), {
       target: { value: '旧内容' },
     })
 
@@ -186,6 +186,6 @@ describe('CommentModal', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.getByRole('textbox', { name: '回复内容' })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: '评论内容' })).toHaveValue('')
   })
 })

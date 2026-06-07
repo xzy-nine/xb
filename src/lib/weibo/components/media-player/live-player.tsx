@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
+import { useInlineFullscreen } from './inline-fullscreen'
 import {
   applyStoredVideoVolume,
   registerVideoVolumeElement,
@@ -49,6 +50,7 @@ import {
 } from './video-volume-store'
 
 import '@videojs/react/video/skin.css'
+import './video-player.css'
 
 const Player = createPlayer({ features: [...videoFeatures] })
 
@@ -218,6 +220,7 @@ export function LivePlayer({ streamUrl, coverUrl, liveStatus, replayUrl = '' }: 
     }
     setInlineFullscreen(true)
   }, [inlineFullscreen])
+  useInlineFullscreen(videoRef, inlineFullscreen, () => setInlineFullscreen(false))
 
   if (!isLive && !isReplay) {
     return (

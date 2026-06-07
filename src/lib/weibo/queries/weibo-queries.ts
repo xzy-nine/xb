@@ -21,6 +21,8 @@ import {
   loadMentions,
   loadLikedStatuses,
   loadNestedComments,
+  loadProfileAssignedGroups,
+  loadProfileAvailableGroups,
   loadProfilePosts,
   loadSearch,
   loadStatusComments,
@@ -123,6 +125,24 @@ export function profilePostsInfiniteOptions(profileId: string) {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     staleTime: 30 * 60 * 1000,
+  }
+}
+
+export function profileAssignedGroupsQueryOptions(uid: string, enabled = true) {
+  return {
+    queryKey: ['weibo', 'profile', 'groups', uid, 'assigned'] as const,
+    queryFn: () => loadProfileAssignedGroups(uid),
+    enabled: enabled && uid !== '',
+    staleTime: 30 * 1000,
+  }
+}
+
+export function profileAvailableGroupsQueryOptions(uid: string, enabled = true) {
+  return {
+    queryKey: ['weibo', 'profile', 'groups', uid, 'available'] as const,
+    queryFn: () => loadProfileAvailableGroups(uid),
+    enabled: enabled && uid !== '',
+    staleTime: 30 * 1000,
   }
 }
 

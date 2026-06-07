@@ -181,14 +181,14 @@ export function HistoryPage() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>清空浏览历史</DialogTitle>
+                    <DialogTitle>清空浏览历史？</DialogTitle>
                     <DialogDescription>
-                      确定要清除所有浏览记录吗？此操作不可撤销。
+                      这会删除 xb 保存的全部浏览记录，删除后无法恢复。
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
                     <DialogClose asChild>
-                      <Button variant="outline">取消</Button>
+                      <Button variant="outline">保留历史</Button>
                     </DialogClose>
                     <Button
                       variant="destructive"
@@ -197,7 +197,7 @@ export function HistoryPage() {
                         setClearConfirmOpen(false)
                       }}
                     >
-                      清空
+                      清空历史
                     </Button>
                   </DialogFooter>
                 </DialogContent>

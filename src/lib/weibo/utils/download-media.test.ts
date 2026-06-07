@@ -1,8 +1,26 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { FeedItem } from '@/lib/weibo/models/feed'
 
-import { extractMediaUrls, inferExtension } from './download-media'
+import {
+  downloadAsZip,
+  estimateTotalSize,
+  extractMediaUrls,
+  inferExtension,
+} from './download-media'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  Object.defineProperty(globalThis, 'browser', {
+    writable: true,
+    configurable: true,
+    value: {
+      runtime: {
+        getManifest: () => ({ version: '0.0.0-test' }),
+      },
+    },
+  })
+})
 
 describe('inferExtension', () => {
   it('应该从 URL 中推断出正确的扩展名', () => {
@@ -74,6 +92,53 @@ describe('extractMediaUrls', () => {
     expect(urls[0].filename).toContain('_1.jpg')
     expect(urls[1].url).toBe('https://example.com/large2.jpg')
     expect(urls[1].filename).toContain('_2.jpg')
+  })
+
+  it('应该保留图片下载候选 URL', () => {
+    const item = createMockItem({
+      images: [
+        {
+          id: '1',
+          thumbnailUrl: 'https://example.com/thumb1.jpg',
+          largeUrl: 'https://example.com/large1.jpg',
+          downloadUrls: ['https://example.com/large1.jpg', 'https://example.com/original1.jpg'],
+        },
+      ],
+    })
+
+    const urls = extractMediaUrls(item)
+
+    expect(urls[0].fallbackUrls).toEqual([
+      'https://example.com/large1.jpg',
+      'https://example.com/original1.jpg',
+    ])
+  })
+
+  it('应该为 sinaimg 图片补充常见尺寸候选并规范化协议', () => {
+    const item = createMockItem({
+      images: [
+        {
+          id: '1',
+          thumbnailUrl: 'http://wx1.sinaimg.cn/thumbnail/pic.jpg',
+          largeUrl: 'http://wx1.sinaimg.cn/large/pic.jpg',
+          downloadUrls: ['https://wx1.sinaimg.cn/woriginal/pic.jpg'],
+        },
+      ],
+    })
+
+    const urls = extractMediaUrls(item)
+
+    expect(urls[0].url).toBe('https://wx1.sinaimg.cn/large/pic.jpg')
+    expect(urls[0].fallbackUrls).toEqual([
+      'https://wx1.sinaimg.cn/large/pic.jpg',
+      'https://wx1.sinaimg.cn/woriginal/pic.jpg',
+      'https://wx1.sinaimg.cn/mw2000/pic.jpg',
+      'https://wx1.sinaimg.cn/original/pic.jpg',
+      'https://wx1.sinaimg.cn/orj1080/pic.jpg',
+      'https://wx1.sinaimg.cn/orj960/pic.jpg',
+      'https://wx1.sinaimg.cn/bmiddle/pic.jpg',
+      'https://wx1.sinaimg.cn/thumbnail/pic.jpg',
+    ])
   })
 
   it('应该提取 Live Photo 的图片和视频', () => {
@@ -289,5 +354,170 @@ describe('extractMediaUrls', () => {
 
     const textPart = urls[0].filename.split('_')[1]
     expect(textPart.length).toBeLessThanOrEqual(10)
+  })
+})
+
+describe('download media proxy', () => {
+  it('应该通过 background 代理预估媒体大小', async () => {
+    const sendMessage = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, size: 1024 })
+      .mockResolvedValueOnce({ ok: true, size: 2048 })
+
+    Object.defineProperty(globalThis, 'browser', {
+      writable: true,
+      configurable: true,
+      value: {
+        runtime: {
+          sendMessage,
+        },
+      },
+    })
+
+    await expect(
+      estimateTotalSize([
+        { url: 'https://wx1.sinaimg.cn/large/a.jpg', filename: 'a.jpg', type: 'image' },
+        { url: 'https://wx2.sinaimg.cn/large/b.jpg', filename: 'b.jpg', type: 'image' },
+      ]),
+    ).resolves.toBe(3072)
+
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'media-head',
+      url: 'https://wx1.sinaimg.cn/large/a.jpg',
+    })
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'media-head',
+      url: 'https://wx2.sinaimg.cn/large/b.jpg',
+    })
+  })
+
+  it('应该通过 background 代理下载媒体并生成 zip', async () => {
+    const sendMessage = vi.fn().mockResolvedValue({
+      ok: true,
+      contentType: 'image/jpeg',
+      data: Buffer.from('image-bytes').toString('base64'),
+    })
+    const createObjectURL = vi.fn().mockReturnValue('blob:zip')
+    const revokeObjectURL = vi.fn()
+    const setTimeoutSpy = vi
+      .spyOn(window, 'setTimeout')
+      .mockImplementation(() => 1 as unknown as ReturnType<typeof window.setTimeout>)
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    Object.defineProperty(globalThis, 'browser', {
+      writable: true,
+      configurable: true,
+      value: {
+        runtime: {
+          sendMessage,
+        },
+      },
+    })
+    Object.defineProperty(URL, 'createObjectURL', {
+      writable: true,
+      configurable: true,
+      value: createObjectURL,
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      writable: true,
+      configurable: true,
+      value: revokeObjectURL,
+    })
+
+    const result = await downloadAsZip(
+      [{ url: 'https://wx1.sinaimg.cn/large/a.jpg', filename: 'a.jpg', type: 'image' }],
+      'media.zip',
+    )
+
+    expect(result).toEqual({ successCount: 1, failCount: 0 })
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'media-fetch',
+      url: 'https://wx1.sinaimg.cn/large/a.jpg',
+    })
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
+    expect(click).toHaveBeenCalled()
+    expect(revokeObjectURL).not.toHaveBeenCalled()
+    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 60_000)
+
+    const revoke = setTimeoutSpy.mock.calls[0]?.[0]
+    if (typeof revoke === 'function') {
+      revoke()
+    }
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:zip')
+
+    click.mockRestore()
+  })
+
+  it('应该在主图下载失败时尝试候选 URL', async () => {
+    const sendMessage = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, error: 'media-fetch-failed:403' })
+      .mockResolvedValueOnce({
+        ok: true,
+        contentType: 'image/jpeg',
+        data: Buffer.from('fallback-image-bytes').toString('base64'),
+      })
+    const createObjectURL = vi.fn().mockReturnValue('blob:zip')
+    const revokeObjectURL = vi.fn()
+    const setTimeoutSpy = vi
+      .spyOn(window, 'setTimeout')
+      .mockImplementation(() => 1 as unknown as ReturnType<typeof window.setTimeout>)
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    Object.defineProperty(globalThis, 'browser', {
+      writable: true,
+      configurable: true,
+      value: {
+        runtime: {
+          sendMessage,
+        },
+      },
+    })
+    Object.defineProperty(URL, 'createObjectURL', {
+      writable: true,
+      configurable: true,
+      value: createObjectURL,
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      writable: true,
+      configurable: true,
+      value: revokeObjectURL,
+    })
+
+    await expect(
+      downloadAsZip(
+        [
+          {
+            url: 'https://wx1.sinaimg.cn/large/a.jpg',
+            fallbackUrls: [
+              'https://wx1.sinaimg.cn/large/a.jpg',
+              'https://wx1.sinaimg.cn/orj1080/a.jpg',
+            ],
+            filename: 'a.jpg',
+            type: 'image',
+          },
+        ],
+        'media.zip',
+      ),
+    ).resolves.toEqual({ successCount: 1, failCount: 0 })
+
+    expect(sendMessage).toHaveBeenCalledTimes(2)
+    expect(sendMessage).toHaveBeenNthCalledWith(1, {
+      type: 'media-fetch',
+      url: 'https://wx1.sinaimg.cn/large/a.jpg',
+    })
+    expect(sendMessage).toHaveBeenNthCalledWith(2, {
+      type: 'media-fetch',
+      url: 'https://wx1.sinaimg.cn/orj1080/a.jpg',
+    })
+    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 60_000)
+
+    const revoke = setTimeoutSpy.mock.calls[0]?.[0]
+    if (typeof revoke === 'function') {
+      revoke()
+    }
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:zip')
+
+    click.mockRestore()
   })
 })

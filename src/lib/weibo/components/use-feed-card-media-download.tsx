@@ -15,6 +15,7 @@ import {
   downloadAsZip,
   estimateTotalSize,
   extractMediaUrls,
+  type MediaUrl,
 } from '@/lib/weibo/utils/download-media'
 
 function getMediaZipFilename(item: FeedItem) {
@@ -30,11 +31,16 @@ function getMediaZipFilename(item: FeedItem) {
 export function useFeedCardMediaDownload(item?: FeedItem) {
   const [downloadLoading, setDownloadLoading] = useState(false)
   const [sizeWarningOpen, setSizeWarningOpen] = useState(false)
-  const [pendingDownload, setPendingDownload] = useState<{ urls: any[] } | null>(null)
+  const [pendingDownload, setPendingDownload] = useState<{ urls: MediaUrl[] } | null>(null)
 
-  const performDownload = async (urls: any[], feedItem: FeedItem) => {
-    await downloadAsZip(urls, getMediaZipFilename(feedItem))
-    toast.success(`已下载 ${urls.length} 个文件`)
+  const performDownload = async (urls: MediaUrl[], feedItem: FeedItem) => {
+    const result = await downloadAsZip(urls, getMediaZipFilename(feedItem))
+    if (result.failCount > 0) {
+      toast.warning(`已下载 ${result.successCount} 个文件，${result.failCount} 个未完成`)
+      return
+    }
+
+    toast.success(`媒体已下载（${result.successCount} 个文件）`)
   }
 
   const handleDownload = async () => {
@@ -46,7 +52,7 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
       const urls = extractMediaUrls(item)
 
       if (urls.length === 0) {
-        toast.error('没有可下载的媒体资源')
+        toast.error('这条微博没有可下载的媒体')
         return
       }
 
@@ -62,7 +68,7 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
       await performDownload(urls, item)
     } catch (error) {
       console.error('下载失败:', error)
-      toast.error('下载失败，请稍后重试')
+      toast.error('媒体下载失败，请稍后再试')
     } finally {
       setDownloadLoading(false)
     }
@@ -78,7 +84,7 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
       await performDownload(pendingDownload.urls, item)
     } catch (error) {
       console.error('下载失败:', error)
-      toast.error('下载失败，请稍后重试')
+      toast.error('媒体下载失败，请稍后再试')
     } finally {
       setDownloadLoading(false)
       setPendingDownload(null)
@@ -89,10 +95,8 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
     <Dialog open={sizeWarningOpen} onOpenChange={setSizeWarningOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>文件较大</DialogTitle>
-          <DialogDescription>
-            该微博的媒体文件总大小超过 100MB，下载可能需要较长时间。确定要继续吗？
-          </DialogDescription>
+          <DialogTitle>媒体文件超过 100MB</DialogTitle>
+          <DialogDescription>这条微博的媒体文件较大，下载可能需要更长时间。</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button
@@ -103,10 +107,10 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
               setPendingDownload(null)
             }}
           >
-            取消
+            暂不下载
           </Button>
           <Button type="button" onClick={confirmLargeDownload} disabled={downloadLoading}>
-            {downloadLoading ? '下载中…' : '继续下载'}
+            {downloadLoading ? '下载中…' : '继续下载媒体'}
           </Button>
         </DialogFooter>
       </DialogContent>

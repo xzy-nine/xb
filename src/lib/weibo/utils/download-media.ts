@@ -4,8 +4,207 @@ import type { FeedItem } from '@/lib/weibo/models/feed'
 
 export interface MediaUrl {
   url: string
+  fallbackUrls?: string[]
   filename: string
   type: 'image' | 'video'
+}
+
+export interface DownloadZipResult {
+  successCount: number
+  failCount: number
+}
+
+interface MediaHeadResponse {
+  ok: boolean
+  size?: number
+  error?: string
+}
+
+interface MediaFetchResponse {
+  ok: boolean
+  data?: string
+  contentType?: string
+  error?: string
+}
+
+const sinaimgDownloadSizes = [
+  'large',
+  'mw2000',
+  'woriginal',
+  'original',
+  'orj1080',
+  'orj960',
+  'bmiddle',
+  'thumbnail',
+]
+
+function canUseBackgroundFetch(): boolean {
+  return typeof browser !== 'undefined' && Boolean(browser.runtime?.sendMessage)
+}
+
+function base64ToBlob(data: string, contentType = 'application/octet-stream'): Blob {
+  const binary = atob(data)
+  const bytes = new Uint8Array(binary.length)
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+
+  return new Blob([bytes], { type: contentType })
+}
+
+async function estimateMediaSize(url: string): Promise<number> {
+  if (!canUseBackgroundFetch()) {
+    const response = await fetch(url, { method: 'HEAD' })
+    return Number.parseInt(response.headers.get('content-length') || '0', 10)
+  }
+
+  const response = (await browser.runtime.sendMessage({
+    type: 'media-head',
+    url,
+  })) as MediaHeadResponse
+
+  if (!response.ok) {
+    throw new Error(response.error || '媒体大小预估失败')
+  }
+
+  return response.size ?? 0
+}
+
+async function fetchMediaBlobFromUrl(url: string): Promise<Blob> {
+  if (!canUseBackgroundFetch()) {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    return response.blob()
+  }
+
+  const response = (await browser.runtime.sendMessage({
+    type: 'media-fetch',
+    url,
+  })) as MediaFetchResponse
+
+  if (!response.ok || !response.data) {
+    throw new Error(response.error || '媒体下载失败')
+  }
+
+  return base64ToBlob(response.data, response.contentType)
+}
+
+function uniqueUrls(urls: Array<string | undefined>): string[] {
+  const seen = new Set<string>()
+  const unique: string[] = []
+
+  for (const url of urls) {
+    const trimmed = normalizeDownloadUrl(url)
+    if (!trimmed || seen.has(trimmed)) continue
+    seen.add(trimmed)
+    unique.push(trimmed)
+  }
+
+  return unique
+}
+
+function normalizeDownloadUrl(url: string | undefined): string | undefined {
+  const trimmed = url?.trim()
+  if (!trimmed) return undefined
+
+  if (trimmed.startsWith('//')) {
+    return `https:${trimmed}`
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol === 'http:' && isSinaimgHost(parsed.hostname)) {
+      parsed.protocol = 'https:'
+      return parsed.toString()
+    }
+  } catch {
+    return trimmed
+  }
+
+  return trimmed
+}
+
+function isSinaimgHost(hostname: string): boolean {
+  return hostname === 'sinaimg.cn' || hostname.endsWith('.sinaimg.cn')
+}
+
+function expandSinaimgImageUrls(urls: Array<string | undefined>): string[] {
+  const normalized = uniqueUrls(urls)
+  const expanded: string[] = [...normalized]
+
+  for (const url of normalized) {
+    try {
+      const parsed = new URL(url)
+      if (!isSinaimgHost(parsed.hostname)) {
+        continue
+      }
+
+      const parts = parsed.pathname.split('/')
+      if (parts.length < 3) {
+        continue
+      }
+
+      const filename = parts.at(-1)
+      if (!filename) {
+        continue
+      }
+
+      for (const size of sinaimgDownloadSizes) {
+        const candidate = new URL(parsed.toString())
+        candidate.pathname = `/${size}/${filename}`
+        expanded.push(candidate.toString())
+      }
+    } catch {
+      // Keep the original URL; malformed candidates will fail in the fetch layer.
+    }
+  }
+
+  return uniqueUrls(expanded)
+}
+
+function createMediaFallbackUrls(
+  url: string,
+  fallbackUrls: string[] | undefined,
+  type: MediaUrl['type'],
+): string[] | undefined {
+  const urls =
+    type === 'image'
+      ? expandSinaimgImageUrls([url, ...(fallbackUrls ?? [])])
+      : uniqueUrls([url, ...(fallbackUrls ?? [])])
+
+  return urls.length > 1 ? urls : undefined
+}
+
+async function fetchMediaBlob(mediaUrl: MediaUrl): Promise<Blob> {
+  const urls = uniqueUrls([mediaUrl.url, ...(mediaUrl.fallbackUrls ?? [])])
+  const errors: string[] = []
+
+  for (const url of urls) {
+    try {
+      return await fetchMediaBlobFromUrl(url)
+    } catch (error) {
+      errors.push(`${url}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  throw new Error(errors.join('; ') || '媒体下载失败')
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const objectUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = filename
+  link.style.display = 'none'
+
+  document.body.append(link)
+  link.click()
+  link.remove()
+
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl)
+  }, 60_000)
 }
 
 /**
@@ -55,7 +254,8 @@ export function extractMediaUrls(item: FeedItem): MediaUrl[] {
   for (const image of item.images) {
     // 静态图片
     urls.push({
-      url: image.largeUrl,
+      url: normalizeDownloadUrl(image.largeUrl) ?? image.largeUrl,
+      fallbackUrls: createMediaFallbackUrls(image.largeUrl, image.downloadUrls, 'image'),
       filename: generateFilename(author, text, index++, image.largeUrl),
       type: 'image',
     })
@@ -85,7 +285,12 @@ export function extractMediaUrls(item: FeedItem): MediaUrl[] {
     for (const mixItem of item.mixMediaInfo) {
       if (mixItem.type === 'pic' && mixItem.image) {
         urls.push({
-          url: mixItem.image.largeUrl,
+          url: normalizeDownloadUrl(mixItem.image.largeUrl) ?? mixItem.image.largeUrl,
+          fallbackUrls: createMediaFallbackUrls(
+            mixItem.image.largeUrl,
+            mixItem.image.downloadUrls,
+            'image',
+          ),
           filename: generateFilename(author, text, index++, mixItem.image.largeUrl),
           type: 'image',
         })
@@ -121,8 +326,7 @@ export async function estimateTotalSize(urls: MediaUrl[]): Promise<number> {
   const sizes = await Promise.all(
     urls.map(async (mediaUrl) => {
       try {
-        const response = await fetch(mediaUrl.url, { method: 'HEAD' })
-        return Number.parseInt(response.headers.get('content-length') || '0', 10)
+        return await estimateMediaSize(mediaUrl.url)
       } catch {
         return 0
       }
@@ -142,14 +346,7 @@ async function downloadWithConcurrency(
 
   for (let i = 0; i < urls.length; i += limit) {
     const batch = urls.slice(i, i + limit)
-    const batchResults = await Promise.allSettled(
-      batch.map((mediaUrl) =>
-        fetch(mediaUrl.url).then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`)
-          return r.blob()
-        }),
-      ),
-    )
+    const batchResults = await Promise.allSettled(batch.map((mediaUrl) => fetchMediaBlob(mediaUrl)))
 
     for (let j = 0; j < batch.length; j++) {
       results.push({
@@ -165,7 +362,10 @@ async function downloadWithConcurrency(
 /**
  * 下载并打包为 zip
  */
-export async function downloadAsZip(urls: MediaUrl[], zipFilename: string): Promise<void> {
+export async function downloadAsZip(
+  urls: MediaUrl[],
+  zipFilename: string,
+): Promise<DownloadZipResult> {
   if (urls.length === 0) {
     throw new Error('没有可下载的媒体资源')
   }
@@ -196,11 +396,7 @@ export async function downloadAsZip(urls: MediaUrl[], zipFilename: string): Prom
   const content = await zip.generateAsync({ type: 'blob' })
 
   // 触发浏览器下载
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(content)
-  link.download = zipFilename
-  link.click()
-  URL.revokeObjectURL(link.href)
+  triggerBlobDownload(content, zipFilename)
 
-  return Promise.resolve()
+  return { successCount, failCount }
 }

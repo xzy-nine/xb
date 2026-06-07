@@ -9,7 +9,7 @@ import {
   MessageCircle,
   Repeat2,
 } from 'lucide-react'
-import { memo, useCallback, type MouseEvent, type ReactNode, useRef, useState } from 'react'
+import { memo, useCallback, type MouseEvent, type ReactNode, useId, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -369,6 +369,8 @@ function FeedActions({
   surface,
   onCommentClick,
   onCommentExpand,
+  commentsExpanded,
+  commentsPanelId,
   onRepostClick,
   onLikeClick,
   likePending,
@@ -388,6 +390,8 @@ function FeedActions({
   surface?: StatusFeedSurface
   onCommentClick?: (item: FeedItem) => void
   onCommentExpand?: (item: FeedItem) => void
+  commentsExpanded?: boolean
+  commentsPanelId?: string
   onRepostClick?: (item: FeedItem) => void
   onLikeClick?: (item: FeedItem) => void
   likePending?: boolean
@@ -406,6 +410,11 @@ function FeedActions({
   const liked = item.liked === true
   const isBookmarked = favorited === true
   const isDetail = surface === 'detail'
+  const controlsInlineComments =
+    commentsPanelId !== undefined &&
+    onCommentExpand !== undefined &&
+    !isDetail &&
+    feedInteractionMode === 'weibo'
   const canDownload =
     item.images.length > 0 || item.media !== null || (item.mixMediaInfo?.length ?? 0) > 0
 
@@ -416,11 +425,19 @@ function FeedActions({
           key={id}
           type="button"
           variant="ghost"
-          aria-label="回复微博"
+          aria-controls={controlsInlineComments ? commentsPanelId : undefined}
+          aria-expanded={controlsInlineComments ? commentsExpanded === true : undefined}
+          aria-label={
+            controlsInlineComments
+              ? commentsExpanded
+                ? '收起精选评论'
+                : '展开精选评论'
+              : '回复微博'
+          }
           className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
-            if (isDetail || feedInteractionMode === 'x') {
+            if (!controlsInlineComments) {
               onCommentClick?.(item)
             } else {
               onCommentExpand?.(item)
@@ -575,7 +592,7 @@ function FeedActions({
           key={id}
           type="button"
           variant="ghost"
-          aria-label="复制微博内容"
+          aria-label="复制内容"
           className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
@@ -670,7 +687,7 @@ function RetweetedFeedBlock({
         toast.success('已复制文字')
       })
       .catch(() => {
-        toast.error('复制失败，请稍后重试')
+        toast.error('复制失败，请稍后再试')
       })
   }
 
@@ -687,7 +704,10 @@ function RetweetedFeedBlock({
 
   return (
     <Card
-      className={cn('gap-3 py-4', canNavigate && 'cursor-pointer')}
+      className={cn(
+        'xb-feed-card xb-feed-card--compact gap-3 py-4',
+        canNavigate && 'cursor-pointer',
+      )}
       onClick={handleRetweetedClick}
     >
       <CardHeader>
@@ -775,6 +795,7 @@ export const FeedCard = memo(function FeedCard({
       })),
     )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
+  const commentsPanelId = useId()
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
   const {
@@ -921,6 +942,7 @@ export const FeedCard = memo(function FeedCard({
   const handleCommentExpand = useCallback(() => {
     setCommentsExpanded((prev) => !prev)
   }, [])
+  const canExpandInlineComments = feedInteractionMode === 'weibo' && onCommentReply !== undefined
 
   const handleCopyLink = useCallback((target: FeedItem) => {
     const weiboUrl = `https://weibo.com/${target.author.id}/${target.mblogId}`
@@ -942,13 +964,13 @@ export const FeedCard = memo(function FeedCard({
         toast.success('已复制文字')
       })
       .catch(() => {
-        toast.error('复制失败，请稍后重试')
+        toast.error('复制失败，请稍后再试')
       })
   }, [])
 
   if (resolvedItem.deleted) {
     return (
-      <Card className={cn('gap-4 py-4 relative', className)}>
+      <Card className={cn('xb-feed-card xb-feed-card--compact gap-4 py-4 relative', className)}>
         <CardContent className="flex flex-col items-center gap-3 py-8">
           <p className="text-muted-foreground text-sm">此微博已被删除</p>
           <Button
@@ -1015,6 +1037,7 @@ export const FeedCard = memo(function FeedCard({
       className={cn(
         'group/card py-4 relative',
         uniformHeight ? 'gap-0 flex-1' : 'gap-4',
+        'xb-feed-card group/card gap-4 py-4 relative',
         canNavigate && 'cursor-pointer',
         className,
       )}
@@ -1074,6 +1097,8 @@ export const FeedCard = memo(function FeedCard({
           surface={surfaceProp}
           onCommentClick={onCommentClick}
           onCommentExpand={handleCommentExpand}
+          commentsExpanded={commentsExpanded}
+          commentsPanelId={canExpandInlineComments ? commentsPanelId : undefined}
           onRepostClick={onRepostClick}
           onLikeClick={(target) => likeMutation.mutate(target)}
           likePending={likePendingId === resolvedItem.id}
@@ -1090,8 +1115,12 @@ export const FeedCard = memo(function FeedCard({
           downloadPending={downloadLoading}
         />
       </CardFooter>
-      {commentsExpanded && feedInteractionMode === 'weibo' && onCommentReply ? (
-        <FeedCommentsExpanded item={resolvedItem} onCommentReply={onCommentReply} />
+      {commentsExpanded && canExpandInlineComments ? (
+        <FeedCommentsExpanded
+          id={commentsPanelId}
+          item={resolvedItem}
+          onCommentReply={onCommentReply}
+        />
       ) : null}
       {downloadDialog}
     </Card>

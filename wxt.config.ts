@@ -36,7 +36,7 @@ export default defineConfig({
     },
     version: extensionVersion,
     version_name: extensionVersion,
-    permissions: ['storage', 'cookies'],
+    permissions: ['storage', 'cookies', 'declarativeNetRequest'],
     host_permissions: [
       'https://weibo.com/*',
       'https://www.weibo.com/*',

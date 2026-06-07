@@ -38,17 +38,17 @@ export class AppErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorB
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangleIcon className="text-destructive size-5" />
-                xb 遇到错误
+                xb 暂时无法显示页面
               </CardTitle>
               <CardAction>
                 <Button variant="destructive" size="sm" onClick={this.handleExitXb}>
-                  退出 xb
+                  停用 xb 并刷新
                 </Button>
               </CardAction>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground text-sm">
-                xb 扩展遇到了一个错误，页面可能无法正常显示。
+                xb 运行时出错，当前页面可能无法继续使用。
               </p>
               {this.state.error && (
                 <pre className="bg-destructive/10 text-destructive max-h-32 overflow-auto rounded-md p-2 text-xs">
@@ -56,7 +56,7 @@ export class AppErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorB
                 </pre>
               )}
               <p className="text-muted-foreground text-xs">
-                点击「退出 xb」按钮将禁用 xb 扩展并刷新页面。
+                停用 xb 后会刷新页面，并回到微博原始界面。
               </p>
             </CardContent>
           </Card>

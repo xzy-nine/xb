@@ -110,7 +110,7 @@ export function StatusCommentsSection({
             authorName,
             excerpt: statusText.trim().slice(0, 80),
           }}
-          placeholder="写评论..."
+          placeholder="写下你的评论"
         />
 
         <div className="pt-4">

@@ -18,6 +18,7 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
   return {
     ...actual,
     loadStatusLongText: vi.fn(),
+    loadFeedComments: vi.fn().mockResolvedValue({ items: [], totalNumber: 0 }),
     setStatusLike: vi.fn().mockResolvedValue(undefined),
     cancelStatusLike: vi.fn().mockResolvedValue(undefined),
     deleteWeiboStatus: vi.fn().mockResolvedValue(undefined),
@@ -102,10 +103,12 @@ describe('FeedCard', () => {
     onNavigate,
     onCommentClick,
     onRepostClick,
+    onCommentReply,
   }: {
     onNavigate?: (item: FeedItem) => void
     onCommentClick?: (item: FeedItem) => void
     onRepostClick?: (item: FeedItem) => void
+    onCommentReply?: Parameters<typeof FeedCard>[0]['onCommentReply']
   } = {}) {
     const queryClient = new QueryClient()
 
@@ -131,6 +134,7 @@ describe('FeedCard', () => {
               onNavigate={onNavigate}
               onCommentClick={onCommentClick}
               onRepostClick={onRepostClick}
+              onCommentReply={onCommentReply}
             />
           </GenImageDialogProvider>
         </MemoryRouter>
@@ -307,7 +311,7 @@ describe('FeedCard', () => {
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
-    const copyButton = screen.getByRole('button', { name: '复制微博内容' })
+    const copyButton = screen.getByRole('button', { name: '复制内容' })
     fireEvent.click(copyButton)
 
     await waitFor(() => {
@@ -348,7 +352,7 @@ describe('FeedCard', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '复制微博内容' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制内容' }))
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('# Preview\n\n**markdown marker**')
@@ -398,11 +402,28 @@ describe('FeedCard', () => {
     fireEvent.click(repostButton)
 
     expect(onNavigate).not.toHaveBeenCalled()
-    // In non-x-layout mode, clicking comment button expands comments instead of opening dialog
-    expect(onCommentClick).not.toHaveBeenCalled()
+    expect(onCommentClick).toHaveBeenCalledWith(expect.objectContaining({ id: '501' }))
     expect(onRepostClick).toHaveBeenCalledWith(expect.objectContaining({ id: '501' }))
     expect(commentButton.className).toContain('rounded-full')
     expect(repostButton.className).toContain('rounded-full')
     expect(screen.getByRole('button', { name: '点赞微博' }).className).toContain('rounded-full')
+  })
+
+  it('exposes inline comment expansion state when comments can expand in weibo mode', async () => {
+    renderCard({ onCommentReply: vi.fn() })
+
+    const commentButton = screen.getByRole('button', { name: '展开精选评论' })
+    expect(commentButton).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(commentButton)
+
+    await waitFor(() => {
+      expect(commentButton).toHaveAttribute('aria-expanded', 'true')
+    })
+
+    const commentsPanelId = commentButton.getAttribute('aria-controls')
+    expect(commentsPanelId).toBeTruthy()
+    expect(document.getElementById(commentsPanelId!)).not.toBeNull()
+    expect(screen.getByRole('button', { name: '收起精选评论' })).toBe(commentButton)
   })
 })

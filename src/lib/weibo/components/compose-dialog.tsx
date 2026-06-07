@@ -50,11 +50,11 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
       invalidates: [['weibo']],
     },
     onSuccess: () => {
-      toast.success('发布成功')
+      toast.success('微博已发布')
       onClose()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '发布失败，请稍后重试')
+      toast.error(error instanceof Error ? error.message : '发布失败，请稍后再试')
     },
   })
 
@@ -67,8 +67,8 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>发微博</DialogTitle>
-        <DialogDescription>有什么新鲜事想分享给大家？</DialogDescription>
+        <DialogTitle>发布微博</DialogTitle>
+        <DialogDescription>输入正文后发布到微博。</DialogDescription>
       </DialogHeader>
 
       <div className={`border-foreground/20 flex flex-col gap-2 rounded-2xl border p-2`}>
@@ -78,23 +78,23 @@ function ComposeForm({ onClose }: { onClose: () => void }) {
           className="h-32 resize-none border-none! bg-transparent! ring-transparent!"
           value={text}
           onChange={(event) => setText(event.target.value)}
-          placeholder="我想..."
+          placeholder="写下你想发布的内容"
         />
 
         <div className="flex items-center justify-between">
           <EmoticonPicker onSelect={(item) => setText((value) => `${value}${item.phrase}`)} />
           <Button type="button" size="sm" variant="ghost" onClick={openVideoUpload}>
-            视频 <ArrowUpRightIcon className="size-3" />
+            上传视频 <ArrowUpRightIcon className="size-3" />
           </Button>
         </div>
       </div>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>
-          取消
+          放弃编辑
         </Button>
         <Button type="button" disabled={isSubmitDisabled} onClick={() => mutation.mutate(text)}>
-          {mutation.isPending ? '发送中...' : '发布'}
+          {mutation.isPending ? '发布中...' : '发布微博'}
         </Button>
       </DialogFooter>
     </>

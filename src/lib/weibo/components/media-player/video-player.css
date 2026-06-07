@@ -124,3 +124,15 @@
 .media-default-skin--video .media-slider__buffer {
   background-color: oklch(1 0 0 / 0.25);
 }
+
+.media-inline-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  background: oklch(0 0 0) !important;
+}

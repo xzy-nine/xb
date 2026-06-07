@@ -1,15 +1,14 @@
-<table>
-  <tr>
-    <td width="128" align="center" valign="middle">
-      <img src="./public/icon/rounded_image.png" alt="xb" width="96" />
-    </td>
-    <td valign="middle">
-      <h1 style="margin: 0 0 0.25em">xb</h1>
-      <p style="margin: 0 0 0.35em; font-size: 1.15em"><strong>Redesign Weibo</strong></p>
-      <p style="margin: 0; opacity: 0.85">like X but even better.</p>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="./public/icon/rounded_image.png" alt="xb" width="96" />
+</p>
+
+<h1 align="center">xb</h1>
+
+<p align="center">
+  <strong>Redesign Weibo</strong>
+</p>
+
+<p align="center">like X but even better.</p>
 
 <p align="right">
   <a href="./README.md">中文</a>

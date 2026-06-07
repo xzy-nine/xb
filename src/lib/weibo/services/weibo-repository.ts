@@ -3,7 +3,7 @@ import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import type { WeiboEmoticonConfig } from '@/lib/weibo/models/emoticon'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
-import type { UserProfile } from '@/lib/weibo/models/profile'
+import type { ProfileFollowGroup, UserProfile } from '@/lib/weibo/models/profile'
 import type { CommentItem, StatusCommentsPage } from '@/lib/weibo/models/status'
 import type { StatusDetail } from '@/lib/weibo/models/status'
 import {
@@ -80,6 +80,35 @@ import type { WeiboLongTextData } from '@/lib/weibo/utils/transform'
 export type HomeTimelineTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 type ProfileLookup = { uid: string } | { screenName: string }
 
+interface ProfileFollowGroupPayload {
+  id?: string | number
+  idstr?: string
+  name?: string
+  mode?: string
+  member_count?: number
+  exist?: number | boolean
+}
+
+interface ProfileAssignedGroupsPayload {
+  data?: ProfileFollowGroupPayload[]
+  ok?: number
+}
+
+interface ProfileAvailableGroupsPayload {
+  data?: {
+    lists?: ProfileFollowGroupPayload[]
+    total_number?: number
+  }
+  ok?: number
+}
+
+interface ProfileCreateGroupPayload {
+  data?: ProfileFollowGroupPayload
+  ok?: number
+  msg?: string
+  message?: string
+}
+
 export interface LoadTimelineOptions {
   cursor?: string | null
   existingCount?: number
@@ -88,6 +117,29 @@ export interface LoadTimelineOptions {
 
 function getTimelinePath(tab: HomeTimelineTab): WeiboEndpointPath {
   return tab === 'following' ? WEIBO_ENDPOINTS.following : WEIBO_ENDPOINTS.forYou
+}
+
+function adaptProfileFollowGroup(raw: ProfileFollowGroupPayload): ProfileFollowGroup | null {
+  const id = raw.idstr ?? (raw.id != null ? String(raw.id) : '')
+  if (!id || id === '0') {
+    return null
+  }
+
+  return {
+    id,
+    idstr: id,
+    name: raw.name ?? '未命名分组',
+    mode: raw.mode ?? null,
+    memberCount: raw.member_count ?? null,
+    exist: raw.exist === true || raw.exist === 1,
+  }
+}
+
+function adaptProfileFollowGroups(groups: ProfileFollowGroupPayload[] = []): ProfileFollowGroup[] {
+  return groups.flatMap((group) => {
+    const adapted = adaptProfileFollowGroup(group)
+    return adapted ? [adapted] : []
+  })
 }
 
 async function loadTimeline(
@@ -353,6 +405,59 @@ export async function loadProfilePosts(profileId: string, page: number): Promise
   return adaptTimelineResponse(payload, page)
 }
 
+export async function loadProfileAssignedGroups(uid: string): Promise<ProfileFollowGroup[]> {
+  const payload = await wbGet<ProfileAssignedGroupsPayload>(WEIBO_ENDPOINTS.profileGroupList, {
+    uid,
+  })
+  return adaptProfileFollowGroups(payload.data)
+}
+
+export async function loadProfileAvailableGroups(uid: string): Promise<ProfileFollowGroup[]> {
+  const payload = await wbGet<ProfileAvailableGroupsPayload>(WEIBO_ENDPOINTS.profileGroups, {
+    target_uid: uid,
+    filterType: 'system',
+    hasRecom: 'true',
+  })
+  return adaptProfileFollowGroups(payload.data?.lists)
+}
+
+export async function setProfileGroups(
+  uid: string,
+  selectedIds: string[],
+  originIds: string[],
+): Promise<void> {
+  const response = await wbPostForm<WeiboMutationResponse>(WEIBO_ENDPOINTS.profileSetGroup, {
+    uids: uid,
+    list_ids: selectedIds.join(','),
+    origin_list_ids: originIds.join(','),
+  })
+
+  if (!isWeiboMutationSuccess(response)) {
+    throw new Error(response.msg ?? response.message ?? '设置分组失败')
+  }
+}
+
+export async function createProfileGroup(
+  name: string,
+  isOpen: boolean,
+): Promise<ProfileFollowGroup> {
+  const response = await wbPostForm<ProfileCreateGroupPayload>(WEIBO_ENDPOINTS.profileCreateGroup, {
+    name,
+    isOpen: String(isOpen),
+  })
+
+  if (!isWeiboMutationSuccess(response) || !response.data) {
+    throw new Error(response.msg ?? response.message ?? '创建分组失败')
+  }
+
+  const group = adaptProfileFollowGroup(response.data)
+  if (!group) {
+    throw new Error('创建分组失败')
+  }
+
+  return group
+}
+
 export interface LoadFavoritesOptions {
   page?: number
 }
@@ -562,7 +667,7 @@ export async function publishWeiboStatus(content: string): Promise<void> {
   })
 
   if (response.ok !== 1) {
-    throw new Error(response.msg || response.message || '发布失败，请稍后重试')
+    throw new Error(response.msg || response.message || '发布失败，请稍后再试')
   }
 }
 

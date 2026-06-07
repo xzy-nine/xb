@@ -126,7 +126,7 @@ const TOOLBAR_BUTTON_OPTIONS: Array<{
 }> = [
   { id: 'favorite', label: '收藏', icon: Bookmark },
   { id: 'copy-link', label: '复制链接', icon: LinkIcon },
-  { id: 'copy-text', label: '复制微博内容', icon: Copy },
+  { id: 'copy-text', label: '复制内容', icon: Copy },
   { id: 'download-media', label: '批量下载', icon: Download },
   { id: 'gen-image', label: '生图', icon: Image },
 ]
@@ -260,12 +260,12 @@ const FEED_INTERACTION_OPTIONS: Array<{
   {
     value: 'x',
     label: 'X 风格',
-    description: '点击卡片进入详情，评论按钮独立响应',
+    description: '点击卡片进入详情，评论按钮弹出评论框',
   },
   {
     value: 'weibo',
-    label: '微博原生',
-    description: '保持微博默认的跳转与交互行为',
+    label: '微博风格',
+    description: '评论按钮展开精选评论，点击查看更多进入详情',
   },
 ]
 
@@ -607,7 +607,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <DialogHeader>
           <DialogTitle className="px-6 pt-5 text-base tracking-tight">设置</DialogTitle>
           <VisuallyHidden>
-            <DialogDescription>配置外观、个性化偏好和字体设置</DialogDescription>
+            <DialogDescription>调整 xb 的外观、阅读行为和字体。</DialogDescription>
           </VisuallyHidden>
         </DialogHeader>
 
@@ -630,7 +630,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             {activeGroup === 'appearance' && (
               <div className="flex flex-col">
                 <div className="divide-border/40 divide-y px-6 py-4">
-                  <Field label="深色模式" description="选择应用的配色方案">
+                  <Field label="颜色模式" description="选择 xb 使用浅色、深色或系统模式">
                     <OptionPills
                       value={theme}
                       options={[
@@ -641,7 +641,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       onChange={(value) => void updateSettings({ theme: value as AppTheme })}
                     />
                   </Field>
-                  <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
+                  <Field label="内容宽度" description="调整主时间线在大屏幕上的宽度">
                     <OptionPills
                       value={contentWidth}
                       options={[
@@ -655,8 +655,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     />
                   </Field>
                   <StackedField
-                    label="控制栏顺序"
-                    description="拖动调整评论、转发、点赞三个主按钮的顺序"
+                    label="微博操作顺序"
+                    description="拖动调整评论、转发、点赞三个主操作的位置"
                   >
                     <Reorder.Group
                       axis="x"
@@ -685,8 +685,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     </Reorder.Group>
                   </StackedField>
                   <StackedField
-                    label="控制栏按钮"
-                    description="勾选后显示在控制栏右侧，未勾选则放入更多菜单"
+                    label="微博工具按钮"
+                    description="勾选后直接显示在微博卡片上，未勾选则放入更多菜单"
                   >
                     <div className="grid grid-cols-2 gap-2">
                       {TOOLBAR_BUTTON_OPTIONS.map((option) => (
@@ -708,7 +708,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </StackedField>
                 </div>
                 <div className="border-border/40 border-t px-6 py-4">
-                  <Field label="页面元素设置" />
+                  <Field label="页面元素" />
                   <TreeView
                     data={pageElementTreeData}
                     className="max-h-[200px] overflow-y-auto"
@@ -736,7 +736,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {activeGroup === 'personalize' && (
               <div className="space-y-3 px-6 py-4">
-                <StackedField label="跳转逻辑" description="控制微博卡片点击和评论按钮的行为">
+                <StackedField
+                  label="微博卡片行为"
+                  description="选择点击微博卡片和评论按钮后的打开方式"
+                >
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup">
                     {FEED_INTERACTION_OPTIONS.map((option) => (
                       <button
@@ -765,7 +768,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </div>
                 </StackedField>
                 <div>
-                  <Field label="图片蒙版" description="深色模式下为小图添加变暗效果防刺眼">
+                  <Field
+                    label="暗色模式图片降亮度"
+                    description="降低小图亮度，减少深色模式下的刺眼感"
+                  >
                     <Switch
                       checked={darkModeImageDim}
                       onCheckedChange={(checked) =>
@@ -805,7 +811,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Field>
                 </div>
                 <div>
-                  <Field label="首次加载跳转" description="打开后，进入首页时自动跳转到指定页面">
+                  <Field label="首页默认标签" description="进入微博首页时，自动打开指定时间线">
                     <Select
                       value={firstLoadRedirect}
                       onValueChange={(value) =>
@@ -827,7 +833,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Field>
                 </div>
                 <div>
-                  <Field label="QuoteChains 渲染" description='将 "//@ 用户名:" 格式渲染成引用样式'>
+                  <Field label="转发链样式" description='将 "//@ 用户名:" 格式显示为引用卡片'>
                     <Switch
                       checked={renderReplyChainEnabled}
                       onCheckedChange={(checked) =>
@@ -843,7 +849,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </div>
                 {renderReplyChainEnabled && (
                   <div>
-                    <Field label="折叠 QuoteChains" description="超过2条时折叠中间的引用">
+                    <Field label="折叠转发链" description="转发链超过 2 条时，折叠中间内容">
                       <Switch
                         checked={collapseRepliesEnabled}
                         onCheckedChange={(checked) =>
@@ -1182,16 +1188,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {activeGroup === 'advanced' && (
               <div className="divide-border/40 divide-y px-6 py-4">
-                <Field
-                  label="xb 评分系统"
-                  description="给用户评分，每小时计算一次分值（来自 BlackMirror · Nosedive）"
-                >
+                <Field label="xb 用户评分" description="显示用户评分，并每小时同步一次分值">
                   <Switch
                     checked={ratingEnabled}
                     onCheckedChange={(checked) => void updateSettings({ ratingEnabled: checked })}
                   />
                 </Field>
-                <Field label="内置话题页" description="使用 xb 内置话题页，关闭则跳转原微博话题页">
+                <Field
+                  label="话题页打开方式"
+                  description="开启后使用 xb 话题页，关闭后跳转到微博原始话题页"
+                >
                   <Switch
                     checked={xbTopicPage}
                     onCheckedChange={(checked) => void updateSettings({ xbTopicPage: checked })}

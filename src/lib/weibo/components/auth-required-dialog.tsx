@@ -22,15 +22,15 @@ export function AuthRequiredDialog({ open, onLogin }: AuthRequiredDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LogIn className="size-5" />
-            未登录微博
+            需要登录微博
           </DialogTitle>
           <DialogDescription>
-            当前未检测到微博登录状态，请先前往微博登录页完成登录，登录后刷新页面即可使用 xb。
+            xb 没有检测到微博登录状态。登录后刷新当前页面，即可继续使用 xb。
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button onClick={onLogin} className="w-full sm:w-auto">
-            去登录
+            前往微博登录
           </Button>
         </DialogFooter>
       </DialogContent>
