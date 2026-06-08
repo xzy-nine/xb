@@ -295,14 +295,11 @@ export function NavigationRail({
           <div
             className={cn(
               'border-border/40 mt-auto space-y-3 border-t pt-3',
-              !isCollapsed && 'xl:w-[180px] xl:space-y-3.5 xl:pt-4',
+              !isCollapsed && 'w-[180px] space-y-3.5 pt-4',
             )}
           >
             <div
-              className={cn(
-                'flex items-center justify-center ',
-                !isCollapsed && 'xl:justify-between',
-              )}
+              className={cn('flex items-center justify-center ', !isCollapsed && 'justify-between')}
             >
               <p
                 className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
@@ -325,7 +322,9 @@ export function NavigationRail({
               )}
             </div>
 
-            <div className="flex items-center justify-center xl:justify-between">
+            <div
+              className={cn('flex items-center justify-center', !isCollapsed && 'justify-between')}
+            >
               <p
                 className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
               >
@@ -361,7 +360,9 @@ export function NavigationRail({
               )}
             </div>
 
-            <div className="flex items-center justify-center xl:justify-between">
+            <div
+              className={cn('flex items-center justify-center', !isCollapsed && 'justify-between')}
+            >
               <p
                 className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
               >
@@ -379,7 +380,9 @@ export function NavigationRail({
               )}
             </div>
 
-            <div className="flex items-center justify-center xl:justify-between">
+            <div
+              className={cn('flex items-center justify-center', !isCollapsed && 'justify-between')}
+            >
               <p
                 className={cn('text-muted-foreground text-xs font-medium', isCollapsed && 'hidden')}
               >

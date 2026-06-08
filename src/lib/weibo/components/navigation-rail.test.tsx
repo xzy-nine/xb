@@ -17,6 +17,22 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
 })
 
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: '',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
 describe('NavigationRail', () => {
   beforeEach(() => {
     getCurrentUserUidMock.mockReset()
@@ -32,19 +48,7 @@ describe('NavigationRail', () => {
         },
       },
     })
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: vi.fn().mockImplementation(() => ({
-        matches: false,
-        media: '',
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
-    })
+    mockMatchMedia(false)
     resetAppSettingsStoreForTest()
     const store = getAppSettingsStore({
       get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
@@ -121,5 +125,14 @@ describe('NavigationRail', () => {
       'aria-pressed',
       'true',
     )
+  })
+
+  it('uses expanded bottom control width without relying on the CSS xl breakpoint', () => {
+    mockMatchMedia(true)
+    renderNavigationRail()
+
+    const rewriteLabel = screen.getByText('返回原模式')
+    expect(rewriteLabel.parentElement).toHaveClass('justify-between')
+    expect(rewriteLabel.parentElement?.parentElement).toHaveClass('w-[180px]')
   })
 })
