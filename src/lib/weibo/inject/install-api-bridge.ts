@@ -102,7 +102,7 @@ export function installApiBridge(targetWindow: Window) {
         }
         postResponse(id, undefined, {
           status,
-          message: error.message,
+          message: error.response?.data?.message || error.response?.data?.msg || error.message,
         })
       } else {
         postResponse(id, undefined, {

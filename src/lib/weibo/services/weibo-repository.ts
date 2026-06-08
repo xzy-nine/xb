@@ -588,7 +588,7 @@ export async function setStatusLike(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-like-failed')
+    throw new Error(response.msg || response.message || '点赞失败')
   }
 }
 
@@ -597,7 +597,7 @@ export async function cancelStatusLike(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-unlike-failed')
+    throw new Error(response.msg || response.message || '取消点赞失败')
   }
 }
 
@@ -607,7 +607,7 @@ export async function setCommentLike(commentId: string): Promise<void> {
     object_type: 'comment',
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-comment-like-failed')
+    throw new Error(response.msg || response.message || '评论点赞失败')
   }
 }
 
@@ -618,7 +618,7 @@ export async function cancelCommentLike(commentId: string): Promise<void> {
   })
   console.log('[cancelCommentLike] response:', JSON.stringify(response))
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-comment-unlike-failed')
+    throw new Error(response.msg || response.message || '取消评论点赞失败')
   }
 }
 
@@ -627,7 +627,7 @@ export async function deleteWeiboStatus(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-delete-status-failed')
+    throw new Error(response.msg || response.message || '删除微博失败')
   }
 }
 
@@ -636,7 +636,7 @@ export async function deleteWeiboComment(commentId: string): Promise<void> {
     cid: commentId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-delete-comment-failed')
+    throw new Error(response.msg || response.message || '删除评论失败')
   }
 }
 
@@ -645,7 +645,7 @@ export async function createFavorite(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-favorite-failed')
+    throw new Error(response.msg || response.message || '收藏失败')
   }
 }
 
@@ -654,7 +654,7 @@ export async function destroyFavorite(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-unfavorite-failed')
+    throw new Error(response.msg || response.message || '取消收藏失败')
   }
 }
 
@@ -693,8 +693,10 @@ export async function submitComposeAction(input: SubmitComposeInput): Promise<vo
     input.target.kind === 'comment' ? WEIBO_ENDPOINTS.commentReply : WEIBO_ENDPOINTS.commentCreate
 
   const response = await wbPostForm<WeiboMutationResponse>(endpoint, buildCommentPayload(input))
+  console.log('🚀 ~ submitComposeAction ~ response:', response)
 
   if (response.ok !== 1) {
+    console.error('[submitComposeAction] API error response:', JSON.stringify(response))
     throw new Error(response.msg || response.message || '发送微博失败')
   }
 }
