@@ -416,7 +416,7 @@ function FeedActions({
                 : '展开精选评论'
               : '回复微博'
           }
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             if (!controlsInlineComments) {
@@ -441,7 +441,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="转发微博"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onRepostClick?.(item)
@@ -463,7 +463,7 @@ function FeedActions({
         aria-label={liked ? '取消点赞' : '点赞微博'}
         aria-pressed={liked}
         disabled={likePending}
-        className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
+        className="group py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
         onClick={(event) => {
           event.stopPropagation()
           onLikeClick?.(item)
@@ -495,7 +495,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="生图"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onGenImage()
@@ -514,7 +514,7 @@ function FeedActions({
           variant="ghost"
           aria-label="批量下载"
           disabled={downloadPending}
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onDownload()
@@ -534,7 +534,7 @@ function FeedActions({
           aria-label={isBookmarked ? '取消收藏' : '收藏'}
           aria-pressed={isBookmarked}
           disabled={favoritePending}
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             void onFavorite()
@@ -557,7 +557,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="复制链接"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onCopyLink()
@@ -575,7 +575,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="复制内容"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
+          className="group py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onCopyText()

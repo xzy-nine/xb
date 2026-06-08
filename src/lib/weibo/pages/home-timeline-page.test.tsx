@@ -145,7 +145,7 @@ describe('HomeTimelinePage', () => {
     expect(vi.mocked(loadFollowGroups)).toHaveBeenCalled()
   })
 
-  it('scrolls to top immediately when the new posts bubble is clicked', async () => {
+  it('shows the new posts indicator and refreshes on refresh button click', async () => {
     let timelineRequestCount = 0
     let resolveRefresh: ((value: Awaited<ReturnType<typeof loadHomeTimeline>>) => void) | undefined
     const refreshPromise = new Promise<Awaited<ReturnType<typeof loadHomeTimeline>>>((resolve) => {
@@ -228,8 +228,10 @@ describe('HomeTimelinePage', () => {
       </QueryClientProvider>,
     )
 
-    const bubble = await screen.findByRole('button', { name: /1条新微博/ })
-    fireEvent.click(bubble)
+    expect(await screen.findByText('1条新微博')).toBeInTheDocument()
+
+    const refreshButton = screen.getAllByRole('button', { name: '刷新' })[0]
+    fireEvent.click(refreshButton)
 
     expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
     expect(timelineRequestCount).toBe(2)
