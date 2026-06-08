@@ -28,6 +28,28 @@ import {
 } from '@/lib/weibo/queries/weibo-queries'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 
+function SidebarSection({ children }: { children: React.ReactNode }) {
+  const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
+  const glassOpacity = useAppSettings((s) => s.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.glassBlur)
+
+  const isGlassActive = glassBlur > 0 || glassOpacity < 100
+
+  return (
+    <div
+      className={cn(
+        'rounded-xl transition-all duration-300',
+        backgroundEnabled &&
+          isGlassActive &&
+          'bg-card/80 backdrop-blur-md border border-border/50 shadow-lg',
+        !backgroundEnabled && 'bg-transparent',
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
 function NavButton({
   children,
   label,
@@ -182,7 +204,7 @@ export function NavigationRail({
   return (
     <TooltipProvider>
       <aside className="flex h-full min-h-0 flex-col px-1 py-3 transition md:px-2 md:py-4 xl:px-3 xl:py-5">
-        <div className="mb-4 flex justify-start">
+        <div className="mb-4 flex justify-start px-1 transition md:px-2 xl:px-3">
           <img
             src={WeiboLogo}
             alt="微博 Logo"
@@ -190,111 +212,119 @@ export function NavigationRail({
           />
         </div>
 
-        <nav aria-label="主导航" className="flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-col gap-1">
-            <NavButton
-              label="主页"
-              showLabel={!isCollapsed}
-              isActive={!isOwnProfileActive && pageKind === 'home'}
-              onClick={() => {
-                if (homeGroupId) {
-                  navigate('/mygroups?gid=' + homeGroupId)
-                  return
-                }
-                navigate(homeTab === 'for-you' ? '/' : '/mygroups')
-              }}
-            >
-              <HomeIcon aria-hidden="true" className="size-4 shrink-0" />
-            </NavButton>
+        <SidebarSection>
+          <div className="flex flex-col px-1 py-3 transition md:px-2 md:py-4 xl:px-3 xl:py-4">
+            <nav aria-label="主导航" className="flex flex-col">
+              <div className="flex flex-col gap-1">
+                <NavButton
+                  label="主页"
+                  showLabel={!isCollapsed}
+                  isActive={!isOwnProfileActive && pageKind === 'home'}
+                  onClick={() => {
+                    if (homeGroupId) {
+                      navigate('/mygroups?gid=' + homeGroupId)
+                      return
+                    }
+                    navigate(homeTab === 'for-you' ? '/' : '/mygroups')
+                  }}
+                >
+                  <HomeIcon aria-hidden="true" className="size-4 shrink-0" />
+                </NavButton>
 
-            {showExplore && (
-              <NavButton
-                label="探索"
-                showLabel={!isCollapsed}
-                isActive={pageKind === 'explore'}
-                onClick={() => navigate('/hot/weibo/102803')}
-              >
-                <CompassIcon aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showExplore && (
+                  <NavButton
+                    label="探索"
+                    showLabel={!isCollapsed}
+                    isActive={pageKind === 'explore'}
+                    onClick={() => navigate('/hot/weibo/102803')}
+                  >
+                    <CompassIcon aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
 
-            {showFavorites && (
-              <NavButton
-                label="收藏"
-                showLabel={!isCollapsed}
-                isActive={isSavedItemsActive}
-                onClick={() => navigate(favoritesHref)}
-              >
-                <BookmarkIcon aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showFavorites && (
+                  <NavButton
+                    label="收藏"
+                    showLabel={!isCollapsed}
+                    isActive={isSavedItemsActive}
+                    onClick={() => navigate(favoritesHref)}
+                  >
+                    <BookmarkIcon aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
 
-            {showHistorySetting && (
-              <NavButton
-                label="历史"
-                showLabel={!isCollapsed}
-                isActive={pageKind === 'history'}
-                onClick={() => navigate('/history')}
-              >
-                <HistoryIcon aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showHistorySetting && (
+                  <NavButton
+                    label="历史"
+                    showLabel={!isCollapsed}
+                    isActive={pageKind === 'history'}
+                    onClick={() => navigate('/history')}
+                  >
+                    <HistoryIcon aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
 
-            {showNotifications && (
-              <NavButton
-                label="通知"
-                showLabel={!isCollapsed}
-                isActive={pageKind === 'notifications'}
-                showBadge={showNotificationBadge}
-                onClick={() => navigate('/at/weibo')}
-              >
-                <BellIcon aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showNotifications && (
+                  <NavButton
+                    label="通知"
+                    showLabel={!isCollapsed}
+                    isActive={pageKind === 'notifications'}
+                    showBadge={showNotificationBadge}
+                    onClick={() => navigate('/at/weibo')}
+                  >
+                    <BellIcon aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
 
-            {showDMs && (
-              <NavButton
-                label={
-                  <span className="flex items-center gap-1">
-                    私信
-                    <ArrowUpRightIcon className="size-3" />
-                  </span>
-                }
-                showLabel={!isCollapsed}
-                href="https://api.weibo.com/chat"
-                isExternal
-                showBadge={showDmBadge}
-              >
-                <MessageSquareMoreIcon aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showDMs && (
+                  <NavButton
+                    label={
+                      <span className="flex items-center gap-1">
+                        私信
+                        <ArrowUpRightIcon className="size-3" />
+                      </span>
+                    }
+                    showLabel={!isCollapsed}
+                    href="https://api.weibo.com/chat"
+                    isExternal
+                    showBadge={showDmBadge}
+                  >
+                    <MessageSquareMoreIcon aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
 
-            {showProfile && (
-              <NavButton
-                label="我的"
-                showLabel={!isCollapsed}
-                isActive={isOwnProfileActive}
-                onClick={() => navigate(profileHref)}
-              >
-                <UserIcon aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showProfile && (
+                  <NavButton
+                    label="我的"
+                    showLabel={!isCollapsed}
+                    isActive={isOwnProfileActive}
+                    onClick={() => navigate(profileHref)}
+                  >
+                    <UserIcon aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
 
-            {showCompose && (
-              <NavButton
-                label="发微博"
-                showLabel={!isCollapsed}
-                onClick={onComposeOpen}
-                variant="default"
-              >
-                <Pencil aria-hidden="true" className="size-4 shrink-0" />
-              </NavButton>
-            )}
+                {showCompose && (
+                  <NavButton
+                    label="发微博"
+                    showLabel={!isCollapsed}
+                    onClick={onComposeOpen}
+                    variant="default"
+                  >
+                    <Pencil aria-hidden="true" className="size-4 shrink-0" />
+                  </NavButton>
+                )}
+              </div>
+            </nav>
           </div>
+        </SidebarSection>
 
+        <div className="flex-1" />
+
+        <SidebarSection>
           <div
             className={cn(
-              'border-border/40 mt-auto space-y-3 border-t pt-3',
+              'border-border/40 space-y-3 border-t pt-3 px-1 transition md:px-2 xl:px-3',
               !isCollapsed && 'xl:w-[180px] xl:space-y-3.5 xl:pt-4',
             )}
           >
@@ -404,7 +434,7 @@ export function NavigationRail({
               )}
             </div>
           </div>
-        </nav>
+        </SidebarSection>
       </aside>
     </TooltipProvider>
   )
