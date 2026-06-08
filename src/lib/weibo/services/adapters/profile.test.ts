@@ -13,6 +13,11 @@ describe('adaptProfileInfoResponse', () => {
           avatar_hd: 'https://wx1.sinaimg.cn/large/avatar.jpg',
           followers_count: 1000000,
           friends_count: 500,
+          statuses_count: 1200,
+          location: '北京',
+          verified: true,
+          verified_reason: '广告导演',
+          special_follow: true,
         },
       },
     })
@@ -22,6 +27,12 @@ describe('adaptProfileInfoResponse', () => {
     expect(result.bio).toBe('bio')
     expect(result.followersCount).toBe(1000000)
     expect(result.friendsCount).toBe(500)
+    expect(result.statusesCount).toBe(1200)
+    expect(result.location).toBe('北京')
+    expect(result.verified).toBe(true)
+    expect(result.verifiedReason).toBe('广告导演')
+    expect(result.descText).toBe('广告导演')
+    expect(result.specialFollow).toBe(true)
   })
 })
 
@@ -78,5 +89,23 @@ describe('mergeProfileDetail', () => {
 
     expect(merged.descText).toBe('认证文案')
     expect(merged.bio).toBe('from detail 简介')
+  })
+
+  it('keeps verified reason when detail desc text is absent', () => {
+    const profile = adaptProfileInfoResponse({
+      data: {
+        user: {
+          idstr: '123',
+          screen_name: 'Bob',
+          verified_reason: '广告导演',
+        },
+      },
+    })
+
+    const merged = mergeProfileDetail(profile, {
+      data: {},
+    })
+
+    expect(merged.descText).toBe('广告导演')
   })
 })

@@ -30,6 +30,8 @@ export const WEIBO_ENDPOINTS = {
   profileCreateGroup: '/ajax/profile/createGroup',
   followCreate: '/ajax/friendships/create',
   followDestroy: '/ajax/friendships/destory',
+  specialFollowAdd: '/ajax/friendships/specialAdd',
+  specialFollowDestroy: '/ajax/friendships/specialDestory',
   searchBand: '/ajax/side/searchBand',
   mineBand: '/ajax/statuses/mineBand',
   entertainmentBand: '/ajax/statuses/entertainment',

@@ -8,6 +8,7 @@ import {
   loadProfileAssignedGroups,
   loadProfileAvailableGroups,
   loadProfileSearchPosts,
+  setSpecialFollowUser,
   setProfileGroups,
   submitComposeAction,
 } from '@/lib/weibo/services/weibo-repository'
@@ -286,6 +287,26 @@ describe('weibo-repository', () => {
     expect(wbPostForm).toHaveBeenCalledWith('/ajax/profile/createGroup', {
       name: '超级厉害',
       isOpen: 'true',
+    })
+  })
+
+  it('sets special follow by posting touid', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(setSpecialFollowUser('1694917363', true)).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/friendships/specialAdd', {
+      touid: '1694917363',
+    })
+  })
+
+  it('cancels special follow by posting touid', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(setSpecialFollowUser('1694917363', false)).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/friendships/specialDestory', {
+      touid: '1694917363',
     })
   })
 })

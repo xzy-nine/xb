@@ -555,6 +555,17 @@ function isWeiboMutationSuccess(response: WeiboMutationResponse): boolean {
   return response.ok === 1 || response.result === true
 }
 
+export async function setSpecialFollowUser(uid: string, special: boolean): Promise<void> {
+  const endpoint = special ? WEIBO_ENDPOINTS.specialFollowAdd : WEIBO_ENDPOINTS.specialFollowDestroy
+  const response = await wbPostForm<WeiboMutationResponse>(endpoint, {
+    touid: uid,
+  })
+
+  if (!isWeiboMutationSuccess(response)) {
+    throw new Error(response.msg ?? response.message ?? '设置特别关注失败')
+  }
+}
+
 function buildRepostPayload(input: SubmitComposeInput): Record<string, string> {
   if (input.target.kind !== 'status') {
     throw new Error('weibo-repost-requires-status-target')

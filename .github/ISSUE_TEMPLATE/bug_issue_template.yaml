@@ -19,13 +19,11 @@ body:
       description: 请填写扩展版本、浏览器版本等信息。
       placeholder: |
         - 浏览器（如 Google Chrome）：
-        - 浏览器版本（如 126.0.6478.126）：
         - xb 版本（如 0.1.0）：
 
         如果你修改了 xb 的设置，请写在下面以方便排查问题（可粗略写成类似「设置了 ×× 后出现这个问题」）：
       value: |
         - 浏览器（如 Google Chrome）：
-        - 浏览器版本（如 126.0.6478.126）：
         - xb 版本（如 0.1.0）：
 
         如果你修改了 xb 的设置，请写在下面以方便排查问题（可粗略写成类似「设置了 ×× 后出现这个问题」）：
@@ -38,6 +36,7 @@ body:
       options:
         - Chrome Web Store
         - Firefox Add-ons
+        - Edge Add-ons
         - GitHub Release
         - 自行编译
     validations:
@@ -61,7 +60,7 @@ body:
   - type: textarea
     attributes:
       label: 预期行为
-      description: 你认为应该是什么行为。
+      description: 如果产品不符合预期，请提供你认为应该是什么行为。
     validations:
       required: false
 

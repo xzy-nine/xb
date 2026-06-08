@@ -31,6 +31,7 @@ import { createProfileGroup, setProfileGroups } from '@/lib/weibo/services/weibo
 interface ProfileGroupButtonProps {
   uid: string
   following: boolean
+  size?: 'icon-sm' | 'icon-lg'
 }
 
 function getGroupIds(groups: ProfileFollowGroup[]) {
@@ -284,7 +285,7 @@ function ProfileGroupDialogContent({
   )
 }
 
-export function ProfileGroupButton({ uid, following }: ProfileGroupButtonProps) {
+export function ProfileGroupButton({ uid, following, size = 'icon-lg' }: ProfileGroupButtonProps) {
   const [open, setOpen] = useState(false)
   const currentUid = getCurrentUserUid()
   const isSelf = currentUid !== null && currentUid === uid
@@ -296,8 +297,8 @@ export function ProfileGroupButton({ uid, following }: ProfileGroupButtonProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="secondary" size="lg">
-          分组
+        <Button type="button" variant="secondary" size={size} aria-label="分组" title="分组">
+          <Users aria-hidden="true" />
         </Button>
       </DialogTrigger>
       <ProfileGroupDialogContent uid={uid} open={open} onOpenChange={setOpen} />
