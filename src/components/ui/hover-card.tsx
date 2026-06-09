@@ -3,6 +3,7 @@ import * as React from 'react'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 function HoverCard({
   openDelay = 300,
@@ -30,6 +31,7 @@ function HoverCardContent({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
+  const resolvedZIndex = React.useMemo(() => getNextZIndex(), [])
 
   return (
     <HoverCardPrimitive.Portal container={container}>
@@ -38,9 +40,10 @@ function HoverCardContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'z-50 w-72 rounded-xl border bg-card p-0 shadow-lg outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+          'w-72 rounded-xl border bg-card p-0 shadow-lg outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
           className,
         )}
+        style={{ zIndex: resolvedZIndex }}
         {...props}
       />
     </HoverCardPrimitive.Portal>

@@ -3,6 +3,7 @@ import * as React from 'react'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
@@ -22,9 +23,11 @@ function PopoverContent({
   className,
   align = 'center',
   sideOffset = 4,
+  zIndex,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & { zIndex?: number }) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
+  const resolvedZIndex = React.useMemo(() => zIndex ?? getNextZIndex(), [zIndex])
 
   return (
     <PopoverPrimitive.Portal container={container}>
@@ -33,9 +36,10 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           className,
         )}
+        style={{ zIndex: resolvedZIndex }}
         {...props}
       />
     </PopoverPrimitive.Portal>
