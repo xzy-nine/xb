@@ -40,11 +40,11 @@ function isLongImage(image: FeedImage) {
 }
 
 function gridClassName(count: number) {
-  if (count === 1) return 'grid-cols-2 max-w-[520px]'
+  if (count === 1) return 'max-w-[520px] grid-cols-1'
   if (count === 2) return 'grid-cols-2 max-w-[520px]'
-  if (count === 3) return 'grid-cols-3'
+  if (count === 3) return 'grid-cols-2 sm:grid-cols-3'
   if (count === 4) return 'grid-cols-2 max-w-[520px]'
-  if (count > 9) return 'grid-cols-4'
+  if (count > 9) return 'grid-cols-3 sm:grid-cols-4'
   return 'grid-cols-3'
 }
 
@@ -73,6 +73,8 @@ function ImageOverlay({ image, dim }: { image: FeedImage; dim: boolean }) {
         src={image.thumbnailUrl}
         className="aspect-square h-full w-full object-cover object-center"
         alt=""
+        width={image.width ?? 1}
+        height={image.height ?? 1}
         loading="lazy"
         decoding="async"
       />
@@ -133,6 +135,8 @@ function LivePhotoPreview({ image, params }: { image: FeedImage; params: PhotoRe
           src={image.largeUrl}
           className="h-full w-full object-contain"
           alt=""
+          width={image.width ?? 1}
+          height={image.height ?? 1}
           style={{ transform: `scale(${params.scale})` }}
         />
       )}
@@ -278,6 +282,8 @@ export const ImageCarousel = memo(function ImageCarousel({
                           src={item.video.videoCoverUrl}
                           className="aspect-square h-full w-full object-cover object-center"
                           alt=""
+                          width={item.video.videoOrientation === 'vertical' ? 600 : 960}
+                          height={item.video.videoOrientation === 'vertical' ? 800 : 540}
                           loading="lazy"
                           decoding="async"
                         />
