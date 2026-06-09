@@ -6,6 +6,7 @@ import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { ProfileFollowGroup, UserProfile } from '@/lib/weibo/models/profile'
 import type { CommentItem, StatusCommentsPage } from '@/lib/weibo/models/status'
 import type { StatusDetail } from '@/lib/weibo/models/status'
+import type { ProfileSearchFilters } from '@/lib/weibo/route/profile-search-params'
 import {
   adaptCommentsResponse,
   type WeiboCommentsPayload,
@@ -79,6 +80,18 @@ import type { WeiboLongTextData } from '@/lib/weibo/utils/transform'
 
 export type HomeTimelineTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 type ProfileLookup = { uid: string } | { screenName: string }
+
+export interface ProfileSearchPage extends TimelinePage {
+  total?: string
+  matchedQuery?: string
+}
+
+export interface LoadProfileSearchParams {
+  query: string
+  starttime: number | null
+  endtime: number
+  filters: ProfileSearchFilters
+}
 
 interface ProfileFollowGroupPayload {
   id?: string | number
@@ -405,6 +418,34 @@ export async function loadProfilePosts(profileId: string, page: number): Promise
   return adaptTimelineResponse(payload, page)
 }
 
+export async function loadProfileSearchPosts(
+  uid: string,
+  params: LoadProfileSearchParams,
+  page: number,
+): Promise<ProfileSearchPage> {
+  const payload = await wbGet<
+    WeiboTimelinePayload & { data?: { total?: string; absstr?: string } }
+  >(WEIBO_ENDPOINTS.profileSearch, {
+    uid,
+    page,
+    q: params.query,
+    ...(params.starttime !== null ? { starttime: params.starttime } : {}),
+    endtime: params.endtime,
+    hasori: params.filters.hasori ? 1 : 0,
+    hasret: params.filters.hasret ? 1 : 0,
+    hastext: params.filters.hastext ? 1 : 0,
+    haspic: params.filters.haspic ? 1 : 0,
+    hasvideo: params.filters.hasvideo ? 1 : 0,
+    hasmusic: params.filters.hasmusic ? 1 : 0,
+  })
+  const pageData = adaptTimelineResponse(payload, page)
+  return {
+    ...pageData,
+    total: payload.data?.total,
+    matchedQuery: payload.data?.absstr,
+  }
+}
+
 export async function loadProfileAssignedGroups(uid: string): Promise<ProfileFollowGroup[]> {
   const payload = await wbGet<ProfileAssignedGroupsPayload>(WEIBO_ENDPOINTS.profileGroupList, {
     uid,
@@ -515,6 +556,17 @@ function isWeiboMutationSuccess(response: WeiboMutationResponse): boolean {
   return response.ok === 1 || response.result === true
 }
 
+export async function setSpecialFollowUser(uid: string, special: boolean): Promise<void> {
+  const endpoint = special ? WEIBO_ENDPOINTS.specialFollowAdd : WEIBO_ENDPOINTS.specialFollowDestroy
+  const response = await wbPostForm<WeiboMutationResponse>(endpoint, {
+    touid: uid,
+  })
+
+  if (!isWeiboMutationSuccess(response)) {
+    throw new Error(response.msg ?? response.message ?? '设置特别关注失败')
+  }
+}
+
 function buildRepostPayload(input: SubmitComposeInput): Record<string, string> {
   if (input.target.kind !== 'status') {
     throw new Error('weibo-repost-requires-status-target')
@@ -537,7 +589,7 @@ export async function setStatusLike(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-like-failed')
+    throw new Error(response.msg || response.message || '点赞失败')
   }
 }
 
@@ -546,7 +598,7 @@ export async function cancelStatusLike(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-unlike-failed')
+    throw new Error(response.msg || response.message || '取消点赞失败')
   }
 }
 
@@ -556,7 +608,7 @@ export async function setCommentLike(commentId: string): Promise<void> {
     object_type: 'comment',
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-comment-like-failed')
+    throw new Error(response.msg || response.message || '评论点赞失败')
   }
 }
 
@@ -567,7 +619,7 @@ export async function cancelCommentLike(commentId: string): Promise<void> {
   })
   console.log('[cancelCommentLike] response:', JSON.stringify(response))
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-comment-unlike-failed')
+    throw new Error(response.msg || response.message || '取消评论点赞失败')
   }
 }
 
@@ -576,7 +628,7 @@ export async function deleteWeiboStatus(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-delete-status-failed')
+    throw new Error(response.msg || response.message || '删除微博失败')
   }
 }
 
@@ -585,7 +637,7 @@ export async function deleteWeiboComment(commentId: string): Promise<void> {
     cid: commentId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-delete-comment-failed')
+    throw new Error(response.msg || response.message || '删除评论失败')
   }
 }
 
@@ -594,7 +646,7 @@ export async function createFavorite(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-favorite-failed')
+    throw new Error(response.msg || response.message || '收藏失败')
   }
 }
 
@@ -603,7 +655,7 @@ export async function destroyFavorite(statusId: string): Promise<void> {
     id: statusId,
   })
   if (!isWeiboMutationSuccess(response)) {
-    throw new Error(response.msg || 'weibo-unfavorite-failed')
+    throw new Error(response.msg || response.message || '取消收藏失败')
   }
 }
 
@@ -642,8 +694,10 @@ export async function submitComposeAction(input: SubmitComposeInput): Promise<vo
     input.target.kind === 'comment' ? WEIBO_ENDPOINTS.commentReply : WEIBO_ENDPOINTS.commentCreate
 
   const response = await wbPostForm<WeiboMutationResponse>(endpoint, buildCommentPayload(input))
+  console.log('🚀 ~ submitComposeAction ~ response:', response)
 
   if (response.ok !== 1) {
+    console.error('[submitComposeAction] API error response:', JSON.stringify(response))
     throw new Error(response.msg || response.message || '发送微博失败')
   }
 }

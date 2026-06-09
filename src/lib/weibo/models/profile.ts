@@ -8,7 +8,11 @@ export interface UserProfile {
   followersCount: number | null
   followersCountStr: string | null
   friendsCount: number | null
+  statusesCount: number | null
+  location: string | null
   ipLocation: string | null
+  verified: boolean
+  verifiedReason: string | null
   /** 认证信息，来自 profile/detail 的 `desc_text`（与简介 `description` 不同）。 */
   descText: string | null
   createdAt: string | null
@@ -18,6 +22,8 @@ export interface UserProfile {
   following: boolean
   /** 对方是否关注我 */
   followMe: boolean
+  /** 我是否把对方设为特别关注 */
+  specialFollow: boolean
 }
 
 export interface ProfileFollowGroup {

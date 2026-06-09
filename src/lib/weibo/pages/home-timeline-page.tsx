@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 
 import type { HomeTab } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -126,17 +126,19 @@ export function HomeTimelinePage() {
     newPostsCheckQuery.dataUpdatedAt > dismissedForGroup
 
   const handleNewPostsClick = useCallback(() => {
+    ctx.scrollMainToTop()
     dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] =
       newPostsCheckQuery.dataUpdatedAt
-    queryClient.setQueryData(
-      ['weibo', 'timeline', 'following', followingNewPostsGroupKey, 'new-check'],
-      null,
-    )
     void queryClient.invalidateQueries({
       queryKey: ['weibo', 'timeline', 'following', followingNewPostsGroupKey],
       exact: true,
     })
-  }, [queryClient, followingNewPostsGroupKey, newPostsCheckQuery.dataUpdatedAt])
+  }, [ctx, queryClient, followingNewPostsGroupKey, newPostsCheckQuery.dataUpdatedAt])
+
+  const handleTimelineRefresh = useCallback(() => {
+    ctx.scrollMainToTop()
+    void timelineQuery.refetch()
+  }, [ctx, timelineQuery])
 
   const isCustomGroupRoute = activeTab === 'following' && selectedGroupGid !== 'default'
   const handleTimelineMenuChange = useCallback(
@@ -192,12 +194,13 @@ export function HomeTimelinePage() {
         titleValue={activeMenuValue}
         titleOptionGroups={titleOptionGroups}
         onTitleChange={handleTimelineMenuChange}
-        onRefresh={() => void timelineQuery.refetch()}
+        onRefresh={handleTimelineRefresh}
         isRefreshing={isRefreshing}
       >
         {showNewPostsBubble ? (
           <div className="absolute top-[calc(100%+0.75rem)] left-1/2 z-20 -translate-x-1/2">
             <NewPostsBubble
+              key={newPostsCheckQuery.dataUpdatedAt}
               authors={newPostsCheckQuery.data?.authors ?? []}
               count={newPostsCheckQuery.data?.count ?? 0}
               onClick={handleNewPostsClick}

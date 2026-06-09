@@ -72,7 +72,7 @@ window.addEventListener('message', (event: MessageEvent) => {
     if (event.data.error) {
       const { status, message } = event.data.error
       if (status) {
-        pending.reject(new Error(`weibo-request-failed:${status}`))
+        pending.reject(new Error(message ?? `weibo-request-failed:${status}`))
       } else {
         pending.reject(new Error(message ?? 'weibo-request-failed'))
       }

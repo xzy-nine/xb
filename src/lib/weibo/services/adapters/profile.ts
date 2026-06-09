@@ -14,10 +14,15 @@ interface ProfileUserPayload {
   friends_count?: number
   id?: number | string
   idstr?: string
+  location?: string
   profile_image_url?: string
   screen_name?: string
+  statuses_count?: number
+  verified?: boolean
+  verified_reason?: string
   following?: boolean
   follow_me?: boolean
+  special_follow?: boolean
 }
 
 export interface ProfileInfoPayload {
@@ -60,13 +65,18 @@ export function adaptProfileInfoResponse(payload: ProfileInfoPayload): UserProfi
     followersCount: user.followers_count ?? null,
     followersCountStr: user.followers_count_str ?? null,
     friendsCount: user.friends_count ?? null,
+    statusesCount: user.statuses_count ?? null,
+    location: user.location ?? null,
     ipLocation: null,
-    descText: null,
+    verified: user.verified ?? false,
+    verifiedReason: user.verified_reason ?? null,
+    descText: user.verified_reason ?? null,
     createdAt: null,
     mutualFollowers: [],
     mutualFollowerTotal: null,
     following: user.following ?? false,
     followMe: user.follow_me ?? false,
+    specialFollow: user.special_follow ?? false,
   }
 }
 
@@ -88,7 +98,7 @@ export function mergeProfileDetail(
   const bioFromDetail = data?.description?.trim()
   return {
     ...profile,
-    descText: data?.desc_text ?? null,
+    descText: data?.desc_text ?? profile.verifiedReason,
     bio: bioFromDetail || profile.bio,
     ipLocation: data?.ip_location ?? null,
     createdAt: formatCreatedAtDate(data?.created_at),

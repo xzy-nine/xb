@@ -21,11 +21,12 @@ export function NewPostsBubble({ authors, count, onClick }: NewPostsBubbleProps)
 
   const handleClick = useCallback(() => {
     if (!visible) return
+    onClick()
     setVisible(false)
-  }, [visible])
+  }, [onClick, visible])
 
   return (
-    <AnimatePresence onExitComplete={onClick}>
+    <AnimatePresence>
       {visible ? (
         <motion.button
           key="new-posts-bubble"

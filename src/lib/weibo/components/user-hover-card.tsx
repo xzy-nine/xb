@@ -1,5 +1,5 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
-import { MapPin, UserRound } from 'lucide-react'
+import { BadgeCheck, MapPin, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { FollowGroup } from '@/lib/weibo/components/follow-group'
 import {
   formatProfileCount,
   ProfileBanner,
@@ -14,8 +15,6 @@ import {
 } from '@/lib/weibo/components/profile-shared'
 import { RatingPanel } from '@/lib/weibo/components/rating-panel'
 import { loadProfileHoverCard } from '@/lib/weibo/services/weibo-repository'
-
-import { FollowButton } from './follow-button'
 
 function UserHoverCardSkeleton() {
   return (
@@ -67,6 +66,7 @@ export function UserHoverCard(props: UserHoverCardProps) {
   })
 
   const profileUid = profile?.id ?? ''
+  const displayLocation = profile?.location ?? profile?.ipLocation ?? null
   const ratingEnabled = useAppSettings((s) => s.ratingEnabled)
 
   return (
@@ -95,17 +95,23 @@ export function UserHoverCard(props: UserHoverCardProps) {
                     {profile.name?.slice(0, 1).toUpperCase() || '?'}
                   </AvatarFallback>
                 </Avatar>
-                <FollowButton
+                <FollowGroup
                   uid={profile.id}
                   following={profile.following}
                   followMe={profile.followMe}
+                  specialFollowing={profile.specialFollow}
                   className="z-10 float-right"
                 />
               </div>
 
-              <p className="text-foreground truncate text-base leading-tight font-bold">
-                {profile.name}
-              </p>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <p className="text-foreground truncate text-base leading-tight font-bold">
+                  {profile.name}
+                </p>
+                {profile.verified ? (
+                  <BadgeCheck className="size-4 shrink-0 fill-blue-500 text-white" />
+                ) : null}
+              </div>
 
               {profile.descText ? (
                 <p className="text-muted-foreground text-xs" title="认证信息">
@@ -119,10 +125,10 @@ export function UserHoverCard(props: UserHoverCardProps) {
                 </p>
               ) : null}
 
-              {profile.ipLocation ? (
+              {displayLocation ? (
                 <div className="text-muted-foreground flex items-center gap-1 text-xs">
                   <MapPin className="size-3" />
-                  <span>{profile.ipLocation}</span>
+                  <span>{displayLocation}</span>
                 </div>
               ) : null}
 

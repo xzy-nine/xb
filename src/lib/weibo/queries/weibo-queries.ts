@@ -4,6 +4,8 @@ import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { StatusCommentsPage } from '@/lib/weibo/models/status'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
+import type { ProfileSearchParams } from '@/lib/weibo/route/profile-search-params'
+import { PROFILE_SEARCH_FILTER_KEYS } from '@/lib/weibo/route/profile-search-params'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 import type { UnreadCounts } from '@/lib/weibo/services/weibo-repository'
 import { checkUnreadNotifications } from '@/lib/weibo/services/weibo-repository'
@@ -24,6 +26,7 @@ import {
   loadProfileAssignedGroups,
   loadProfileAvailableGroups,
   loadProfilePosts,
+  loadProfileSearchPosts,
   loadSearch,
   loadStatusComments,
   loadStatusDetail,
@@ -124,6 +127,36 @@ export function profilePostsInfiniteOptions(profileId: string) {
       loadProfilePosts(profileId, pageParam ? Number(pageParam) : 1),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    staleTime: 30 * 60 * 1000,
+  }
+}
+
+export function profileSearchInfiniteOptions(profileId: string, params: ProfileSearchParams) {
+  return {
+    queryKey: [
+      'weibo',
+      'profile',
+      'search',
+      profileId,
+      params.query,
+      params.starttime,
+      params.endtime,
+      ...PROFILE_SEARCH_FILTER_KEYS.map((key) => (params.filters[key] ? 1 : 0)),
+    ] as const,
+    queryFn: ({ pageParam }: { pageParam: string | null }) =>
+      loadProfileSearchPosts(profileId, params, pageParam ? Number(pageParam) : 1),
+    initialPageParam: null as string | null,
+    getNextPageParam: (
+      lastPage: TimelinePage & { total?: string },
+      allPages: Array<TimelinePage & { total?: string }>,
+    ) => {
+      const loadedCount = allPages.reduce((sum, page) => sum + page.items.length, 0)
+      const total = Number(lastPage.total)
+      if (Number.isFinite(total) && loadedCount >= total) {
+        return undefined
+      }
+      return lastPage.nextCursor ?? undefined
+    },
     staleTime: 30 * 60 * 1000,
   }
 }

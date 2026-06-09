@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import {
   createProfileGroup,
-  loadProfileAssignedGroups,
-  loadProfileAvailableGroups,
   loadHomeTimeline,
   loadLikedStatuses,
+  loadProfileAssignedGroups,
+  loadProfileAvailableGroups,
+  loadProfileSearchPosts,
+  setSpecialFollowUser,
   setProfileGroups,
   submitComposeAction,
 } from '@/lib/weibo/services/weibo-repository'
@@ -195,6 +197,55 @@ describe('weibo-repository', () => {
     })
   })
 
+  it('searches profile posts with original profile search params', async () => {
+    vi.mocked(wbGet).mockResolvedValue({
+      data: {
+        total: '436',
+        absstr: '烧鸡',
+        list: [],
+      },
+    })
+
+    await expect(
+      loadProfileSearchPosts(
+        '1783497251',
+        {
+          query: '烧鸡',
+          starttime: 1780588800,
+          endtime: 1780848000,
+          filters: {
+            hasori: true,
+            hasret: true,
+            hastext: true,
+            haspic: true,
+            hasvideo: false,
+            hasmusic: true,
+          },
+        },
+        1,
+      ),
+    ).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+      total: '436',
+      matchedQuery: '烧鸡',
+    })
+
+    expect(wbGet).toHaveBeenCalledWith('/ajax/statuses/searchProfile', {
+      uid: '1783497251',
+      page: 1,
+      q: '烧鸡',
+      starttime: 1780588800,
+      endtime: 1780848000,
+      hasori: 1,
+      hasret: 1,
+      hastext: 1,
+      haspic: 1,
+      hasvideo: 0,
+      hasmusic: 1,
+    })
+  })
+
   it('sets profile groups by posting selected and origin ids', async () => {
     vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
 
@@ -236,6 +287,26 @@ describe('weibo-repository', () => {
     expect(wbPostForm).toHaveBeenCalledWith('/ajax/profile/createGroup', {
       name: '超级厉害',
       isOpen: 'true',
+    })
+  })
+
+  it('sets special follow by posting touid', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(setSpecialFollowUser('1694917363', true)).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/friendships/specialAdd', {
+      touid: '1694917363',
+    })
+  })
+
+  it('cancels special follow by posting touid', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(setSpecialFollowUser('1694917363', false)).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/friendships/specialDestory', {
+      touid: '1694917363',
     })
   })
 })

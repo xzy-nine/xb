@@ -7,7 +7,11 @@ import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
 import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
 import { AppShell } from '@/lib/weibo/app/app-shell'
 import { ProfilePage } from '@/lib/weibo/pages/profile-page'
-import { loadProfileHoverCard, loadProfilePosts } from '@/lib/weibo/services/weibo-repository'
+import {
+  loadProfileHoverCard,
+  loadProfilePosts,
+  loadProfileSearchPosts,
+} from '@/lib/weibo/services/weibo-repository'
 
 vi.mock('@/lib/weibo/services/weibo-repository', async () => {
   const actual = await vi.importActual<typeof import('@/lib/weibo/services/weibo-repository')>(
@@ -49,6 +53,26 @@ vi.mock('@/lib/weibo/services/weibo-repository', async () => {
         },
       ],
       nextCursor: null,
+    })),
+    loadProfileSearchPosts: vi.fn(async () => ({
+      items: [
+        {
+          id: '601',
+          isLongText: false,
+          mblogId: null,
+          text: 'search post',
+          createdAtLabel: 'today',
+          author: { id: '1', name: 'Alice', avatarUrl: null },
+          stats: { likes: 1, comments: 1, reposts: 0 },
+          images: [],
+          media: null,
+          regionName: '',
+          source: '',
+        },
+      ],
+      nextCursor: null,
+      total: '1',
+      matchedQuery: '烧鸡',
     })),
   }
 })
@@ -93,7 +117,7 @@ describe('ProfilePage', () => {
     })
   })
 
-  it('renders the header and posts tab', async () => {
+  it('renders the header, search bar, and posts feed', async () => {
     const queryClient = new QueryClient()
     render(
       <QueryClientProvider client={queryClient}>
@@ -108,9 +132,45 @@ describe('ProfilePage', () => {
     )
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Alice' })).toBeInTheDocument()
-    expect(await screen.findByRole('tab', { name: '微博' })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('搜索 TA 的微博')).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: '微博' })).not.toBeInTheDocument()
     expect(await screen.findByText('profile post')).toBeInTheDocument()
     expect(vi.mocked(loadProfileHoverCard)).toHaveBeenCalledWith({ uid: '1' })
     expect(vi.mocked(loadProfilePosts)).toHaveBeenCalledWith('1', 1)
+  })
+
+  it('loads profile search when q is present in the URL', async () => {
+    const queryClient = new QueryClient()
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/u/1?q=%E7%83%A7%E9%B8%A1&endtime=1780848000']}>
+          <Routes>
+            <Route path="*" element={<AppShell />}>
+              <Route path="u/:uid" element={<ProfilePage />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('search post')).toBeInTheDocument()
+    expect(await screen.findByText('已检索 1 条')).toBeInTheDocument()
+    expect(vi.mocked(loadProfileSearchPosts)).toHaveBeenCalledWith(
+      '1',
+      {
+        query: '烧鸡',
+        starttime: null,
+        endtime: 1780848000,
+        filters: {
+          hasori: true,
+          hasret: true,
+          hastext: true,
+          haspic: true,
+          hasvideo: true,
+          hasmusic: true,
+        },
+      },
+      1,
+    )
   })
 })

@@ -1,83 +1,119 @@
 import { skipToken, useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
-import { PageEmptyState, PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { ProfileHeader } from '@/lib/weibo/components/profile-header'
+import { ProfileSearchBar } from '@/lib/weibo/components/profile-search-bar'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
   profileLookupFromPage,
   profilePostsInfiniteOptions,
+  profileSearchInfiniteOptions,
 } from '@/lib/weibo/queries/weibo-queries'
+import {
+  parseProfileSearchUrlState,
+  profileSearchStateKey,
+  writeProfileSearchParams,
+} from '@/lib/weibo/route/profile-search-params'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { loadProfileHoverCard } from '@/lib/weibo/services/weibo-repository'
 
 export function ProfilePostsTabs({
   profileId,
+  searchState,
+  searchBarKey,
+  searchParams,
+  setSearchParams,
   onNavigate,
   onCommentClick,
   onRepostClick,
   onCommentReply,
 }: {
   profileId: string
+  searchState?: ReturnType<typeof parseProfileSearchUrlState>
+  searchBarKey?: string
+  searchParams?: URLSearchParams
+  setSearchParams?: ReturnType<typeof useSearchParams>[1]
   onNavigate: ReturnType<typeof useAppShellContext>['navigateToStatusDetail']
   onCommentClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
   onRepostClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
   onCommentReply: ReturnType<typeof useAppShellContext>['setComposeTarget']
 }) {
+  const isSearchEnabled =
+    searchState !== undefined && searchParams !== undefined && setSearchParams !== undefined
+
   const postsQuery = useInfiniteQuery({
     ...profilePostsInfiniteOptions(profileId),
-    enabled: profileId !== '',
+    enabled: profileId !== '' && !searchState?.active,
+  })
+  const searchQuery = useInfiniteQuery({
+    ...profileSearchInfiniteOptions(profileId, searchState!.params),
+    enabled: profileId !== '' && isSearchEnabled && searchState?.active,
   })
 
-  const errorMessage = postsQuery.error instanceof Error ? postsQuery.error.message : null
-  const hasNextPage = Boolean(postsQuery.hasNextPage)
-  const isFetchingNextPage = postsQuery.isFetchingNextPage
+  const activeQuery = isSearchEnabled && searchState?.active ? searchQuery : postsQuery
+  const errorMessage = activeQuery.error instanceof Error ? activeQuery.error.message : null
+  const hasNextPage = Boolean(activeQuery.hasNextPage)
+  const isFetchingNextPage = activeQuery.isFetchingNextPage
+  const total = searchQuery.data?.pages[0]?.total
 
   return (
-    <Tabs defaultValue="posts" className="flex flex-col gap-4">
-      <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 overflow-hidden">
-        <TabsTrigger value="posts">微博</TabsTrigger>
-        <TabsTrigger value="pictures">图片</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="posts" className="flex flex-col gap-4">
-        <InfiniteFeedList
-          pages={postsQuery.data?.pages as TimelinePage[] | undefined}
-          emptyLabel="暂时还没有微博内容"
-          loadingLabel="正在加载此用户微博..."
-          errorMessage={errorMessage}
-          isLoading={postsQuery.isLoading}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          fetchNextPage={postsQuery.fetchNextPage}
-          onRetry={() => void postsQuery.refetch()}
-          onNavigate={onNavigate}
-          onCommentClick={onCommentClick}
-          onRepostClick={onRepostClick}
-          onCommentReply={onCommentReply}
-          className="flex flex-col gap-4"
+    <div className="flex flex-col gap-4">
+      {isSearchEnabled && searchBarKey && searchState && searchParams && setSearchParams ? (
+        <ProfileSearchBar
+          key={searchBarKey}
+          state={searchState}
+          resultTotal={total}
+          isSearching={searchQuery.isFetching}
+          onSubmit={(params) => {
+            setSearchParams(writeProfileSearchParams(searchParams, { active: true, params }))
+          }}
+          onClear={() => {
+            setSearchParams(
+              writeProfileSearchParams(searchParams, { active: false, params: searchState.params }),
+            )
+          }}
         />
-      </TabsContent>
-
-      <TabsContent value="pictures" className="flex flex-col gap-0">
-        <PageEmptyState label="施工中..." />
-      </TabsContent>
-    </Tabs>
+      ) : null}
+      <InfiniteFeedList
+        pages={activeQuery.data?.pages as TimelinePage[] | undefined}
+        emptyLabel={
+          isSearchEnabled && searchState?.active ? '没有找到相关微博' : '暂时还没有微博内容'
+        }
+        loadingLabel={
+          isSearchEnabled && searchState?.active ? '正在搜索此用户微博...' : '正在加载此用户微博...'
+        }
+        errorMessage={errorMessage}
+        isLoading={activeQuery.isLoading}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={activeQuery.fetchNextPage}
+        onRetry={() => void activeQuery.refetch()}
+        onNavigate={onNavigate}
+        onCommentClick={onCommentClick}
+        onRepostClick={onRepostClick}
+        onCommentReply={onCommentReply}
+        className="flex flex-col gap-4"
+      />
+    </div>
   )
 }
 
 export function ProfilePage() {
   const ctx = useAppShellContext()
   const page = useWeiboPage()
+  const [searchParams, setSearchParams] = useSearchParams()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
 
   const profileLookup = profileLookupFromPage(page)
   const isEnabled = rewriteEnabled && page.kind === 'profile'
+  const searchState = useMemo(() => parseProfileSearchUrlState(searchParams), [searchParams])
+  const searchBarKey = profileSearchStateKey(searchState)
 
   const profileQuery = useQuery({
     queryKey: [
@@ -114,6 +150,10 @@ export function ProfilePage() {
           <ProfilePostsTabs
             profileId={profileQuery.data.id}
             onNavigate={ctx?.navigateToStatusDetail}
+            searchState={searchState}
+            searchBarKey={searchBarKey}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
             onCommentClick={(item) =>
               ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
             }

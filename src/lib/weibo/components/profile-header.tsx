@@ -4,8 +4,7 @@ import { Link } from 'react-router'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { FollowButton } from '@/lib/weibo/components/follow-button'
-import { ProfileGroupButton } from '@/lib/weibo/components/profile-group-button'
+import { FollowGroup } from '@/lib/weibo/components/follow-group'
 import {
   formatProfileCount,
   ProfileBanner,
@@ -32,7 +31,7 @@ function ProfileIdentity({ profile }: { profile: UserProfile }) {
               <h1 className="truncate text-2xl leading-tight font-extrabold tracking-normal">
                 {profile.name}
               </h1>
-              {profile.descText ? (
+              {profile.verified ? (
                 <BadgeCheck className="size-5 shrink-0 fill-blue-500 text-white" />
               ) : null}
             </div>
@@ -40,13 +39,13 @@ function ProfileIdentity({ profile }: { profile: UserProfile }) {
           </div>
         </div>
         <div className="flex shrink-0 gap-2 pb-1 sm:justify-end">
-          <FollowButton
+          <FollowGroup
             uid={profile.id}
             following={profile.following}
             followMe={profile.followMe}
+            specialFollowing={profile.specialFollow}
             size="lg"
           />
-          <ProfileGroupButton uid={profile.id} following={profile.following} />
         </div>
       </div>
 
@@ -61,17 +60,19 @@ function ProfileIdentity({ profile }: { profile: UserProfile }) {
 }
 
 function ProfileMetadata({ profile }: { profile: UserProfile }) {
+  const displayLocation = profile.location ?? profile.ipLocation
+  const hasStatusesCount = profile.statusesCount != null
   const hasFriendsCount = profile.friendsCount != null
   const hasFollowersCount = profile.followersCount != null
-  const hasStats = hasFriendsCount || hasFollowersCount
+  const hasStats = hasStatusesCount || hasFriendsCount || hasFollowersCount
 
   return (
     <>
       <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-        {profile.ipLocation ? (
+        {displayLocation ? (
           <span className="flex items-center gap-1">
             <MapPin className="size-4" />
-            {profile.ipLocation}
+            {displayLocation}
           </span>
         ) : null}
         {profile.createdAt ? (
@@ -84,6 +85,14 @@ function ProfileMetadata({ profile }: { profile: UserProfile }) {
 
       {hasStats ? (
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+          {hasStatusesCount ? (
+            <span className="text-muted-foreground">
+              <span className="text-foreground font-semibold tabular-nums">
+                {formatProfileCount(profile.statusesCount)}
+              </span>{' '}
+              微博
+            </span>
+          ) : null}
           {hasFriendsCount ? (
             <Link
               to={`/u/page/follow/${profile.id}?tab=following`}
