@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useRef } from 'react'
 
 import type { HomeTab } from '@/lib/app-settings'
@@ -53,7 +53,6 @@ function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
 export function HomeTimelinePage() {
   const ctx = useAppShellContext()
   const page = useWeiboPage()
-  const queryClient = useQueryClient()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
 
   const pageTab = page.kind === 'home' ? page.tab : 'for-you'
@@ -125,20 +124,11 @@ export function HomeTimelinePage() {
     !newPostsCheckQuery.isFetching &&
     newPostsCheckQuery.dataUpdatedAt > dismissedForGroup
 
-  const handleNewPostsClick = useCallback(() => {
-    ctx.scrollMainToTop()
-    dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] =
-      newPostsCheckQuery.dataUpdatedAt
-    void queryClient.invalidateQueries({
-      queryKey: ['weibo', 'timeline', 'following', followingNewPostsGroupKey],
-      exact: true,
-    })
-  }, [ctx, queryClient, followingNewPostsGroupKey, newPostsCheckQuery.dataUpdatedAt])
-
   const handleTimelineRefresh = useCallback(() => {
     ctx.scrollMainToTop()
+    dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] = Date.now()
     void timelineQuery.refetch()
-  }, [ctx, timelineQuery])
+  }, [ctx, timelineQuery, followingNewPostsGroupKey])
 
   const isCustomGroupRoute = activeTab === 'following' && selectedGroupGid !== 'default'
   const handleTimelineMenuChange = useCallback(
@@ -196,18 +186,16 @@ export function HomeTimelinePage() {
         onTitleChange={handleTimelineMenuChange}
         onRefresh={handleTimelineRefresh}
         isRefreshing={isRefreshing}
-      >
-        {showNewPostsBubble ? (
-          <div className="absolute top-[calc(100%+0.75rem)] left-1/2 z-20 -translate-x-1/2">
+        rightAction={
+          showNewPostsBubble ? (
             <NewPostsBubble
               key={newPostsCheckQuery.dataUpdatedAt}
               authors={newPostsCheckQuery.data?.authors ?? []}
               count={newPostsCheckQuery.data?.count ?? 0}
-              onClick={handleNewPostsClick}
             />
-          </div>
-        ) : null}
-      </TimelineTopBar>
+          ) : undefined
+        }
+      />
 
       <div className="flex flex-col">
         <InfiniteFeedList

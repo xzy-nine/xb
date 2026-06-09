@@ -9,7 +9,16 @@ import {
   MessageCircle,
   Repeat2,
 } from 'lucide-react'
-import { memo, useCallback, type MouseEvent, type ReactNode, useId, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  useId,
+  useRef,
+  useState,
+} from 'react'
 import { toast } from 'sonner'
 
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -87,6 +96,12 @@ function getMediaDownloadFilename(item: Pick<FeedItem, 'author' | 'text'>) {
 
 function getStatusCopyText(item: Pick<FeedItem, 'text' | 'markdownText'>) {
   return item.markdownText || item.text
+}
+
+function getStatusDetailPath(item: Pick<FeedItem, 'author' | 'id' | 'mblogId'>) {
+  const statusId = item.mblogId ?? item.id
+  if (!item.author.id || !statusId) return null
+  return `/${item.author.id}/${statusId}`
 }
 
 function FeedMediaBlock({ item }: { item: FeedItem }) {
@@ -434,7 +449,7 @@ function FeedActions({
                 : '展开精选评论'
               : '回复微博'
           }
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             if (!controlsInlineComments) {
@@ -459,7 +474,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="转发微博"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onRepostClick?.(item)
@@ -481,7 +496,7 @@ function FeedActions({
         aria-label={liked ? '取消点赞' : '点赞微博'}
         aria-pressed={liked}
         disabled={likePending}
-        className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
+        className="group rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
         onClick={(event) => {
           event.stopPropagation()
           onLikeClick?.(item)
@@ -513,7 +528,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="生图"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onGenImage()
@@ -532,7 +547,7 @@ function FeedActions({
           variant="ghost"
           aria-label="批量下载"
           disabled={downloadPending}
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onDownload()
@@ -552,7 +567,7 @@ function FeedActions({
           aria-label={isBookmarked ? '取消收藏' : '收藏'}
           aria-pressed={isBookmarked}
           disabled={favoritePending}
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             void onFavorite()
@@ -575,7 +590,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="复制链接"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onCopyLink()
@@ -593,7 +608,7 @@ function FeedActions({
           type="button"
           variant="ghost"
           aria-label="复制内容"
-          className="group h-auto rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
+          className="group rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
           onClick={(event) => {
             event.stopPropagation()
             onCopyText()
@@ -665,7 +680,15 @@ function RetweetedFeedBlock({
   }, [resolvedItem])
 
   const isDeletedAuthor = !resolvedItem.author.id
-  const canNavigate = feedInteractionMode === 'x' && onNavigate !== undefined
+  const detailPath = getStatusDetailPath(resolvedItem)
+  const canNavigate = feedInteractionMode === 'x' && onNavigate !== undefined && detailPath !== null
+  const navigationProps = canNavigate
+    ? ({
+        role: 'link',
+        tabIndex: 0,
+        'aria-label': `查看 ${resolvedItem.author.name || '微博'} 的微博详情`,
+      } as const)
+    : {}
 
   const handleCopyLink = () => {
     const weiboUrl = `https://weibo.com/${resolvedItem.author.id}/${resolvedItem.mblogId}`
@@ -691,6 +714,18 @@ function RetweetedFeedBlock({
       })
   }
 
+  const handleRetweetedCommentClick = useCallback(
+    (target: FeedItem) => {
+      console.log('🚀 ~ RetweetedFeedBlock ~ feedInteractionMode:', feedInteractionMode)
+      if (feedInteractionMode === 'weibo') {
+        onNavigate?.(target)
+      } else {
+        onCommentClick?.(target)
+      }
+    },
+    [feedInteractionMode, onNavigate, onCommentClick],
+  )
+
   const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (!canNavigate) {
@@ -702,13 +737,24 @@ function RetweetedFeedBlock({
     onNavigate?.(resolvedItem)
   }
 
+  const handleRetweetedKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!canNavigate) return
+    if (event.target !== event.currentTarget) return
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    onNavigate?.(resolvedItem)
+  }
+
   return (
     <Card
       className={cn(
         'xb-feed-card xb-feed-card--compact gap-3 py-4',
-        canNavigate && 'cursor-pointer',
+        canNavigate &&
+          'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
       )}
       onClick={handleRetweetedClick}
+      onKeyDown={handleRetweetedKeyDown}
+      {...navigationProps}
     >
       <CardHeader>
         <RetweetedAuthorHeader item={resolvedItem} onNavigateProfile={onNavigateProfile} />
@@ -735,7 +781,7 @@ function RetweetedFeedBlock({
         {!isDeletedAuthor && (
           <FeedActions
             item={resolvedItem}
-            onCommentClick={onCommentClick}
+            onCommentClick={handleRetweetedCommentClick}
             onCommentExpand={onNavigate}
             onRepostClick={onRepostClick}
             onLikeClick={onLikeClick}
@@ -907,10 +953,19 @@ export const FeedCard = memo(function FeedCard({
     pointerDownPositionRef.current = null
   }
 
+  const detailPath = getStatusDetailPath(resolvedItem)
   const canNavigate =
     feedInteractionMode === 'x' &&
     onNavigate !== undefined &&
-    statusAllowsCardNavigate(surfaceProp, 'root')
+    statusAllowsCardNavigate(surfaceProp, 'root') &&
+    detailPath !== null
+  const navigationProps = canNavigate
+    ? ({
+        role: 'link',
+        tabIndex: 0,
+        'aria-label': `查看 ${resolvedItem.author.name || '微博'} 的微博详情`,
+      } as const)
+    : {}
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation()
@@ -936,6 +991,23 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
+    onNavigate?.(resolvedItem)
+  }
+
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (!canNavigate) {
+      return
+    }
+
+    if (event.target !== event.currentTarget) {
+      return
+    }
+
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return
+    }
+
+    event.preventDefault()
     onNavigate?.(resolvedItem)
   }
 
@@ -1038,11 +1110,14 @@ export const FeedCard = memo(function FeedCard({
         'group/card py-4 relative',
         uniformHeight ? 'gap-0 flex-1' : 'gap-4',
         'xb-feed-card group/card gap-4 py-4 relative',
-        canNavigate && 'cursor-pointer',
+        canNavigate &&
+          'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
         className,
       )}
       data-testid="feed-card-body"
       onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      {...navigationProps}
     >
       <div className="absolute top-4 right-4">
         <FeedCardMoreMenu

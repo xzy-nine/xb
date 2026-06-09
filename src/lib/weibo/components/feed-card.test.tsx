@@ -375,6 +375,23 @@ describe('FeedCard', () => {
     )
   })
 
+  it('exposes keyboard navigation for card detail in x mode', () => {
+    const store = getAppSettingsStore()
+    store.setState({ feedInteractionMode: 'x' })
+    const onNavigate = vi.fn()
+    renderCard({ onNavigate })
+
+    const cardLink = screen.getByRole('link', { name: '查看 Alice 的微博详情' })
+    expect(cardLink).toHaveAttribute('tabindex', '0')
+
+    fireEvent.keyDown(cardLink, { key: 'Enter' })
+    fireEvent.keyDown(cardLink, { key: ' ' })
+
+    expect(onNavigate).toHaveBeenCalledTimes(2)
+    expect(onNavigate).toHaveBeenNthCalledWith(1, expect.objectContaining({ id: '501' }))
+    expect(onNavigate).toHaveBeenNthCalledWith(2, expect.objectContaining({ id: '501' }))
+  })
+
   it('does not trigger detail callback after dragging across card body text', () => {
     const store = getAppSettingsStore()
     store.setState({ feedInteractionMode: 'x' })

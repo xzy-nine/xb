@@ -114,6 +114,8 @@ function renderInlineEmoticon(emoticon: WeiboEmoticonItem, key: string) {
       key={key}
       src={emoticon.url}
       alt={emoticon.phrase}
+      width={20}
+      height={20}
       className={INLINE_EMOTICON_CLASS_NAME}
     />
   )
@@ -594,38 +596,35 @@ function renderReplyChainText(
         ) : null}
         {leading && leading.images.length > 0 ? <ImageCarousel images={leading.images} /> : null}
         {renderReplyChainItem(firstItem, 0, urlEntities, topicEntities, phraseMap, extractImages)}
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <div className="group" onClick={(e) => e.stopPropagation()}>
-              {renderReplyChainItem(
-                secondItem,
-                1,
-                urlEntities,
-                topicEntities,
-                phraseMap,
-                extractImages,
+        {renderReplyChainItem(secondItem, 1, urlEntities, topicEntities, phraseMap, extractImages)}
+        {middleItems.length > 0 ? (
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button
+                type="button"
+                size="xs"
+                variant="ghost"
+                className="group mt-2 flex w-fit items-center gap-1"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <ChevronRightIcon className="size-3 transition-transform group-data-[state=open]:rotate-90" />
+                <span className="text-xs">{middleItems.length} 条引用</span>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent data-testid="reply-chain" className="flex flex-col gap-2">
+              {middleItems.map((segment, idx) =>
+                renderReplyChainItem(
+                  segment,
+                  idx + 2,
+                  urlEntities,
+                  topicEntities,
+                  phraseMap,
+                  extractImages,
+                ),
               )}
-              {middleItems.length > 0 && (
-                <Button size="xs" variant="ghost" className="mt-2 flex items-center gap-1">
-                  <ChevronRightIcon className="size-3 transition-transform group-data-[state=open]:rotate-90" />
-                  <span className="text-xs">{middleItems.length} 条引用</span>
-                </Button>
-              )}
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent data-testid="reply-chain" className="flex flex-col gap-2">
-            {middleItems.map((segment, idx) =>
-              renderReplyChainItem(
-                segment,
-                idx + 2,
-                urlEntities,
-                topicEntities,
-                phraseMap,
-                extractImages,
-              ),
-            )}
-          </CollapsibleContent>
-        </Collapsible>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : null}
         {renderReplyChainItem(
           lastItem,
           chain.length - 1,
