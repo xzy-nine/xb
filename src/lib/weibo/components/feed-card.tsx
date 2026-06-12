@@ -694,7 +694,6 @@ function RetweetedFeedBlock({
 
   const handleRetweetedCommentClick = useCallback(
     (target: FeedItem) => {
-      console.log('🚀 ~ RetweetedFeedBlock ~ feedInteractionMode:', feedInteractionMode)
       if (feedInteractionMode === 'weibo') {
         onNavigate?.(target)
       } else {
