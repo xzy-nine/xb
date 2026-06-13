@@ -32,7 +32,8 @@ function escapeRegExp(value: string) {
 const MENTION_PATTERN = /@([A-Za-z0-9_\u4e00-\u9fff-]+)(?=[:\s]|$)/g
 const EMOTICON_PATTERN = /\[[^[\]]+\]/g
 const REPLY_CHAIN_MARKER_PATTERN = /\/\/@([A-Za-z0-9_\u4e00-\u9fff-]+):/g
-const LINK_TEXT_CLASS_NAME = 'underline underline-offset-2'
+const LINK_TEXT_CLASS_NAME = 'text-primary underline underline-offset-2'
+const MENTION_TEXT_CLASS_NAME = 'text-primary'
 const INLINE_EMOTICON_CLASS_NAME = 'inline h-[1.2em] w-auto align-[-0.22em]'
 const EMPTY_COMMENT_LABEL = 'No content.'
 const EMPTY_STATUS_LABEL = 'No text content.'
@@ -103,7 +104,9 @@ function createImageExtractor(imageEntities: Record<string, FeedImage[]>): Image
 function renderMentionLink(screenName: string, key: string) {
   return (
     <UserHoverCard key={key} screenName={screenName}>
-      <Link to={`/n/${encodeURIComponent(screenName)}`}>@{screenName}</Link>
+      <Link to={`/n/${encodeURIComponent(screenName)}`} className={MENTION_TEXT_CLASS_NAME}>
+        @{screenName}
+      </Link>
     </UserHoverCard>
   )
 }
