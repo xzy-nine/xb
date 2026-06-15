@@ -56,6 +56,7 @@ import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed
 import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
 import { useInlineFullscreen } from './inline-fullscreen'
+import { MediaPopoverPopup, MediaTooltipPopup } from './media-popup'
 import { getPlaybackPositionStore } from './video-playback-position-store'
 import { registerPlayingVideo, unregisterPlayingVideo } from './video-playback-registry'
 import {
@@ -204,14 +205,14 @@ function VolumeControl() {
   return (
     <Popover.Root openOnHover delay={200} closeDelay={100} side="top">
       <Popover.Trigger render={muteButton} />
-      <Popover.Popup className="media-surface media-popover media-popover--volume">
+      <MediaPopoverPopup className="media-surface media-popover media-popover--volume">
         <VolumeSlider.Root className="media-slider" orientation="vertical" thumbAlignment="edge">
           <VolumeSlider.Track className="media-slider__track">
             <VolumeSlider.Fill className="media-slider__fill" />
           </VolumeSlider.Track>
           <VolumeSlider.Thumb className="media-slider__thumb media-slider__thumb--persistent" />
         </VolumeSlider.Root>
-      </Popover.Popup>
+      </MediaPopoverPopup>
     </Popover.Root>
   )
 }
@@ -265,7 +266,7 @@ function QualityControl({
           </PlayerButton>
         )}
       />
-      <Popover.Popup className="media-surface media-popover rounded-2xl p-1.5">
+      <MediaPopoverPopup className="media-surface media-popover rounded-2xl p-1.5">
         <div className="flex min-w-24 flex-col gap-1">
           {options.map((option) => {
             const active = option.id === value
@@ -288,7 +289,7 @@ function QualityControl({
             )
           })}
         </div>
-      </Popover.Popup>
+      </MediaPopoverPopup>
     </Popover.Root>
   )
 }
@@ -314,7 +315,7 @@ function PlaybackRateControl() {
           </IconButton>
         )}
       />
-      <Popover.Popup className="media-surface media-popover rounded-2xl p-1.5">
+      <MediaPopoverPopup className="media-surface media-popover rounded-2xl p-1.5">
         <div className="flex min-w-24 flex-col gap-1">
           {playbackRates.map((rate) => {
             const active = rate === playbackRate
@@ -336,7 +337,7 @@ function PlaybackRateControl() {
             )
           })}
         </div>
-      </Popover.Popup>
+      </MediaPopoverPopup>
     </Popover.Root>
   )
 }
@@ -810,7 +811,9 @@ export function VideoPlayer({
                     />
                   }
                 />
-                <Tooltip.Popup className="media-surface media-tooltip">播放/暂停</Tooltip.Popup>
+                <MediaTooltipPopup className="media-surface media-tooltip">
+                  播放/暂停
+                </MediaTooltipPopup>
               </Tooltip.Root>
 
               {qualities.length > 0 ? (
@@ -838,9 +841,9 @@ export function VideoPlayer({
                       </IconButton>
                     }
                   />
-                  <Tooltip.Popup className="media-surface media-tooltip">
+                  <MediaTooltipPopup className="media-surface media-tooltip">
                     {downloading ? '下载中…' : '下载视频'}
-                  </Tooltip.Popup>
+                  </MediaTooltipPopup>
                 </Tooltip.Root>
               ) : null}
             </div>
@@ -863,7 +866,9 @@ export function VideoPlayer({
             <div className="media-button-group">
               <Tooltip.Root side="top">
                 <Tooltip.Trigger render={<PlaybackRateControl />} />
-                <Tooltip.Popup className="media-surface media-tooltip">播放速度</Tooltip.Popup>
+                <MediaTooltipPopup className="media-surface media-tooltip">
+                  播放速度
+                </MediaTooltipPopup>
               </Tooltip.Root>
 
               <VolumeControl />
@@ -890,7 +895,9 @@ export function VideoPlayer({
                   }
                 />
 
-                <Tooltip.Popup className="media-surface media-tooltip">画中画</Tooltip.Popup>
+                <MediaTooltipPopup className="media-surface media-tooltip">
+                  画中画
+                </MediaTooltipPopup>
               </Tooltip.Root>
 
               {!hideInlineFullScreen && (
@@ -909,7 +916,9 @@ export function VideoPlayer({
                       </IconButton>
                     }
                   />
-                  <Tooltip.Popup className="media-surface media-tooltip">网页全屏</Tooltip.Popup>
+                  <MediaTooltipPopup className="media-surface media-tooltip">
+                    网页全屏
+                  </MediaTooltipPopup>
                 </Tooltip.Root>
               )}
 
@@ -930,7 +939,7 @@ export function VideoPlayer({
                     />
                   }
                 />
-                <Tooltip.Popup className="media-surface media-tooltip">全屏</Tooltip.Popup>
+                <MediaTooltipPopup className="media-surface media-tooltip">全屏</MediaTooltipPopup>
               </Tooltip.Root>
             </div>
           </Tooltip.Provider>
