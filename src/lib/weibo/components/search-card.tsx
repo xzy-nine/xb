@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowUpRightIcon, Search, X } from 'lucide-react'
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -28,7 +28,6 @@ export function SearchCard({ className }: SearchCardProps) {
   const [activeQuery, setActiveQuery] = useState('')
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const navigate = useNavigate()
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
 
   const searchQuery = useQuery(searchQueryOptions(activeQuery))
@@ -55,11 +54,6 @@ export function SearchCard({ className }: SearchCardProps) {
     inputRef.current?.focus()
   }
 
-  const handleUserClick = (screenName: string) => {
-    navigate(`/n/${encodeURIComponent(screenName)}`)
-    setOpen(false)
-  }
-
   const handleRelatedWeiboClick = (searchTerm: string) => {
     window.open(
       `https://s.weibo.com/weibo?q=${encodeURIComponent(searchTerm)}`,
@@ -69,15 +63,24 @@ export function SearchCard({ className }: SearchCardProps) {
     setOpen(false)
   }
 
-  const handleHotQueryClick = (suggestion: string) => {
+  const handleHotQueryClick = (suggestion: string, event?: React.MouseEvent) => {
+    // 如果是修饰键点击，在新Tab打开微博搜索页
+    if (event && (event.metaKey || event.ctrlKey)) {
+      window.open(
+        `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
+        '_blank',
+        'noopener,noreferrer',
+      )
+      setOpen(false)
+      return
+    }
+
     if (!xbTopicPage) {
       window.open(
         `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
         '_blank',
         'noopener,noreferrer',
       )
-    } else {
-      navigate(`/topic?q=${encodeURIComponent(suggestion)}`)
     }
     setOpen(false)
   }
@@ -144,18 +147,41 @@ export function SearchCard({ className }: SearchCardProps) {
               {topHotQueries.length > 0 && (
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="text-xs">热搜</DropdownMenuLabel>
-                  {topHotQueries.map((item, index) => (
-                    <DropdownMenuItem
-                      key={`hot-${index}`}
-                      onSelect={() => handleHotQueryClick(item.suggestion)}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="text-muted-foreground w-4 text-xs tabular-nums">
-                        {index + 1}
-                      </span>
-                      <span className="truncate">{item.suggestion}</span>
-                    </DropdownMenuItem>
-                  ))}
+                  {xbTopicPage
+                    ? topHotQueries.map((item, index) => (
+                        <Link
+                          key={`hot-${index}`}
+                          to={`/topic?q=${encodeURIComponent(item.suggestion)}`}
+                          onClick={(e) => {
+                            // 修饰键时在新Tab打开外部微博搜索
+                            if (e.metaKey || e.ctrlKey) {
+                              e.preventDefault()
+                              handleHotQueryClick(item.suggestion, e)
+                              return
+                            }
+                            setOpen(false)
+                          }}
+                        >
+                          <DropdownMenuItem className="flex items-center gap-2">
+                            <span className="text-muted-foreground w-4 text-xs tabular-nums">
+                              {index + 1}
+                            </span>
+                            <span className="truncate">{item.suggestion}</span>
+                          </DropdownMenuItem>
+                        </Link>
+                      ))
+                    : topHotQueries.map((item, index) => (
+                        <DropdownMenuItem
+                          key={`hot-${index}`}
+                          onSelect={() => handleHotQueryClick(item.suggestion)}
+                          className="flex items-center gap-2"
+                        >
+                          <span className="text-muted-foreground w-4 text-xs tabular-nums">
+                            {index + 1}
+                          </span>
+                          <span className="truncate">{item.suggestion}</span>
+                        </DropdownMenuItem>
+                      ))}
                 </DropdownMenuGroup>
               )}
 
@@ -163,28 +189,30 @@ export function SearchCard({ className }: SearchCardProps) {
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="text-xs">用户</DropdownMenuLabel>
                   {users.map((user) => (
-                    <DropdownMenuItem
+                    <Link
                       key={user.uid}
-                      onSelect={() => handleUserClick(user.screen_name)}
-                      className="flex items-center gap-3 py-2"
+                      to={`/n/${encodeURIComponent(user.screen_name)}`}
+                      onClick={() => setOpen(false)}
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.profile_image_url} />
-                        <AvatarFallback>{user.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">
-                          {user.name}
-                          <span className="text-muted-foreground ml-2 truncate text-xs">
-                            {user.followers_count_str} 粉丝
-                          </span>
-                        </div>
+                      <DropdownMenuItem className="flex items-center gap-3 py-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.profile_image_url} />
+                          <AvatarFallback>{user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium">
+                            {user.name}
+                            <span className="text-muted-foreground ml-2 truncate text-xs">
+                              {user.followers_count_str} 粉丝
+                            </span>
+                          </div>
 
-                        <div className="text-muted-foreground truncate text-xs">
-                          {user.description}
+                          <div className="text-muted-foreground truncate text-xs">
+                            {user.description}
+                          </div>
                         </div>
-                      </div>
-                    </DropdownMenuItem>
+                      </DropdownMenuItem>
+                    </Link>
                   ))}
                 </DropdownMenuGroup>
               )}

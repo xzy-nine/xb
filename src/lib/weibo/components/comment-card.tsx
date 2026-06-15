@@ -74,13 +74,19 @@ export const CommentCard = memo(function CommentCard({
 
   const liked = item.liked === true
 
+  const handleUserLinkClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation()
+    // 中键或修饰键时不拦截，让 Link 的原生行为处理新标签打开
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return
+    }
+    // 左键点击使用 SPA 导航（Link 默认行为）
+  }
+
   return (
     <div className="group flex gap-3">
       <UserHoverCard uid={item.author.id}>
-        <Link
-          to={`/n/${encodeURIComponent(item.author.name)}`}
-          onClick={(event) => event.stopPropagation()}
-        >
+        <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
           <UserAvatar
             author={item.author}
             sizeClassName="size-8"
@@ -92,10 +98,7 @@ export const CommentCard = memo(function CommentCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <UserHoverCard uid={item.author.id}>
-              <Link
-                to={`/n/${encodeURIComponent(item.author.name)}`}
-                onClick={(event) => event.stopPropagation()}
-              >
+              <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
                 <span className="text-foreground truncate text-sm font-semibold hover:underline">
                   {item.author.name}
                 </span>
