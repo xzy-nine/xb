@@ -365,7 +365,8 @@ describe('FeedCard', () => {
     const onNavigate = vi.fn()
     renderCard({ onNavigate })
 
-    fireEvent.click(screen.getByText('preview content'))
+    const cardLink = screen.getByRole('link', { name: '查看 Alice 的微博详情' })
+    fireEvent.click(cardLink)
 
     expect(onNavigate).toHaveBeenCalledTimes(1)
     expect(onNavigate).toHaveBeenCalledWith(

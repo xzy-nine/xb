@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { MessageCircle } from 'lucide-react'
+import { ChevronUp, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
@@ -14,9 +14,15 @@ interface FeedCommentsExpandedProps {
   id?: string
   item: FeedItem
   onCommentReply: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
+  onCollapse?: () => void
 }
 
-export function FeedCommentsExpanded({ id, item, onCommentReply }: FeedCommentsExpandedProps) {
+export function FeedCommentsExpanded({
+  id,
+  item,
+  onCommentReply,
+  onCollapse,
+}: FeedCommentsExpandedProps) {
   const commentsQuery = useQuery(feedCommentsQueryOptions(item.id, item.author.id))
 
   const comments = (commentsQuery.data?.items ?? []) as CommentItem[]
@@ -26,7 +32,10 @@ export function FeedCommentsExpanded({ id, item, onCommentReply }: FeedCommentsE
     <div
       id={id}
       className="flex cursor-default flex-col gap-3 border-t px-4 pt-3"
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
     >
       <CommentBox
         target={{
@@ -53,14 +62,30 @@ export function FeedCommentsExpanded({ id, item, onCommentReply }: FeedCommentsE
             authorUid={item.author.id}
             onCommentReply={onCommentReply}
           />
-          {totalNumber > 0 && (
-            <Link to={`/${item.author.id}/${item.mblogId}`} className="block">
-              <Button variant="ghost" className="text-primary w-full gap-2">
-                <MessageCircle className="size-3.5" />
-                查看全部 {totalNumber} 条评论
+          <div className="flex gap-2">
+            {totalNumber > 0 && (
+              <Link to={`/${item.author.id}/${item.mblogId}`} className="flex-1">
+                <Button variant="ghost" className="text-primary w-full gap-2">
+                  <MessageCircle className="size-3.5" />
+                  查看全部 {totalNumber} 条评论
+                </Button>
+              </Link>
+            )}
+            {onCollapse && (
+              <Button
+                variant="ghost"
+                className="text-muted-foreground gap-2"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onCollapse()
+                }}
+              >
+                <ChevronUp className="size-3.5" />
+                收起评论
               </Button>
-            </Link>
-          )}
+            )}
+          </div>
         </>
       ) : (
         <p className="text-muted-foreground px-2 text-center text-xs">还没有评论，快来抢沙发吧</p>

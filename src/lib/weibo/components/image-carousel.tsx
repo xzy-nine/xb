@@ -126,9 +126,18 @@ function LivePhotoPreview({ image, params }: { image: FeedImage; params: PhotoRe
           muted
           playsInline
           onEnded={() => setIsPlaying(false)}
-          onMouseDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
+          onMouseDown={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onPointerDown={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
         />
       ) : (
         <img
@@ -146,9 +155,16 @@ function LivePhotoPreview({ image, params }: { image: FeedImage; params: PhotoRe
         variant="outline"
         className="absolute bottom-4 left-4 z-30 border font-mono font-medium backdrop-blur"
         size="sm"
-        onMouseDown={(event) => event.stopPropagation()}
-        onPointerDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+        onPointerDown={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+        }}
         onClick={(event) => {
+          event.preventDefault()
           event.stopPropagation()
           if (!isPlaying) setIsPlaying(true)
         }}
@@ -223,7 +239,13 @@ export const ImageCarousel = memo(function ImageCarousel({
             const roundedClassName = gridItems.length === 1 ? 'rounded-xl' : 'rounded-lg'
 
             return (
-              <div key={item.id} onClick={(event) => event.stopPropagation()}>
+              <div
+                key={item.id}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+              >
                 {item.kind === 'image' ? (
                   <ImagePhotoView image={item.image}>
                     <AspectRatio
@@ -241,9 +263,18 @@ export const ImageCarousel = memo(function ImageCarousel({
                       <div
                         {...attrs}
                         className="flex h-full w-full items-center justify-center px-4"
-                        onMouseDown={(event) => event.stopPropagation()}
-                        onClick={(event) => event.stopPropagation()}
-                        onPointerDown={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                        }}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                        }}
+                        onPointerDown={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                        }}
                       >
                         <div
                           className={cn(
