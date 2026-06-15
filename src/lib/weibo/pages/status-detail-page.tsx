@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
+import { getContentWidthAdjustedMaxWidth } from '@/lib/weibo/app/content-width'
 import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
@@ -222,7 +223,8 @@ export function StatusDetailPage() {
   const ctx = useAppShellContext()
   const navigate = useNavigate()
   const page = useWeiboPage()
-  const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const contentWidth = useAppSettings((state) => state.contentWidth)
+  const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
   const statusArticleRef = useRef<HTMLElement | null>(null)
   const [showStatusSummary, setShowStatusSummary] = useState(false)
 
@@ -283,7 +285,10 @@ export function StatusDetailPage() {
         <PageErrorState description={detailQuery.error.message} />
       ) : null}
       {detail ? (
-        <div className="mx-auto flex max-w-[720px] flex-col gap-4">
+        <div
+          className="mx-auto flex w-full flex-col gap-4"
+          style={{ maxWidth: getContentWidthAdjustedMaxWidth(contentWidth, 720) }}
+        >
           <article ref={statusArticleRef} className="relative">
             <div className="bg-primary/70 absolute top-5 bottom-5 left-0 hidden w-px sm:block" />
             <FeedCard
