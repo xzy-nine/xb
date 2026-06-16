@@ -101,14 +101,33 @@ function createImageExtractor(imageEntities: Record<string, FeedImage[]>): Image
   }
 }
 
-function renderMentionLink(screenName: string, key: string) {
+function MentionLink({ screenName, key: keyProp }: { screenName: string; key: string }) {
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
+
+  const handleUserClick = () => {
+    if (statusDetailPopupEnabled && ctx?.navigateToProfile) {
+      ctx.navigateToProfile({ screenName })
+    }
+  }
+
   return (
-    <UserHoverCard key={key} screenName={screenName}>
-      <Link to={`/n/${encodeURIComponent(screenName)}`} className={MENTION_TEXT_CLASS_NAME}>
-        @{screenName}
-      </Link>
+    <UserHoverCard key={keyProp} screenName={screenName}>
+      {statusDetailPopupEnabled ? (
+        <button type="button" onClick={handleUserClick} className={MENTION_TEXT_CLASS_NAME}>
+          @{screenName}
+        </button>
+      ) : (
+        <Link to={`/n/${encodeURIComponent(screenName)}`} className={MENTION_TEXT_CLASS_NAME}>
+          @{screenName}
+        </Link>
+      )}
     </UserHoverCard>
   )
+}
+
+function renderMentionLink(screenName: string, key: string) {
+  return <MentionLink screenName={screenName} key={key} />
 }
 
 function renderInlineEmoticon(emoticon: WeiboEmoticonItem, key: string) {

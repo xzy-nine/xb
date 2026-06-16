@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { FollowGroup } from '@/lib/weibo/components/follow-group'
 import {
   formatProfileCount,
@@ -67,6 +68,8 @@ export function UserHoverCard(props: UserHoverCardProps) {
   const profileUid = profile?.id ?? ''
   const displayLocation = profile?.location ?? profile?.ipLocation ?? null
   const ratingEnabled = useAppSettings((s) => s.ratingEnabled)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
 
   return (
     <HoverCard
@@ -176,12 +179,25 @@ export function UserHoverCard(props: UserHoverCardProps) {
                 }
               />
 
-              <Link to={`/n/${encodeURIComponent(profile.name)}`}>
-                <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
+              {statusDetailPopupEnabled ? (
+                <Button
+                  variant="outline"
+                  className="w-full flex-1 gap-1.5 py-2"
+                  onClick={() => {
+                    ctx?.navigateToProfile({ screenName: profile.name })
+                  }}
+                >
                   <UserRound className="size-3.5" />
                   主页
                 </Button>
-              </Link>
+              ) : (
+                <Link to={`/n/${encodeURIComponent(profile.name)}`}>
+                  <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
+                    <UserRound className="size-3.5" />
+                    主页
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         )}

@@ -3,6 +3,7 @@ import { ChevronUp, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { PageLoadingState } from '@/lib/weibo/components/page-state'
@@ -15,6 +16,7 @@ interface FeedCommentsExpandedProps {
   item: FeedItem
   onCommentReply: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
   onCollapse?: () => void
+  onNavigate?: (item: FeedItem) => void
 }
 
 export function FeedCommentsExpanded({
@@ -22,7 +24,9 @@ export function FeedCommentsExpanded({
   item,
   onCommentReply,
   onCollapse,
+  onNavigate,
 }: FeedCommentsExpandedProps) {
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
   const commentsQuery = useQuery(feedCommentsQueryOptions(item.id, item.author.id))
 
   const comments = (commentsQuery.data?.items ?? []) as CommentItem[]
@@ -63,14 +67,24 @@ export function FeedCommentsExpanded({
             onCommentReply={onCommentReply}
           />
           <div className="flex gap-2">
-            {totalNumber > 0 && (
-              <Link to={`/${item.author.id}/${item.mblogId}`} className="flex-1">
-                <Button variant="ghost" className="text-primary w-full gap-2">
+            {totalNumber > 0 &&
+              (statusDetailPopupEnabled && onNavigate ? (
+                <Button
+                  variant="ghost"
+                  className="text-primary w-full flex-1 gap-2"
+                  onClick={() => onNavigate(item)}
+                >
                   <MessageCircle className="size-3.5" />
                   查看全部 {totalNumber} 条评论
                 </Button>
-              </Link>
-            )}
+              ) : (
+                <Link to={`/${item.author.id}/${item.mblogId}`} className="flex-1">
+                  <Button variant="ghost" className="text-primary w-full gap-2">
+                    <MessageCircle className="size-3.5" />
+                    查看全部 {totalNumber} 条评论
+                  </Button>
+                </Link>
+              ))}
             {onCollapse && (
               <Button
                 variant="ghost"

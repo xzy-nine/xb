@@ -32,6 +32,7 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const xbTopicPage = useAppSettings((s) => s.xbTopicPage)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
 
   const searchQuery = useQuery(searchQueryOptions(activeQuery))
 
@@ -198,14 +199,13 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
               {users.length > 0 && (
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="text-xs">用户</DropdownMenuLabel>
-                  {users.map((user) => (
-                    <Link
-                      key={user.uid}
-                      to={`/n/${encodeURIComponent(user.screen_name)}`}
-                      onClick={() => handleUserClick(user.uid)}
-                      className="flex items-center gap-3 py-2"
-                    >
-                      <DropdownMenuItem className="flex items-center gap-3 py-2">
+                  {users.map((user) =>
+                    statusDetailPopupEnabled && onNavigateProfile ? (
+                      <DropdownMenuItem
+                        key={user.uid}
+                        onSelect={() => handleUserClick(user.uid)}
+                        className="flex items-center gap-3 py-2"
+                      >
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.profile_image_url} />
                           <AvatarFallback>{user.name[0]}</AvatarFallback>
@@ -223,8 +223,34 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
                           </div>
                         </div>
                       </DropdownMenuItem>
-                    </Link>
-                  ))}
+                    ) : (
+                      <Link
+                        key={user.uid}
+                        to={`/n/${encodeURIComponent(user.screen_name)}`}
+                        onClick={() => handleUserClick(user.uid)}
+                        className="flex items-center gap-3 py-2"
+                      >
+                        <DropdownMenuItem className="flex items-center gap-3 py-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.profile_image_url} />
+                            <AvatarFallback>{user.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium">
+                              {user.name}
+                              <span className="text-muted-foreground ml-2 truncate text-xs">
+                                {user.followers_count_str} 粉丝
+                              </span>
+                            </div>
+
+                            <div className="text-muted-foreground truncate text-xs">
+                              {user.description}
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      </Link>
+                    ),
+                  )}
                 </DropdownMenuGroup>
               )}
             </>

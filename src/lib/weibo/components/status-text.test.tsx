@@ -69,6 +69,7 @@ describe('StatusText', () => {
       ...store.getState(),
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
+      statusDetailPopupEnabled: false,
       isHydrated: true,
     })
   })
@@ -510,6 +511,19 @@ describe('StatusText reply-chain collapsible', () => {
 })
 
 describe('MentionInlineText', () => {
+  beforeEach(() => {
+    resetAppSettingsStoreForTest()
+    const store = getAppSettingsStore({
+      get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
+      set: async () => {},
+    })
+    store.setState({
+      ...store.getState(),
+      statusDetailPopupEnabled: false,
+      isHydrated: true,
+    })
+  })
+
   it('renders mentions and emoticons in the same sentence', () => {
     const { container } = renderWithProviders(<MentionInlineText text="@Alice [赞]" />, {
       groups: [

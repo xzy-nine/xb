@@ -874,15 +874,21 @@ export const FeedCard = memo(function FeedCard({
   className?: string
   uniformHeight?: boolean
 }) {
-  const { feedInteractionMode, feedPrimaryActionOrder, feedToolbarButtonIds, ratingEnabled } =
-    useAppSettings(
-      useShallow((s) => ({
-        feedInteractionMode: s.feedInteractionMode,
-        feedPrimaryActionOrder: s.feedPrimaryActionOrder,
-        feedToolbarButtonIds: s.feedToolbarButtonIds,
-        ratingEnabled: s.ratingEnabled,
-      })),
-    )
+  const {
+    feedInteractionMode,
+    feedPrimaryActionOrder,
+    feedToolbarButtonIds,
+    ratingEnabled,
+    statusDetailPopupEnabled,
+  } = useAppSettings(
+    useShallow((s) => ({
+      feedInteractionMode: s.feedInteractionMode,
+      feedPrimaryActionOrder: s.feedPrimaryActionOrder,
+      feedToolbarButtonIds: s.feedToolbarButtonIds,
+      ratingEnabled: s.ratingEnabled,
+      statusDetailPopupEnabled: s.statusDetailPopupEnabled,
+    })),
+  )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
   const commentsPanelId = useId()
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
@@ -1016,7 +1022,6 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    // 中键或修饰键时不拦截，让 Link 的原生行为处理新标签打开
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
@@ -1027,13 +1032,10 @@ export const FeedCard = memo(function FeedCard({
     }
 
     const target = event.target as HTMLElement
-    // 如果点击的是 Link 本身之外的可交互元素或媒体元素，阻止传播
-    if (
-      target !== event.currentTarget &&
-      target.closest(
-        'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]',
-      )
-    ) {
+    const interactiveSelectors = shouldUsePopupMode
+      ? 'a,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+      : 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+    if (target !== event.currentTarget && target.closest(interactiveSelectors)) {
       return
     }
 
@@ -1041,7 +1043,6 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    // 拦截左键点击使用 SPA 导航
     event.preventDefault()
     onNavigate?.(resolvedItem)
   }
@@ -1157,24 +1158,21 @@ export const FeedCard = memo(function FeedCard({
     </CardContent>
   )
 
-  return (
-    <Link
-      to={canNavigate ? detailPath : ''}
-      className={cn(
-        'group/card py-4 relative',
-        uniformHeight ? 'gap-0 flex-1' : 'gap-4',
-        'xb-feed-card group/card gap-4 py-4 relative',
-        'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
-        canNavigate
-          ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
-          : 'cursor-default',
-        className,
-      )}
-      data-testid="feed-card-body"
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
-      {...(canNavigate ? navigationProps : { as: 'div' as const })}
-    >
+  // 当弹窗模式开启时，使用按钮组件；否则使用 Link 组件支持中键在新标签页打开
+  const shouldUsePopupMode = statusDetailPopupEnabled && canNavigate
+  const cardClassName = cn(
+    'group/card py-4 relative',
+    uniformHeight ? 'gap-0 flex-1' : 'gap-4',
+    'xb-feed-card group/card gap-4 py-4 relative',
+    'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
+    canNavigate
+      ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
+      : 'cursor-default',
+    className,
+  )
+
+  const cardContent = (
+    <>
       <div className="absolute top-4 right-4">
         <FeedCardMoreMenu
           type="status"
@@ -1252,9 +1250,40 @@ export const FeedCard = memo(function FeedCard({
           item={resolvedItem}
           onCommentReply={onCommentReply}
           onCollapse={handleCommentExpand}
+          onNavigate={onNavigate}
         />
       ) : null}
       {downloadDialog}
+    </>
+  )
+
+  // 弹窗模式：使用按钮组件，点击时调用 onNavigate 打开弹窗
+  if (shouldUsePopupMode) {
+    return (
+      <button
+        type="button"
+        className={cardClassName}
+        data-testid="feed-card-body"
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+        {...navigationProps}
+      >
+        {cardContent}
+      </button>
+    )
+  }
+
+  // 非弹窗模式：使用 Link 组件，支持中键在新标签页打开
+  return (
+    <Link
+      to={canNavigate ? detailPath : ''}
+      className={cardClassName}
+      data-testid="feed-card-body"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      {...(canNavigate ? navigationProps : { as: 'div' as const })}
+    >
+      {cardContent}
     </Link>
   )
 })

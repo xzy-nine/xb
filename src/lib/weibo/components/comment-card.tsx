@@ -5,7 +5,9 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { CommentsDialog } from '@/lib/weibo/components/comments-dialog'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
@@ -40,6 +42,14 @@ export const CommentCard = memo(function CommentCard({
   const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
     useFontSettings()
   const queryClient = useQueryClient()
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
+
+  const handleUserClick = () => {
+    if (statusDetailPopupEnabled && ctx?.navigateToProfile) {
+      ctx.navigateToProfile({ uid: item.author.id })
+    }
+  }
 
   const likeMutation = useMutation({
     mutationFn: async (target: CommentItem) => {
@@ -122,23 +132,44 @@ export const CommentCard = memo(function CommentCard({
   return (
     <div className="group flex gap-3">
       <UserHoverCard uid={item.author.id}>
-        <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
-          <UserAvatar
-            author={item.author}
-            sizeClassName="size-8"
-            fallbackClassName="text-[10px] font-semibold"
-          />
-        </Link>
+        {statusDetailPopupEnabled ? (
+          <button type="button" onClick={handleUserClick}>
+            <UserAvatar
+              author={item.author}
+              sizeClassName="size-8"
+              fallbackClassName="text-[10px] font-semibold"
+            />
+          </button>
+        ) : (
+          <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
+            <UserAvatar
+              author={item.author}
+              sizeClassName="size-8"
+              fallbackClassName="text-[10px] font-semibold"
+            />
+          </Link>
+        )}
       </UserHoverCard>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <UserHoverCard uid={item.author.id}>
-              <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
-                <span className="text-foreground truncate text-sm font-semibold hover:underline">
-                  {item.author.name}
-                </span>
-              </Link>
+              {statusDetailPopupEnabled ? (
+                <button type="button" onClick={handleUserClick}>
+                  <span className="text-foreground truncate text-sm font-semibold hover:underline">
+                    {item.author.name}
+                  </span>
+                </button>
+              ) : (
+                <Link
+                  to={`/n/${encodeURIComponent(item.author.name)}`}
+                  onClick={handleUserLinkClick}
+                >
+                  <span className="text-foreground truncate text-sm font-semibold hover:underline">
+                    {item.author.name}
+                  </span>
+                </Link>
+              )}
             </UserHoverCard>
             <CreatedAtBadge label={item.createdAtLabel} className="px-1.5 py-0 text-[10px]" />
           </div>

@@ -2,7 +2,9 @@ import { memo } from 'react'
 import { Link } from 'react-router'
 
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { MentionInlineText } from '@/lib/weibo/components/status-text'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
@@ -34,25 +36,50 @@ function NotificationHeader({
   createdAtLabel: string
   source?: string
 }) {
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
+
+  const handleUserClick = () => {
+    if (statusDetailPopupEnabled && ctx?.navigateToProfile) {
+      ctx.navigateToProfile({ uid: user.id })
+    }
+  }
+
   return (
     <CardHeader className="flex flex-row gap-3 px-4">
       <UserHoverCard uid={user.id}>
-        <Link to={`/n/${encodeURIComponent(user.name)}`}>
-          <UserAvatar
-            author={user}
-            sizeClassName="size-12"
-            fallbackClassName="text-sm font-semibold"
-          />
-        </Link>
+        {statusDetailPopupEnabled ? (
+          <button type="button" onClick={handleUserClick}>
+            <UserAvatar
+              author={user}
+              sizeClassName="size-12"
+              fallbackClassName="text-sm font-semibold"
+            />
+          </button>
+        ) : (
+          <Link to={`/n/${encodeURIComponent(user.name)}`}>
+            <UserAvatar
+              author={user}
+              sizeClassName="size-12"
+              fallbackClassName="text-sm font-semibold"
+            />
+          </Link>
+        )}
       </UserHoverCard>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <UserHoverCard uid={user.id}>
-                <Link to={`/n/${encodeURIComponent(user.name)}`}>
-                  <span className="truncate text-base hover:underline">{user.name}</span>
-                </Link>
+                {statusDetailPopupEnabled ? (
+                  <button type="button" onClick={handleUserClick}>
+                    <span className="truncate text-base hover:underline">{user.name}</span>
+                  </button>
+                ) : (
+                  <Link to={`/n/${encodeURIComponent(user.name)}`}>
+                    <span className="truncate text-base hover:underline">{user.name}</span>
+                  </Link>
+                )}
               </UserHoverCard>
               <CreatedAtBadge label={createdAtLabel} />
             </div>
@@ -73,16 +100,31 @@ function ReplyCommentBlock({
     user: { id: string; name: string; avatarUrl: string | null }
   }
 }) {
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
+
+  const handleUserClick = () => {
+    if (statusDetailPopupEnabled && ctx?.navigateToProfile) {
+      ctx.navigateToProfile({ uid: replyComment.user.id })
+    }
+  }
+
   return (
     <div className="border-border/70 bg-muted/40 flex flex-col gap-2 border p-3">
       <div className="flex flex-col gap-1">
         <UserHoverCard uid={replyComment.user.id}>
-          <Link
-            to={`/n/${encodeURIComponent(replyComment.user.name)}`}
-            className="text-sm hover:underline"
-          >
-            @{replyComment.user.name}
-          </Link>
+          {statusDetailPopupEnabled ? (
+            <button type="button" onClick={handleUserClick} className="text-sm hover:underline">
+              @{replyComment.user.name}
+            </button>
+          ) : (
+            <Link
+              to={`/n/${encodeURIComponent(replyComment.user.name)}`}
+              className="text-sm hover:underline"
+            >
+              @{replyComment.user.name}
+            </Link>
+          )}
         </UserHoverCard>
         <p className="text-foreground text-sm">
           <MentionInlineText text={replyComment.text} />
@@ -104,6 +146,15 @@ function CommentNotificationContent({ item }: { item: CommentNotification }) {
 }
 
 function MentionNotificationContent({ item }: { item: MentionNotification }) {
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
+
+  const handleUserClick = () => {
+    if (statusDetailPopupEnabled && ctx?.navigateToProfile) {
+      ctx.navigateToProfile({ uid: item.status.author.id })
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <p className="text-foreground text-sm">
@@ -113,12 +164,18 @@ function MentionNotificationContent({ item }: { item: MentionNotification }) {
         <div className="border-border/70 bg-muted/40 flex flex-col gap-2 border p-3">
           <div className="flex flex-col gap-1">
             <UserHoverCard uid={item.status.author.id}>
-              <Link
-                to={`/n/${encodeURIComponent(item.status.author.name)}`}
-                className="text-sm hover:underline"
-              >
-                @{item.status.author.name}
-              </Link>
+              {statusDetailPopupEnabled ? (
+                <button type="button" onClick={handleUserClick} className="text-sm hover:underline">
+                  @{item.status.author.name}
+                </button>
+              ) : (
+                <Link
+                  to={`/n/${encodeURIComponent(item.status.author.name)}`}
+                  className="text-sm hover:underline"
+                >
+                  @{item.status.author.name}
+                </Link>
+              )}
             </UserHoverCard>
             <p className="text-foreground text-sm">
               <MentionInlineText text={item.status.textRaw} />
@@ -131,6 +188,15 @@ function MentionNotificationContent({ item }: { item: MentionNotification }) {
 }
 
 function LikeNotificationContent({ item }: { item: LikeNotification }) {
+  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const ctx = useAppShellContext()
+
+  const handleUserClick = () => {
+    if (statusDetailPopupEnabled && ctx?.navigateToProfile) {
+      ctx.navigateToProfile({ uid: item.status.author.id })
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <p className="text-muted-foreground text-sm">赞了你的微博</p>
@@ -138,12 +204,18 @@ function LikeNotificationContent({ item }: { item: LikeNotification }) {
         <div className="border-border/70 bg-muted/40 flex flex-col gap-2 border p-3">
           <div className="flex flex-col gap-1">
             <UserHoverCard uid={item.status.author.id}>
-              <Link
-                to={`/n/${encodeURIComponent(item.status.author.name)}`}
-                className="text-sm hover:underline"
-              >
-                @{item.status.author.name}
-              </Link>
+              {statusDetailPopupEnabled ? (
+                <button type="button" onClick={handleUserClick} className="text-sm hover:underline">
+                  @{item.status.author.name}
+                </button>
+              ) : (
+                <Link
+                  to={`/n/${encodeURIComponent(item.status.author.name)}`}
+                  className="text-sm hover:underline"
+                >
+                  @{item.status.author.name}
+                </Link>
+              )}
             </UserHoverCard>
             <p className="text-foreground text-sm">
               <MentionInlineText text={item.status.text} />
