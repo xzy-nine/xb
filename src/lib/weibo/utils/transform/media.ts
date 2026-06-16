@@ -352,7 +352,7 @@ export function toMedia(status: WeiboStatus) {
       type: 'video' as const,
       streamUrl: progressiveUrl ?? '',
       title: mediaInfo.video_title ?? '',
-      coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
+      coverUrl: pagePicUrl ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
       videoOrientation: mediaInfo.video_orientation,
       downloadUrl: dlUrl,
       dash: {
@@ -371,7 +371,7 @@ export function toMedia(status: WeiboStatus) {
     type: 'video' as const,
     streamUrl: progressiveUrl,
     title: mediaInfo.video_title ?? '',
-    coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
+    coverUrl: pagePicUrl ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
     videoOrientation: mediaInfo.video_orientation,
     downloadUrl: dlUrl,
     dash: undefined,
