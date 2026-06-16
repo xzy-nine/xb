@@ -62,7 +62,8 @@ export function toImagesFromParts(
     }
 
     const downloadUrls = imageDownloadUrlsFromInfo(info)
-    const livePhotoVideoUrl = pickNonEmptyUrl(info?.video) ?? pickNonEmptyUrl(info?.video_hd)
+    const livePhotoVideoUrl =
+      pickNonEmptyUrl(info?.video?.url) ?? pickNonEmptyUrl(info?.video_hd?.url)
     images.push({
       id: picId,
       thumbnailUrl,
