@@ -71,7 +71,7 @@ describe('adaptTimelineResponse', () => {
           list: [
             {
               mid: '777',
-              raw_text: 'nested payload',
+              text_raw: 'nested payload',
               user: {
                 id: 42,
                 screen_name: 'Bob',

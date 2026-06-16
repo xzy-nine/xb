@@ -22,6 +22,8 @@ vi.mock('@/lib/app-settings-store', () => ({
 describe('GenImageDialog', () => {
   const mockFeedItem: FeedItem = {
     id: '123',
+    mblogId: null,
+    isLongText: false,
     author: {
       id: 'user123',
       name: '测试用户',
