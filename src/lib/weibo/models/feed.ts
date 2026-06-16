@@ -65,7 +65,7 @@ interface FeedMedia {
   coverUrl: string | null
   dash?: FeedDashSource
   liveStatus?: number
-  liveStartTime?: number
+  liveStartTime?: string | number
   replayUrl?: string
   videoOrientation?: 'vertical' | 'horizontal'
   /** Direct mp4 URL for downloading (avoids DASH/DRM issues) */

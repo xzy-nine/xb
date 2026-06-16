@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import type { FeedAuthor } from '@/lib/weibo/models/feed'
 
 function getAuthorInitial(name: string | null | undefined) {
@@ -23,16 +22,6 @@ export function UserAvatar({
   )
 }
 
-export function CreatedAtBadge({
-  label,
-  className,
-}: {
-  label: string | null | undefined
-  className?: string
-}) {
-  return (
-    <Badge variant="secondary" className={className}>
-      {label || 'Unknown time'}
-    </Badge>
-  )
+export function CreatedAtBadge({ label }: { label: string | null | undefined }) {
+  return <div className="text-muted-foreground text-xs">{label || 'Unknown time'}</div>
 }

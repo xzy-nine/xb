@@ -171,7 +171,7 @@ export const CommentCard = memo(function CommentCard({
                 </Link>
               )}
             </UserHoverCard>
-            <CreatedAtBadge label={item.createdAtLabel} className="px-1.5 py-0 text-[10px]" />
+            <CreatedAtBadge label={item.createdAtLabel} />
           </div>
           {showOwnerMenu ? (
             <FeedCardMoreMenu

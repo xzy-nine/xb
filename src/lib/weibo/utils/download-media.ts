@@ -384,7 +384,6 @@ export async function downloadAsZip(
       successCount++
     } else {
       failCount++
-      console.error(`下载失败: ${url.url}`, result.reason)
     }
   }
 

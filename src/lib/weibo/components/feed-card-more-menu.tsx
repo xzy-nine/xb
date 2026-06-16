@@ -86,7 +86,10 @@ export function FeedCardMoreMenu({
             size="icon"
             className={cn('size-8 shrink-0', className)}
             aria-label="更多操作"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
           >
             <MoreHorizontal className="size-4" />
           </Button>

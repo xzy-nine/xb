@@ -185,6 +185,7 @@ describe('FeedCard', () => {
           short_url: 'http://t.cn/IMG',
           url_title: '查看图片',
           long_url: 'https://photo.weibo.com/example',
+          ori_url: 'https://photo.weibo.com/example',
           h5_target_url: 'https://photo.weibo.com/example?h5=1',
           url_type: 39,
           pic_ids: ['pic1'],
