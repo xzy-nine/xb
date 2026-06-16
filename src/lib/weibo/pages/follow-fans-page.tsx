@@ -1,7 +1,9 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router'
 
+import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { getContentWidthAdjustedMaxWidth } from '@/lib/weibo/app/content-width'
 import { UserList } from '@/lib/weibo/components/user-list'
 import { friendsInfiniteOptions } from '@/lib/weibo/queries/weibo-queries'
 
@@ -13,6 +15,7 @@ const TABS = [
 export function FollowFansPage() {
   const { uid } = useParams<{ uid: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
+  const contentWidth = useAppSettings((state) => state.contentWidth)
   const activeTab = searchParams.get('tab') === 'fans' ? 'fans' : 'following'
 
   if (!uid) return null
@@ -25,7 +28,10 @@ export function FollowFansPage() {
   const errorMsg = query.data?.pages[0]?.errorMsg
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div
+      className="mx-auto w-full"
+      style={{ maxWidth: getContentWidthAdjustedMaxWidth(contentWidth, 672) }}
+    >
       <div className="bg-background/80 sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex">
           {TABS.map((tab) => (

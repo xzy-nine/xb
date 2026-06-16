@@ -43,6 +43,7 @@ import type { FeedDashSource } from '@/lib/weibo/models/feed'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 import { useInlineFullscreen } from './inline-fullscreen'
+import { MediaPopoverPopup } from './media-popup'
 import {
   applyStoredVideoVolume,
   registerVideoVolumeElement,
@@ -104,14 +105,14 @@ function VolumeControl() {
   return (
     <Popover.Root openOnHover delay={200} closeDelay={100} side="top">
       <Popover.Trigger render={muteButton} />
-      <Popover.Popup className="media-surface media-popover media-popover--volume">
+      <MediaPopoverPopup className="media-surface media-popover media-popover--volume">
         <VolumeSlider.Root className="media-slider" orientation="vertical" thumbAlignment="edge">
           <VolumeSlider.Track className="media-slider__track">
             <VolumeSlider.Fill className="media-slider__fill" />
           </VolumeSlider.Track>
           <VolumeSlider.Thumb className="media-slider__thumb media-slider__thumb--persistent" />
         </VolumeSlider.Root>
-      </Popover.Popup>
+      </MediaPopoverPopup>
     </Popover.Root>
   )
 }

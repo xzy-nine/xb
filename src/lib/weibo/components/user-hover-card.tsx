@@ -1,7 +1,7 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
 import { BadgeCheck, MapPin, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -50,7 +50,6 @@ function getProfileLookup(props: UserHoverCardProps): ProfileHoverLookup {
 export function UserHoverCard(props: UserHoverCardProps) {
   const { children } = props
   const lookup = getProfileLookup(props)
-  const navigate = useNavigate()
 
   const [hasOpened, setHasOpened] = useState(false)
 
@@ -134,28 +133,26 @@ export function UserHoverCard(props: UserHoverCardProps) {
 
               <div className="flex items-center gap-4 text-sm">
                 {profile.friendsCount != null ? (
-                  <button
-                    type="button"
+                  <Link
+                    to={`/u/page/follow/${profile.id}?tab=following`}
                     className="text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => navigate(`/u/page/follow/${profile.id}?tab=following`)}
                   >
                     <span className="text-foreground font-semibold">
                       {formatProfileCount(profile.friendsCount)}
                     </span>{' '}
                     关注
-                  </button>
+                  </Link>
                 ) : null}
                 {profile.followersCount != null ? (
-                  <button
-                    type="button"
+                  <Link
+                    to={`/u/page/follow/${profile.id}?tab=fans`}
                     className="text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => navigate(`/u/page/follow/${profile.id}?tab=fans`)}
                   >
                     <span className="text-foreground font-semibold">
                       {profile.followersCountStr}
                     </span>{' '}
                     粉丝
-                  </button>
+                  </Link>
                 ) : null}
               </div>
 
@@ -179,14 +176,12 @@ export function UserHoverCard(props: UserHoverCardProps) {
                 }
               />
 
-              <Button
-                variant="outline"
-                className="w-full flex-1 gap-1.5 py-2"
-                onClick={() => navigate(`/n/${encodeURIComponent(profile.name)}`)}
-              >
-                <UserRound className="size-3.5" />
-                主页
-              </Button>
+              <Link to={`/n/${encodeURIComponent(profile.name)}`}>
+                <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
+                  <UserRound className="size-3.5" />
+                  主页
+                </Button>
+              </Link>
             </div>
           </div>
         )}

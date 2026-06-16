@@ -355,4 +355,27 @@ describe('StatusDetailPage', () => {
       excerpt: 'reply level 3',
     })
   })
+
+  it('expands the detail column when content width is wider', async () => {
+    const store = getAppSettingsStore()
+    store.setState({
+      ...store.getState(),
+      contentWidth: 'wider',
+    })
+
+    const queryClient = new QueryClient()
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/1/501']}>
+          <StatusDetailPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    const mainPost = await screen.findByText('main post')
+    const detailColumn = mainPost.closest('article')?.parentElement
+
+    expect(detailColumn).not.toBeNull()
+    expect(detailColumn).toHaveStyle({ maxWidth: '920px' })
+  })
 })

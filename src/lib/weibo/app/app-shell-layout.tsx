@@ -63,6 +63,7 @@ export function ShellFrame({
 }: ShellFrameProps) {
   const location = useLocation()
   const savedMainScrollByRouteRef = useRef<Partial<Record<string, number>>>({})
+  const savedScrollAnchorByRouteRef = useRef<Partial<Record<string, string>>>({})
   const locationRef = useRef(location)
   locationRef.current = location
   const showRightRail = useAppSettings((state) => state.showRightRail)
@@ -118,6 +119,19 @@ export function ShellFrame({
       const key = mainScrollRestorationKey(pathname, search)
       if (key) {
         savedMainScrollByRouteRef.current[key] = main.scrollTop
+
+        // Save the ID of the first visible feed item in viewport
+        const feedElements = Array.from(main.querySelectorAll('[data-feed-id]')) as HTMLElement[]
+        for (const element of feedElements) {
+          const rect = element.getBoundingClientRect()
+          if (rect.top >= -100 && rect.top < window.innerHeight) {
+            const feedId = element.getAttribute('data-feed-id')
+            if (feedId) {
+              savedScrollAnchorByRouteRef.current[key] = feedId
+            }
+            break
+          }
+        }
       }
     }
     main.addEventListener('scroll', onScroll, { passive: true })
@@ -131,7 +145,61 @@ export function ShellFrame({
       return
     }
     const y = savedMainScrollByRouteRef.current[key] ?? 0
-    main.scrollTop = y
+    const anchorId = savedScrollAnchorByRouteRef.current[key]
+
+    // Prefer anchor-based restoration over pixel-based
+    if (anchorId) {
+      const anchorElement = main.querySelector(`[data-feed-id="${anchorId}"]`) as HTMLElement | null
+      if (anchorElement) {
+        // Scroll anchor element to the same viewport position as when saved
+        const targetScrollTop = anchorElement.offsetTop - 100
+        main.scrollTop = targetScrollTop
+      } else {
+        // Fallback to pixel position if anchor element not found
+        main.scrollTop = y
+      }
+    } else {
+      main.scrollTop = y
+    }
+
+    // Monitor content height changes and re-anchor
+    let lastScrollHeight = main.scrollHeight
+    let stableCount = 0
+    let checkCount = 0
+    const maxChecks = 20
+    const requiredStableChecks = 3
+
+    const checkAndCorrect = () => {
+      checkCount++
+      const currentScrollHeight = main.scrollHeight
+      const heightChanged = currentScrollHeight !== lastScrollHeight
+
+      if (heightChanged) {
+        // Re-anchor when content height changes
+        if (anchorId) {
+          const anchorElement = main.querySelector(
+            `[data-feed-id="${anchorId}"]`,
+          ) as HTMLElement | null
+          if (anchorElement) {
+            const targetScrollTop = anchorElement.offsetTop - 100
+            main.scrollTop = targetScrollTop
+          }
+        }
+        stableCount = 0
+      } else {
+        stableCount++
+      }
+
+      lastScrollHeight = currentScrollHeight
+
+      if (stableCount < requiredStableChecks && checkCount < maxChecks) {
+        timerId = setTimeout(checkAndCorrect, 100)
+      }
+    }
+
+    let timerId = setTimeout(checkAndCorrect, 100)
+
+    return () => clearTimeout(timerId)
   }, [location.pathname, location.search, mainRef])
 
   const contentWidthClass: Record<ContentWidth, string> = {
