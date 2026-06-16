@@ -23,24 +23,24 @@ describe('GenImageDialog', () => {
   const mockFeedItem: FeedItem = {
     id: '123',
     author: {
-      uid: 'user123',
+      id: 'user123',
       name: '测试用户',
-      avatarHd: 'https://example.com/avatar.jpg',
-      followerCount: 1000,
-      isFollowing: false,
-      description: '测试描述',
-      profileUrl: 'https://weibo.com/u/user123',
+      avatarUrl: 'https://example.com/avatar.jpg',
     },
     createdAt: '2024-01-01T00:00:00Z',
+    createdAtLabel: '刚刚',
     text: '测试微博内容',
     source: 'iPhone客户端',
-    region: '北京',
-    attitudesCount: 10,
-    commentsCount: 5,
-    repostsCount: 3,
-    isLiked: false,
-    picIds: [],
-    picInfos: {},
+    regionName: '北京',
+    stats: {
+      likes: 10,
+      comments: 5,
+      reposts: 3,
+    },
+    liked: false,
+    favorited: false,
+    images: [],
+    media: null,
   }
 
   it('exports GenImageDialog component', async () => {
