@@ -17,6 +17,21 @@ export interface WeiboMediaInfo {
   mp4_720p_mp4?: string
   h265_mp4_hd?: string
   mp4_hd_url?: string
+  stream_url?: string
+  stream_url_hd?: string
+  live_ld?: string
+  live_status?: number
+  live_start_time?: string
+  replay_hd?: string
+  author_mid?: string
+  big_pic_info?: {
+    pic_big?: {
+      url?: string
+    }
+  }
+  subscribe?: {
+    cover?: string
+  }
   mpdInfo?: {
     mpdContent?: string
     mpdcontent?: string
@@ -65,13 +80,14 @@ export interface WeiboMediaInfo {
 
 export interface WeiboPageInfo {
   type?: string
-  object_type?: number
+  object_type?: number | string
   object_id?: string
   content1?: string
   content2?: string
-  page_pic?: {
-    url?: string
-  }
+  page_pic?: string | { url?: string }
+  page_url?: string
+  page_title?: string
+  author_mid?: string
   media_info?: WeiboMediaInfo
 }
 

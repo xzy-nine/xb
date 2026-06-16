@@ -8,35 +8,6 @@ import type { FeedDashQuality, FeedDashSource, FeedMixMediaItem } from '@/lib/we
 import { pickNonEmptyUrl, uniqueNonEmptyUrls } from './helpers'
 import type { WeiboMediaInfo, WeiboStatus } from './types'
 
-interface WeiboMixMediaInfo {
-  items: Array<
-    | {
-        type: 'video'
-        id: string
-        data: {
-          object_type: 'video'
-          content1?: string
-          content2?: string
-          media_info?: WeiboMediaInfo
-          page_pic?: string
-          page_url?: string
-        }
-      }
-    | {
-        type: 'pic'
-        id: string
-        data: {
-          thumbnail?: { url?: string; width?: number; height?: number }
-          bmiddle?: { url?: string; width?: number; height?: number }
-          large?: { url?: string; width?: number; height?: number }
-          original?: { url?: string; width?: number; height?: number }
-          largest?: { url?: string; width?: number; height?: number }
-          mw2000?: { url?: string; width?: number; height?: number }
-        }
-      }
-  >
-}
-
 /**
  * Gets MPD XML from media info.
  */
@@ -210,9 +181,7 @@ function playbackSourcesFromList(
 /**
  * Converts mix media info to FeedMixMediaItem array.
  */
-export function toMixMediaInfo(
-  mixMediaInfo: WeiboMixMediaInfo | undefined,
-): FeedMixMediaItem[] | undefined {
+export function toMixMediaInfo(mixMediaInfo: any): FeedMixMediaItem[] | undefined {
   if (!mixMediaInfo?.items) {
     return undefined
   }
