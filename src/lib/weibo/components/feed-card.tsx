@@ -118,7 +118,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
     return (
       <div
         onClick={(event) => {
-          event.preventDefault()
           event.stopPropagation()
         }}
       >
@@ -131,7 +130,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
     return (
       <div
         onClick={(event) => {
-          event.preventDefault()
           event.stopPropagation()
         }}
       >
@@ -150,7 +148,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
   return (
     <div
       onClick={(event) => {
-        event.preventDefault()
         event.stopPropagation()
       }}
     >
@@ -180,10 +177,7 @@ function FeedAuthorHeader({
       <UserHoverCard uid={item.author.id}>
         <Link
           to={`/n/${encodeURIComponent(item.author.name)}`}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
+          onClick={(event) => event.stopPropagation()}
         >
           <UserAvatar
             author={item.author}
@@ -199,10 +193,7 @@ function FeedAuthorHeader({
               <UserHoverCard uid={item.author.id}>
                 <Link
                   to={`/n/${encodeURIComponent(item.author.name)}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}
+                  onClick={(event) => event.stopPropagation()}
                 >
                   <CardTitle className="truncate text-base hover:underline">
                     {item.author.name}
@@ -212,14 +203,8 @@ function FeedAuthorHeader({
               <CreatedAtBadge label={item.createdAtLabel} />
               {trailing ? (
                 <div
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}
-                  onMouseDown={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
                 >
                   {trailing}
                 </div>
@@ -252,10 +237,7 @@ function RetweetedAuthorHeader({
         <button
           type="button"
           className="cursor-pointer"
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
+          onClick={(event) => event.stopPropagation()}
         >
           <UserAvatar
             author={item.author}
@@ -270,10 +252,7 @@ function RetweetedAuthorHeader({
             <button
               type="button"
               className="cursor-pointer text-left"
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-              }}
+              onClick={(event) => event.stopPropagation()}
             >
               <p className="text-foreground truncate text-sm font-medium hover:underline">
                 {item.author.name}
@@ -324,10 +303,7 @@ function FeedTextBlock({
         <Tabs
           value={resolvedTextMode}
           onValueChange={(value) => setTextMode(value as 'markdown' | 'plain')}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
+          onClick={(event) => event.stopPropagation()}
         >
           <TabsList>
             <TabsTrigger
@@ -349,7 +325,6 @@ function FeedTextBlock({
       {canLoadLongText ? (
         <LongTextButton
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onLoadLongText()
           }}
@@ -458,7 +433,6 @@ function FeedActions({
           }
           className="group rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             if (!controlsInlineComments) {
               onCommentClick?.(item)
@@ -484,7 +458,6 @@ function FeedActions({
           aria-label="转发微博"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onRepostClick?.(item)
           }}
@@ -507,7 +480,6 @@ function FeedActions({
         disabled={likePending}
         className="group rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
         onClick={(event) => {
-          event.preventDefault()
           event.stopPropagation()
           onLikeClick?.(item)
         }}
@@ -540,7 +512,6 @@ function FeedActions({
           aria-label="生图"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onGenImage()
           }}
@@ -560,7 +531,6 @@ function FeedActions({
           disabled={downloadPending}
           className="group rounded-full py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onDownload()
           }}
@@ -581,7 +551,6 @@ function FeedActions({
           disabled={favoritePending}
           className="group rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             void onFavorite()
           }}
@@ -605,7 +574,6 @@ function FeedActions({
           aria-label="复制链接"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onCopyLink()
           }}
@@ -624,7 +592,6 @@ function FeedActions({
           aria-label="复制内容"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onCopyText()
           }}
@@ -736,41 +703,35 @@ function RetweetedFeedBlock({
     [feedInteractionMode, onNavigate, onCommentClick],
   )
 
-  const handleRetweetedClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (!canNavigate) {
       return
     }
-    // 中键或修饰键时不拦截，让 Link 的原生行为处理新标签打开
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
-    // 拦截左键点击使用 SPA 导航
-    event.preventDefault()
     onNavigate?.(resolvedItem)
   }
 
-  const handleRetweetedKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  const handleRetweetedKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!canNavigate) return
     if (event.target !== event.currentTarget) return
     if (event.key !== 'Enter' && event.key !== ' ') return
-    event.preventDefault()
+
     onNavigate?.(resolvedItem)
   }
 
   return (
-    <Link
-      to={canNavigate ? detailPath : ''}
+    <Card
       className={cn(
         'xb-feed-card xb-feed-card--compact gap-3 py-4',
-        'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
-        canNavigate
-          ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
-          : 'cursor-default',
+        canNavigate &&
+          'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
       )}
       onClick={handleRetweetedClick}
       onKeyDown={handleRetweetedKeyDown}
-      {...(canNavigate ? navigationProps : { as: 'div' as const })}
+      {...navigationProps}
     >
       <CardHeader>
         <RetweetedAuthorHeader item={resolvedItem} />
@@ -816,7 +777,7 @@ function RetweetedFeedBlock({
         )}
       </CardContent>
       {downloadDialog}
-    </Link>
+    </Card>
   )
 }
 
@@ -982,7 +943,6 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    // 中键或修饰键时不拦截，让 Link 的原生行为处理新标签打开
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
@@ -993,13 +953,7 @@ export const FeedCard = memo(function FeedCard({
     }
 
     const target = event.target as HTMLElement
-    // 如果点击的是 Link 本身之外的可交互元素或媒体元素，阻止传播
-    if (
-      target !== event.currentTarget &&
-      target.closest(
-        'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]',
-      )
-    ) {
+    if (target.closest('a,button,[role="button"],input,textarea,select,label')) {
       return
     }
 
@@ -1007,8 +961,6 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    // 拦截左键点击使用 SPA 导航
-    event.preventDefault()
     onNavigate?.(resolvedItem)
   }
 
@@ -1025,7 +977,6 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    event.preventDefault()
     onNavigate?.(resolvedItem)
   }
 
@@ -1068,7 +1019,6 @@ export const FeedCard = memo(function FeedCard({
             size="sm"
             disabled={unfavoriteMutation.isPending}
             onClick={(event) => {
-              event.preventDefault()
               event.stopPropagation()
               void unfavoriteMutation.mutateAsync(resolvedItem.id)
             }}
@@ -1082,20 +1032,17 @@ export const FeedCard = memo(function FeedCard({
   }
 
   return (
-    <Link
-      to={canNavigate ? detailPath : ''}
+    <Card
       className={cn(
         'xb-feed-card group/card gap-4 py-4 relative',
-        'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
-        canNavigate
-          ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
-          : 'cursor-default',
+        canNavigate &&
+          'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
         className,
       )}
       data-testid="feed-card-body"
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
-      {...(canNavigate ? navigationProps : { as: 'div' as const })}
+      {...navigationProps}
     >
       <div className="absolute top-4 right-4">
         <FeedCardMoreMenu
@@ -1197,6 +1144,6 @@ export const FeedCard = memo(function FeedCard({
         />
       ) : null}
       {downloadDialog}
-    </Link>
+    </Card>
   )
 })

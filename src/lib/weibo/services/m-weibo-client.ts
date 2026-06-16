@@ -1,7 +1,24 @@
 import type { MweiboFetchResponse } from '@/lib/weibo/platform/messages'
+import { MweiboCaptchaError } from '@/lib/weibo/services/mweibo-errors'
 
 const SEND_MESSAGE_RETRIES = 3
 const RETRY_DELAY_MS = 300
+
+/**
+ * Inspect an m.weibo.cn response payload and return the captcha URL if
+ * the server is gating the request behind its captcha interceptor.
+ *
+ * Captcha responses have shape:
+ *   { ok: -100, errno: '-100', msg: '', url: 'https://m.weibo.cn/captcha/show?...', extra: '' }
+ */
+export function detectMweiboCaptcha(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null
+  const obj = data as Record<string, unknown>
+  if (obj.ok !== -100) return null
+  if (typeof obj.url !== 'string') return null
+  if (!obj.url.includes('/captcha/')) return null
+  return obj.url
+}
 
 async function ensureBackgroundReady(): Promise<void> {
   // Ping the background to ensure the service worker is awake.
@@ -38,8 +55,14 @@ export async function mweiboFetch<T>(url: string): Promise<T> {
         throw new Error(response.error ?? 'mweibo-fetch-failed')
       }
 
+      const captchaUrl = detectMweiboCaptcha(response.data)
+      if (captchaUrl) {
+        throw new MweiboCaptchaError(captchaUrl)
+      }
+
       return response.data as T
     } catch (error) {
+      if (error instanceof MweiboCaptchaError) throw error
       if (error instanceof Error && error.message.startsWith('mweibo-fetch-failed')) {
         throw error
       }
