@@ -344,6 +344,20 @@ export function toMedia(status: WeiboStatus) {
         }
       }
     }
+
+    if (!progressiveUrl) {
+      return null
+    }
+
+    return {
+      type: 'video' as const,
+      streamUrl: progressiveUrl,
+      title: mediaInfo.video_title ?? '',
+      coverUrl: pagePicUrl ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
+      videoOrientation: mediaInfo.video_orientation,
+      downloadUrl: dlUrl,
+      dash: undefined,
+    }
   }
 
   const sources = playbackSourcesFromList(mediaInfo)

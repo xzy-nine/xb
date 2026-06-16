@@ -22,8 +22,10 @@ import {
   User,
   Bell,
   PanelLeft,
+  XIcon,
 } from 'lucide-react'
 import { Reorder } from 'motion/react'
+import { Dialog as DialogPrimitive } from 'radix-ui'
 import React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -42,6 +44,7 @@ import {
   VisuallyHidden,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { getUiPortalContainer } from '@/components/ui/portal'
 import {
   Select,
   SelectContent,
@@ -120,7 +123,7 @@ const TOOLBAR_BUTTON_OPTIONS: Array<{
 }> = [
   { id: 'favorite', label: '收藏', icon: Bookmark },
   { id: 'copy-link', label: '复制链接', icon: LinkIcon },
-  { id: 'copy-text', label: '复制内容', icon: Copy },
+  { id: 'copy-text', label: '复制正文', icon: Copy },
   { id: 'download-media', label: '批量下载', icon: Download },
   { id: 'gen-image', label: '生图', icon: Image },
 ]
@@ -128,6 +131,50 @@ const TOOLBAR_BUTTON_OPTIONS: Array<{
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Force mount the dialog content even when closed (used for tests / animation). */
+  forceMount?: boolean
+}
+
+const DIALOG_CONTENT_CLASSES = 'flex h-[560px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]'
+
+function DialogContentMaybeForced({
+  forceMount,
+  children,
+}: {
+  forceMount?: boolean
+  children: React.ReactNode
+}) {
+  if (forceMount) {
+    return <ForcedDialogContent>{children}</ForcedDialogContent>
+  }
+  return <DialogContent className={DIALOG_CONTENT_CLASSES}>{children}</DialogContent>
+}
+
+function ForcedDialogContent({ children }: { children: React.ReactNode }) {
+  const container = React.useMemo(() => getUiPortalContainer(), [])
+  return (
+    <DialogPrimitive.Portal data-slot="dialog-portal" container={container} forceMount>
+      <DialogPrimitive.Overlay
+        data-slot="dialog-overlay"
+        className="data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50"
+        forceMount
+      />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        forceMount
+        className={DIALOG_CONTENT_CLASSES}
+      >
+        {children}
+        <DialogPrimitive.Close
+          data-slot="dialog-close"
+          className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+        >
+          <XIcon />
+          <span className="sr-only">关闭</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
+  )
 }
 
 function SidebarItem({
@@ -263,7 +310,7 @@ const FEED_INTERACTION_OPTIONS: Array<{
   },
 ]
 
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, forceMount = false }: SettingsDialogProps) {
   const [version, setVersion] = useState<string>('')
   const [activeGroup, setActiveGroup] = useState<GroupId>('appearance')
   const settingsMainRef = useRef<HTMLElement>(null)
@@ -540,7 +587,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[560px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]">
+      <DialogContentMaybeForced forceMount={forceMount}>
         <DialogHeader>
           <DialogTitle className="px-6 pt-5 text-base tracking-tight">设置</DialogTitle>
           <VisuallyHidden>
@@ -567,7 +614,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             {activeGroup === 'appearance' && (
               <div className="flex flex-col">
                 <div className="divide-border/40 divide-y px-6 py-4">
-                  <Field label="颜色模式" description="选择 xb 使用浅色、深色或系统模式">
+                  <Field label="主题模式" description="选择 xb 使用浅色、深色或系统模式">
                     <OptionPills
                       value={theme}
                       options={[
@@ -644,14 +691,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     </div>
                   </StackedField>
                 </div>
-                <div className="border-border/40 border-t px-6 py-4">
-                  <Field label="页面元素" />
-                  <TreeView
-                    data={pageElementTreeData}
-                    className="max-h-[200px] overflow-y-auto"
-                    renderItem={renderTreeItem}
-                  />
-                </div>
               </div>
             )}
 
@@ -673,6 +712,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             {activeGroup === 'personalize' && (
               <div className="space-y-3 px-6 py-4">
+                <StackedField label="页面可见性" description="控制在导航栏中显示哪些页面">
+                  <TreeView
+                    data={pageElementTreeData}
+                    className="max-h-[200px] overflow-y-auto"
+                    renderItem={renderTreeItem}
+                  />
+                </StackedField>
                 <StackedField
                   label="微博卡片行为"
                   description="选择点击微博卡片和评论按钮后的打开方式"
@@ -701,7 +747,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </StackedField>
                 <div>
                   <Field
-                    label="暗色模式图片降亮度"
+                    label="暗色模式降低图片亮度"
                     description="降低小图亮度，减少深色模式下的刺眼感"
                   >
                     <Switch
@@ -712,11 +758,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     />
                   </Field>
                   <IllustrationPlaceholder>
-                    <img src={darkModeImageDimJpeg} alt="图片蒙版" className="h-auto w-full" />
+                    <img
+                      src={darkModeImageDimJpeg}
+                      alt="暗色模式降低图片亮度效果"
+                      className="h-auto w-full"
+                    />
                   </IllustrationPlaceholder>
                 </div>
                 <div>
-                  <Field label="首页默认标签" description="进入微博首页时，自动打开指定时间线">
+                  <Field label="首页默认时间线" description="进入微博首页时，自动打开指定时间线">
                     <Select
                       value={firstLoadRedirect}
                       onValueChange={(value) =>
@@ -738,7 +788,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Field>
                 </div>
                 <div>
-                  <Field label="转发链样式" description='将 "//@ 用户名:" 格式显示为引用卡片'>
+                  <Field label="转发链样式" description='将 "//@用户名:" 格式显示为引用卡片'>
                     <Switch
                       checked={renderReplyChainEnabled}
                       onCheckedChange={(checked) =>
@@ -747,7 +797,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     />
                   </Field>
                   <IllustrationPlaceholder>
-                    <img src={quoteChainsJpeg} alt="QuoteChains 渲染" className="h-auto w-full" />
+                    <img src={quoteChainsJpeg} alt="转发链样式效果" className="h-auto w-full" />
                   </IllustrationPlaceholder>
                 </div>
                 {renderReplyChainEnabled && (
@@ -763,7 +813,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     <IllustrationPlaceholder>
                       <img
                         src={collapseReplyChain}
-                        alt="折叠 QuoteChains"
+                        alt="折叠转发链效果"
                         className="h-auto w-full"
                       />
                     </IllustrationPlaceholder>
@@ -812,15 +862,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="font-thin">100 细</SelectItem>
-                        <SelectItem value="font-extralight">200</SelectItem>
-                        <SelectItem value="font-light">300</SelectItem>
+                        <SelectItem value="font-thin">100 极细</SelectItem>
+                        <SelectItem value="font-extralight">200 较细</SelectItem>
+                        <SelectItem value="font-light">300 细</SelectItem>
                         <SelectItem value="font-normal">400 标准</SelectItem>
-                        <SelectItem value="font-medium">500</SelectItem>
-                        <SelectItem value="font-semibold">600</SelectItem>
+                        <SelectItem value="font-medium">500 中等</SelectItem>
+                        <SelectItem value="font-semibold">600 较粗</SelectItem>
                         <SelectItem value="font-bold">700 粗</SelectItem>
-                        <SelectItem value="font-extrabold">800</SelectItem>
-                        <SelectItem value="font-black">900</SelectItem>
+                        <SelectItem value="font-extrabold">800 特粗</SelectItem>
+                        <SelectItem value="font-black">900 超粗</SelectItem>
                       </SelectContent>
                     </Select>
                   </Field>
@@ -972,7 +1022,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </div>
         )}
-      </DialogContent>
+      </DialogContentMaybeForced>
     </Dialog>
   )
 }

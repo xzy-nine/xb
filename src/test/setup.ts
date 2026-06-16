@@ -1,10 +1,16 @@
 import { notifyManager } from '@tanstack/query-core'
 import '@testing-library/jest-dom/vitest'
-import { vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach, vi } from 'vitest'
 
 // Avoid setTimeout(0) batches firing after Vitest tears down jsdom (window is not defined).
 notifyManager.setScheduler((run) => {
   run()
+})
+
+// Automatically unmount and cleanup DOM after each test
+afterEach(() => {
+  cleanup()
 })
 
 Object.defineProperty(window, 'matchMedia', {

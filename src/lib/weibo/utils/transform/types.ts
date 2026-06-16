@@ -99,9 +99,9 @@ export interface WeiboPicInfo {
   bmiddle?: { url?: string; width?: number; height?: number }
   thumbnail?: { url?: string; width?: number; height?: number }
   mw2000?: { url?: string; width?: number; height?: number }
-  video?: { url?: string }
-  video_hd?: { url?: string }
-  livephoto_video?: { url?: string }
+  video?: string | { url?: string }
+  video_hd?: string | { url?: string }
+  livephoto_video?: string | { url?: string }
   pic_status?: number
   type?: string
 }

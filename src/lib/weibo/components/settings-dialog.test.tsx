@@ -43,7 +43,7 @@ describe('SettingsDialog', () => {
   })
 
   it('renders dialog when open', () => {
-    render(<SettingsDialog open={true} onOpenChange={() => {}} />)
+    render(<SettingsDialog open={true} onOpenChange={() => {}} forceMount />)
 
     const dialog = screen.getByRole('dialog')
     expect(dialog).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe('SettingsDialog', () => {
   })
 
   it('has closed state when not open', () => {
-    render(<SettingsDialog open={false} onOpenChange={() => {}} />)
+    render(<SettingsDialog open={false} onOpenChange={() => {}} forceMount />)
 
     const dialog = screen.getByRole('dialog')
     // Dialog is still in DOM but with data-state="closed"
@@ -60,7 +60,7 @@ describe('SettingsDialog', () => {
   })
 
   it('renders all sidebar groups', () => {
-    render(<SettingsDialog open={true} onOpenChange={() => {}} />)
+    render(<SettingsDialog open={true} onOpenChange={() => {}} forceMount />)
 
     // Check for main setting groups - use getAllByText to handle duplicates
     const appearanceElements = screen.getAllByText('外观')

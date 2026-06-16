@@ -56,16 +56,21 @@ export function toUrlEntities(
     .map((entity: any) => {
       const shortUrl = entity.short_url?.trim() ?? ''
       const urlTitle = entity.url_title?.trim() ?? ''
-      const longUrl = entity.long_url ?? entity.ori_url ?? entity.h5_target_url ?? ''
       const urlType = Number(entity.url_type ?? 0)
 
-      if (!shortUrl || !longUrl) {
+      if (!shortUrl) {
+        return null
+      }
+
+      if (urlType <= 0) {
         return null
       }
 
       if (!text.includes(shortUrl)) {
         return null
       }
+
+      const longUrl = entity.long_url ?? entity.ori_url ?? entity.h5_target_url ?? shortUrl
 
       if (options?.excludeImageEntities) {
         const hasImages = Array.isArray(entity.pic_ids) && entity.pic_ids.length > 0
