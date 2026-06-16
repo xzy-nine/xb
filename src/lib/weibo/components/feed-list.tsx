@@ -25,14 +25,15 @@ export function FeedList({
   return (
     <div className="flex flex-col gap-3">
       {items.map((item) => (
-        <FeedCard
-          key={item.id}
-          item={item}
-          onNavigate={onNavigate}
-          onCommentClick={onCommentClick}
-          onRepostClick={onRepostClick}
-          onCommentReply={onCommentReply}
-        />
+        <div key={item.id} data-feed-id={item.id}>
+          <FeedCard
+            item={item}
+            onNavigate={onNavigate}
+            onCommentClick={onCommentClick}
+            onRepostClick={onRepostClick}
+            onCommentReply={onCommentReply}
+          />
+        </div>
       ))}
     </div>
   )
