@@ -47,7 +47,6 @@ export function SearchCard({ className }: SearchCardProps) {
   }
 
   const handleClear = () => {
-    console.log('🚀 ~ handleClear ~ handleClear:')
     setQuery('')
     setActiveQuery('')
     setOpen(false)

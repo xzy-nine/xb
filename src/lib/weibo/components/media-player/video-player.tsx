@@ -444,8 +444,7 @@ export function VideoPlayer({
           a.click()
           a.remove()
           toast.success(`视频已下载：${name}`)
-        } catch (error) {
-          console.error(error)
+        } catch {
           toast.error('视频下载失败，请稍后再试')
         }
         return
@@ -464,8 +463,7 @@ export function VideoPlayer({
         URL.revokeObjectURL(blobUrl)
         toast.success(`视频已下载：${name}`)
         a.remove()
-      } catch (error) {
-        console.error(error)
+      } catch {
         toast.error('视频下载失败，请稍后再试')
       }
     } catch {

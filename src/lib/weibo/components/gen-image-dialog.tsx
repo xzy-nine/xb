@@ -173,8 +173,7 @@ export function GenImageDialog() {
     onSuccess: () => {
       toast.success('已复制到剪贴板')
     },
-    onError: (error) => {
-      console.error('[GenImageCard] Copy failed:', error)
+    onError: () => {
       toast.error('复制图片失败，请重试')
     },
   })
@@ -188,8 +187,7 @@ export function GenImageDialog() {
     onSuccess: () => {
       toast.success('图片已开始下载')
     },
-    onError: (error) => {
-      console.error('[GenImageCard] Save failed:', error)
+    onError: () => {
       toast.error('保存图片失败，请重试')
     },
   })

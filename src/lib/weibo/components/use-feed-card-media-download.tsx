@@ -66,8 +66,7 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
       }
 
       await performDownload(urls, item)
-    } catch (error) {
-      console.error('下载失败:', error)
+    } catch {
       toast.error('媒体下载失败，请稍后再试')
     } finally {
       setDownloadLoading(false)
@@ -82,8 +81,7 @@ export function useFeedCardMediaDownload(item?: FeedItem) {
 
     try {
       await performDownload(pendingDownload.urls, item)
-    } catch (error) {
-      console.error('下载失败:', error)
+    } catch {
       toast.error('媒体下载失败，请稍后再试')
     } finally {
       setDownloadLoading(false)
