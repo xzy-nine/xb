@@ -92,15 +92,18 @@ export interface WeiboPageInfo {
 }
 
 export interface WeiboPicInfo {
-  large?: { url?: string }
-  largest?: { url?: string }
-  original?: { url?: string }
-  woriginal?: { url?: string }
-  bmiddle?: { url?: string }
-  thumbnail?: { url?: string }
-  mw2000?: { url?: string }
+  large?: { url?: string; width?: number; height?: number }
+  largest?: { url?: string; width?: number; height?: number }
+  original?: { url?: string; width?: number; height?: number }
+  woriginal?: { url?: string; width?: number; height?: number }
+  bmiddle?: { url?: string; width?: number; height?: number }
+  thumbnail?: { url?: string; width?: number; height?: number }
+  mw2000?: { url?: string; width?: number; height?: number }
+  video?: { url?: string }
+  video_hd?: { url?: string }
   livephoto_video?: { url?: string }
   pic_status?: number
+  type?: string
 }
 
 export interface WeiboStatus {
