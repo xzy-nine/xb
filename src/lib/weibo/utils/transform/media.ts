@@ -281,11 +281,16 @@ export function toMedia(status: WeiboStatus) {
   }
 
   if (status.page_info?.object_type === 'live') {
+    const pagePicUrl =
+      typeof status.page_info?.page_pic === 'string'
+        ? status.page_info.page_pic
+        : status.page_info?.page_pic?.url
+
     return {
       type: 'live' as const,
       streamUrl: mediaInfo.live_ld ?? mediaInfo.stream_url ?? '',
       title: mediaInfo.video_title ?? '',
-      coverUrl: status.page_info?.page_pic ?? mediaInfo.subscribe?.cover ?? null,
+      coverUrl: pagePicUrl ?? mediaInfo.subscribe?.cover ?? null,
       liveStatus: mediaInfo.live_status,
       liveStartTime: mediaInfo.live_start_time,
       replayUrl: mediaInfo.replay_hd,
@@ -299,16 +304,26 @@ export function toMedia(status: WeiboStatus) {
     if (!progressiveUrl) {
       return null
     }
+    const pagePicUrl =
+      typeof status.page_info?.page_pic === 'string'
+        ? status.page_info.page_pic
+        : status.page_info?.page_pic?.url
+
     return {
       type: 'audio' as const,
       streamUrl: progressiveUrl,
       title: mediaInfo.video_title ?? '',
-      coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
+      coverUrl: pagePicUrl ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
     }
   }
 
   const rawMpdXml = getMpdXml(mediaInfo)
   const dlUrl = downloadUrlFromMediaInfo(mediaInfo)
+
+  const pagePicUrl =
+    typeof status.page_info?.page_pic === 'string'
+      ? status.page_info.page_pic
+      : status.page_info?.page_pic?.url
 
   if (rawMpdXml) {
     if (hasAudioAdaptationInMpd(rawMpdXml)) {
@@ -318,7 +333,7 @@ export function toMedia(status: WeiboStatus) {
           type: 'video' as const,
           streamUrl: progressiveUrl ?? '',
           title: mediaInfo.video_title ?? '',
-          coverUrl: status.page_info?.page_pic ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
+          coverUrl: pagePicUrl ?? mediaInfo.big_pic_info?.pic_big?.url ?? null,
           videoOrientation: mediaInfo.video_orientation,
           downloadUrl: dlUrl,
           dash: {

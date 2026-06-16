@@ -95,8 +95,12 @@ export interface WeiboPicInfo {
   large?: { url?: string }
   largest?: { url?: string }
   original?: { url?: string }
-  mw2000?: { url?: string }
+  woriginal?: { url?: string }
+  bmiddle?: { url?: string }
   thumbnail?: { url?: string }
+  mw2000?: { url?: string }
+  livephoto_video?: { url?: string }
+  pic_status?: number
 }
 
 export interface WeiboStatus {
@@ -149,7 +153,7 @@ export interface WeiboStatus {
     ori_url?: string
     h5_target_url?: string
     url_title?: string
-    url_type?: number
+    url_type?: number | string
     pic_ids?: string[]
     pic_infos?: Record<string, WeiboPicInfo>
   }>
