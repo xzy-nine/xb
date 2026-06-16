@@ -85,6 +85,7 @@
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.9",
     "@wxt-dev/module-react": "^1.2.2",
     "conventional-changelog-conventionalcommits": "^9.3.1",
     "husky": "^9.1.7",
