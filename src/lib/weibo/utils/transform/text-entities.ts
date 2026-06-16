@@ -25,7 +25,7 @@ export function getStatusText(
  * Gets markdown text if available.
  */
 export function getStatusMarkdownText(
-  status: Pick<WeiboStatus, 'text_raw' | 'text' | 'isMarkdown'> & { raw_text?: string },
+  status: Pick<WeiboStatus, 'text_raw' | 'text'> & { raw_text?: string; isMarkdown?: boolean },
 ): string | undefined {
   if (!status.isMarkdown) {
     return undefined
