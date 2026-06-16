@@ -284,7 +284,7 @@ export function toMedia(status: WeiboStatus) {
     const pagePicUrl =
       typeof status.page_info?.page_pic === 'string'
         ? status.page_info.page_pic
-        : status.page_info?.page_pic?.url
+        : (status.page_info?.page_pic?.url ?? null)
 
     return {
       type: 'live' as const,
@@ -307,7 +307,7 @@ export function toMedia(status: WeiboStatus) {
     const pagePicUrl =
       typeof status.page_info?.page_pic === 'string'
         ? status.page_info.page_pic
-        : status.page_info?.page_pic?.url
+        : (status.page_info?.page_pic?.url ?? null)
 
     return {
       type: 'audio' as const,
@@ -323,7 +323,7 @@ export function toMedia(status: WeiboStatus) {
   const pagePicUrl =
     typeof status.page_info?.page_pic === 'string'
       ? status.page_info.page_pic
-      : status.page_info?.page_pic?.url
+      : (status.page_info?.page_pic?.url ?? null)
 
   if (rawMpdXml) {
     if (hasAudioAdaptationInMpd(rawMpdXml)) {
