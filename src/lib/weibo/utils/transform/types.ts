@@ -197,6 +197,8 @@ export interface WeiboLongTextData {
   url_struct?: Array<{
     short_url?: string
     long_url?: string
+    ori_url?: string
+    h5_target_url?: string
     url_title?: string
     url_type?: number
     pic_ids?: string[]
