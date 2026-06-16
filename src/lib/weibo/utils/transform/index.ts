@@ -16,6 +16,8 @@ export type {
 // Media transformation
 export { toMedia, toMixMediaInfo } from './media'
 
-// Note: status.ts and comments.ts will be added in the next phase
-// export { toFeedItem, mergeLongTextIntoFeedItem } from './status'
-// export { toCommentItem } from './comments'
+// Status transformation
+export { toFeedItem, mergeLongTextIntoFeedItem } from './status'
+
+// Comment transformation
+export { toCommentItem } from './comments'

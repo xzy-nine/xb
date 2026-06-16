@@ -15,7 +15,9 @@ export function getStatusId(status: Pick<WeiboStatus, 'idstr' | 'mid' | 'id'>): 
 /**
  * Gets status text from various text fields.
  */
-export function getStatusText(status: Pick<WeiboStatus, 'text_raw' | 'raw_text' | 'text'>): string {
+export function getStatusText(
+  status: Pick<WeiboStatus, 'text_raw' | 'text'> & { raw_text?: string },
+): string {
   return status.text_raw ?? status.raw_text ?? status.text ?? ''
 }
 
@@ -23,7 +25,7 @@ export function getStatusText(status: Pick<WeiboStatus, 'text_raw' | 'raw_text' 
  * Gets markdown text if available.
  */
 export function getStatusMarkdownText(
-  status: Pick<WeiboStatus, 'text_raw' | 'raw_text' | 'text' | 'isMarkdown'>,
+  status: Pick<WeiboStatus, 'text_raw' | 'text' | 'isMarkdown'> & { raw_text?: string },
 ): string | undefined {
   if (!status.isMarkdown) {
     return undefined
@@ -34,7 +36,7 @@ export function getStatusMarkdownText(
     return raw
   }
 
-  return normalizeMarkdownText(status.text)
+  return normalizeMarkdownText(status.text ?? '')
 }
 
 /**
@@ -43,7 +45,7 @@ export function getStatusMarkdownText(
 export function toUrlEntities(
   status: Pick<WeiboStatus, 'url_struct' | 'text_raw' | 'text'>,
   options?: { excludeImageEntities?: boolean },
-): Array<{ title: string; url: string }> {
+): Array<{ shortUrl: string; title: string; url: string }> {
   if (!Array.isArray(status.url_struct)) {
     return []
   }
@@ -74,11 +76,12 @@ export function toUrlEntities(
 
       const decodedTitle = urlTitle ? decodeHtmlEntities(urlTitle) : longUrl
       return {
+        shortUrl,
         title: decodedTitle || longUrl,
         url: longUrl,
       }
     })
-    .filter((entity): entity is { title: string; url: string } => entity !== null)
+    .filter((entity): entity is { shortUrl: string; title: string; url: string } => entity !== null)
 }
 
 /**

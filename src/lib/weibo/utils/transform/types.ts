@@ -143,9 +143,22 @@ export interface WeiboStatus {
   liked?: boolean
 }
 
-export interface WeiboLongTextData extends Pick<
-  WeiboStatus,
-  'created_at' | 'longText' | 'region_name' | 'source' | 'text' | 'url_struct' | 'topic_struct'
-> {
-  ok: number
+export interface WeiboLongTextData {
+  ok?: number
+  longTextContent?: string
+  longTextContent_raw?: string
+  isMarkdown?: boolean
+  pic_ids?: string[]
+  pic_infos?: Record<string, WeiboPicInfo>
+  topic_struct?: Array<{
+    topic_title?: string
+  }>
+  url_struct?: Array<{
+    short_url?: string
+    long_url?: string
+    url_title?: string
+    url_type?: number
+    pic_ids?: string[]
+    pic_infos?: Record<string, WeiboPicInfo>
+  }>
 }
