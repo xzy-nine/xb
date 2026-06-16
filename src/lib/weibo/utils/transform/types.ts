@@ -90,8 +90,10 @@ export interface WeiboStatus {
   mblogid?: string
   user?: WeiboStatusUser
   created_at?: string
+  deleted?: string
   text?: string
   text_raw?: string
+  isMarkdown?: boolean
   longText?: {
     longTextContent?: string
   }
@@ -104,11 +106,23 @@ export interface WeiboStatus {
   mix_media_info?: {
     items?: Array<{
       type?: 'video' | 'pic' | 'live'
+      id?: string
       data?: {
+        object_type?: 'video'
+        content1?: string
+        content2?: string
         pic_id?: string
         pic_infos?: Record<string, WeiboPicInfo>
         media_info?: WeiboMediaInfo
+        page_pic?: string
+        page_url?: string
         stream?: { url?: string }
+        thumbnail?: { url?: string; width?: number; height?: number }
+        bmiddle?: { url?: string; width?: number; height?: number }
+        large?: { url?: string; width?: number; height?: number }
+        original?: { url?: string; width?: number; height?: number }
+        largest?: { url?: string; width?: number; height?: number }
+        mw2000?: { url?: string; width?: number; height?: number }
       }
     }>
   }
@@ -116,6 +130,8 @@ export interface WeiboStatus {
   url_struct?: Array<{
     short_url?: string
     long_url?: string
+    ori_url?: string
+    h5_target_url?: string
     url_title?: string
     url_type?: number
     pic_ids?: string[]
@@ -126,11 +142,12 @@ export interface WeiboStatus {
     topic_url?: string
   }>
   retweeted_status?: WeiboStatus
+  analysis_extra?: string
   reposts_count?: number
   comments_count?: number
   attitudes_count?: number
   favorited?: boolean
-  attitudes_status?: number
+  attitudes_status?: number | boolean
   title?: {
     text?: string
   }
@@ -141,6 +158,7 @@ export interface WeiboStatus {
   }
   like_counts?: number
   liked?: boolean
+  isAd?: number
 }
 
 export interface WeiboLongTextData {
