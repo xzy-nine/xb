@@ -1163,7 +1163,7 @@ export const FeedCard = memo(function FeedCard({
   const cardClassName = cn(
     'group/card py-4 relative',
     uniformHeight ? 'gap-0 flex-1' : 'gap-4',
-    'xb-feed-card group/card gap-4 py-4 relative',
+    'xb-feed-card group/card gap-4 py-4 relative text-left',
     'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
     canNavigate
       ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
