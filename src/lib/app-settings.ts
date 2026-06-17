@@ -155,6 +155,7 @@ export interface AppSettings {
   showCompose: boolean
   showRightRail: boolean
   showHotSearchCard: boolean
+  xbEntryCollapsed: boolean
   showFollowedSuperTopicsCard: boolean
   sidebarCollapsed: boolean
   collapseRepliesEnabled: boolean
@@ -224,6 +225,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   showCompose: true,
   showRightRail: true,
   showHotSearchCard: true,
+  xbEntryCollapsed: false,
   showFollowedSuperTopicsCard: false,
   sidebarCollapsed: false,
   collapseRepliesEnabled: false,
@@ -496,6 +498,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.showHotSearchCard === 'boolean'
         ? candidate.showHotSearchCard
         : DEFAULT_APP_SETTINGS.showHotSearchCard,
+    xbEntryCollapsed:
+      typeof candidate.xbEntryCollapsed === 'boolean'
+        ? candidate.xbEntryCollapsed
+        : DEFAULT_APP_SETTINGS.xbEntryCollapsed,
     showFollowedSuperTopicsCard:
       typeof candidate.showFollowedSuperTopicsCard === 'boolean'
         ? candidate.showFollowedSuperTopicsCard

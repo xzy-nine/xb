@@ -1,10 +1,10 @@
-import { Sparkles, Zap } from 'lucide-react'
+import { Maximize2, Minimize2, Sparkles, Zap } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useOutletContext } from 'react-router'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AppTheme, ContentWidth } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
@@ -210,23 +210,111 @@ export function ShellFrame({
 }
 
 export function RewritePausedCard({ onResume }: { onResume: () => void }) {
+  const collapsed = useAppSettings((state) => state.xbEntryCollapsed)
+  const updateSettings = useAppSettings((state) => state.updateSettings)
+  const shouldReduceMotion = useReducedMotion()
+  const transition = {
+    duration: shouldReduceMotion ? 0.12 : 0.28,
+    ease: [0.4, 0, 0.2, 1] as const,
+  }
+
+  const toggleCollapsed = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    void updateSettings({ xbEntryCollapsed: !collapsed })
+  }
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onResume()
+    }
+  }
+
   return (
     <div className="fixed bottom-4 left-4 z-2147483647">
-      <Card className="bg-card/95 w-40 shadow-lg shadow-black/5 backdrop-blur md:w-60 lg:w-60">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="text-primary h-4 w-4" />
-            xb
-          </CardTitle>
-          <CardDescription>一键切换「更清爽、更 X 的」超级体验</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <Button onClick={onResume} className="justify-between">
-            <span>Let's xb!</span>
-            <Zap className="h-4 w-4" />
-          </Button>
-        </CardContent>
-      </Card>
+      <motion.div
+        data-testid="xb-entry"
+        data-state={collapsed ? 'collapsed' : 'expanded'}
+        initial={false}
+        animate={{
+          width: collapsed ? 110 : 240,
+          borderRadius: collapsed ? 18 : 8,
+          paddingLeft: 12,
+          paddingRight: collapsed ? 4 : 12,
+          paddingTop: collapsed ? 0 : 12,
+          paddingBottom: collapsed ? 0 : 12,
+        }}
+        transition={transition}
+        onClick={collapsed ? onResume : undefined}
+        onKeyDown={collapsed ? handleKeyDown : undefined}
+        role={collapsed ? 'button' : undefined}
+        tabIndex={collapsed ? 0 : undefined}
+        aria-label={collapsed ? '进入 xb 模式' : undefined}
+        title={collapsed ? '进入 xb 模式' : undefined}
+        style={{ overflow: 'hidden' }}
+        className={cn(
+          'bg-card/95 border-border/70 shadow-lg shadow-black/5 backdrop-blur',
+          'flex flex-col',
+          collapsed &&
+            'cursor-pointer hover:bg-card focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
+        )}
+      >
+        <div className="flex h-9 w-full items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="text-primary h-4 w-4 shrink-0" />
+            <span className="text-sm font-semibold">xb</span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? '展开 xb 模式' : '收起 xb 模式入口'}
+            title={collapsed ? '展开 xb 模式' : '收起'}
+            data-testid={collapsed ? 'xb-corner-expand' : 'xb-corner-collapse'}
+            className={cn(
+              'text-muted-foreground hover:text-foreground hover:bg-muted',
+              'inline-flex size-7 items-center justify-center rounded-full',
+            )}
+          >
+            {collapsed ? (
+              <Maximize2 className="h-3.5 w-3.5" />
+            ) : (
+              <Minimize2 className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+        <div
+          className={cn('grid', collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]')}
+          style={{
+            transition: 'grid-template-rows 280ms cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          <div className="overflow-hidden">
+            <motion.div
+              initial={false}
+              animate={{ opacity: collapsed ? 0 : 1 }}
+              transition={transition}
+              data-testid="xb-entry-body"
+              className="flex flex-col gap-2"
+            >
+              <p className="text-muted-foreground text-xs leading-snug">
+                一键切换「更清爽、更 X 的」超级体验
+              </p>
+              <button
+                type="button"
+                onClick={onResume}
+                data-testid="xb-entry-cta"
+                className={cn(
+                  'bg-primary text-primary-foreground hover:bg-primary/90',
+                  'inline-flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium',
+                )}
+              >
+                <span>Let&apos;s xb!</span>
+                <Zap className="h-4 w-4" />
+              </button>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
     </div>
   )
 }
