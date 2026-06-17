@@ -795,6 +795,7 @@ function RetweetedFeedBlock({
           ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
           : 'cursor-default',
       )}
+      data-slot="card"
       onClick={handleRetweetedClick}
       onKeyDown={handleRetweetedKeyDown}
       {...(canNavigate ? navigationProps : { as: 'div' as const })}
@@ -1264,6 +1265,7 @@ export const FeedCard = memo(function FeedCard({
         type="button"
         className={cardClassName}
         data-testid="feed-card-body"
+        data-slot="card"
         onClick={handleCardClick}
         onKeyDown={handleCardKeyDown}
         {...navigationProps}
@@ -1279,6 +1281,7 @@ export const FeedCard = memo(function FeedCard({
       to={canNavigate ? detailPath : ''}
       className={cardClassName}
       data-testid="feed-card-body"
+      data-slot="card"
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       {...(canNavigate ? navigationProps : { as: 'div' as const })}
