@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import type { HomeTab } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
@@ -111,11 +111,21 @@ export function HomeTimelinePage() {
     !newPostsCheckQuery.isFetching &&
     newPostsCheckQuery.dataUpdatedAt > dismissedForGroup
 
+  // Scroll to top only after a triggered refresh completes, mirroring
+  // explore / notifications / favorites. The trigger itself (refetch + bubble
+  // dismissal) stays synchronous so the spinner shows immediately.
+  const wasRefreshingRef = useRef(false)
+  useEffect(() => {
+    if (wasRefreshingRef.current && !isRefreshing) {
+      ctx.scrollMainToTop()
+    }
+    wasRefreshingRef.current = isRefreshing
+  }, [isRefreshing, ctx])
+
   const handleTimelineRefresh = useCallback(() => {
-    ctx.scrollMainToTop()
     dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] = Date.now()
     void timelineQuery.refetch()
-  }, [ctx, timelineQuery, followingNewPostsGroupKey])
+  }, [timelineQuery, followingNewPostsGroupKey])
 
   const isCustomGroupRoute = activeTab === 'following' && selectedGroupGid !== 'default'
   const handleTimelineMenuChange = useCallback(
