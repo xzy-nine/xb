@@ -91,6 +91,13 @@ function hasTextSelectionWithin(container: HTMLElement) {
   return commonAncestor === container || container.contains(commonAncestor)
 }
 
+function openStatusDetailInNewTab(path: string): void {
+  // Use the full URL so the new tab loads at the correct weibo.com path
+  // regardless of the current location. The xb content script runs on
+  // https://weibo.com/* and react-router picks up the new path on load.
+  window.open(`${window.location.origin}${path}`, '_blank', 'noopener,noreferrer')
+}
+
 function getMediaDownloadFilename(item: Pick<FeedItem, 'author' | 'text'>) {
   return `${item.author.name} ${sanitizeFilename(item.text.slice(0, 15))}`
 }
@@ -118,7 +125,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
     return (
       <div
         onClick={(event) => {
-          event.preventDefault()
           event.stopPropagation()
         }}
       >
@@ -131,7 +137,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
     return (
       <div
         onClick={(event) => {
-          event.preventDefault()
           event.stopPropagation()
         }}
       >
@@ -150,7 +155,6 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
   return (
     <div
       onClick={(event) => {
-        event.preventDefault()
         event.stopPropagation()
       }}
     >
@@ -222,14 +226,8 @@ function FeedAuthorHeader({
               <CreatedAtBadge label={item.createdAtLabel} />
               {trailing ? (
                 <div
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}
-                  onMouseDown={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}
+                  onClick={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
                 >
                   {trailing}
                 </div>
@@ -342,10 +340,7 @@ function FeedTextBlock({
         <Tabs
           value={resolvedTextMode}
           onValueChange={(value) => setTextMode(value as 'markdown' | 'plain')}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
+          onClick={(event) => event.stopPropagation()}
         >
           <TabsList>
             <TabsTrigger
@@ -372,7 +367,6 @@ function FeedTextBlock({
       {canLoadLongText ? (
         <LongTextButton
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onLoadLongText()
           }}
@@ -481,7 +475,6 @@ function FeedActions({
           }
           className="group rounded-full py-2 font-normal transition-transform hover:bg-sky-50 hover:text-sky-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             if (!controlsInlineComments) {
               onCommentClick?.(item)
@@ -507,7 +500,6 @@ function FeedActions({
           aria-label="转发微博"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-emerald-50 hover:text-emerald-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onRepostClick?.(item)
           }}
@@ -530,7 +522,6 @@ function FeedActions({
         disabled={likePending}
         className="group rounded-full py-2 font-normal transition-transform hover:bg-rose-50 hover:text-rose-500 active:scale-[0.96]"
         onClick={(event) => {
-          event.preventDefault()
           event.stopPropagation()
           onLikeClick?.(item)
         }}
@@ -563,7 +554,6 @@ function FeedActions({
           aria-label="生图"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-violet-50 hover:text-violet-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onGenImage()
           }}
@@ -583,7 +573,6 @@ function FeedActions({
           disabled={downloadPending}
           className="group rounded-full py-2 font-normal transition-transform hover:bg-indigo-50 hover:text-indigo-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onDownload()
           }}
@@ -604,7 +593,6 @@ function FeedActions({
           disabled={favoritePending}
           className="group rounded-full py-2 font-normal transition-transform hover:bg-amber-50 hover:text-amber-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             void onFavorite()
           }}
@@ -628,7 +616,6 @@ function FeedActions({
           aria-label="复制链接"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-cyan-50 hover:text-cyan-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onCopyLink()
           }}
@@ -647,7 +634,6 @@ function FeedActions({
           aria-label="复制内容"
           className="group rounded-full py-2 font-normal transition-transform hover:bg-slate-50 hover:text-slate-500 active:scale-[0.96]"
           onClick={(event) => {
-            event.preventDefault()
             event.stopPropagation()
             onCopyText()
           }}
@@ -720,6 +706,8 @@ function RetweetedFeedBlock({
   const isDeletedAuthor = !resolvedItem.author.id
   const detailPath = getStatusDetailPath(resolvedItem)
   const canNavigate = feedInteractionMode === 'x' && onNavigate !== undefined && detailPath !== null
+  const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
+  const suppressNextClickRef = useRef(false)
   const navigationProps = canNavigate
     ? ({
         role: 'link',
@@ -763,42 +751,116 @@ function RetweetedFeedBlock({
     [feedInteractionMode, onNavigate, onCommentClick],
   )
 
-  const handleRetweetedClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  const handleRetweetedMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) {
+      pointerDownPositionRef.current = null
+      return
+    }
+
+    suppressNextClickRef.current = false
+    pointerDownPositionRef.current = { x: event.clientX, y: event.clientY }
+  }
+
+  const handleRetweetedMouseUp = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || !pointerDownPositionRef.current) {
+      return
+    }
+
+    const deltaX = event.clientX - pointerDownPositionRef.current.x
+    const deltaY = event.clientY - pointerDownPositionRef.current.y
+    suppressNextClickRef.current = Math.hypot(deltaX, deltaY) > 4
+    pointerDownPositionRef.current = null
+  }
+
+  const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (!canNavigate) {
       return
     }
-    // 中键或修饰键时不拦截，让 Link 的原生行为处理新标签打开
+
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+
+    const target = event.target as HTMLElement
+    const isOnInteractiveChild = target.closest(
+      'a,button,[role="button"],input,textarea,select,label',
+    )
+
+    // cmd/ctrl + left click on the inert area → open in new tab. The browser
+    // already handles modifier+click on inner <a>/<button> children natively.
+    if (
+      event.button === 0 &&
+      (event.metaKey || event.ctrlKey) &&
+      !isOnInteractiveChild &&
+      !hasTextSelectionWithin(event.currentTarget) &&
+      detailPath !== null
+    ) {
+      openStatusDetailInNewTab(detailPath)
+      return
+    }
+
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
-    // 拦截左键点击使用 SPA 导航
-    event.preventDefault()
+
+    if (isOnInteractiveChild) {
+      return
+    }
+
+    if (hasTextSelectionWithin(event.currentTarget)) {
+      return
+    }
+
     onNavigate?.(resolvedItem)
   }
 
-  const handleRetweetedKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
+  const handleRetweetedAuxClick = (event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    if (!canNavigate || event.button !== 1 || detailPath === null) {
+      return
+    }
+
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+
+    const target = event.target as HTMLElement
+    if (target.closest('a,button,[role="button"],input,textarea,select,label')) {
+      return
+    }
+
+    if (hasTextSelectionWithin(event.currentTarget)) {
+      return
+    }
+
+    openStatusDetailInNewTab(detailPath)
+  }
+
+  const handleRetweetedKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!canNavigate) return
     if (event.target !== event.currentTarget) return
     if (event.key !== 'Enter' && event.key !== ' ') return
-    event.preventDefault()
+
     onNavigate?.(resolvedItem)
   }
 
   return (
-    <Link
-      to={canNavigate ? detailPath : ''}
+    <Card
       className={cn(
         'xb-feed-card xb-feed-card--compact gap-3 py-4',
-        'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
-        canNavigate
-          ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
-          : 'cursor-default',
+        canNavigate &&
+          'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
       )}
-      data-slot="card"
+      data-testid="feed-card-body"
+      onMouseDown={handleRetweetedMouseDown}
+      onMouseUp={handleRetweetedMouseUp}
       onClick={handleRetweetedClick}
+      onAuxClick={handleRetweetedAuxClick}
       onKeyDown={handleRetweetedKeyDown}
-      {...(canNavigate ? navigationProps : { as: 'div' as const })}
+      {...navigationProps}
     >
       <CardHeader>
         <RetweetedAuthorHeader item={resolvedItem} onNavigateProfile={onNavigateProfile} />
@@ -845,7 +907,7 @@ function RetweetedFeedBlock({
         )}
       </CardContent>
       {downloadDialog}
-    </Link>
+    </Card>
   )
 }
 
@@ -1023,18 +1085,35 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-      return
-    }
-
     if (suppressNextClickRef.current) {
       suppressNextClickRef.current = false
       return
     }
 
     const target = event.target as HTMLElement
+    const isOnInteractiveChild = target.closest(
+      'a,button,[role="button"],input,textarea,select,label',
+    )
+
+    // cmd/ctrl + left click on the inert area → open in new tab. The browser
+    // already handles modifier+click on inner <a>/<button> children natively.
+    if (
+      event.button === 0 &&
+      (event.metaKey || event.ctrlKey) &&
+      !isOnInteractiveChild &&
+      !hasTextSelectionWithin(event.currentTarget) &&
+      detailPath !== null
+    ) {
+      openStatusDetailInNewTab(detailPath)
+      return
+    }
+
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return
+    }
+
     const interactiveSelectors = shouldUsePopupMode
-      ? 'a,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+      ? 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
       : 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
     if (target !== event.currentTarget && target.closest(interactiveSelectors)) {
       return
@@ -1046,6 +1125,31 @@ export const FeedCard = memo(function FeedCard({
 
     event.preventDefault()
     onNavigate?.(resolvedItem)
+  }
+
+  const handleCardAuxClick = (event: MouseEvent<HTMLElement>) => {
+    if (!canNavigate || event.button !== 1 || detailPath === null) {
+      return
+    }
+
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+
+    const target = event.target as HTMLElement
+    const interactiveSelectors = shouldUsePopupMode
+      ? 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+      : 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+    if (target !== event.currentTarget && target.closest(interactiveSelectors)) {
+      return
+    }
+
+    if (hasTextSelectionWithin(event.currentTarget)) {
+      return
+    }
+
+    openStatusDetailInNewTab(detailPath)
   }
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -1061,7 +1165,6 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    event.preventDefault()
     onNavigate?.(resolvedItem)
   }
 
@@ -1104,7 +1207,6 @@ export const FeedCard = memo(function FeedCard({
             size="sm"
             disabled={unfavoriteMutation.isPending}
             onClick={(event) => {
-              event.preventDefault()
               event.stopPropagation()
               void unfavoriteMutation.mutateAsync(resolvedItem.id)
             }}
@@ -1258,20 +1360,23 @@ export const FeedCard = memo(function FeedCard({
     </>
   )
 
-  // 弹窗模式：使用按钮组件，点击时调用 onNavigate 打开弹窗
+  // 弹窗模式：使用 div + role="button" 避免嵌套 button 的 HTML 错误；
+  // 仍然保留 data-slot="card" 以应用玻璃效果
   if (shouldUsePopupMode) {
     return (
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         className={cardClassName}
         data-testid="feed-card-body"
         data-slot="card"
         onClick={handleCardClick}
+        onAuxClick={handleCardAuxClick}
         onKeyDown={handleCardKeyDown}
         {...navigationProps}
       >
         {cardContent}
-      </button>
+      </div>
     )
   }
 

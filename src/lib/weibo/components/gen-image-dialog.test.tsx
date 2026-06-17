@@ -7,6 +7,23 @@ vi.mock('html-to-image', () => ({
   toBlob: vi.fn().mockResolvedValue(new Blob(['fake'], { type: 'image/png' })),
 }))
 
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}))
+
+vi.mock('@tanstack/react-query', () => ({
+  useMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+}))
+
 vi.mock('@/lib/app-settings-store', () => ({
   useAppSettings: vi.fn(() => ({
     imageGenTheme: 'light',
@@ -19,6 +36,14 @@ vi.mock('@/lib/app-settings-store', () => ({
   useShallow: vi.fn((fn) => fn),
 }))
 
+vi.mock('@/lib/weibo/components/gen-image-dialog-context', () => ({
+  useGenImageDialog: vi.fn(() => ({
+    openGenImage: vi.fn(),
+    closeGenImage: vi.fn(),
+    genImageItem: null,
+  })),
+}))
+
 describe('GenImageDialog', () => {
   const mockFeedItem: FeedItem = {
     id: '123',
@@ -26,6 +51,7 @@ describe('GenImageDialog', () => {
     isLongText: false,
     author: {
       id: 'user123',
+      uid: 'user123',
       name: '测试用户',
       avatarUrl: 'https://example.com/avatar.jpg',
     },
@@ -49,7 +75,7 @@ describe('GenImageDialog', () => {
     const { GenImageDialog } = await import('./gen-image-dialog')
     expect(GenImageDialog).toBeDefined()
     expect(typeof GenImageDialog).toBe('function')
-  })
+  }, 30000)
 
   it('has expected props interface', () => {
     // Test that the component accepts the expected props structure

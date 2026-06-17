@@ -7,6 +7,20 @@ import type { FeedImage } from '@/lib/weibo/models/feed'
 import { pickNonEmptyUrl, stripUrlQuery, uniqueNonEmptyUrls } from './helpers'
 import type { WeiboPicInfo, WeiboStatus } from './types'
 
+function pickLivePhotoVideoUrl(info: WeiboPicInfo | undefined): string | undefined {
+  if (!info) return undefined
+  const candidates: Array<string | undefined> = [
+    typeof info.video === 'string' ? info.video : info.video?.url,
+    typeof info.video_hd === 'string' ? info.video_hd : info.video_hd?.url,
+    typeof info.livephoto_video === 'string' ? info.livephoto_video : info.livephoto_video?.url,
+  ]
+  for (const candidate of candidates) {
+    const url = pickNonEmptyUrl(candidate)
+    if (url) return url
+  }
+  return undefined
+}
+
 interface WeiboUrlStruct {
   url_type?: number | string
   short_url?: string
@@ -25,10 +39,13 @@ export function imageDownloadUrlsFromInfo(info: WeiboPicInfo | undefined): strin
   if (!info) return []
 
   return uniqueNonEmptyUrls([
-    stripUrlQuery(info.mw2000?.url),
-    stripUrlQuery(info.largest?.url),
     stripUrlQuery(info.woriginal?.url),
     stripUrlQuery(info.original?.url),
+    stripUrlQuery(info.mw2000?.url),
+    stripUrlQuery(info.largest?.url),
+    stripUrlQuery(info.large?.url),
+    stripUrlQuery(info.bmiddle?.url),
+    stripUrlQuery(info.thumbnail?.url),
   ])
 }
 
@@ -62,13 +79,12 @@ export function toImagesFromParts(
     }
 
     const downloadUrls = imageDownloadUrlsFromInfo(info)
-    const livePhotoVideoUrl =
-      pickNonEmptyUrl(info?.video?.url) ?? pickNonEmptyUrl(info?.video_hd?.url)
+    const livePhotoVideoUrl = pickLivePhotoVideoUrl(info)
     images.push({
       id: picId,
       thumbnailUrl,
       largeUrl,
-      ...(downloadUrls.length > 1 ? { downloadUrls } : {}),
+      ...(downloadUrls.length > 0 ? { downloadUrls } : {}),
       ...(typeof largeImage?.width === 'number' ? { width: largeImage.width } : {}),
       ...(typeof largeImage?.height === 'number' ? { height: largeImage.height } : {}),
       ...(info?.type === 'livephoto' ? { type: 'livephoto' as const } : {}),

@@ -1,5 +1,7 @@
 export interface FeedAuthor {
   id: string
+  /** Alias for `id`, kept for compatibility with consumers that read `author.uid`. */
+  uid?: string
   name: string
   avatarUrl: string | null
 }

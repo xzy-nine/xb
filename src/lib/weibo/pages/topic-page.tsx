@@ -5,6 +5,7 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
+import { MweiboCaptchaPrompt } from '@/lib/weibo/components/mweibo-captcha-prompt'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import {
@@ -13,6 +14,7 @@ import {
   topicSearchInfiniteOptions,
 } from '@/lib/weibo/queries/weibo-queries'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+import { MweiboCaptchaError } from '@/lib/weibo/services/mweibo-errors'
 
 function TopicChannelBar({
   channels,
@@ -100,6 +102,19 @@ export function TopicPage() {
   const hasNextPage = Boolean(topicQuery.hasNextPage)
   const isFetchingNextPage = topicQuery.isFetchingNextPage
   const isLoading = topicQuery.isLoading
+
+  const captchaError = useMemo(
+    () => (topicQuery.error instanceof MweiboCaptchaError ? topicQuery.error : null),
+    [topicQuery.error],
+  )
+
+  if (captchaError) {
+    return (
+      <div className="flex flex-col gap-3">
+        <MweiboCaptchaPrompt onRetry={() => void topicQuery.refetch()} />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-3">

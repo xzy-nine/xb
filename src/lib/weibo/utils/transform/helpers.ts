@@ -25,9 +25,12 @@ export function stripHtmlTags(text: string): string {
 export function normalizeMarkdownText(value: string | undefined): string {
   if (!value) return ''
   return value
+    .replace(/<br\s*\/?>(?!\n)/gi, '\n')
+    .replace(/<span[^>]*class="expand"[^>]*>[\s\S]*?<\/span>/gi, '')
+    .replace(/<[^>]+>/g, '')
     .split('\n')
     .map((line) => line.trim())
-    .filter(Boolean)
+    .filter((line) => line.length > 0)
     .join('\n')
 }
 
