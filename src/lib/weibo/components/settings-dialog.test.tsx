@@ -84,8 +84,8 @@ describe('SettingsDialog', () => {
     const user = userEvent.setup()
     render(<SettingsDialog open={true} onOpenChange={() => {}} />)
 
-    // Default panel is 'appearance' – it should show the color mode field
-    expect(screen.getByText('颜色模式')).toBeInTheDocument()
+    // Default panel is 'appearance' – it should show the theme mode field
+    expect(screen.getByText('主题模式')).toBeInTheDocument()
 
     // Click on theme panel
     const themeButton = screen.getByRole('button', { name: /主题/ })
@@ -99,7 +99,7 @@ describe('SettingsDialog', () => {
     render(<SettingsDialog open={true} onOpenChange={() => {}} />)
 
     // Appearance panel should be default and show its core fields
-    expect(screen.getByText('颜色模式')).toBeInTheDocument()
+    expect(screen.getByText('主题模式')).toBeInTheDocument()
     expect(screen.getByText('内容宽度')).toBeInTheDocument()
   })
 
