@@ -91,6 +91,13 @@ function hasTextSelectionWithin(container: HTMLElement) {
   return commonAncestor === container || container.contains(commonAncestor)
 }
 
+function openStatusDetailInNewTab(path: string): void {
+  // Use the full URL so the new tab loads at the correct weibo.com path
+  // regardless of the current location. The xb content script runs on
+  // https://weibo.com/* and react-router picks up the new path on load.
+  window.open(`${window.location.origin}${path}`, '_blank', 'noopener,noreferrer')
+}
+
 function getMediaDownloadFilename(item: Pick<FeedItem, 'author' | 'text'>) {
   return `${item.author.name} ${sanitizeFilename(item.text.slice(0, 15))}`
 }
@@ -660,6 +667,8 @@ function RetweetedFeedBlock({
   const isDeletedAuthor = !resolvedItem.author.id
   const detailPath = getStatusDetailPath(resolvedItem)
   const canNavigate = feedInteractionMode === 'x' && onNavigate !== undefined && detailPath !== null
+  const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
+  const suppressNextClickRef = useRef(false)
   const navigationProps = canNavigate
     ? ({
         role: 'link',
@@ -703,15 +712,92 @@ function RetweetedFeedBlock({
     [feedInteractionMode, onNavigate, onCommentClick],
   )
 
+  const handleRetweetedMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) {
+      pointerDownPositionRef.current = null
+      return
+    }
+
+    suppressNextClickRef.current = false
+    pointerDownPositionRef.current = { x: event.clientX, y: event.clientY }
+  }
+
+  const handleRetweetedMouseUp = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || !pointerDownPositionRef.current) {
+      return
+    }
+
+    const deltaX = event.clientX - pointerDownPositionRef.current.x
+    const deltaY = event.clientY - pointerDownPositionRef.current.y
+    suppressNextClickRef.current = Math.hypot(deltaX, deltaY) > 4
+    pointerDownPositionRef.current = null
+  }
+
   const handleRetweetedClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation()
     if (!canNavigate) {
       return
     }
+
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+
+    const target = event.target as HTMLElement
+    const isOnInteractiveChild = target.closest(
+      'a,button,[role="button"],input,textarea,select,label',
+    )
+
+    // cmd/ctrl + left click on the inert area → open in new tab. The browser
+    // already handles modifier+click on inner <a>/<button> children natively.
+    if (
+      event.button === 0 &&
+      (event.metaKey || event.ctrlKey) &&
+      !isOnInteractiveChild &&
+      !hasTextSelectionWithin(event.currentTarget) &&
+      detailPath !== null
+    ) {
+      openStatusDetailInNewTab(detailPath)
+      return
+    }
+
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
+
+    if (isOnInteractiveChild) {
+      return
+    }
+
+    if (hasTextSelectionWithin(event.currentTarget)) {
+      return
+    }
+
     onNavigate?.(resolvedItem)
+  }
+
+  const handleRetweetedAuxClick = (event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation()
+    if (!canNavigate || event.button !== 1 || detailPath === null) {
+      return
+    }
+
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+
+    const target = event.target as HTMLElement
+    if (target.closest('a,button,[role="button"],input,textarea,select,label')) {
+      return
+    }
+
+    if (hasTextSelectionWithin(event.currentTarget)) {
+      return
+    }
+
+    openStatusDetailInNewTab(detailPath)
   }
 
   const handleRetweetedKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -729,7 +815,11 @@ function RetweetedFeedBlock({
         canNavigate &&
           'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none',
       )}
+      data-testid="feed-card-body"
+      onMouseDown={handleRetweetedMouseDown}
+      onMouseUp={handleRetweetedMouseUp}
       onClick={handleRetweetedClick}
+      onAuxClick={handleRetweetedAuxClick}
       onKeyDown={handleRetweetedKeyDown}
       {...navigationProps}
     >
@@ -943,7 +1033,46 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+
+    const target = event.target as HTMLElement
+    const isOnInteractiveChild = target.closest(
+      'a,button,[role="button"],input,textarea,select,label',
+    )
+
+    // cmd/ctrl + left click on the inert area → open in new tab. The browser
+    // already handles modifier+click on inner <a>/<button> children natively.
+    if (
+      event.button === 0 &&
+      (event.metaKey || event.ctrlKey) &&
+      !isOnInteractiveChild &&
+      !hasTextSelectionWithin(event.currentTarget) &&
+      detailPath !== null
+    ) {
+      openStatusDetailInNewTab(detailPath)
+      return
+    }
+
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return
+    }
+
+    if (isOnInteractiveChild) {
+      return
+    }
+
+    if (hasTextSelectionWithin(event.currentTarget)) {
+      return
+    }
+
+    onNavigate?.(resolvedItem)
+  }
+
+  const handleCardAuxClick = (event: MouseEvent<HTMLElement>) => {
+    if (!canNavigate || event.button !== 1 || detailPath === null) {
       return
     }
 
@@ -961,7 +1090,7 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    onNavigate?.(resolvedItem)
+    openStatusDetailInNewTab(detailPath)
   }
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -1041,6 +1170,7 @@ export const FeedCard = memo(function FeedCard({
       )}
       data-testid="feed-card-body"
       onClick={handleCardClick}
+      onAuxClick={handleCardAuxClick}
       onKeyDown={handleCardKeyDown}
       {...navigationProps}
     >
