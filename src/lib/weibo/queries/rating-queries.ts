@@ -26,7 +26,7 @@ export function myUserRatingQueryKey(uid: string) {
   return ['rating', 'user', uid, 'me'] as const
 }
 
-export function batchRatingQueryKey(uids: string[]) {
+function batchRatingQueryKey(uids: string[]) {
   return ['rating', 'batch', ...[...uids].sort()] as const
 }
 

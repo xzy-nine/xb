@@ -6,7 +6,6 @@
 // Types
 export type {
   WeiboStatusUser,
-  WeiboMediaInfo,
   WeiboPageInfo,
   WeiboPicInfo,
   WeiboStatus,
@@ -14,7 +13,7 @@ export type {
 } from './types'
 
 // Media transformation
-export { toMedia, toMixMediaInfo } from './media'
+export { toMedia } from './media'
 
 // Status transformation
 export { toFeedItem, mergeLongTextIntoFeedItem } from './status'

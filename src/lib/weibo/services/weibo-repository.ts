@@ -214,7 +214,7 @@ export async function loadFollowGroups(): Promise<FollowGroups> {
   return adaptFollowGroupsDataResponse(payload)
 }
 
-export async function loadHomeTimelineDefaultGroupId(
+async function loadHomeTimelineDefaultGroupId(
   tab: Extract<HomeTimelineTab, 'special-follow' | 'friend-circle'>,
 ): Promise<string> {
   const groups = await loadFollowGroups()

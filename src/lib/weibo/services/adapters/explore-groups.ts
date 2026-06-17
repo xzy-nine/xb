@@ -52,7 +52,7 @@ export function adaptExploreGroupsResponse(payload: ExploreGroupsPayload): Explo
   return groups as ExploreGroup[]
 }
 
-export function adaptFollowGroupsResponse(payload: ExploreGroupsPayload): FollowGroup[] {
+function adaptFollowGroupsResponse(payload: ExploreGroupsPayload): FollowGroup[] {
   const list = payload.groups ?? []
   const myGroups = list.find((item) => item.title === '我的分组')
   if (!myGroups?.group) return []

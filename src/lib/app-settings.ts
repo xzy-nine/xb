@@ -2,11 +2,11 @@ import { FONT_FAMILY_CLASSES, RemoteFontFamily, SystemFontFamily } from './font-
 
 export type AppTheme = 'system' | 'light' | 'dark'
 
-export type LightBgColorPreset = 'white' | 'paper' | 'sepia' | 'light-gray'
+type LightBgColorPreset = 'white' | 'paper' | 'sepia' | 'light-gray'
 
-export type DarkBgColorPreset = 'near-black' | 'black' | 'dark-gray' | 'warm-dark'
+type DarkBgColorPreset = 'near-black' | 'black' | 'dark-gray' | 'warm-dark'
 
-export type BackgroundColorPreset = LightBgColorPreset | DarkBgColorPreset
+type BackgroundColorPreset = LightBgColorPreset | DarkBgColorPreset
 
 export interface BgColorPresetDef {
   key: BackgroundColorPreset
@@ -119,7 +119,7 @@ export type SelectedThemeType = 'preset' | 'custom'
 
 export type FeedInteractionMode = 'x' | 'weibo'
 
-export const FEED_PRIMARY_ACTION_IDS = ['comment', 'repost', 'like'] as const
+const FEED_PRIMARY_ACTION_IDS = ['comment', 'repost', 'like'] as const
 
 export type FeedPrimaryActionId = (typeof FEED_PRIMARY_ACTION_IDS)[number]
 
@@ -187,9 +187,9 @@ export interface AppSettings {
   userThemes: UserTheme[]
 }
 
-export type GenImageCardTheme = 'light' | 'dark'
+type GenImageCardTheme = 'light' | 'dark'
 
-export type CardStyle =
+type CardStyle =
   | 'default'
   | 'minimal'
   | 'glass'

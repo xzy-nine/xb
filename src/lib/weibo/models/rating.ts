@@ -8,9 +8,6 @@ export interface RatingSummary {
   distribution: Record<number, number>
 }
 
-/** A target that can be rated — always a Weibo user UID. */
-export type RatingTarget = string
-
 /** Response for getting the current user's own rating. */
 export interface MyRatingResponse {
   stars: number | null

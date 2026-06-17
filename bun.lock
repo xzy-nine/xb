@@ -11,6 +11,7 @@
         "@radix-ui/react-visually-hidden": "^1.2.4",
         "@reactuses/core": "^6.3.2",
         "@tailwindcss/vite": "^4.3.0",
+        "@tanstack/query-core": "^5.101.0",
         "@tanstack/react-query": "^5.101.0",
         "@videojs/react": "10.0.0-beta.24",
         "axios": "^1.17.0",
@@ -47,7 +48,6 @@
         "@testing-library/jest-dom": "^6.9.1",
         "@testing-library/react": "^16.3.2",
         "@testing-library/user-event": "^14.6.1",
-        "@types/jszip": "^3.4.1",
         "@types/node": "^25.9.1",
         "@types/react": "^19.2.16",
         "@types/react-dom": "^19.2.3",
@@ -743,8 +743,6 @@
     "@types/har-format": ["@types/har-format@1.2.16", "https://registry.npmmirror.com/@types/har-format/-/har-format-1.2.16.tgz", {}, "sha512-fluxdy7ryD3MV6h8pTfTYpy/xQzCFC7m89nOH9y94cNqJ1mDIDPut7MnRHI3F6qRmh/cT2fUjG1MLdCNb4hE9A=="],
 
     "@types/hast": ["@types/hast@3.0.4", "https://registry.npmmirror.com/@types/hast/-/hast-3.0.4.tgz", { "dependencies": { "@types/unist": "*" } }, "sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ=="],
-
-    "@types/jszip": ["@types/jszip@3.4.1", "https://registry.npmmirror.com/@types/jszip/-/jszip-3.4.1.tgz", { "dependencies": { "jszip": "*" } }, "sha512-TezXjmf3lj+zQ651r6hPqvSScqBLvyPI9FxdXBqpEwBijNGQ2NXpaFW/7joGzveYkKQUil7iiDHLo6LV71Pc0A=="],
 
     "@types/mdast": ["@types/mdast@4.0.4", "https://registry.npmmirror.com/@types/mdast/-/mdast-4.0.4.tgz", { "dependencies": { "@types/unist": "*" } }, "sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA=="],
 

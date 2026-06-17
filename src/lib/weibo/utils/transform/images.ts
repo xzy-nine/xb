@@ -35,7 +35,7 @@ interface WeiboUrlStruct {
 /**
  * Gets download URLs from pic info.
  */
-export function imageDownloadUrlsFromInfo(info: WeiboPicInfo | undefined): string[] {
+function imageDownloadUrlsFromInfo(info: WeiboPicInfo | undefined): string[] {
   if (!info) return []
 
   return uniqueNonEmptyUrls([
