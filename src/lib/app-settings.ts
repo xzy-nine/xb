@@ -137,6 +137,10 @@ export const BROWSING_HISTORY_LIMIT_OPTIONS = [200, 300, 500] as const
 
 export type BrowsingHistoryLimit = (typeof BROWSING_HISTORY_LIMIT_OPTIONS)[number]
 
+export const PLAYBACK_RATE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
+
+export type PlaybackRate = (typeof PLAYBACK_RATE_OPTIONS)[number]
+
 export interface AppSettings {
   contentWidth: ContentWidth
   theme: AppTheme
@@ -176,6 +180,8 @@ export interface AppSettings {
   browsingHistoryLimit: BrowsingHistoryLimit
   xbTopicPage: boolean
   ratingEnabled: boolean
+  rememberPlaybackRate: boolean
+  playbackRate: number
   forceRedirectToFollowing?: boolean
   firstLoadRedirect: HomeTab
   homeTab: HomeTab
@@ -246,6 +252,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   browsingHistoryLimit: 200,
   xbTopicPage: true,
   ratingEnabled: true,
+  rememberPlaybackRate: false,
+  playbackRate: 1,
   forceRedirectToFollowing: false,
   firstLoadRedirect: 'for-you',
   homeTab: 'for-you',
@@ -399,6 +407,18 @@ function isHomeTab(value: unknown): value is HomeTab {
 
 function isBrowsingHistoryLimit(value: unknown): value is BrowsingHistoryLimit {
   return BROWSING_HISTORY_LIMIT_OPTIONS.includes(value as BrowsingHistoryLimit)
+}
+
+function isPlaybackRate(value: unknown): value is PlaybackRate {
+  return PLAYBACK_RATE_OPTIONS.includes(value as PlaybackRate)
+}
+
+function normalizePlaybackRate(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number.NaN
+  if (!Number.isFinite(numeric)) {
+    return DEFAULT_APP_SETTINGS.playbackRate
+  }
+  return isPlaybackRate(numeric) ? numeric : DEFAULT_APP_SETTINGS.playbackRate
 }
 
 function isSelectedThemeType(value: unknown): value is SelectedThemeType {
@@ -575,6 +595,11 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.ratingEnabled === 'boolean'
         ? candidate.ratingEnabled
         : DEFAULT_APP_SETTINGS.ratingEnabled,
+    rememberPlaybackRate:
+      typeof candidate.rememberPlaybackRate === 'boolean'
+        ? candidate.rememberPlaybackRate
+        : DEFAULT_APP_SETTINGS.rememberPlaybackRate,
+    playbackRate: normalizePlaybackRate(candidate.playbackRate),
     forceRedirectToFollowing:
       typeof candidate.forceRedirectToFollowing === 'boolean'
         ? candidate.forceRedirectToFollowing

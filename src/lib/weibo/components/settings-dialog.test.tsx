@@ -95,15 +95,15 @@ describe('SettingsDialog', () => {
     expect(screen.getByText('内容宽度')).toBeInTheDocument()
   })
 
-  it('renders page visibility section in personalize panel', async () => {
+  it('renders page visibility section in appearance panel', async () => {
     const user = userEvent.setup()
     render(<SettingsDialog open={true} onOpenChange={() => {}} />)
 
-    // Click on personalize panel
-    const personalizeButton = screen.getByRole('button', { name: /个性化/ })
-    await user.click(personalizeButton)
+    // Click on appearance panel
+    const appearanceButton = screen.getByRole('button', { name: /外观/ })
+    await user.click(appearanceButton)
 
-    // Should show page visibility section
+    // Should show page visibility section as the last item in appearance
     expect(screen.getByText('页面可见性')).toBeInTheDocument()
   })
 

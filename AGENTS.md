@@ -8,6 +8,7 @@
 
 xb is a browser extension that rewrites weibo.com into a cleaner X-like reading
 experience. Built with WXT, React 19, TypeScript, Tailwind CSS 4, shadcn/ui,
+videojs(more use infos: https://videojs.org/docs/framework/react/llms.txt)
 motion (same as framer-motion), Zustand, TanStack Query, and `@reactuses/core`.
 
 ## Developer Commands
