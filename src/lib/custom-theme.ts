@@ -405,11 +405,6 @@ export interface ThemePreviewColors {
   border: string
 }
 
-export interface ThemePreviewSwatches {
-  light: [string, string, string, string]
-  dark: [string, string, string, string]
-}
-
 function readPreviewColor(variables: Record<string, string>, key: string, fallback: string) {
   return variables[key] ?? fallback
 }
@@ -436,19 +431,6 @@ export function getThemePreviewColors(css: string): ThemePreviewColors {
     destructive,
     muted,
     border,
-  }
-}
-
-function pickPreviewSwatches(css: string): [string, string, string, string] {
-  const colors = getThemePreviewColors(css)
-
-  return [colors.background, colors.foreground, colors.primary, colors.muted]
-}
-
-export function getThemePreviewSwatches(lightCss: string, darkCss: string): ThemePreviewSwatches {
-  return {
-    light: pickPreviewSwatches(lightCss),
-    dark: pickPreviewSwatches(darkCss),
   }
 }
 

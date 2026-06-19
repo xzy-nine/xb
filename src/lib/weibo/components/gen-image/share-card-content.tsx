@@ -1,8 +1,7 @@
-import { Heart, Link, MessageCircle, Repeat2 } from 'lucide-react'
+import { Heart, MessageCircle, Repeat2 } from 'lucide-react'
 
-import WeiboLogo from '@/assets/icons/weibo.svg'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { StatusText } from '@/lib/weibo/components/status-text'
 
@@ -149,38 +148,5 @@ export function RetweetedShareCard({
         <ShareCardActions stats={data.stats} />
       </CardContent>
     </Card>
-  )
-}
-
-export function ShareCardFooter({
-  stats,
-  mblogId,
-  authorId,
-  showStats,
-  showLink,
-}: {
-  stats: ShareCardProps['data']['stats']
-  mblogId: string | null
-  authorId: string
-  showStats?: boolean
-  showLink?: boolean
-}) {
-  return (
-    <CardFooter className="flex justify-between px-4">
-      <div className="flex flex-col gap-1">
-        {showStats && <ShareCardActions stats={stats} />}
-        {showLink && mblogId && (
-          <div className="text-muted-foreground flex w-full items-center gap-1 text-xs">
-            <Link className="size-3" />
-            <span>
-              https://weibo.com/{authorId}/{mblogId}
-            </span>
-          </div>
-        )}
-      </div>
-      <div>
-        <img src={WeiboLogo} alt="微博 Logo" className="size-9" />
-      </div>
-    </CardFooter>
   )
 }

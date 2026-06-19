@@ -67,27 +67,12 @@ export function createRecentEmoticonsStore(
   }))
 }
 
-let recentEmoticonsStorageArea: AppSettingsStorageArea | undefined
-
-const recentEmoticonsStoreAccess = createSingletonStoreAccess(() =>
-  createRecentEmoticonsStore(recentEmoticonsStorageArea),
-)
-
-function getRecentEmoticonsStore(storageArea?: AppSettingsStorageArea) {
-  if (storageArea) {
-    recentEmoticonsStorageArea = storageArea
-  }
-
-  return recentEmoticonsStoreAccess.getStore()
-}
+const recentEmoticonsStoreAccess = createSingletonStoreAccess(() => createRecentEmoticonsStore())
 
 export function resetRecentEmoticonsStoreForTest() {
-  recentEmoticonsStorageArea = undefined
   recentEmoticonsStoreAccess.resetForTest()
 }
 
 export function useRecentEmoticons<T>(selector: (state: RecentEmoticonsState) => T): T {
   return recentEmoticonsStoreAccess.useSingletonStore(selector)
 }
-
-export { getRecentEmoticonsStore }

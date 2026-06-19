@@ -158,11 +158,14 @@ function StatusDetailTopBar({
   authorName,
   createdAtLabel,
   statusText,
+  regionName,
 }: {
   showStatusSummary: boolean
   authorName?: string
   createdAtLabel?: string
   statusText?: string
+  source?: string
+  regionName?: string
 }) {
   return (
     <div className="bg-background/85 border-border/45 sticky top-0 z-50 border-b backdrop-blur-lg">
@@ -190,10 +193,14 @@ function StatusDetailTopBar({
                   className="min-w-0"
                 >
                   <h1 className="text-foreground truncate text-lg leading-6 font-semibold">
-                    {authorName ?? '正文'}
+                    {authorName ?? '正文'}{' '}
+                    <span className="text-muted-foreground space-x-1 text-xs">
+                      {createdAtLabel && <span>{createdAtLabel}</span>}
+                      {regionName && <span>{regionName}</span>}
+                    </span>
                   </h1>
                   <p className="text-muted-foreground line-clamp-1 truncate text-xs">
-                    {createdAtLabel && statusText ? `${createdAtLabel} · ${statusText}` : '详情页'}
+                    {statusText ? statusText : '详情页'}
                   </p>
                 </motion.div>
               ) : (
@@ -278,6 +285,8 @@ export function StatusDetailPage() {
         authorName={detail?.status.author.name}
         createdAtLabel={detail?.status.createdAtLabel}
         statusText={detail?.status.text}
+        source={detail?.status.source}
+        regionName={detail?.status.regionName}
       />
 
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}

@@ -356,6 +356,7 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     contentWidth,
     xbTopicPage,
     ratingEnabled,
+    rememberPlaybackRate,
     firstLoadRedirect,
     selectedThemeType,
     selectedThemeId,
@@ -404,6 +405,7 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
       contentWidth: s.contentWidth,
       xbTopicPage: s.xbTopicPage,
       ratingEnabled: s.ratingEnabled,
+      rememberPlaybackRate: s.rememberPlaybackRate,
       firstLoadRedirect: s.firstLoadRedirect,
       selectedThemeType: s.selectedThemeType,
       selectedThemeId: s.selectedThemeId,
@@ -753,6 +755,13 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                       ))}
                     </div>
                   </StackedField>
+                  <StackedField label="页面可见性" description="控制在导航栏中显示哪些页面">
+                    <TreeView
+                      data={pageElementTreeData}
+                      className="max-h-[200px] overflow-y-auto"
+                      renderItem={renderTreeItem}
+                    />
+                  </StackedField>
                 </div>
               </div>
             )}
@@ -775,13 +784,6 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
 
             {activeGroup === 'personalize' && (
               <div className="space-y-3 px-6 py-4">
-                <StackedField label="页面可见性" description="控制在导航栏中显示哪些页面">
-                  <TreeView
-                    data={pageElementTreeData}
-                    className="max-h-[200px] overflow-y-auto"
-                    renderItem={renderTreeItem}
-                  />
-                </StackedField>
                 <StackedField
                   label="微博卡片行为"
                   description="选择点击微博卡片和评论按钮后的打开方式"
@@ -852,6 +854,23 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                       checked={followGroupsEnabled}
                       onCheckedChange={(checked) =>
                         void updateSettings({ followGroupsEnabled: checked })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div>
+                  <Field
+                    label="视频倍速记忆"
+                    description="开启后，最近一次手动设置的倍速作为视频的默认倍速"
+                  >
+                    <Switch
+                      checked={rememberPlaybackRate}
+                      onCheckedChange={(checked) =>
+                        void updateSettings({
+                          rememberPlaybackRate: checked,
+                          // 关闭时同步重置缓存为 1，确保下次开启从干净状态开始
+                          ...(checked ? {} : { playbackRate: 1 }),
+                        })
                       }
                     />
                   </Field>

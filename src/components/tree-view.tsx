@@ -530,13 +530,4 @@ const TreeActions = ({
   )
 }
 
-export {
-  TreeView,
-  type TreeDataItem,
-  type TreeRenderItemParams,
-  AccordionTrigger,
-  AccordionContent,
-  TreeLeaf,
-  TreeNode,
-  TreeItem,
-}
+export { TreeView, type TreeDataItem }

@@ -90,5 +90,3 @@ export async function rateUser(payload: RateUserPayload): Promise<RateResponse> 
     body: payload,
   })
 }
-
-export { XB_SERVER_BASE }

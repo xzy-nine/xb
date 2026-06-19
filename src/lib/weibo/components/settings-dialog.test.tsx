@@ -103,18 +103,16 @@ describe('SettingsDialog', () => {
     expect(screen.getByText('内容宽度')).toBeInTheDocument()
   })
 
-  it('shows personalize panel content', async () => {
+  it('renders page visibility section in appearance panel', async () => {
     const user = userEvent.setup()
     render(<SettingsDialog open={true} onOpenChange={() => {}} />)
 
-    // Click on personalize panel
-    const personalizeButton = screen.getByRole('button', { name: /个性化/ })
-    await user.click(personalizeButton)
+    // Click on appearance panel
+    const appearanceButton = screen.getByRole('button', { name: /外观/ })
+    await user.click(appearanceButton)
 
-    // The personalize panel renders the "微博卡片行为" field. The user described
-    // a "页面可见性" section, but it does not exist in this panel – the actual
-    // identifier for the panel is the feed interaction field below.
-    expect(screen.getByText('微博卡片行为')).toBeInTheDocument()
+    // Should show page visibility section as the last item in appearance
+    expect(screen.getByText('页面可见性')).toBeInTheDocument()
   })
 
   it('calls onOpenChange when close button clicked', async () => {

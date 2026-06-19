@@ -125,10 +125,9 @@ export function HomeTimelinePage() {
     newPostsCheckQuery.dataUpdatedAt > dismissedForGroup
 
   const handleTimelineRefresh = useCallback(() => {
-    ctx.scrollMainToTop()
     dismissedNewPostsCheckAtByGroup.current[followingNewPostsGroupKey] = Date.now()
     void timelineQuery.refetch()
-  }, [ctx, timelineQuery, followingNewPostsGroupKey])
+  }, [timelineQuery, followingNewPostsGroupKey])
 
   const isCustomGroupRoute = activeTab === 'following' && selectedGroupGid !== 'default'
   const handleTimelineMenuChange = useCallback(

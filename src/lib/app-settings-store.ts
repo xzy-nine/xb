@@ -298,8 +298,4 @@ export function useAppSettings<T>(selector: (state: AppSettingsStoreState) => T)
   return useStore(getAppSettingsStore(), selector)
 }
 
-export function useUpdateAppSettings() {
-  return useAppSettings((state) => state.updateSettings)
-}
-
 export { useShallow }

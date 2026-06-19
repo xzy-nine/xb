@@ -63,5 +63,3 @@ function createPlaybackPositionStore(): StoreApi<PlaybackPositionState> {
 const playbackPositionStoreAccess = createSingletonStoreAccess(createPlaybackPositionStore)
 
 export const getPlaybackPositionStore = playbackPositionStoreAccess.getStore
-export const resetPlaybackPositionStoreForTest = playbackPositionStoreAccess.resetForTest
-export const usePlaybackPosition = playbackPositionStoreAccess.useSingletonStore

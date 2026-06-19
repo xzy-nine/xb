@@ -2,7 +2,6 @@ export const XB_SOURCE = 'xb'
 export const API_REQUEST_EVENT = 'api-request'
 export const API_RESPONSE_EVENT = 'api-response'
 export const API_UNAUTHORIZED_EVENT = 'api-unauthorized'
-export const MWEIBO_FETCH_EVENT = 'mweibo-fetch'
 
 export interface ApiRequestMessage {
   source: typeof XB_SOURCE
@@ -27,18 +26,11 @@ export interface ApiUnauthorizedMessage {
   type: typeof API_UNAUTHORIZED_EVENT
 }
 
-export interface MweiboFetchMessage {
-  type: typeof MWEIBO_FETCH_EVENT
-  url: string
-}
-
 export interface MweiboFetchResponse {
   ok: boolean
   data?: unknown
   error?: string
 }
-
-export type XbMessage = ApiRequestMessage | ApiResponseMessage | ApiUnauthorizedMessage
 
 export function isApiRequestMessage(value: unknown): value is ApiRequestMessage {
   return (

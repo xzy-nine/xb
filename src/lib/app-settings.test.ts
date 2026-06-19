@@ -97,6 +97,7 @@ describe('app-settings', () => {
       showProfile: true,
       showCompose: true,
       showRightRail: true,
+      xbEntryCollapsed: false,
       sidebarCollapsed: false,
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
@@ -127,6 +128,8 @@ describe('app-settings', () => {
       browsingHistoryLimit: 200,
       xbTopicPage: true,
       ratingEnabled: true,
+      rememberPlaybackRate: false,
+      playbackRate: 1,
       forceRedirectToFollowing: false,
       firstLoadRedirect: 'for-you',
       followGroupsEnabled: true,
@@ -159,6 +162,7 @@ describe('app-settings', () => {
         showProfile: true,
         showCompose: true,
         showRightRail: true,
+        xbEntryCollapsed: false,
         sidebarCollapsed: false,
         collapseRepliesEnabled: false,
         renderReplyChainEnabled: true,
@@ -189,6 +193,8 @@ describe('app-settings', () => {
         browsingHistoryLimit: 300,
         xbTopicPage: true,
         ratingEnabled: true,
+        rememberPlaybackRate: false,
+        playbackRate: 1,
         forceRedirectToFollowing: false,
         firstLoadRedirect: 'for-you',
         followGroupsEnabled: true,
@@ -222,6 +228,7 @@ describe('app-settings', () => {
       showProfile: true,
       showCompose: true,
       showRightRail: true,
+      xbEntryCollapsed: false,
       sidebarCollapsed: false,
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
@@ -252,6 +259,8 @@ describe('app-settings', () => {
       browsingHistoryLimit: 300,
       xbTopicPage: true,
       ratingEnabled: true,
+      rememberPlaybackRate: false,
+      playbackRate: 1,
       forceRedirectToFollowing: false,
       firstLoadRedirect: 'for-you',
       followGroupsEnabled: true,
@@ -270,5 +279,23 @@ describe('app-settings', () => {
     expect(resolveIsDarkMode('light', true)).toBe(false)
     expect(resolveIsDarkMode('system', true)).toBe(true)
     expect(resolveIsDarkMode('system', false)).toBe(false)
+  })
+
+  it('normalizes playback rate and remember switch values', () => {
+    expect(normalizeAppSettings({ playbackRate: 0.5 }).playbackRate).toBe(0.5)
+    expect(normalizeAppSettings({ playbackRate: 1.5 }).playbackRate).toBe(1.5)
+    expect(normalizeAppSettings({ playbackRate: 2 }).playbackRate).toBe(2)
+
+    expect(normalizeAppSettings({ playbackRate: 1.1 }).playbackRate).toBe(1)
+    expect(normalizeAppSettings({ playbackRate: 3 }).playbackRate).toBe(1)
+    expect(normalizeAppSettings({ playbackRate: 0 }).playbackRate).toBe(1)
+    expect(normalizeAppSettings({ playbackRate: 'fast' as never }).playbackRate).toBe(1)
+    expect(normalizeAppSettings({ playbackRate: null as never }).playbackRate).toBe(1)
+    expect(normalizeAppSettings({ playbackRate: Number.NaN as never }).playbackRate).toBe(1)
+
+    expect(normalizeAppSettings({ rememberPlaybackRate: true }).rememberPlaybackRate).toBe(true)
+    expect(
+      normalizeAppSettings({ rememberPlaybackRate: 'yes' as never }).rememberPlaybackRate,
+    ).toBe(false)
   })
 })

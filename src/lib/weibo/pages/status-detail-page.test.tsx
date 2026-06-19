@@ -219,7 +219,7 @@ describe('StatusDetailPage', () => {
     )
 
     expect(await screen.findByRole('heading', { name: '微博正文' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Alice' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Alice/ })).not.toBeInTheDocument()
 
     await waitFor(() => {
       expect(TestIntersectionObserver.instances).toHaveLength(1)
@@ -232,8 +232,10 @@ describe('StatusDetailPage', () => {
       )
     })
 
-    expect(await screen.findByRole('heading', { name: 'Alice' })).toBeInTheDocument()
-    expect(screen.getByText('today · main post')).toBeInTheDocument()
+    const summaryHeading = await screen.findByRole('heading', { name: /Alice/ })
+    expect(summaryHeading).toBeInTheDocument()
+    expect(summaryHeading).toHaveTextContent('today')
+    expect(summaryHeading.parentElement).toHaveTextContent('main post')
   })
 
   it('supports reply/repost for status and reply entry for nested comments', async () => {

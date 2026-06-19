@@ -233,12 +233,17 @@ describe('HomeTimelinePage', () => {
     const refreshButton = screen.getAllByRole('button', { name: '刷新' })[0]
     fireEvent.click(refreshButton)
 
-    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
     expect(timelineRequestCount).toBe(2)
+    // Refetch is in flight — the page must NOT have scrolled yet.
+    expect(scrollToMock).not.toHaveBeenCalled()
 
     resolveRefresh?.({
       items: [],
       nextCursor: null,
+    })
+
+    await waitFor(() => {
+      expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
     })
     queryClient.clear()
   })

@@ -53,13 +53,13 @@ import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
+import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource, FeedPlaybackSource } from '@/lib/weibo/models/feed'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
 import { useInlineFullscreen } from './inline-fullscreen'
-import { MediaPopoverPopup, MediaTooltipPopup } from './media-popup'
 import { getPlaybackPositionStore } from './video-playback-position-store'
 import { registerPlayingVideo, unregisterPlayingVideo } from './video-playback-registry'
 import {
@@ -208,14 +208,14 @@ function VolumeControl() {
   return (
     <Popover.Root openOnHover delay={200} closeDelay={100} side="top">
       <Popover.Trigger render={muteButton} />
-      <MediaPopoverPopup className="media-surface media-popover media-popover--volume">
+      <Popover.Popup className="media-surface media-popover media-popover--volume">
         <VolumeSlider.Root className="media-slider" orientation="vertical" thumbAlignment="edge">
           <VolumeSlider.Track className="media-slider__track">
             <VolumeSlider.Fill className="media-slider__fill" />
           </VolumeSlider.Track>
           <VolumeSlider.Thumb className="media-slider__thumb media-slider__thumb--persistent" />
         </VolumeSlider.Root>
-      </MediaPopoverPopup>
+      </Popover.Popup>
     </Popover.Root>
   )
 }
@@ -269,7 +269,7 @@ function QualityControl({
           </PlayerButton>
         )}
       />
-      <MediaPopoverPopup className="media-surface media-popover rounded-2xl p-1.5">
+      <Popover.Popup className="media-surface media-popover rounded-2xl p-1.5">
         <div className="flex min-w-24 flex-col gap-1">
           {options.map((option) => {
             const active = option.id === value
@@ -292,7 +292,7 @@ function QualityControl({
             )
           })}
         </div>
-      </MediaPopoverPopup>
+      </Popover.Popup>
     </Popover.Root>
   )
 }
@@ -318,7 +318,7 @@ function PlaybackRateControl() {
           </IconButton>
         )}
       />
-      <MediaPopoverPopup className="media-surface media-popover rounded-2xl p-1.5">
+      <Popover.Popup className="media-surface media-popover rounded-2xl p-1.5">
         <div className="flex min-w-24 flex-col gap-1">
           {playbackRates.map((rate) => {
             const active = rate === playbackRate
@@ -340,7 +340,7 @@ function PlaybackRateControl() {
             )
           })}
         </div>
-      </MediaPopoverPopup>
+      </Popover.Popup>
     </Popover.Root>
   )
 }
@@ -387,6 +387,28 @@ export function VideoPlayer({
   const qualityRef = useRef(AUTO_QUALITY_ID)
 
   const isInPiPRef = useRef(false)
+
+  const { rememberPlaybackRate, savedPlaybackRate, updateSettings } = useAppSettings(
+    useShallow((s) => ({
+      rememberPlaybackRate: s.rememberPlaybackRate,
+      savedPlaybackRate: s.playbackRate,
+      updateSettings: s.updateSettings,
+    })),
+  )
+
+  const savedPlaybackRateRef = useRef(savedPlaybackRate)
+  const rememberEnabledRef = useRef(rememberPlaybackRate)
+  const lastWrittenRateRef = useRef(savedPlaybackRate)
+  const appliedFromSettingsRef = useRef(false)
+
+  useEffect(() => {
+    savedPlaybackRateRef.current = savedPlaybackRate
+    lastWrittenRateRef.current = savedPlaybackRate
+  }, [savedPlaybackRate])
+
+  useEffect(() => {
+    rememberEnabledRef.current = rememberPlaybackRate
+  }, [rememberPlaybackRate])
 
   const [qualityId, setQualityId] = useState(AUTO_QUALITY_ID)
   const [shouldLoad, setShouldLoad] = useState(false)
@@ -482,6 +504,7 @@ export function VideoPlayer({
 
   useEffect(() => {
     pendingPlaybackRef.current = null
+    appliedFromSettingsRef.current = false
     setQualityId(AUTO_QUALITY_ID)
     setShouldLoad(false)
   }, [sourceKey])
@@ -531,6 +554,29 @@ export function VideoPlayer({
       video.removeEventListener('volumechange', handleVolumeChange)
     }
   }, [sourceKey])
+
+  // Persist user-driven playback rate changes (covers videojs setPlaybackRate,
+  // keyboard `<`/`>` hotkeys, and any direct assignment to video.playbackRate).
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleRateChange = () => {
+      if (!rememberEnabledRef.current) return
+      // Suppress writes while a quality switch is restoring a saved rate.
+      if (pendingPlaybackRef.current != null) return
+      const next = video.playbackRate
+      if (!Number.isFinite(next) || next <= 0) return
+      if (Math.abs(next - lastWrittenRateRef.current) < 0.001) return
+      lastWrittenRateRef.current = next
+      void updateSettings({ playbackRate: next })
+    }
+
+    video.addEventListener('ratechange', handleRateChange)
+    return () => {
+      video.removeEventListener('ratechange', handleRateChange)
+    }
+  }, [sourceKey, updateSettings])
 
   // Save playback position periodically during playback (every 5 seconds)
   useInterval(() => {
@@ -738,6 +784,17 @@ export function VideoPlayer({
       }
     }
 
+    // Apply remembered playback rate on first load (skipped when a quality
+    // switch is restoring prior rate via pendingPlayback below).
+    if (!pendingPlayback && !appliedFromSettingsRef.current && rememberEnabledRef.current) {
+      const target = savedPlaybackRateRef.current
+      if (Number.isFinite(target) && target > 0) {
+        video.playbackRate = target
+        lastWrittenRateRef.current = target
+        appliedFromSettingsRef.current = true
+      }
+    }
+
     // Existing: restore after quality switch
     if (!pendingPlayback) {
       return
@@ -845,9 +902,7 @@ export function VideoPlayer({
                   />
                 }
               />
-              <MediaTooltipPopup className="media-surface media-tooltip">
-                播放/暂停
-              </MediaTooltipPopup>
+              <Tooltip.Popup className="media-surface media-tooltip">播放/暂停</Tooltip.Popup>
             </Tooltip.Root>
 
             {qualities.length > 0 ? (
@@ -875,9 +930,9 @@ export function VideoPlayer({
                     </IconButton>
                   }
                 />
-                <MediaTooltipPopup className="media-surface media-tooltip">
+                <Tooltip.Popup className="media-surface media-tooltip">
                   {downloading ? '下载中…' : '下载视频'}
-                </MediaTooltipPopup>
+                </Tooltip.Popup>
               </Tooltip.Root>
             ) : null}
           </div>
@@ -900,9 +955,7 @@ export function VideoPlayer({
           <div className="media-button-group">
             <Tooltip.Root side="top">
               <Tooltip.Trigger render={<PlaybackRateControl />} />
-              <MediaTooltipPopup className="media-surface media-tooltip">
-                播放速度
-              </MediaTooltipPopup>
+              <Tooltip.Popup className="media-surface media-tooltip">播放速度</Tooltip.Popup>
             </Tooltip.Root>
 
             <VolumeControl />
@@ -929,7 +982,7 @@ export function VideoPlayer({
                 }
               />
 
-              <MediaTooltipPopup className="media-surface media-tooltip">画中画</MediaTooltipPopup>
+              <Tooltip.Popup className="media-surface media-tooltip">画中画</Tooltip.Popup>
             </Tooltip.Root>
 
             {!hideInlineFullScreen && (
@@ -948,9 +1001,7 @@ export function VideoPlayer({
                     </IconButton>
                   }
                 />
-                <MediaTooltipPopup className="media-surface media-tooltip">
-                  网页全屏
-                </MediaTooltipPopup>
+                <Tooltip.Popup className="media-surface media-tooltip">网页全屏</Tooltip.Popup>
               </Tooltip.Root>
             )}
 
@@ -971,7 +1022,7 @@ export function VideoPlayer({
                   />
                 }
               />
-              <MediaTooltipPopup className="media-surface media-tooltip">全屏</MediaTooltipPopup>
+              <Tooltip.Popup className="media-surface media-tooltip">全屏</Tooltip.Popup>
             </Tooltip.Root>
           </div>
         </Tooltip.Provider>
