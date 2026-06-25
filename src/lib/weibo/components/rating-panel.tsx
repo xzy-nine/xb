@@ -3,6 +3,7 @@ import { StarIcon } from 'lucide-react'
 import { useState, type FocusEvent } from 'react'
 
 import { Rating } from '@/components/ui/rating'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import {
   myUserRatingQueryOptions,
@@ -70,19 +71,27 @@ export function RatingSummaryBadge({
       className={cn('inline-flex h-7 items-center gap-1.5 rounded-md px-2 leading-none', className)}
       aria-label={`评分 ${averageDisplayScore} 分`}
     >
-      <div className={cn('flex shrink-0 items-center', sizes.starSlotClassName)}>
-        <Rating
-          value={averageDisplayStars}
-          max={5}
-          size={sizes.starSize}
-          precision={0.5}
-          readOnly
-          aria-label={`评分 ${averageDisplayScore} 分`}
-        />
-      </div>
-      <span className={cn('font-semibold tabular-nums', sizes.scoreTextClassName)}>
-        {averageDisplayScore}
-      </span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <div className={cn('flex shrink-0 items-center', sizes.starSlotClassName)}>
+              <Rating
+                value={averageDisplayStars}
+                max={5}
+                size={sizes.starSize}
+                precision={0.5}
+                readOnly
+                aria-label={`评分 ${averageDisplayScore} 分`}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <span className={cn('font-semibold tabular-nums', sizes.scoreTextClassName)}>
+              {averageDisplayScore}
+            </span>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   )
 }

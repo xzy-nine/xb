@@ -116,7 +116,7 @@ describe('app-settings', () => {
       feedToolbarButtonIds: [],
       browsingHistoryLimit: 200,
       xbTopicPage: true,
-      ratingEnabled: true,
+      ratingEnabled: false,
       rememberPlaybackRate: false,
       playbackRate: 1,
       forceRedirectToFollowing: false,
