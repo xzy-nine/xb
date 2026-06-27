@@ -10,7 +10,7 @@ import {
   useRateUser,
   userRatingCacheOnlyQueryOptions,
   userRatingQueryOptions,
-} from '@/lib/weibo/queries/rating-queries'
+} from '@/lib/weibo/rating/xb-rating'
 
 export interface RatingSummaryBadgeProps {
   /** UID of the user whose public rating is shown. */
