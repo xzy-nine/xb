@@ -11,14 +11,14 @@ import {
   type TimelineTopBarOption,
   type TimelineTopBarOptionGroup,
 } from '@/lib/weibo/components/timeline-top-bar'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import {
   flattenInfiniteItems,
   followingNewPostsCheckOptions,
   followGroupsQueryOptions,
   homeTimelineInfiniteOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
+import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import {
   getDefaultFollowGroupForHomeTab,

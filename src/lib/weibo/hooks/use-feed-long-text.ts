@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
+import { longTextQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { FeedItem } from '@/lib/weibo/models/feed'
-import { longTextQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 import { mergeLongTextIntoFeedItem } from '@/lib/weibo/utils/transform'
 
 export function useFeedLongText(item: FeedItem) {

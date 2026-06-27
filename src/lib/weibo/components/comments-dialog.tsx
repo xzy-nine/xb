@@ -11,8 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { PageEmptyState, PageErrorState } from '@/lib/weibo/components/page-state'
+import { nestedCommentsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import { nestedCommentsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 
 import { CommentList } from './comment-list'
 

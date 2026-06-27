@@ -20,12 +20,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import type { ProfileFollowGroup } from '@/lib/weibo/models/profile'
-import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
   profileAssignedGroupsQueryOptions,
   profileAvailableGroupsQueryOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import type { ProfileFollowGroup } from '@/lib/weibo/models/profile'
+import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import { createProfileGroup, setProfileGroups } from '@/lib/weibo/services/weibo-repository'
 
 interface ProfileGroupButtonProps {

@@ -20,14 +20,14 @@ import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
-import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { CommentItem } from '@/lib/weibo/models/status'
 import {
   flattenInfiniteItems,
   statusCommentsInfiniteOptions,
   statusDetailQueryOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
+import type { CommentItem } from '@/lib/weibo/models/status'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { formatWeiboCount } from '@/lib/weibo/utils/format-weibo-count'
 
