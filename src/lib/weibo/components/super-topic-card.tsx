@@ -7,7 +7,7 @@ import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 import { followedSuperTopicsQueryOptions } from '@/lib/weibo/data/weibo-data'
-import type { SuperTopicItem } from '@/lib/weibo/services/adapters/super-topic'
+import type { SuperTopicItem } from '@/lib/weibo/models/super-topic'
 
 function SuperTopicItemLink({ item }: { item: SuperTopicItem }) {
   const fallback = item.title.trim().slice(0, 1) || '#'

@@ -1,6 +1,8 @@
 import type { HomeTab } from '@/lib/app-settings'
-import type { DefaultFollowGroups } from '@/lib/weibo/services/adapters/explore-groups'
-import { getDefaultFollowGroupForHomeTab } from '@/lib/weibo/services/adapters/explore-groups'
+import type { DefaultFollowGroups } from '@/lib/weibo/models/explore'
+import {
+  getDefaultFollowGroupForHomeTab,
+} from '@/lib/weibo/models/explore-utils'
 
 export function homeTimelinePathFromTab(
   tab: HomeTab,

@@ -13,9 +13,9 @@ import {
   exploreTimelineInfiniteOptions,
 } from '@/lib/weibo/data/weibo-data'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
+import type { ExploreGroup } from '@/lib/weibo/models/explore'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
-import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
   requestAnimationFrame(resetMainScroll)

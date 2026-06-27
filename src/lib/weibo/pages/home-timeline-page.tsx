@@ -18,12 +18,12 @@ import {
   homeTimelineInfiniteOptions,
 } from '@/lib/weibo/data/weibo-data'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
-import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import {
   getDefaultFollowGroupForHomeTab,
   getHomeTabForDefaultFollowGroupId,
-} from '@/lib/weibo/services/adapters/explore-groups'
+} from '@/lib/weibo/models/explore-utils'
+import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
+import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 
 type HomeTimelineMenuValue = `tab:${HomeTab}` | `group:${string}`
 
