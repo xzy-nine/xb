@@ -87,16 +87,24 @@ describe('RatingSummaryBadge', () => {
     vi.clearAllMocks()
   })
 
-  it('shows only the public average score without fetching my rating', async () => {
-    renderWithClient(<RatingSummaryBadge targetUid="1001" />)
+  it('renders score in tooltip with public summary API called', async () => {
+    const view = renderWithClient(<RatingSummaryBadge targetUid="1001" />)
 
-    expect(await screen.findByText('8.2')).toBeInTheDocument()
-    expect(screen.queryByText('我评')).not.toBeInTheDocument()
+    // Badge renders with the expected aria-label reflecting the score
+    expect(await view.findByRole('img', { name: /评分 8\.2 分/i })).toBeInTheDocument()
+
+    // Score text is intentionally hidden in the DOM (rendered in tooltip)
+    expect(screen.queryByText('8.2')).not.toBeInTheDocument()
+
+    // Only the public summary API is called; personal rating API is not
     expect(vi.mocked(getUserRatingSummary)).toHaveBeenCalledWith('1001')
     expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
+
+    // Personal rating label is absent
+    expect(screen.queryByText('我评')).not.toBeInTheDocument()
   })
 
-  it('reads batch-seeded cache without calling the single-user API', async () => {
+  it('reads batch-seeded cache without calling any API', async () => {
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -109,9 +117,18 @@ describe('RatingSummaryBadge', () => {
       distribution: {},
     })
 
-    renderWithClient(<RatingSummaryBadge targetUid="1001" useBatchCache />, queryClient)
+    const view = renderWithClient(
+      <RatingSummaryBadge targetUid="1001" useBatchCache />,
+      queryClient,
+    )
 
-    expect(await screen.findByText('7.5')).toBeInTheDocument()
+    // Badge renders with the expected aria-label reflecting the cached score
+    expect(await view.findByRole('img', { name: /评分 7\.5 分/i })).toBeInTheDocument()
+
+    // Score text is intentionally hidden in the DOM
+    expect(screen.queryByText('7.5')).not.toBeInTheDocument()
+
+    // With useBatchCache, no API calls are made at all
     expect(vi.mocked(getUserRatingSummary)).not.toHaveBeenCalled()
     expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
   })
