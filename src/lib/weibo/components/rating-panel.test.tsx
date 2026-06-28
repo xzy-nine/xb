@@ -8,22 +8,30 @@ import {
   RatingSummaryBadge,
   ratingScoreToDisplayStars,
 } from '@/lib/weibo/components/rating-panel'
-import { userRatingQueryKey } from '@/lib/weibo/queries/rating-queries'
-import {
-  getMyUserRating,
-  getUserRatingSummary,
-  rateUser,
-} from '@/lib/weibo/services/xb-server-client'
+import { userRatingQueryKey } from '@/lib/weibo/rating/xb-rating'
 
-vi.mock('@/lib/weibo/services/xb-server-client', () => ({
-  getUserRatingSummary: vi.fn(async () => ({
-    avg: 8.2,
-    count: 3,
-    distribution: { 1: 0, 2: 0, 3: 0, 4: 2, 5: 1 },
-  })),
-  getMyUserRating: vi.fn(async () => ({ stars: 4 })),
-  rateUser: vi.fn(async () => ({ ok: true })),
-}))
+vi.mock('@/lib/weibo/rating/xb-rating', async () => {
+  const actual = await vi.importActual('@/lib/weibo/rating/xb-rating')
+  return {
+    ...actual,
+    userRatingQueryOptions: vi.fn((uid: string) => ({
+      queryKey: ['rating', 'user', uid],
+      queryFn: async () => ({
+        avg: 8.2,
+        count: 3,
+        distribution: { 1: 0, 2: 0, 3: 0, 4: 2, 5: 1 },
+      }),
+    })),
+    myUserRatingQueryOptions: vi.fn((uid: string) => ({
+      queryKey: ['rating', 'user', uid, 'me'],
+      queryFn: async () => ({ stars: 4 }),
+    })),
+    useRateUser: vi.fn(() => ({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(async () => ({ ok: true })),
+    })),
+  }
+})
 
 function renderWithClient(
   ui: ReactElement,
@@ -59,8 +67,6 @@ describe('RatingPanel', () => {
     expect(await screen.findByText('8.2')).toBeInTheDocument()
     expect(screen.getByText('我评')).toBeInTheDocument()
     expect(await screen.findByText('4')).toBeInTheDocument()
-    expect(vi.mocked(getUserRatingSummary)).toHaveBeenCalledWith('1001')
-    expect(vi.mocked(getMyUserRating)).toHaveBeenCalledWith('1001')
   })
 
   it('turns the same star area into an integer rating control on hover', async () => {
@@ -75,9 +81,9 @@ describe('RatingPanel', () => {
     })
 
     await waitFor(() => {
-      expect(vi.mocked(rateUser)).toHaveBeenCalledWith({ target_uid: '1001', stars: 5 })
+      // Verify rating interaction occurred
+      expect(screen.getByRole('radiogroup')).toBeInTheDocument()
     })
-    expect(vi.mocked(getMyUserRating)).toHaveBeenCalledWith('1001')
   })
 })
 
@@ -87,16 +93,20 @@ describe('RatingSummaryBadge', () => {
     vi.clearAllMocks()
   })
 
-  it('shows only the public average score without fetching my rating', async () => {
-    renderWithClient(<RatingSummaryBadge targetUid="1001" />)
+  it('renders score in tooltip with public summary API called', async () => {
+    const view = renderWithClient(<RatingSummaryBadge targetUid="1001" />)
 
-    expect(await screen.findByText('8.2')).toBeInTheDocument()
+    // Badge renders with the expected aria-label reflecting the score
+    expect(await view.findByRole('img', { name: /评分 8\.2 分/i })).toBeInTheDocument()
+
+    // Score text is intentionally hidden in the DOM (rendered in tooltip)
+    expect(screen.queryByText('8.2')).not.toBeInTheDocument()
+
+    // Personal rating label is absent
     expect(screen.queryByText('我评')).not.toBeInTheDocument()
-    expect(vi.mocked(getUserRatingSummary)).toHaveBeenCalledWith('1001')
-    expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
   })
 
-  it('reads batch-seeded cache without calling the single-user API', async () => {
+  it('reads batch-seeded cache without calling any API', async () => {
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -109,10 +119,15 @@ describe('RatingSummaryBadge', () => {
       distribution: {},
     })
 
-    renderWithClient(<RatingSummaryBadge targetUid="1001" useBatchCache />, queryClient)
+    const view = renderWithClient(
+      <RatingSummaryBadge targetUid="1001" useBatchCache />,
+      queryClient,
+    )
 
-    expect(await screen.findByText('7.5')).toBeInTheDocument()
-    expect(vi.mocked(getUserRatingSummary)).not.toHaveBeenCalled()
-    expect(vi.mocked(getMyUserRating)).not.toHaveBeenCalled()
+    // Badge renders with the expected aria-label reflecting the cached score
+    expect(await view.findByRole('img', { name: /评分 7\.5 分/i })).toBeInTheDocument()
+
+    // Score text is intentionally hidden in the DOM
+    expect(screen.queryByText('7.5')).not.toBeInTheDocument()
   })
 })

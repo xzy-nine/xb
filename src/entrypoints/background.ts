@@ -55,7 +55,25 @@ interface MweiboFetchResponse {
   error?: string
 }
 
+export function assertAllowedMweiboFetchUrl(url: string): void {
+  const parsed = new URL(url)
+  if (parsed.protocol !== 'https:' || parsed.hostname !== 'm.weibo.cn') {
+    throw new Error('unsupported-mweibo-url')
+  }
+
+  const allowed =
+    parsed.pathname === '/api/remind/unread' ||
+    (parsed.pathname === '/api/container/getIndex' &&
+      parsed.searchParams.get('page_type') === 'searchall')
+
+  if (!allowed) {
+    throw new Error('unsupported-mweibo-endpoint')
+  }
+}
+
 async function handleMweiboFetch(message: MweiboFetchMessage): Promise<MweiboFetchResponse> {
+  assertAllowedMweiboFetchUrl(message.url)
+
   const xsrfCookie = await browser.cookies.get({
     url: 'https://m.weibo.cn',
     name: 'XSRF-TOKEN',

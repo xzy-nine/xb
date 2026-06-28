@@ -41,12 +41,12 @@ function isLongImage(image: FeedImage) {
 }
 
 function gridClassName(count: number) {
-  if (count === 1) return 'max-w-[520px] grid-cols-1'
-  if (count === 2) return 'grid-cols-2 max-w-[520px]'
-  if (count === 3) return 'grid-cols-2 sm:grid-cols-3'
-  if (count === 4) return 'grid-cols-2 max-w-[520px]'
-  if (count > 9) return 'grid-cols-3 sm:grid-cols-4'
-  return 'grid-cols-3'
+  if (count === 1) return 'max-w-[450px] grid-cols-1'
+  if (count === 2) return 'grid-cols-2 max-w-[650px]'
+  if (count === 3) return 'grid-cols-2 max-w-[650px] sm:grid-cols-3'
+  if (count === 4) return 'grid-cols-2 max-w-[650px]'
+  if (count > 9) return 'grid-cols-3 max-w-[650px] sm:grid-cols-4'
+  return 'grid-cols-3 max-w-[650px]'
 }
 
 function mediaRatio(item: GridItem, total: number) {
@@ -299,7 +299,7 @@ export const ImageCarousel = memo(function ImageCarousel({
                             'bg-background w-full overflow-hidden rounded-xl',
                             item.video.videoOrientation === 'vertical'
                               ? 'max-w-[560px]'
-                              : 'max-w-[960px]',
+                              : 'max-w-[860px]',
                           )}
                         >
                           <AspectRatio

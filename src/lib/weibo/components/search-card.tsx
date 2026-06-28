@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
-import { searchQueryOptions } from '@/lib/weibo/queries/weibo-queries'
+import { searchQueryOptions } from '@/lib/weibo/data/weibo-data'
 
 type ProfileLookup = { uid: string } | { screenName: string }
 

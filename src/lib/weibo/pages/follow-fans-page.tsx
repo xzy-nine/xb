@@ -5,7 +5,7 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { getContentWidthAdjustedMaxWidth } from '@/lib/weibo/app/content-width'
 import { UserList } from '@/lib/weibo/components/user-list'
-import { friendsInfiniteOptions } from '@/lib/weibo/queries/weibo-queries'
+import { friendsInfiniteOptions } from '@/lib/weibo/data/weibo-data'
 
 const TABS = [
   { key: 'following', label: '关注' },

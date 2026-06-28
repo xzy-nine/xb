@@ -7,9 +7,9 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { PageLoadingState } from '@/lib/weibo/components/page-state'
+import { feedCommentsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 import type { CommentItem } from '@/lib/weibo/models/status'
-import { feedCommentsQueryOptions } from '@/lib/weibo/queries/weibo-queries'
 
 interface FeedCommentsExpandedProps {
   id?: string

@@ -97,15 +97,15 @@ export function createAppSettingsStore(
   storageArea: AppSettingsStorageArea = browser.storage.local,
 ): AppSettingsStore {
   return createStore<AppSettingsStoreState>((set, get) => {
+    let persistQueue: Promise<unknown> = Promise.resolve()
+
     async function updateAndPersist(patch: Partial<AppSettings>) {
       set(patch)
-      await persistAppSettings(
-        {
-          ...toPersistedSettings(get()),
-          ...patch,
-        },
-        storageArea,
+      const persistTask = persistQueue.then(() =>
+        persistAppSettings(toPersistedSettings(get()), storageArea),
       )
+      persistQueue = persistTask.catch(() => {})
+      await persistTask
     }
 
     return {

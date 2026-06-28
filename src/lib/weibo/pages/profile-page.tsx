@@ -8,13 +8,13 @@ import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { ProfileHeader } from '@/lib/weibo/components/profile-header'
 import { ProfileSearchBar } from '@/lib/weibo/components/profile-search-bar'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
   profileLookupFromPage,
   profilePostsInfiniteOptions,
   profileSearchInfiniteOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
+import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
   parseProfileSearchUrlState,
   profileSearchStateKey,

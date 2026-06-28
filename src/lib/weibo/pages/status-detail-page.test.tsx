@@ -358,7 +358,7 @@ describe('StatusDetailPage', () => {
     })
   })
 
-  it('expands the detail column when content width is wider', async () => {
+  it('lets the detail column fill the available content width', async () => {
     const store = getAppSettingsStore()
     store.setState({
       ...store.getState(),
@@ -378,6 +378,7 @@ describe('StatusDetailPage', () => {
     const detailColumn = mainPost.closest('article')?.parentElement
 
     expect(detailColumn).not.toBeNull()
-    expect(detailColumn).toHaveStyle({ maxWidth: '920px' })
+    expect(detailColumn).toHaveClass('w-full')
+    expect(detailColumn).not.toHaveAttribute('style')
   })
 })

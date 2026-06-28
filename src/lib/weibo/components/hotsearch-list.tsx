@@ -15,7 +15,7 @@ import { Spinner } from '@/components/ui/spinner'
 import type { HotSearchType } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
-import { hotSearchQueryOptions } from '@/lib/weibo/queries/weibo-queries'
+import { hotSearchQueryOptions } from '@/lib/weibo/data/weibo-data'
 
 const HOT_SEARCH_TYPES: { value: HotSearchType; label: string }[] = [
   { value: 'hot', label: '热搜' },

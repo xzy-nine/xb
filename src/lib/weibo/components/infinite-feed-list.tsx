@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { FeedList } from '@/lib/weibo/components/feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { flattenInfiniteItems } from '@/lib/weibo/data/weibo-data'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { FeedItem } from '@/lib/weibo/models/feed'
-import { useFeedRatingBatchSync } from '@/lib/weibo/queries/rating-queries'
-import { flattenInfiniteItems } from '@/lib/weibo/queries/weibo-queries'
+import { useFeedRatingBatchSync } from '@/lib/weibo/rating/xb-rating'
 
 interface InfiniteFeedListProps {
   pages: Array<{ items: FeedItem[] }> | undefined

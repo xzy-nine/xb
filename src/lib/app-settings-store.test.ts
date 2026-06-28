@@ -3,6 +3,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { APP_SETTINGS_STORAGE_KEY, DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
 import { createAppSettingsStore } from '@/lib/app-settings-store'
 
+interface Deferred<T = void> {
+  promise: Promise<T>
+  resolve: (value: T | PromiseLike<T>) => void
+  reject: (reason?: unknown) => void
+}
+
+function createDeferred<T = void>(): Deferred<T> {
+  let resolve!: Deferred<T>['resolve']
+  let reject!: Deferred<T>['reject']
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
+
 function createStorageArea(initialValue?: unknown) {
   let stored = initialValue
 
@@ -13,6 +29,31 @@ function createStorageArea(initialValue?: unknown) {
     set: vi.fn(async (items: Record<string, unknown>) => {
       stored = items[APP_SETTINGS_STORAGE_KEY]
     }),
+    read() {
+      return stored
+    },
+  }
+}
+
+function createDelayedStorageArea(initialValue?: unknown) {
+  let stored = initialValue
+  const pendingSets: Array<{
+    items: Record<string, unknown>
+    deferred: Deferred
+  }> = []
+
+  return {
+    get: vi.fn(async () => ({
+      [APP_SETTINGS_STORAGE_KEY]: stored,
+    })),
+    set: vi.fn((items: Record<string, unknown>) => {
+      const deferred = createDeferred()
+      pendingSets.push({ items, deferred })
+      return deferred.promise.then(() => {
+        stored = items[APP_SETTINGS_STORAGE_KEY]
+      })
+    }),
+    pendingSets,
     read() {
       return stored
     },
@@ -50,6 +91,64 @@ describe('app-settings-store', () => {
     expect(storage.read()).toEqual({
       ...DEFAULT_APP_SETTINGS,
       rewriteEnabled: false,
+    })
+  })
+
+  it('serializes overlapping settings writes so older storage calls cannot revert newer state', async () => {
+    const storage = createDelayedStorageArea()
+    const store = createAppSettingsStore(storage)
+
+    const first = store.getState().updateSettings({ theme: 'dark' })
+    await Promise.resolve()
+    expect(storage.pendingSets).toHaveLength(1)
+
+    const second = store.getState().updateSettings({ rewriteEnabled: false })
+    expect(storage.pendingSets).toHaveLength(1)
+
+    storage.pendingSets[0]!.deferred.resolve()
+    await first
+    await Promise.resolve()
+    expect(storage.pendingSets).toHaveLength(2)
+
+    storage.pendingSets[1]!.deferred.resolve()
+    await second
+
+    expect(storage.read()).toEqual({
+      ...DEFAULT_APP_SETTINGS,
+      theme: 'dark',
+      rewriteEnabled: false,
+    })
+  })
+
+  it('serializes helper writes with later settings updates without losing array values', async () => {
+    const storage = createDelayedStorageArea()
+    const store = createAppSettingsStore(storage)
+    const theme = {
+      id: 'theme-1',
+      name: 'Test Theme',
+      lightCss: ':root { --background: white; }',
+      darkCss: ':root { --background: black; }',
+    }
+
+    const first = store.getState().addUserTheme(theme)
+    await Promise.resolve()
+    expect(storage.pendingSets).toHaveLength(1)
+
+    const second = store.getState().updateSettings({ theme: 'dark' })
+    expect(storage.pendingSets).toHaveLength(1)
+
+    storage.pendingSets[0]!.deferred.resolve()
+    await first
+    await Promise.resolve()
+    expect(storage.pendingSets).toHaveLength(2)
+
+    storage.pendingSets[1]!.deferred.resolve()
+    await second
+
+    expect(storage.read()).toEqual({
+      ...DEFAULT_APP_SETTINGS,
+      theme: 'dark',
+      userThemes: [theme],
     })
   })
 })

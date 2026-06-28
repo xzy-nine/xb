@@ -6,6 +6,12 @@ import { cn } from '@/lib/utils'
 import { DialogContainer } from '@/lib/weibo/components/dialog-container'
 import { FeedList } from '@/lib/weibo/components/feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import {
+  extractTopicChannels,
+  extractTopicHeadData,
+  flattenInfiniteItems,
+  topicSearchInfiniteOptions,
+} from '@/lib/weibo/data/weibo-data'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type {
@@ -14,12 +20,6 @@ import type {
   TimelinePage,
   TopicChannel,
 } from '@/lib/weibo/models/feed'
-import {
-  extractTopicChannels,
-  extractTopicHeadData,
-  flattenInfiniteItems,
-  topicSearchInfiniteOptions,
-} from '@/lib/weibo/queries/weibo-queries'
 
 type ProfileLookup = { uid: string } | { screenName: string }
 

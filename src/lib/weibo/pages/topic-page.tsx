@@ -6,13 +6,13 @@ import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { MweiboCaptchaPrompt } from '@/lib/weibo/components/mweibo-captcha-prompt'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import {
   extractTopicChannels,
   extractTopicHeadData,
   topicSearchInfiniteOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
+import type { TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { MweiboCaptchaError } from '@/lib/weibo/services/mweibo-errors'
 

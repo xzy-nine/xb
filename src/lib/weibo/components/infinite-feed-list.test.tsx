@@ -8,7 +8,7 @@ vi.mock('@/lib/weibo/components/feed-card', () => ({
   FeedCard: ({ item }: { item: FeedItem }) => <article>{item.text}</article>,
 }))
 
-vi.mock('@/lib/weibo/queries/rating-queries', () => ({
+vi.mock('@/lib/weibo/rating/xb-rating', () => ({
   useFeedRatingBatchSync: vi.fn(),
 }))
 

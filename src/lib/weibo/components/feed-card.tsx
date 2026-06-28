@@ -157,6 +157,7 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
       onClick={(event) => {
         event.stopPropagation()
       }}
+      className="max-w-[650px]"
     >
       <AspectRatio ratio={item.media.videoOrientation === 'vertical' ? 4 / 3 : 16 / 9}>
         <VideoPlayer

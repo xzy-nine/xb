@@ -8,14 +8,14 @@ import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
 import { PageErrorState } from '@/lib/weibo/components/page-state'
 import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
   exploreGroupsQueryOptions,
   exploreTimelineInfiniteOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
+import type { ExploreGroup } from '@/lib/weibo/models/explore'
+import type { TimelinePage } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
-import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 
 function resetMainScrollAfterRouteChange(resetMainScroll: () => void) {
   requestAnimationFrame(() => {

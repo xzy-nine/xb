@@ -20,12 +20,12 @@ import type { AppTheme } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { ThemeModeToggle } from '@/lib/weibo/components/theme-mode-toggle'
-import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import {
   hasDmBadge,
   hasNotificationBadge,
   unreadNotificationsQueryOptions,
-} from '@/lib/weibo/queries/weibo-queries'
+} from '@/lib/weibo/data/weibo-data'
+import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 
 function SidebarSection({ children }: { children: React.ReactNode }) {
@@ -197,7 +197,11 @@ export function NavigationRail({
     currentUserUid === viewingProfileUserId
   const isSavedItemsActive = pageKind === 'favorites' || pageKind === 'liked'
 
-  const { data: unreadCounts } = useQuery(unreadNotificationsQueryOptions)
+  const shouldPollUnread = showNotifications || showDMs
+  const { data: unreadCounts } = useQuery({
+    ...unreadNotificationsQueryOptions,
+    enabled: shouldPollUnread,
+  })
   const showNotificationBadge = unreadCounts ? hasNotificationBadge(unreadCounts) : false
   const showDmBadge = unreadCounts ? hasDmBadge(unreadCounts) : false
 

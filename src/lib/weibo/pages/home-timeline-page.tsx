@@ -11,19 +11,19 @@ import {
   type TimelineTopBarOption,
   type TimelineTopBarOptionGroup,
 } from '@/lib/weibo/components/timeline-top-bar'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
 import {
   flattenInfiniteItems,
   followingNewPostsCheckOptions,
   followGroupsQueryOptions,
   homeTimelineInfiniteOptions,
-} from '@/lib/weibo/queries/weibo-queries'
-import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
+} from '@/lib/weibo/data/weibo-data'
+import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import {
   getDefaultFollowGroupForHomeTab,
   getHomeTabForDefaultFollowGroupId,
-} from '@/lib/weibo/services/adapters/explore-groups'
+} from '@/lib/weibo/models/explore-utils'
+import type { FeedItem, TimelinePage } from '@/lib/weibo/models/feed'
+import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 
 type HomeTimelineMenuValue = `tab:${HomeTab}` | `group:${string}`
 

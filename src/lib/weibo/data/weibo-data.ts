@@ -1,22 +1,36 @@
+/**
+ * Weibo Data Layer
+ *
+ * Consolidated data access layer combining TanStack Query configuration,
+ * API calls via client.ts, and response adaptation via adapters/.
+ *
+ * Replaces the three-layer architecture:
+ * - weibo-queries.ts (query options)
+ * - weibo-repository.ts (API calls)
+ * - client.ts (postMessage bridge - preserved)
+ */
+
 import type { HotSearchType } from '@/lib/app-settings'
 import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import type { NotificationsPage } from '@/lib/weibo/models/notification'
 import type { StatusCommentsPage } from '@/lib/weibo/models/status'
+import type { RelationPage } from '@/lib/weibo/models/user-relation'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import type { ProfileSearchParams } from '@/lib/weibo/route/profile-search-params'
 import { PROFILE_SEARCH_FILTER_KEYS } from '@/lib/weibo/route/profile-search-params'
 import type { ExploreGroup } from '@/lib/weibo/services/adapters/explore-groups'
 import type { UnreadCounts } from '@/lib/weibo/services/weibo-repository'
-import { checkUnreadNotifications } from '@/lib/weibo/services/weibo-repository'
 import {
   loadComments,
+  checkUnreadNotifications,
   loadExploreGroups,
   loadExploreHot,
   loadFavorites,
   loadFeedComments,
   loadFollowGroups,
   loadFollowedSuperTopics,
+  loadFriends,
   loadGroupTimeline,
   loadHotSearchByType,
   loadHomeTimeline,
@@ -35,6 +49,8 @@ import {
   type HomeTimelineTab,
 } from '@/lib/weibo/services/weibo-repository'
 
+// ─── Utility Functions ───
+
 export function flattenInfiniteItems<Item>(pages: Array<{ items: Item[] }> | undefined): Item[] {
   return pages?.flatMap((page) => page.items) ?? []
 }
@@ -48,6 +64,30 @@ export function profileLookupFromPage(page: WeiboPageDescriptor) {
     ? ({ uid: page.profileId } as const)
     : ({ screenName: page.profileId } as const)
 }
+
+/** Extract channels from the first page of topic search results. */
+export function extractTopicChannels(pages: TimelinePage[] | undefined): TopicChannel[] {
+  return pages?.[0]?.channels ?? []
+}
+
+/** Extract head data from the first page of topic search results. */
+export function extractTopicHeadData(pages: TimelinePage[] | undefined) {
+  return pages?.[0]?.headData ?? null
+}
+
+/** Whether the notification tab should show a badge. */
+export function hasNotificationBadge(counts: UnreadCounts): boolean {
+  return counts.mentions + counts.comments + counts.likes > 0
+}
+
+/** Whether the DM tab should show a badge. */
+export function hasDmBadge(counts: UnreadCounts): boolean {
+  return counts.dm > 0
+}
+
+// ─── Query Options ───
+
+export const FEED_INFINITE_QUERY_MAX_PAGES = 8
 
 /** Result of checking for new posts on the "following" timeline. */
 export interface FollowingNewPostsCheck {
@@ -115,6 +155,7 @@ export function homeTimelineInfiniteOptions(
         : loadHomeTimeline(activeTimelineTab, { cursor: pageParam, existingCount: 0 }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: Infinity,
     gcTime: Infinity,
   }
@@ -296,13 +337,11 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
       loadExploreHot({ cursor: pageParam, groupId: group.gid, containerid: group.containerid }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: Infinity,
     gcTime: Infinity,
   }
 }
-
-import type { RelationPage } from '@/lib/weibo/models/user-relation'
-import { loadFriends } from '@/lib/weibo/services/weibo-repository'
 
 export function friendsInfiniteOptions(uid: string, tab: 'following' | 'fans') {
   return {
@@ -343,18 +382,6 @@ export function topicSearchInfiniteOptions(topic: string, channelType?: string) 
   }
 }
 
-/** Extract channels from the first page of topic search results. */
-export function extractTopicChannels(pages: TimelinePage[] | undefined): TopicChannel[] {
-  return pages?.[0]?.channels ?? []
-}
-
-/** Extract head data from the first page of topic search results. */
-export function extractTopicHeadData(pages: TimelinePage[] | undefined) {
-  return pages?.[0]?.headData ?? null
-}
-
-// ─── Unread Notifications ───
-
 /** Polls unread notification / DM counts from m.weibo.cn. */
 export const unreadNotificationsQueryOptions = {
   queryKey: ['weibo', 'unread'] as const,
@@ -362,14 +389,4 @@ export const unreadNotificationsQueryOptions = {
   staleTime: 30 * 1000,
   refetchInterval: 60 * 1000,
   gcTime: 5 * 60 * 1000,
-}
-
-/** Whether the notification tab should show a badge. */
-export function hasNotificationBadge(counts: UnreadCounts): boolean {
-  return counts.mentions + counts.comments + counts.likes > 0
-}
-
-/** Whether the DM tab should show a badge. */
-export function hasDmBadge(counts: UnreadCounts): boolean {
-  return counts.dm > 0
 }
