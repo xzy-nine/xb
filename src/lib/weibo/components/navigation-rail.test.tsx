@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,13 +8,18 @@ import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-set
 import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
 
 const getCurrentUserUidMock = vi.fn<() => string | null>()
+const checkUnreadNotificationsMock = vi.fn()
 
 vi.mock('@/lib/weibo/platform/current-user', () => ({
   getCurrentUserUid: () => getCurrentUserUidMock(),
 }))
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
+vi.mock('@/lib/weibo/services/weibo-repository', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/weibo/services/weibo-repository')>()
+  return {
+    ...actual,
+    checkUnreadNotifications: () => checkUnreadNotificationsMock(),
+  }
 })
 
 function mockMatchMedia(matches: boolean) {
@@ -37,6 +42,13 @@ describe('NavigationRail', () => {
   beforeEach(() => {
     getCurrentUserUidMock.mockReset()
     getCurrentUserUidMock.mockReturnValue('1001')
+    checkUnreadNotificationsMock.mockReset()
+    checkUnreadNotificationsMock.mockResolvedValue({
+      mentions: 0,
+      comments: 0,
+      likes: 0,
+      dm: 0,
+    })
     Object.defineProperty(globalThis, 'browser', {
       writable: true,
       value: {
@@ -73,6 +85,10 @@ describe('NavigationRail', () => {
     viewingProfileUserId?: string | null
     rewriteEnabled?: boolean
   } = {}) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
     return render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -134,5 +150,33 @@ describe('NavigationRail', () => {
     const rewriteLabel = screen.getByText('返回原模式')
     expect(rewriteLabel.parentElement).toHaveClass('justify-between')
     expect(rewriteLabel.parentElement?.parentElement).toHaveClass('w-[180px]')
+  })
+
+  it('does not poll unread counts when notifications and DMs are hidden', async () => {
+    getAppSettingsStore().setState({
+      ...getAppSettingsStore().getState(),
+      showNotifications: false,
+      showDMs: false,
+    })
+
+    renderNavigationRail()
+
+    await waitFor(() => {
+      expect(checkUnreadNotificationsMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it('polls unread counts when either notification entry point is visible', async () => {
+    getAppSettingsStore().setState({
+      ...getAppSettingsStore().getState(),
+      showNotifications: false,
+      showDMs: true,
+    })
+
+    renderNavigationRail()
+
+    await waitFor(() => {
+      expect(checkUnreadNotificationsMock).toHaveBeenCalledTimes(1)
+    })
   })
 })

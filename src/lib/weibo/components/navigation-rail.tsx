@@ -175,7 +175,11 @@ export function NavigationRail({
     currentUserUid === viewingProfileUserId
   const isSavedItemsActive = pageKind === 'favorites' || pageKind === 'liked'
 
-  const { data: unreadCounts } = useQuery(unreadNotificationsQueryOptions)
+  const shouldPollUnread = showNotifications || showDMs
+  const { data: unreadCounts } = useQuery({
+    ...unreadNotificationsQueryOptions,
+    enabled: shouldPollUnread,
+  })
   const showNotificationBadge = unreadCounts ? hasNotificationBadge(unreadCounts) : false
   const showDmBadge = unreadCounts ? hasDmBadge(unreadCounts) : false
 

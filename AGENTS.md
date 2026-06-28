@@ -140,4 +140,5 @@ const followMutation = useMutation({
   `https://m.weibo.cn/*`, `https://xb-server.nnecec-3d5.workers.dev/*`
 - Web accessible resource: `weibo-main-world.js`
 - Rating build env: `XB_SIGN_SECRET` / `VITE_XB_SIGN_SECRET`; optional
-  `XB_SERVER_URL`
+  `XB_SERVER_URL`. These signing secrets are bundled into the extension and
+  should be treated as compatibility-only, not as a real security boundary.

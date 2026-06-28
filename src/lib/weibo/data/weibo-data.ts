@@ -83,6 +83,8 @@ export function hasDmBadge(counts: UnreadCounts): boolean {
 
 // ─── Query Options ───
 
+export const FEED_INFINITE_QUERY_MAX_PAGES = 8
+
 /** Result of checking for new posts on the "following" timeline. */
 interface FollowingNewPostsCheck {
   /** Authors of the new posts (deduplicated, up to 5). */
@@ -149,6 +151,7 @@ export function homeTimelineInfiniteOptions(
         : loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: Infinity,
     gcTime: Infinity,
   }
@@ -312,6 +315,7 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
       loadExploreHot({ cursor: pageParam, groupId: group.gid, containerid: group.containerid }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: Infinity,
     gcTime: Infinity,
   }

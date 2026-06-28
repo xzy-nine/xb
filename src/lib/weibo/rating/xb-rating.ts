@@ -30,12 +30,8 @@ const RATING_SUMMARY_STALE_TIME = 60 * 60 * 1000
 const RATING_SUMMARY_CACHE_TIME = 24 * 60 * 60 * 1000
 const MY_RATING_CACHE_TIME = 24 * 60 * 60 * 1000
 
-// ─── Signing (inlined from xb-server-sign.ts) ───
+// ─── Signing (compatibility-only; client-bundled secrets are public) ───
 
-/**
- * Sign a request to the xb-server.
- * HMAC-SHA256 signature payload: `${timestamp}.${uid}.${path}`
- */
 async function signXbServerRequest(uid: string, path: string): Promise<Record<string, string>> {
   const timestamp = String(Math.floor(Date.now() / 1000))
 
@@ -80,8 +76,7 @@ async function xbFetch<T>(
   const uid = getCurrentUserUid()
   if (!uid) throw new Error('xb-rating-not-logged-in')
 
-  const signHeaders = await signXbServerRequest(uid, path)
-  Object.assign(headers, signHeaders)
+  Object.assign(headers, await signXbServerRequest(uid, path))
 
   const response = await fetch(url, {
     method,
