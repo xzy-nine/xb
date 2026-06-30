@@ -124,8 +124,20 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
   if (item.media.type === 'audio') {
     return (
       <div
+        onClickCapture={(event) => {
+          event.preventDefault()
+        }}
         onClick={(event) => {
           event.stopPropagation()
+          event.preventDefault()
+        }}
+        onMouseDown={(event) => {
+          event.stopPropagation()
+          event.preventDefault()
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          event.preventDefault()
         }}
       >
         <AudioPlayerComponent src={item.media.streamUrl} />
@@ -136,8 +148,20 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
   if (item.media.type === 'live') {
     return (
       <div
+        onClickCapture={(event) => {
+          event.preventDefault()
+        }}
         onClick={(event) => {
           event.stopPropagation()
+          event.preventDefault()
+        }}
+        onMouseDown={(event) => {
+          event.stopPropagation()
+          event.preventDefault()
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          event.preventDefault()
         }}
       >
         <AspectRatio ratio={16 / 9}>
@@ -154,8 +178,20 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
 
   return (
     <div
+      onClickCapture={(event) => {
+        event.preventDefault()
+      }}
       onClick={(event) => {
         event.stopPropagation()
+        event.preventDefault()
+      }}
+      onMouseDown={(event) => {
+        event.stopPropagation()
+        event.preventDefault()
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation()
+        event.preventDefault()
       }}
       className="max-w-[650px]"
     >
@@ -757,6 +793,14 @@ function RetweetedFeedBlock({
     }
     // 中键或修饰键时不拦截，让 Link 的原生行为处理新标签页打开
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return
+    }
+    // 点击内部交互元素（视频、图片、按钮等）时不导航，排除自身 <a>
+    const target = event.target as HTMLElement
+    const interactiveSelectors =
+      'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+    const clickedEl = target.closest(interactiveSelectors)
+    if (target !== event.currentTarget && clickedEl && clickedEl !== event.currentTarget) {
       return
     }
     // 拦截左键点击使用 SPA 导航
