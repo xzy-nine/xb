@@ -12,9 +12,7 @@ import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
 import { followGroupsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import {
-  getDefaultFollowGroupForHomeTab,
-} from '@/lib/weibo/models/explore-utils'
+import { getDefaultFollowGroupForHomeTab } from '@/lib/weibo/models/explore-utils'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'

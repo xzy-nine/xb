@@ -291,6 +291,7 @@ export async function loadEmoticonConfig(): Promise<WeiboEmoticonConfig> {
 export async function loadNestedComments(
   statusId: string,
   uid: string,
+  cursor?: string | null,
 ): Promise<StatusCommentsPage> {
   const payload = await wbGet<unknown>(WEIBO_ENDPOINTS.statusComments, {
     flow: 1,
@@ -301,7 +302,7 @@ export async function loadNestedComments(
     is_mix: 1,
     fetch_level: 1,
     count: 20,
-    max_id: 0,
+    max_id: cursor ?? 0,
     locale: 'en',
   })
 

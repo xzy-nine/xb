@@ -257,10 +257,13 @@ export function statusCommentsInfiniteOptions(statusId: string, authorId: string
   }
 }
 
-export function nestedCommentsQueryOptions(statusId: string, authorUid: string, enabled = true) {
+export function nestedCommentsInfiniteOptions(statusId: string, authorUid: string, enabled = true) {
   return {
     queryKey: ['weibo', 'nested-comments', statusId] as const,
-    queryFn: () => loadNestedComments(statusId, authorUid),
+    queryFn: ({ pageParam }: { pageParam: string | null }) =>
+      loadNestedComments(statusId, authorUid, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage: StatusCommentsPage) => lastPage.nextCursor ?? undefined,
     enabled: enabled && statusId !== '' && authorUid !== '',
   }
 }
