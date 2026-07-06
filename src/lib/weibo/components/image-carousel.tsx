@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import type { FeedImage, FeedMixMediaItem } from '@/lib/weibo/models/feed'
 
 import { VideoPlayer } from './media-player/video-player'
+import { PhotoToolbar } from './photo-toolbar'
 
 interface ImageCarouselProps {
   images: FeedImage[]
@@ -200,6 +201,7 @@ export const ImageCarousel = memo(function ImageCarousel({
 }: ImageCarouselProps) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
+  const photoLoopEnabled = useAppSettings((s) => s.photoLoopEnabled)
 
   const gridItems = React.useMemo<GridItem[]>(() => {
     const items: GridItem[] = images.map((image) => ({
@@ -229,9 +231,11 @@ export const ImageCarousel = memo(function ImageCarousel({
       <PhotoProvider
         portalContainer={container}
         photoClosable={true}
+        loop={photoLoopEnabled}
         onVisibleChange={(visible) => {
           if (visible) onOpen?.()
         }}
+        toolbarRender={(overlayProps) => <PhotoToolbar overlayProps={overlayProps} />}
       >
         <div className={cn('grid gap-2', gridClassName(gridItems.length))}>
           {gridItems.map((item) => {

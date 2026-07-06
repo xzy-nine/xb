@@ -191,6 +191,7 @@ export interface AppSettings {
   selectedThemeType: SelectedThemeType
   selectedThemeId: string
   userThemes: UserTheme[]
+  photoLoopEnabled: boolean
 }
 
 type GenImageCardTheme = 'light' | 'dark'
@@ -263,6 +264,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   selectedThemeType: 'preset',
   selectedThemeId: 'default',
   userThemes: [],
+  photoLoopEnabled: true,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -642,6 +644,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
             typeof (t as UserTheme).name === 'string',
         )
       : DEFAULT_APP_SETTINGS.userThemes,
+    photoLoopEnabled:
+      typeof candidate.photoLoopEnabled === 'boolean'
+        ? candidate.photoLoopEnabled
+        : DEFAULT_APP_SETTINGS.photoLoopEnabled,
   }
 }
 

@@ -128,6 +128,7 @@ describe('app-settings', () => {
       selectedThemeType: 'preset',
       selectedThemeId: 'default',
       userThemes: [],
+      photoLoopEnabled: true,
     })
 
     await persistAppSettings(
@@ -181,6 +182,7 @@ describe('app-settings', () => {
         selectedThemeType: 'preset',
         selectedThemeId: 'default',
         userThemes: [],
+        photoLoopEnabled: true,
       },
       storage,
     )
@@ -235,6 +237,7 @@ describe('app-settings', () => {
       selectedThemeType: 'preset',
       selectedThemeId: 'default',
       userThemes: [],
+      photoLoopEnabled: true,
     })
   })
 
