@@ -19,10 +19,12 @@ export function NewPostsBubble({ authors, count }: NewPostsBubbleProps) {
     <AnimatePresence>
       <motion.div
         key="new-posts-bubble"
-        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 14 }}
-        animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
-        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 14 }}
-        transition={{ duration: shouldReduceMotion ? 0.12 : 0.25, ease: [0.4, 0, 0.2, 1] }}
+        initial={
+          shouldReduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateX(14px)' }
+        }
+        animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, transform: 'translateX(0px)' }}
+        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateX(14px)' }}
+        transition={{ duration: shouldReduceMotion ? 0.12 : 0.25, ease: [0.23, 1, 0.32, 1] }}
         className="bg-muted/80 text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
       >
         <span className="flex -space-x-1.5">
