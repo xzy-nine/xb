@@ -14,6 +14,7 @@ import type { FeedImage, FeedMixMediaItem } from '@/lib/weibo/models/feed'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
 
 import { VideoPlayer } from './media-player/video-player'
+import { PhotoToolbar } from './photo-toolbar'
 
 interface ImageCarouselProps {
   images: FeedImage[]
@@ -201,6 +202,7 @@ export const ImageCarousel = memo(function ImageCarousel({
 }: ImageCarouselProps) {
   const container = useMemo(() => getUiPortalContainer(), [])
   const darkModeImageDim = useAppSettings((s) => s.darkModeImageDim)
+  const photoLoopEnabled = useAppSettings((s) => s.photoLoopEnabled)
 
   const handlePhotoVisibleChange = useCallback(
     (visible: boolean) => {
@@ -249,7 +251,9 @@ export const ImageCarousel = memo(function ImageCarousel({
       <PhotoProvider
         portalContainer={container}
         photoClosable={true}
+        loop={photoLoopEnabled}
         onVisibleChange={handlePhotoVisibleChange}
+        toolbarRender={(overlayProps) => <PhotoToolbar overlayProps={overlayProps} />}
       >
         <div className={cn('grid gap-2', gridClassName(gridItems.length))}>
           {gridItems.map((item) => {

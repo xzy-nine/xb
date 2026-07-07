@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -11,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { PageEmptyState, PageErrorState } from '@/lib/weibo/components/page-state'
-import { nestedCommentsQueryOptions } from '@/lib/weibo/data/weibo-data'
+import { flattenInfiniteItems, nestedCommentsInfiniteOptions } from '@/lib/weibo/data/weibo-data'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 
 import { CommentList } from './comment-list'
@@ -33,21 +34,40 @@ export function CommentsDialog({
   onOpenChange,
   onCommentReply,
 }: CommentsDialogProps) {
-  const { data, isLoading, error } = useQuery({
-    ...nestedCommentsQueryOptions(statusId, authorUid, open),
-  })
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      ...nestedCommentsInfiniteOptions(statusId, authorUid, open),
+    })
 
-  const comments = data?.items ? [...data.items].reverse() : []
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const comments = flattenInfiniteItems(data?.pages)
+  const total = data?.pages[0]?.total ?? comments.length
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl || !hasNextPage || isFetchingNextPage) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollEl
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        fetchNextPage()
+      }
+    }
+
+    scrollEl.addEventListener('scroll', handleScroll)
+    return () => scrollEl.removeEventListener('scroll', handleScroll)
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>评论详情</DialogTitle>
-          <DialogDescription>共 {data?.items.length ?? 0} 条回复</DialogDescription>
+          <DialogDescription>共 {total} 条回复</DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div ref={scrollRef} className="max-h-[60vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
@@ -57,13 +77,20 @@ export function CommentsDialog({
           ) : comments.length === 0 ? (
             <PageEmptyState label="暂无评论" />
           ) : (
-            <CommentList
-              comments={comments}
-              emptyLabel="此微博暂无评论"
-              rootStatusId={rootStatusId}
-              authorUid={authorUid ?? undefined}
-              onCommentReply={onCommentReply}
-            />
+            <>
+              <CommentList
+                comments={comments}
+                emptyLabel="此微博暂无评论"
+                rootStatusId={rootStatusId}
+                authorUid={authorUid ?? undefined}
+                onCommentReply={onCommentReply}
+              />
+              {isFetchingNextPage && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                </div>
+              )}
+            </>
           )}
         </div>
 

@@ -204,6 +204,7 @@ export interface AppSettings {
   selectedThemeId: string
   userThemes: UserTheme[]
   followGroupsEnabled: boolean
+  photoLoopEnabled: boolean
 }
 
 export type GenImageCardTheme = 'light' | 'dark'
@@ -288,6 +289,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   selectedThemeId: 'default',
   userThemes: [],
   followGroupsEnabled: true,
+  photoLoopEnabled: true,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -727,6 +729,10 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.followGroupsEnabled === 'boolean'
         ? candidate.followGroupsEnabled
         : DEFAULT_APP_SETTINGS.followGroupsEnabled,
+    photoLoopEnabled:
+      typeof candidate.photoLoopEnabled === 'boolean'
+        ? candidate.photoLoopEnabled
+        : DEFAULT_APP_SETTINGS.photoLoopEnabled,
   }
 }
 

@@ -10,6 +10,7 @@ interface StatusCommentsPayload {
   data?: WeiboStatus[]
   max_id?: string | number
   filter_group?: CommentFilterOption[]
+  total_number?: number
 }
 
 function isWeiboStatusLike(value: unknown): value is WeiboStatus {
@@ -64,5 +65,6 @@ export function adaptStatusCommentsResponse(payload: StatusCommentsPayload): Sta
     items: Array.isArray(payload.data) ? payload.data.map(toCommentItem) : [],
     nextCursor: normalizeCursor(payload.max_id),
     filterGroup: payload.filter_group,
+    total: payload.total_number,
   }
 }

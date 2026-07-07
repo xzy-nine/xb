@@ -37,6 +37,7 @@ export interface StatusCommentsPage {
   items: CommentItem[]
   nextCursor: string | null
   filterGroup?: CommentFilterOption[]
+  total?: number
 }
 
 export interface StatusDetail {
