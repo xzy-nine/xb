@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Bell, BellRing } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -24,7 +24,6 @@ export function SpecialFollowButton({
   size = 'icon-lg',
   className,
 }: SpecialFollowButtonProps) {
-  const queryClient = useQueryClient()
   const currentUid = getCurrentUserUid()
   const isSelf = currentUid !== null && currentUid === uid
   const [optimistic, setOptimistic] = useState<{ uid: string; special: boolean } | null>(null)
@@ -36,6 +35,14 @@ export function SpecialFollowButton({
 
   const mutation = useMutation({
     mutationFn: (nextSpecial: boolean) => setSpecialFollowUser(uid, nextSpecial),
+    meta: {
+      invalidates: [
+        ['weibo', 'profile'],
+        ['weibo', 'profile-hover'],
+        ['weibo', 'profile', 'groups', uid],
+        ['weibo', 'follow-groups'],
+      ],
+    },
     onMutate: (nextSpecial) => {
       const previous = isSpecial
       setOptimistic({ uid, special: nextSpecial })
@@ -43,11 +50,6 @@ export function SpecialFollowButton({
     },
     onSuccess: (_data, nextSpecial) => {
       toast.success(nextSpecial ? '已设为特别关注' : '已取消特别关注')
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'profile', 'groups', uid] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'follow-groups'] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'timeline'] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'profile'] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'profile-hover'] })
     },
     onError: (error, _nextSpecial, context) => {
       setOptimistic(context ? { uid, special: context.previous } : null)
