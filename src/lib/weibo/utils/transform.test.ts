@@ -1,6 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
+import { normalizeSafeExternalUrl } from '@/lib/weibo/utils/safe-url'
+
 import { mergeLongTextIntoFeedItem, toFeedItem, toMedia } from './transform'
+
+describe('normalizeSafeExternalUrl', () => {
+  it('allows http and https URLs and normalizes protocol-relative URLs', () => {
+    expect(normalizeSafeExternalUrl('https://example.com/path')).toBe('https://example.com/path')
+    expect(normalizeSafeExternalUrl('http://example.com/path')).toBe('http://example.com/path')
+    expect(normalizeSafeExternalUrl('//example.com/path')).toBe('https://example.com/path')
+  })
+
+  it('rejects empty values and unsafe schemes', () => {
+    expect(normalizeSafeExternalUrl('')).toBeNull()
+    expect(normalizeSafeExternalUrl('javascript:alert(1)')).toBeNull()
+    expect(normalizeSafeExternalUrl('data:text/html,<script>alert(1)</script>')).toBeNull()
+    expect(normalizeSafeExternalUrl('weixin://profile/example')).toBeNull()
+  })
+})
 
 describe('toMedia', () => {
   describe('live type', () => {
@@ -236,6 +253,50 @@ describe('toMedia', () => {
       expect(result?.type).toBe('audio')
       expect(result?.streamUrl).toBe('https://example.com/audio.mp3')
     })
+  })
+})
+
+describe('toFeedItem URL entities', () => {
+  it('skips url_struct entries with unsafe target schemes', () => {
+    const result = toFeedItem({
+      idstr: 'url-1',
+      text_raw: 'unsafe http://t.cn/abc',
+      user: { idstr: '1', screen_name: 'Alice' },
+      url_struct: [
+        {
+          short_url: 'http://t.cn/abc',
+          long_url: 'javascript:alert(1)',
+          url_title: 'unsafe',
+          url_type: 1,
+        },
+      ],
+    } as any)
+
+    expect(result.urlEntities).toBeUndefined()
+  })
+
+  it('normalizes protocol-relative url_struct targets', () => {
+    const result = toFeedItem({
+      idstr: 'url-2',
+      text_raw: 'safe http://t.cn/abc',
+      user: { idstr: '1', screen_name: 'Alice' },
+      url_struct: [
+        {
+          short_url: 'http://t.cn/abc',
+          long_url: '//example.com/path',
+          url_title: 'safe',
+          url_type: 1,
+        },
+      ],
+    } as any)
+
+    expect(result.urlEntities).toEqual([
+      {
+        shortUrl: 'http://t.cn/abc',
+        title: 'safe',
+        url: 'https://example.com/path',
+      },
+    ])
   })
 })
 

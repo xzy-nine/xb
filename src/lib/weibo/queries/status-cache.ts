@@ -4,7 +4,7 @@ import type { FeedItem } from '@/lib/weibo/models/feed'
 import type { CommentItem } from '@/lib/weibo/models/status'
 
 export interface StatusCacheMutationContext {
-  previousItems: Array<[QueryKey, unknown]>
+  rollbacks: Array<(queryClient: QueryClient) => void>
 }
 
 type InfinitePagesData<PageItem> = {
@@ -15,9 +15,9 @@ type ItemsData<Item> = {
   items: Item[]
 }
 
-function snapshotWeiboQueries(queryClient: QueryClient): StatusCacheMutationContext {
+function createStatusCacheMutationContext(): StatusCacheMutationContext {
   return {
-    previousItems: queryClient.getQueriesData({ queryKey: ['weibo'] }),
+    rollbacks: [],
   }
 }
 
@@ -25,12 +25,12 @@ export function restoreStatusCacheMutation(
   queryClient: QueryClient,
   context: StatusCacheMutationContext | undefined,
 ) {
-  if (!context?.previousItems) {
+  if (!context?.rollbacks) {
     return
   }
 
-  for (const [queryKey, data] of context.previousItems) {
-    queryClient.setQueryData(queryKey, data)
+  for (const rollback of context.rollbacks.toReversed()) {
+    rollback(queryClient)
   }
 }
 
@@ -62,93 +62,200 @@ function updateFeedItemById(
   item: FeedItem,
   statusId: string,
   update: (item: FeedItem) => FeedItem,
-): FeedItem {
+): { item: FeedItem; changed: boolean } {
   if (item.id === statusId) {
-    return update(item)
+    return { item: update(item), changed: true }
   }
 
   if (item.retweetedStatus?.id === statusId) {
     return {
-      ...item,
-      retweetedStatus: update(item.retweetedStatus as FeedItem),
+      item: {
+        ...item,
+        retweetedStatus: update(item.retweetedStatus as FeedItem),
+      },
+      changed: true,
     }
   }
 
-  return item
+  return { item, changed: false }
 }
 
-function updateFeedPages(
-  queryClient: QueryClient,
+function updateStatusInData(
+  data: unknown,
   statusId: string,
   update: (item: FeedItem) => FeedItem,
-) {
-  queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-    if (!hasInfinitePages<unknown>(old)) {
-      return old
-    }
+): { data: unknown; changed: boolean } {
+  if (hasInfinitePages<unknown>(data)) {
+    let changed = false
+    const pages = data.pages.map((page) => ({
+      ...page,
+      items: page.items.map((item) => {
+        if (!isFeedItem(item)) {
+          return item
+        }
 
+        const result = updateFeedItemById(item, statusId, update)
+        changed ||= result.changed
+        return result.item
+      }),
+    }))
+
+    return changed ? { data: { ...data, pages }, changed } : { data, changed }
+  }
+
+  if (isObject(data) && isFeedItem(data.status) && data.status.id === statusId) {
     return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        items: page.items.map((item) =>
-          isFeedItem(item) ? updateFeedItemById(item, statusId, update) : item,
-        ),
-      })),
+      data: {
+        ...data,
+        status: update(data.status),
+      },
+      changed: true,
     }
-  })
+  }
+
+  return { data, changed: false }
 }
 
-function updateStatusDetailCaches(
+function updateStatusInKeys(
   queryClient: QueryClient,
+  queryKeys: QueryKey[],
   statusId: string,
   update: (item: FeedItem) => FeedItem,
 ) {
-  for (const key of queryClient
-    .getQueryCache()
-    .getAll()
-    .map((q) => q.queryKey)) {
-    if (!Array.isArray(key) || key[0] !== 'weibo' || key[1] !== 'status') {
-      continue
-    }
+  for (const queryKey of queryKeys) {
+    const cached = queryClient.getQueryData(queryKey)
+    const result = updateStatusInData(cached, statusId, update)
 
-    const cached = queryClient.getQueryData(key)
-    if (!isObject(cached) || !isFeedItem(cached.status)) {
-      continue
-    }
-
-    if (cached.status.id === statusId) {
-      queryClient.setQueryData(key, {
-        ...cached,
-        status: update(cached.status),
-      })
+    if (result.changed) {
+      queryClient.setQueryData(queryKey, result.data)
     }
   }
+}
+
+function findFeedItemById(item: FeedItem, statusId: string): FeedItem | null {
+  if (item.id === statusId) {
+    return item
+  }
+
+  return item.retweetedStatus?.id === statusId ? (item.retweetedStatus as FeedItem) : null
+}
+
+function findStatusInData(data: unknown, statusId: string): FeedItem | null {
+  if (hasInfinitePages<unknown>(data)) {
+    for (const page of data.pages) {
+      for (const item of page.items) {
+        if (!isFeedItem(item)) {
+          continue
+        }
+
+        const found = findFeedItemById(item, statusId)
+        if (found) {
+          return found
+        }
+      }
+    }
+  }
+
+  if (isObject(data) && isFeedItem(data.status) && data.status.id === statusId) {
+    return data.status
+  }
+
+  return null
+}
+
+function collectStatusCommentCounts(queryClient: QueryClient, statusId: string) {
+  const commentsByKey = new Map<QueryKey, number>()
+
+  for (const [queryKey, data] of queryClient.getQueriesData({ queryKey: ['weibo'] })) {
+    const item = findStatusInData(data, statusId)
+    if (item) {
+      commentsByKey.set(queryKey, item.stats.comments)
+    }
+  }
+
+  return commentsByKey
 }
 
 function updateStatusEverywhere(
   queryClient: QueryClient,
   statusId: string,
   update: (item: FeedItem) => FeedItem,
-) {
-  updateFeedPages(queryClient, statusId, update)
-  updateStatusDetailCaches(queryClient, statusId, update)
+): QueryKey[] {
+  const changedQueryKeys: QueryKey[] = []
+
+  for (const [queryKey, data] of queryClient.getQueriesData({ queryKey: ['weibo'] })) {
+    const result = updateStatusInData(data, statusId, update)
+    if (!result.changed) {
+      continue
+    }
+
+    queryClient.setQueryData(queryKey, result.data)
+    changedQueryKeys.push(queryKey)
+  }
+
+  return changedQueryKeys
 }
 
-function removeStatusFromFavorites(queryClient: QueryClient, statusId: string) {
-  queryClient.setQueriesData({ queryKey: ['weibo', 'favorites'] }, (old) => {
-    if (!hasInfinitePages<unknown>(old)) {
-      return old
+function restoreRemovedFavoriteItem(
+  queryClient: QueryClient,
+  queryKey: QueryKey,
+  removedItems: Array<{ pageIndex: number; itemIndex: number; item: FeedItem }>,
+  fallbackData: unknown,
+) {
+  queryClient.setQueryData(queryKey, (current) => {
+    if (!hasInfinitePages<unknown>(current)) {
+      return fallbackData
+    }
+
+    const pages = current.pages.map((page) => ({ ...page, items: [...page.items] }))
+
+    for (const removed of removedItems.toSorted((a, b) => b.itemIndex - a.itemIndex)) {
+      const page = pages[removed.pageIndex]
+      if (!page || page.items.some((item) => isFeedItem(item) && item.id === removed.item.id)) {
+        continue
+      }
+
+      page.items.splice(Math.min(removed.itemIndex, page.items.length), 0, removed.item)
     }
 
     return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        items: page.items.filter((item) => !isFeedItem(item) || item.id !== statusId),
-      })),
+      ...current,
+      pages,
     }
   })
+}
+
+function removeStatusFromFavorites(
+  queryClient: QueryClient,
+  context: StatusCacheMutationContext,
+  statusId: string,
+) {
+  for (const [queryKey, data] of queryClient.getQueriesData({ queryKey: ['weibo', 'favorites'] })) {
+    if (!hasInfinitePages<unknown>(data)) {
+      continue
+    }
+
+    const removedItems: Array<{ pageIndex: number; itemIndex: number; item: FeedItem }> = []
+    const pages = data.pages.map((page, pageIndex) => ({
+      ...page,
+      items: page.items.filter((item, itemIndex) => {
+        const shouldRemove = isFeedItem(item) && item.id === statusId
+        if (shouldRemove) {
+          removedItems.push({ pageIndex, itemIndex, item })
+        }
+        return !shouldRemove
+      }),
+    }))
+
+    if (removedItems.length === 0) {
+      continue
+    }
+
+    queryClient.setQueryData(queryKey, { ...data, pages })
+    context.rollbacks.push((client) => {
+      restoreRemovedFavoriteItem(client, queryKey, removedItems, data)
+    })
+  }
 }
 
 function updateCommentInTree(
@@ -172,7 +279,7 @@ function updateCommentInTree(
 
 async function prepareMutation(queryClient: QueryClient): Promise<StatusCacheMutationContext> {
   await queryClient.cancelQueries({ queryKey: ['weibo'] })
-  return snapshotWeiboQueries(queryClient)
+  return createStatusCacheMutationContext()
 }
 
 export async function optimisticallyToggleStatusLike(
@@ -180,8 +287,10 @@ export async function optimisticallyToggleStatusLike(
   target: FeedItem,
 ): Promise<StatusCacheMutationContext> {
   const context = await prepareMutation(queryClient)
+  const previousLiked = Boolean(target.liked)
+  const previousLikes = target.stats.likes
 
-  updateStatusEverywhere(queryClient, target.id, (item) => ({
+  const changedQueryKeys = updateStatusEverywhere(queryClient, target.id, (item) => ({
     ...item,
     liked: !item.liked,
     stats: {
@@ -189,6 +298,17 @@ export async function optimisticallyToggleStatusLike(
       likes: item.stats.likes + (item.liked ? -1 : 1),
     },
   }))
+
+  context.rollbacks.push((client) => {
+    updateStatusInKeys(client, changedQueryKeys, target.id, (item) => ({
+      ...item,
+      liked: previousLiked,
+      stats: {
+        ...item.stats,
+        likes: previousLikes,
+      },
+    }))
+  })
 
   return context
 }
@@ -198,14 +318,22 @@ export async function optimisticallyToggleStatusFavorite(
   target: FeedItem,
 ): Promise<StatusCacheMutationContext> {
   const context = await prepareMutation(queryClient)
+  const previousFavorited = Boolean(target.favorited)
 
-  updateStatusEverywhere(queryClient, target.id, (item) => ({
+  const changedQueryKeys = updateStatusEverywhere(queryClient, target.id, (item) => ({
     ...item,
     favorited: !item.favorited,
   }))
 
+  context.rollbacks.push((client) => {
+    updateStatusInKeys(client, changedQueryKeys, target.id, (item) => ({
+      ...item,
+      favorited: previousFavorited,
+    }))
+  })
+
   if (target.favorited) {
-    removeStatusFromFavorites(queryClient, target.id)
+    removeStatusFromFavorites(queryClient, context, target.id)
   }
 
   return context
@@ -217,11 +345,17 @@ export async function optimisticallyRemoveStatusFromFavorites(
 ): Promise<StatusCacheMutationContext> {
   const context = await prepareMutation(queryClient)
 
-  updateStatusEverywhere(queryClient, statusId, (item) => ({
+  const changedQueryKeys = updateStatusEverywhere(queryClient, statusId, (item) => ({
     ...item,
     favorited: false,
   }))
-  removeStatusFromFavorites(queryClient, statusId)
+  context.rollbacks.push((client) => {
+    updateStatusInKeys(client, changedQueryKeys, statusId, (item) => ({
+      ...item,
+      favorited: true,
+    }))
+  })
+  removeStatusFromFavorites(queryClient, context, statusId)
 
   return context
 }
@@ -232,7 +366,8 @@ export async function optimisticallyIncrementStatusComments(
 ): Promise<StatusCacheMutationContext> {
   const context = await prepareMutation(queryClient)
 
-  updateStatusEverywhere(queryClient, statusId, (item) => ({
+  const previousCommentsByKey = collectStatusCommentCounts(queryClient, statusId)
+  const changedQueryKeys = updateStatusEverywhere(queryClient, statusId, (item) => ({
     ...item,
     stats: {
       ...item.stats,
@@ -240,7 +375,105 @@ export async function optimisticallyIncrementStatusComments(
     },
   }))
 
+  context.rollbacks.push((client) => {
+    for (const queryKey of changedQueryKeys) {
+      const previousComments = previousCommentsByKey.get(queryKey)
+      if (previousComments === undefined) {
+        continue
+      }
+
+      updateStatusInKeys(client, [queryKey], statusId, (item) => ({
+        ...item,
+        stats: {
+          ...item.stats,
+          comments: previousComments,
+        },
+      }))
+    }
+  })
+
   return context
+}
+
+function updateCommentInData(
+  data: unknown,
+  commentId: string,
+  update: (comment: CommentItem) => CommentItem,
+): { data: unknown; changed: boolean } {
+  if (hasInfinitePages<unknown>(data)) {
+    let changed = false
+    const pages = data.pages.map((page) => ({
+      ...page,
+      items: page.items.map((item) => {
+        if (!isCommentItem(item)) {
+          return item
+        }
+
+        const next = updateCommentInTree(item, commentId, (comment) => {
+          changed = true
+          return update(comment)
+        })
+        return next
+      }),
+    }))
+
+    return changed ? { data: { ...data, pages }, changed } : { data, changed }
+  }
+
+  if (hasItems<unknown>(data)) {
+    let changed = false
+    const items = data.items.map((item) => {
+      if (!isCommentItem(item)) {
+        return item
+      }
+
+      const next = updateCommentInTree(item, commentId, (comment) => {
+        changed = true
+        return update(comment)
+      })
+      return next
+    })
+
+    return changed ? { data: { ...data, items }, changed } : { data, changed }
+  }
+
+  return { data, changed: false }
+}
+
+function updateCommentInKeys(
+  queryClient: QueryClient,
+  queryKeys: QueryKey[],
+  commentId: string,
+  update: (comment: CommentItem) => CommentItem,
+) {
+  for (const queryKey of queryKeys) {
+    const cached = queryClient.getQueryData(queryKey)
+    const result = updateCommentInData(cached, commentId, update)
+
+    if (result.changed) {
+      queryClient.setQueryData(queryKey, result.data)
+    }
+  }
+}
+
+function updateCommentEverywhere(
+  queryClient: QueryClient,
+  commentId: string,
+  update: (comment: CommentItem) => CommentItem,
+): QueryKey[] {
+  const changedQueryKeys: QueryKey[] = []
+
+  for (const [queryKey, data] of queryClient.getQueriesData({ queryKey: ['weibo'] })) {
+    const result = updateCommentInData(data, commentId, update)
+    if (!result.changed) {
+      continue
+    }
+
+    queryClient.setQueryData(queryKey, result.data)
+    changedQueryKeys.push(queryKey)
+  }
+
+  return changedQueryKeys
 }
 
 export async function optimisticallyToggleCommentLike(
@@ -248,6 +481,8 @@ export async function optimisticallyToggleCommentLike(
   target: CommentItem,
 ): Promise<StatusCacheMutationContext> {
   const context = await prepareMutation(queryClient)
+  const previousLiked = Boolean(target.liked)
+  const previousLikeCount = target.likeCount
 
   const updateComment = (comment: CommentItem) => ({
     ...comment,
@@ -255,29 +490,14 @@ export async function optimisticallyToggleCommentLike(
     likeCount: comment.likeCount + (comment.liked ? -1 : 1),
   })
 
-  queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-    if (hasInfinitePages<unknown>(old)) {
-      return {
-        ...old,
-        pages: old.pages.map((page) => ({
-          ...page,
-          items: page.items.map((item) =>
-            isCommentItem(item) ? updateCommentInTree(item, target.id, updateComment) : item,
-          ),
-        })),
-      }
-    }
+  const changedQueryKeys = updateCommentEverywhere(queryClient, target.id, updateComment)
 
-    if (hasItems<unknown>(old)) {
-      return {
-        ...old,
-        items: old.items.map((item) =>
-          isCommentItem(item) ? updateCommentInTree(item, target.id, updateComment) : item,
-        ),
-      }
-    }
-
-    return old
+  context.rollbacks.push((client) => {
+    updateCommentInKeys(client, changedQueryKeys, target.id, (comment) => ({
+      ...comment,
+      liked: previousLiked,
+      likeCount: previousLikeCount,
+    }))
   })
 
   return context

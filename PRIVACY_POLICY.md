@@ -12,11 +12,14 @@ This Privacy Policy applies to the xb browser extension and its current core fea
 
 - hiding distractions such as promoted content, stickers, ads, and supertopics
 - improving reading flow through page enhancements
+- making supporting requests to Weibo-owned endpoints such as `m.weibo.cn` for specific features
+- loading and downloading media from permitted Weibo media CDN hosts
+- optionally using xb rating when the user enables it
 - saving extension preferences locally in the browser
 
 ## Information xb Processes
 
-xb processes content from pages on `weibo.com` and `www.weibo.com` only to provide the extension's user-facing features.
+xb processes content from Weibo pages on `weibo.com` and `www.weibo.com` to provide the extension's user-facing features. Some features may also request related Weibo-owned endpoints such as `m.weibo.cn` and permitted media CDN hosts.
 
 This may include:
 
@@ -42,9 +45,11 @@ Core extension features are designed to process page content locally in the user
 
 ## Network Access
 
-xb runs only on `weibo.com` and `www.weibo.com` pages.
+xb runs on Weibo pages and uses network access only for extension features.
 
-All page content processing happens locally in your browser. xb does not make network requests to external servers.
+Most page content processing happens locally in your browser. The extension may request Weibo, `m.weibo.cn`, and permitted Weibo media CDN endpoints to provide reading, topic/search, notification, and media download features.
+
+xb rating is optional. When rating is enabled, xb may contact the configured xb-server to fetch or submit rating data. Users can disable rating in the extension settings.
 
 ## Data Sharing
 

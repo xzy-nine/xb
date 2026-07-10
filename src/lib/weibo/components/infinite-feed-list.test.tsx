@@ -136,4 +136,27 @@ describe('InfiniteFeedList', () => {
 
     expect(fetchNextPage).toHaveBeenCalledTimes(1)
   })
+
+  it('does not fetch the next page while a next page is already loading', () => {
+    const fetchNextPage = vi.fn()
+    render(
+      <InfiniteFeedList
+        pages={[{ items: [createFeedItem('1', '第一条')] }]}
+        emptyLabel="暂无内容"
+        loadingLabel="加载中"
+        errorMessage={null}
+        isLoading={false}
+        hasNextPage={true}
+        isFetchingNextPage={true}
+        fetchNextPage={fetchNextPage}
+      />,
+    )
+
+    TestIntersectionObserver.instances[0]?.callback(
+      [{ isIntersecting: true } as IntersectionObserverEntry],
+      TestIntersectionObserver.instances[0] as unknown as IntersectionObserver,
+    )
+
+    expect(fetchNextPage).not.toHaveBeenCalled()
+  })
 })

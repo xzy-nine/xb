@@ -98,6 +98,36 @@ describe('status-cache', () => {
     ).toBe(false)
   })
 
+  it('does not roll back later optimistic changes when an earlier mutation fails', async () => {
+    const queryClient = new QueryClient()
+    const item = createFeedItem({
+      id: 'status-1',
+      favorited: false,
+      liked: false,
+      stats: { likes: 1, comments: 0, reposts: 0 },
+    })
+    queryClient.setQueryData(['weibo', 'timeline'], { pages: [{ items: [item] }] })
+
+    const likeContext = await optimisticallyToggleStatusLike(queryClient, item)
+    const likedItem = queryClient.getQueryData<{ pages: Array<{ items: FeedItem[] }> }>([
+      'weibo',
+      'timeline',
+    ])?.pages[0]?.items[0]
+
+    const favoriteContext = await optimisticallyToggleStatusFavorite(queryClient, likedItem ?? item)
+    expect(favoriteContext).toBeDefined()
+
+    restoreStatusCacheMutation(queryClient, likeContext)
+
+    const current = queryClient.getQueryData<{ pages: Array<{ items: FeedItem[] }> }>([
+      'weibo',
+      'timeline',
+    ])?.pages[0]?.items[0]
+    expect(current?.liked).toBe(false)
+    expect(current?.stats.likes).toBe(1)
+    expect(current?.favorited).toBe(true)
+  })
+
   it('removes unfavorited statuses from favorites pages and can restore the previous snapshot', async () => {
     const queryClient = new QueryClient()
     const item = createFeedItem({ id: 'status-1', favorited: true })

@@ -93,21 +93,7 @@ export function HotSearchCard({ className }: HotSearchCardProps) {
     })),
   )
 
-  const hotQuery = useQuery(hotSearchQueryOptions('hot'))
-  const mineQuery = useQuery(hotSearchQueryOptions('mine'))
-  const entertainmentQuery = useQuery(hotSearchQueryOptions('entertainment'))
-  const lifeQuery = useQuery(hotSearchQueryOptions('life'))
-  const socialQuery = useQuery(hotSearchQueryOptions('social'))
-
-  const queries = {
-    hot: hotQuery,
-    mine: mineQuery,
-    entertainment: entertainmentQuery,
-    life: lifeQuery,
-    social: socialQuery,
-  }
-
-  const currentQuery = queries[selectedType]
+  const currentQuery = useQuery(hotSearchQueryOptions(selectedType))
   const items =
     currentQuery.data?.items.map((item) => ({
       type: item.type,

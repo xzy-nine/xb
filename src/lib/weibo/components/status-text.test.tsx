@@ -201,6 +201,28 @@ describe('StatusText', () => {
     expect(container).toHaveTextContent('http://t.cn/PLAIN')
   })
 
+  it('renders unsafe url entity schemes as plain text', () => {
+    const { container } = renderWithProviders(
+      <StatusText
+        item={{
+          urlEntities: [
+            {
+              shortUrl: 'http://t.cn/LINK',
+              title: '不安全链接',
+              url: 'javascript:alert(1)',
+            },
+          ],
+          topicEntities: [],
+        }}
+        text="真链接 http://t.cn/LINK"
+      />,
+    )
+
+    const view = within(container)
+    expect(view.queryByRole('link', { name: '不安全链接' })).not.toBeInTheDocument()
+    expect(container).toHaveTextContent('不安全链接')
+  })
+
   it('renders reply-chain text as leading body plus stacked quoted segments', () => {
     const { container } = renderWithProviders(
       <StatusText

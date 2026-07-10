@@ -18,7 +18,6 @@
     "@semantic-release/release-notes-generator",
     "conventional-changelog-conventionalcommits"
   ],
-  "ignoreBinaries": ["only-allow"],
   "ignoreExportsUsedInFile": true,
   "ignore": [
     "src/components/ui/*",

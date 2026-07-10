@@ -43,7 +43,9 @@ export function InfiniteFeedList({
 }: InfiniteFeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const fetchNextPageRef = useRef(fetchNextPage)
+  const isFetchingNextPageRef = useRef(isFetchingNextPage)
   fetchNextPageRef.current = fetchNextPage
+  isFetchingNextPageRef.current = isFetchingNextPage
 
   const items = useMemo(() => flattenInfiniteItems<FeedItem>(pages), [pages])
 
@@ -55,7 +57,7 @@ export function InfiniteFeedList({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        if (entries[0]?.isIntersecting && !isFetchingNextPageRef.current) {
           void fetchNextPageRef.current()
         }
       },

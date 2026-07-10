@@ -1,3 +1,5 @@
+import { normalizeSafeExternalUrl } from '@/lib/weibo/utils/safe-url'
+
 export interface SuperTopicItem {
   title: string
   intro: string
@@ -45,14 +47,6 @@ function asNumber(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
-function normalizeWeiboUrl(url: string): string {
-  if (url.startsWith('//')) {
-    return `https:${url}`
-  }
-
-  return url
-}
-
 export function adaptSuperTopicResponse(payload: SuperTopicPayload): SuperTopicPage {
   const list = payload.data?.list ?? []
 
@@ -65,7 +59,7 @@ export function adaptSuperTopicResponse(payload: SuperTopicPayload): SuperTopicP
         title: asString(item.title),
         intro,
         fansText: asString(item.content2),
-        link: normalizeWeiboUrl(asString(item.link)),
+        link: normalizeSafeExternalUrl(asString(item.link)) ?? '',
         pic: asString(item.pic),
         oid: asString(item.oid),
         topicName: asString(item.topic_name) || asString(item.title),

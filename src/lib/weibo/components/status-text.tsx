@@ -22,6 +22,7 @@ import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import type { WeiboEmoticonItem } from '@/lib/weibo/models/emoticon'
 import type { FeedImage, FeedItem, FeedTopicEntity, FeedUrlEntity } from '@/lib/weibo/models/feed'
+import { normalizeSafeExternalUrl } from '@/lib/weibo/utils/safe-url'
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -168,14 +169,13 @@ function renderTextWithMentionsAndEmoticons(
 }
 
 function renderEntityLink(entity: FeedUrlEntity, key: string) {
+  const href = normalizeSafeExternalUrl(entity.url)
+  if (!href) {
+    return <span key={key}>{entity.title}</span>
+  }
+
   return (
-    <a
-      key={key}
-      href={entity.url}
-      target="_blank"
-      rel="noreferrer"
-      className={LINK_TEXT_CLASS_NAME}
-    >
+    <a key={key} href={href} target="_blank" rel="noreferrer" className={LINK_TEXT_CLASS_NAME}>
       {entity.title}
     </a>
   )

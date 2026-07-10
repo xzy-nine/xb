@@ -84,6 +84,10 @@ export function hasDmBadge(counts: UnreadCounts): boolean {
 // ─── Query Options ───
 
 export const FEED_INFINITE_QUERY_MAX_PAGES = 8
+export const COMMENT_INFINITE_QUERY_MAX_PAGES = 8
+export const RELATION_INFINITE_QUERY_MAX_PAGES = 8
+export const TOPIC_INFINITE_QUERY_MAX_PAGES = 8
+export const NOTIFICATION_INFINITE_QUERY_MAX_PAGES = 8
 
 /** Result of checking for new posts on the "following" timeline. */
 interface FollowingNewPostsCheck {
@@ -164,6 +168,7 @@ export function profilePostsInfiniteOptions(profileId: string) {
       loadProfilePosts(profileId, pageParam ? Number(pageParam) : 1),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: 30 * 60 * 1000,
   }
 }
@@ -194,6 +199,7 @@ export function profileSearchInfiniteOptions(profileId: string, params: ProfileS
       }
       return lastPage.nextCursor ?? undefined
     },
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: 30 * 60 * 1000,
   }
 }
@@ -223,6 +229,7 @@ export function favoritesInfiniteOptions(uid: string) {
       loadFavorites(uid, { page: pageParam ? Number(pageParam) : 1 }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: 30 * 60 * 1000,
   }
 }
@@ -234,6 +241,7 @@ export function likedStatusesInfiniteOptions(uid: string) {
       loadLikedStatuses(uid, { page: pageParam ? Number(pageParam) : 1 }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
+    maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: 30 * 60 * 1000,
   }
 }
@@ -253,6 +261,7 @@ export function statusCommentsInfiniteOptions(statusId: string, authorId: string
       loadStatusComments(statusId, authorId, pageParam, filter),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: StatusCommentsPage) => lastPage.nextCursor ?? undefined,
+    maxPages: COMMENT_INFINITE_QUERY_MAX_PAGES,
     enabled: statusId !== '' && authorId !== '',
   }
 }
@@ -264,6 +273,7 @@ export function nestedCommentsInfiniteOptions(statusId: string, authorUid: strin
       loadNestedComments(statusId, authorUid, pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: StatusCommentsPage) => lastPage.nextCursor ?? undefined,
+    maxPages: COMMENT_INFINITE_QUERY_MAX_PAGES,
     enabled: enabled && statusId !== '' && authorUid !== '',
   }
 }
@@ -335,6 +345,7 @@ export function friendsInfiniteOptions(uid: string, tab: 'following' | 'fans') {
     initialPageParam: 1,
     getNextPageParam: (lastPage: RelationPage, _allPages: RelationPage[], lastPageParam: number) =>
       lastPage.nextPage != null ? lastPageParam + 1 : undefined,
+    maxPages: RELATION_INFINITE_QUERY_MAX_PAGES,
     staleTime: 30 * 1000,
   }
 }
@@ -359,6 +370,7 @@ export function topicSearchInfiniteOptions(topic: string, channelType?: string) 
     initialPageParam: 1 as number,
     getNextPageParam: (lastPage: TimelinePage, allPages: TimelinePage[]) =>
       lastPage.items.length > 0 ? allPages.length + 1 : undefined,
+    maxPages: TOPIC_INFINITE_QUERY_MAX_PAGES,
     staleTime: 5 * 60 * 1000,
   }
 }
