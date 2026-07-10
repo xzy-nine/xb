@@ -119,8 +119,12 @@ export function ShareCardImages({
 
 export function RetweetedShareCard({
   data,
+  showStats = true,
+  showFullImages,
 }: {
   data: NonNullable<ShareCardProps['data']['retweetedStatus']>
+  showStats?: boolean
+  showFullImages?: boolean
 }) {
   return (
     <Card className="gap-3 py-4">
@@ -144,8 +148,12 @@ export function RetweetedShareCard({
         <div className="text-sm leading-6">
           <StatusText item={data} text={data.text} />
         </div>
-        <ShareCardImages images={data.images} />
-        <ShareCardActions stats={data.stats} />
+        <ShareCardImages
+          images={data.images}
+          videoCoverUrl={data.videoCoverUrl}
+          showFullImages={showFullImages}
+        />
+        {showStats ? <ShareCardActions stats={data.stats} /> : null}
       </CardContent>
     </Card>
   )
