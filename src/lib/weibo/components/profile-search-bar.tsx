@@ -39,7 +39,7 @@ const FILTER_LABELS: Record<ProfileSearchFilterKey, string> = {
 }
 
 function formatDateLabel(date: Date): string {
-  return format(date, 'M月d日', { locale: zhCN })
+  return format(date, 'yyyy年M月d日', { locale: zhCN })
 }
 
 function selectedFilterCount(filters: ProfileSearchFilters): number {
@@ -48,7 +48,7 @@ function selectedFilterCount(filters: ProfileSearchFilters): number {
 
 function filterButtonLabel(filters: ProfileSearchFilters): string {
   const count = selectedFilterCount(filters)
-  return count === PROFILE_SEARCH_FILTER_KEYS.length ? '全部类型' : `${count} 项类型`
+  return count === PROFILE_SEARCH_FILTER_KEYS.length ? '全部' : `${count}项`
 }
 
 function resultLabel(isSearching: boolean, resultTotal: string | undefined): string {
