@@ -169,7 +169,7 @@ export function getGenImageThemeStyle(theme: 'light' | 'dark'): React.CSSPropert
 }
 
 export function GenImageDialog() {
-  const { genImageItem, closeGenImage } = useGenImageDialog()
+  const { resolvedItem, isLoadingLongText, closeGenImage } = useGenImageDialog()
   const cardRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -208,7 +208,7 @@ export function GenImageDialog() {
     mutationFn: async () => {
       const blob = await captureCardAsBlob(cardRef)
       if (!blob) throw new Error('Failed to capture card')
-      downloadBlob(blob, `${genImageItem?.author.name}_${genImageItem?.text?.slice(0, 10)}`)
+      downloadBlob(blob, `${resolvedItem?.author.name}_${resolvedItem?.text?.slice(0, 10)}`)
     },
     onSuccess: () => {
       toast.success('图片已开始下载')
@@ -218,13 +218,13 @@ export function GenImageDialog() {
     },
   })
 
-  const cardData = genImageItem ? transformFeedItem(genImageItem) : null
+  const cardData = resolvedItem ? transformFeedItem(resolvedItem) : null
   const CardComponent = cardData ? CARD_COMPONENTS[imageGenCardStyle] : null
 
   const sharedStyle = getGenImageThemeStyle(imageGenTheme)
 
   return (
-    <Dialog open={genImageItem !== null} onOpenChange={closeGenImage}>
+    <Dialog open={resolvedItem !== null} onOpenChange={closeGenImage}>
       <DialogContent className="gap-0 p-0 sm:max-w-fit">
         <VisuallyHidden>
           <DialogHeader>
@@ -349,7 +349,14 @@ export function GenImageDialog() {
 
           {/* Right: Preview */}
           <div className="ml-4 flex-1 border-l pl-4">
-            {cardData && CardComponent ? (
+            {isLoadingLongText ? (
+              <div className="flex h-[60vh] w-[640px] items-center justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner />
+                  <p className="text-muted-foreground text-sm">加载完整内容中...</p>
+                </div>
+              </div>
+            ) : cardData && CardComponent ? (
               <div className="no-scrollbar flex h-[60vh] w-[640px] flex-col overflow-y-auto">
                 <div ref={cardRef} style={sharedStyle}>
                   <CardComponent

@@ -1,11 +1,16 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { createContext, useContext, useState, type ReactNode, useEffect } from 'react'
 
+import { longTextQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { FeedItem } from '@/lib/weibo/models/feed'
+import { mergeLongTextIntoFeedItem } from '@/lib/weibo/utils/transform'
 
 interface GenImageDialogContextValue {
   openGenImage: (item: FeedItem) => void
   closeGenImage: () => void
   genImageItem: FeedItem | null
+  resolvedItem: FeedItem | null
+  isLoadingLongText: boolean
 }
 
 const GenImageDialogContext = createContext<GenImageDialogContextValue | null>(null)
@@ -16,13 +21,81 @@ interface GenImageDialogProviderProps {
 
 export function GenImageDialogProvider({ children }: GenImageDialogProviderProps) {
   const [genImageItem, setGenImageItem] = useState<FeedItem | null>(null)
+  const [longTextEnabled, setLongTextEnabled] = useState(false)
+  const [retweetedLongTextEnabled, setRetweetedLongTextEnabled] = useState(false)
+
+  const canLoadLongText = genImageItem?.isLongText ?? false
+  const canLoadRetweetedLongText = genImageItem?.retweetedStatus?.isLongText ?? false
+
+  const { data: longText, isLoading: isLoadingLongText } = useQuery({
+    ...longTextQueryOptions(genImageItem?.mblogId ?? null, longTextEnabled && canLoadLongText),
+  })
+
+  const { data: retweetedLongText, isLoading: isLoadingRetweetedLongText } = useQuery({
+    ...longTextQueryOptions(
+      genImageItem?.retweetedStatus?.mblogId ?? null,
+      retweetedLongTextEnabled && canLoadRetweetedLongText,
+    ),
+  })
+
+  // Auto-enable long text loading when dialog opens with a long text item
+  useEffect(() => {
+    if (genImageItem?.isLongText) {
+      setLongTextEnabled(true)
+    } else {
+      setLongTextEnabled(false)
+    }
+
+    if (genImageItem?.retweetedStatus?.isLongText) {
+      setRetweetedLongTextEnabled(true)
+    } else {
+      setRetweetedLongTextEnabled(false)
+    }
+  }, [genImageItem])
+
+  const hasResolvedLongText = Boolean(
+    longText && (longText.longTextContent?.trim() || longText.longTextContent_raw?.trim()),
+  )
+
+  const hasResolvedRetweetedLongText = Boolean(
+    retweetedLongText &&
+    (retweetedLongText.longTextContent?.trim() || retweetedLongText.longTextContent_raw?.trim()),
+  )
+
+  let resolvedItem = genImageItem
+
+  // Merge main item long text
+  if (resolvedItem && longTextEnabled && longText && hasResolvedLongText) {
+    resolvedItem = mergeLongTextIntoFeedItem(resolvedItem, longText)
+  }
+
+  // Merge retweeted status long text
+  if (
+    resolvedItem?.retweetedStatus &&
+    retweetedLongTextEnabled &&
+    retweetedLongText &&
+    hasResolvedRetweetedLongText
+  ) {
+    resolvedItem = {
+      ...resolvedItem,
+      retweetedStatus: mergeLongTextIntoFeedItem(resolvedItem.retweetedStatus, retweetedLongText),
+    }
+  }
+
+  const isLoading = isLoadingLongText || isLoadingRetweetedLongText
 
   return (
     <GenImageDialogContext.Provider
       value={{
         openGenImage: setGenImageItem,
-        closeGenImage: () => setGenImageItem(null),
+        closeGenImage: () => {
+          setGenImageItem(null)
+          setLongTextEnabled(false)
+          setRetweetedLongTextEnabled(false)
+        },
         genImageItem,
+        resolvedItem,
+        isLoadingLongText: isLoading,
       }}
     >
       {children}
