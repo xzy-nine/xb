@@ -2,7 +2,6 @@ import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { CalendarDays, ChevronDown, Search, X } from 'lucide-react'
 import { useState } from 'react'
-import type { DateRange } from 'react-day-picker'
 
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -40,7 +39,7 @@ const FILTER_LABELS: Record<ProfileSearchFilterKey, string> = {
 }
 
 function formatDateLabel(date: Date): string {
-  return format(date, 'M月d日', { locale: zhCN })
+  return format(date, 'yyyy年M月d日', { locale: zhCN })
 }
 
 function selectedFilterCount(filters: ProfileSearchFilters): number {
@@ -49,7 +48,7 @@ function selectedFilterCount(filters: ProfileSearchFilters): number {
 
 function filterButtonLabel(filters: ProfileSearchFilters): string {
   const count = selectedFilterCount(filters)
-  return count === PROFILE_SEARCH_FILTER_KEYS.length ? '全部类型' : `${count} 项类型`
+  return count === PROFILE_SEARCH_FILTER_KEYS.length ? '全部' : `${count}项`
 }
 
 function resultLabel(isSearching: boolean, resultTotal: string | undefined): string {
@@ -64,29 +63,23 @@ function resultLabel(isSearching: boolean, resultTotal: string | undefined): str
   return '检索结果'
 }
 
-function getInitialDateRange(params: ProfileSearchParams): {
-  hasStartDate: boolean
-  range: DateRange
+function getInitialDates(params: ProfileSearchParams): {
+  startDate: Date | undefined
+  endDate: Date
 } {
   const endDate = dateFromBeijingInclusiveEndtime(params.endtime)
   const startDate =
     params.starttime === null ? undefined : dateFromBeijingTimestamp(params.starttime)
 
   return {
-    hasStartDate: Boolean(startDate),
-    range: {
-      from: startDate ?? endDate,
-      to: endDate,
-    },
+    startDate,
+    endDate,
   }
 }
 
-function dateRangeLabel(hasStartDate: boolean, range: DateRange): string {
-  const endDate =
-    range.to ?? range.from ?? dateFromBeijingInclusiveEndtime(defaultProfileSearchEndtime())
-
-  if (hasStartDate && range.from) {
-    return `${formatDateLabel(range.from)} - ${formatDateLabel(endDate)}`
+function dateRangeLabel(startDate: Date | undefined, endDate: Date): string {
+  if (startDate) {
+    return `${formatDateLabel(startDate)} 至 ${formatDateLabel(endDate)}`
   }
 
   const today = dateFromBeijingInclusiveEndtime(defaultProfileSearchEndtime())
@@ -110,22 +103,19 @@ export function ProfileSearchBar({
   onSubmit,
   onClear,
 }: ProfileSearchBarProps) {
-  const initialDateRange = getInitialDateRange(state.params)
+  const initialDates = getInitialDates(state.params)
   const [query, setQuery] = useState(state.params.query)
   const [filters, setFilters] = useState<ProfileSearchFilters>(state.params.filters)
-  const [hasStartDate, setHasStartDate] = useState(initialDateRange.hasStartDate)
-  const [dateRange, setDateRange] = useState<DateRange>(initialDateRange.range)
-  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [startDate, setStartDate] = useState<Date | undefined>(initialDates.startDate)
+  const [endDate, setEndDate] = useState<Date>(initialDates.endDate)
+  const [startPickerOpen, setStartPickerOpen] = useState(false)
+  const [endPickerOpen, setEndPickerOpen] = useState(false)
   const count = selectedFilterCount(filters)
 
   const submitSearch = () => {
-    const endDate =
-      dateRange.to ??
-      dateRange.from ??
-      dateFromBeijingInclusiveEndtime(defaultProfileSearchEndtime())
     onSubmit({
       query,
-      starttime: hasStartDate && dateRange.from ? beijingDateStartTimestamp(dateRange.from) : null,
+      starttime: startDate ? beijingDateStartTimestamp(startDate) : null,
       endtime: beijingInclusiveEndDateTimestamp(endDate),
       filters,
     })
@@ -162,16 +152,17 @@ export function ProfileSearchBar({
           <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             value={query}
+            size={6}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="搜索 TA 的微博"
             aria-label="搜索 TA 的微博"
-            className="h-10 border-0 pr-3 pl-9 shadow-none focus-visible:ring-0"
+            className="border-0 pr-3 pl-9 shadow-none focus-visible:ring-0"
           />
         </div>
         <div className="flex shrink-0 flex-wrap gap-1 p-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="secondary" size="sm" aria-label="筛选微博类型">
+              <Button type="button" variant="secondary" aria-label="筛选微博类型">
                 <span>{filterButtonLabel(filters)}</span>
                 <ChevronDown data-icon="inline-end" />
               </Button>
@@ -206,28 +197,24 @@ export function ProfileSearchBar({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+          <Popover open={startPickerOpen} onOpenChange={setStartPickerOpen}>
             <PopoverTrigger asChild>
-              <Button type="button" variant="secondary" size="sm" aria-label="选择搜索日期范围">
+              <Button type="button" variant="secondary" aria-label="选择开始日期">
                 <CalendarDays data-icon="inline-start" />
-                <span>{dateRangeLabel(hasStartDate, dateRange)}</span>
+                <span>{startDate ? formatDateLabel(startDate) : '不限'}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-auto p-2">
               <div className="flex flex-col gap-2">
+                <div className="text-muted-foreground px-2 text-xs">开始日期</div>
                 <Calendar
-                  mode="range"
-                  selected={dateRange}
+                  mode="single"
+                  selected={startDate}
                   locale={zhCN}
-                  onSelect={(range) => {
-                    if (!range?.from) {
-                      return
-                    }
-                    setHasStartDate(true)
-                    setDateRange({
-                      from: range.from,
-                      to: range.to ?? range.from,
-                    })
+                  captionLayout="dropdown"
+                  disabled={(date) => date > endDate}
+                  onSelect={(date) => {
+                    setStartDate(date)
                   }}
                 />
                 <div className="flex justify-end gap-2">
@@ -235,23 +222,18 @@ export function ProfileSearchBar({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={!hasStartDate}
+                    disabled={!startDate}
                     onClick={() => {
-                      const endDate = dateRange.to ?? dateRange.from
-                      if (!endDate) {
-                        return
-                      }
-                      setHasStartDate(false)
-                      setDateRange({ from: endDate, to: endDate })
+                      setStartDate(undefined)
                     }}
                   >
-                    清除开始日期
+                    清除
                   </Button>
                   <Button
                     type="button"
                     size="sm"
                     onClick={() => {
-                      setDatePickerOpen(false)
+                      setStartPickerOpen(false)
                     }}
                   >
                     完成
@@ -261,14 +243,51 @@ export function ProfileSearchBar({
             </PopoverContent>
           </Popover>
 
-          <Button size="sm" type="submit" disabled={isSearching}>
+          <Popover open={endPickerOpen} onOpenChange={setEndPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="secondary" aria-label="选择结束日期">
+                <CalendarDays data-icon="inline-start" />
+                <span>{formatDateLabel(endDate)}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto p-2">
+              <div className="flex flex-col gap-2">
+                <div className="text-muted-foreground px-2 text-xs">结束日期</div>
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  locale={zhCN}
+                  captionLayout="dropdown"
+                  disabled={(date) => (startDate ? date < startDate : false)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setEndDate(date)
+                    }
+                  }}
+                />
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setEndPickerOpen(false)
+                    }}
+                  >
+                    完成
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Button type="submit" disabled={isSearching}>
             搜索
           </Button>
           {state.active ? (
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               aria-label="退出搜索"
               onClick={onClear}
             >
@@ -281,7 +300,7 @@ export function ProfileSearchBar({
       {state.active ? (
         <div className="text-muted-foreground flex min-h-5 items-center justify-between gap-2 px-1 text-xs">
           <span className="truncate">
-            {query ? `“${query}”` : '空关键词'}，{dateRangeLabel(hasStartDate, dateRange)}
+            {query ? `"${query}"` : '空关键词'}，{dateRangeLabel(startDate, endDate)}
           </span>
           <span className="shrink-0 font-medium tabular-nums">
             {resultLabel(isSearching, resultTotal)}

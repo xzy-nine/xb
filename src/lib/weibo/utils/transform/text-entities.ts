@@ -2,6 +2,7 @@
  * Text entity extraction utilities for Weibo data.
  */
 
+import { normalizeSafeExternalUrl } from '../safe-url'
 import { decodeHtmlEntities, normalizeMarkdownText } from './helpers'
 import type { WeiboStatus } from './types'
 
@@ -71,6 +72,10 @@ export function toUrlEntities(
       }
 
       const longUrl = entity.long_url ?? entity.ori_url ?? entity.h5_target_url ?? shortUrl
+      const safeUrl = normalizeSafeExternalUrl(String(longUrl))
+      if (!safeUrl) {
+        return null
+      }
 
       if (options?.excludeImageEntities) {
         const hasImages = Array.isArray(entity.pic_ids) && entity.pic_ids.length > 0
@@ -79,11 +84,11 @@ export function toUrlEntities(
         }
       }
 
-      const decodedTitle = urlTitle ? decodeHtmlEntities(urlTitle) : longUrl
+      const decodedTitle = urlTitle ? decodeHtmlEntities(urlTitle) : safeUrl
       return {
         shortUrl,
-        title: decodedTitle || longUrl,
-        url: longUrl,
+        title: decodedTitle || safeUrl,
+        url: safeUrl,
       }
     })
     .filter((entity): entity is { shortUrl: string; title: string; url: string } => entity !== null)

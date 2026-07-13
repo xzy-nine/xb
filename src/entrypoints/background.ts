@@ -126,7 +126,8 @@ interface MediaFetchResponse {
   error?: string
 }
 
-const allowedMediaHostSuffixes = ['sinaimg.cn', 'sinajs.cn', 'weibocdn.com', 'weibo.com']
+const allowedMediaHostSuffixes = ['sinaimg.cn', 'sinajs.cn', 'weibocdn.com']
+export const maxBackgroundMediaBytes = 150 * 1024 * 1024
 const mediaRequestHeaderRuleId = 10_401
 const backgroundRequestTabId = -1
 
@@ -206,18 +207,20 @@ function getMediaReferrer(senderUrl: string | undefined): string {
   return 'https://weibo.com/'
 }
 
-function assertAllowedMediaUrl(url: string): void {
+function isAllowedMediaHost(hostname: string): boolean {
+  return allowedMediaHostSuffixes.some(
+    (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`),
+  )
+}
+
+export function assertAllowedMediaUrl(url: string): void {
   const parsed = new URL(url)
 
   if (parsed.protocol !== 'https:') {
     throw new Error('unsupported-media-url')
   }
 
-  const allowed = allowedMediaHostSuffixes.some(
-    (suffix) => parsed.hostname === suffix || parsed.hostname.endsWith(`.${suffix}`),
-  )
-
-  if (!allowed) {
+  if (!isAllowedMediaHost(parsed.hostname)) {
     throw new Error('unsupported-media-host')
   }
 }
@@ -240,14 +243,85 @@ function getMediaRequestInit(
   return {
     credentials: 'include',
     headers: {
-      accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,video/*,*/*;q=0.8',
+      accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,video/*',
     },
     referrer,
     referrerPolicy: 'unsafe-url',
   }
 }
 
-async function handleMediaHead(
+function isMediaContentType(contentType: string | null): contentType is string {
+  return contentType?.startsWith('image/') === true || contentType?.startsWith('video/') === true
+}
+
+function getMediaContentType(response: Response): string | null {
+  return response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase() || null
+}
+
+function getResponseContentLength(response: Response): number | null {
+  const value = response.headers.get('content-length')
+  if (!value) return null
+
+  const size = Number.parseInt(value, 10)
+  return Number.isFinite(size) && size >= 0 ? size : null
+}
+
+function concatenateChunks(chunks: Uint8Array[], totalLength: number): ArrayBuffer {
+  const bytes = new Uint8Array(totalLength)
+  let offset = 0
+
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  return bytes.buffer
+}
+
+async function readArrayBufferWithLimit(
+  response: Response,
+): Promise<{ ok: true; data: ArrayBuffer } | { ok: false; error: string }> {
+  const contentLength = getResponseContentLength(response)
+
+  if (contentLength !== null && contentLength > maxBackgroundMediaBytes) {
+    return { ok: false, error: 'media-fetch-too-large' }
+  }
+
+  if (!response.body) {
+    if (contentLength === null) {
+      return { ok: false, error: 'media-fetch-size-unknown' }
+    }
+
+    const data = await response.arrayBuffer()
+    return data.byteLength > maxBackgroundMediaBytes
+      ? { ok: false, error: 'media-fetch-too-large' }
+      : { ok: true, data }
+  }
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let totalLength = 0
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      totalLength += value.byteLength
+      if (totalLength > maxBackgroundMediaBytes) {
+        await reader.cancel()
+        return { ok: false, error: 'media-fetch-too-large' }
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  return { ok: true, data: concatenateChunks(chunks, totalLength) }
+}
+
+export async function handleMediaHead(
   message: MediaHeadMessage,
   referrer: string,
 ): Promise<MediaHeadResponse> {
@@ -266,13 +340,20 @@ async function handleMediaHead(
     }
   }
 
+  if (!isMediaContentType(getMediaContentType(response))) {
+    return {
+      ok: false,
+      error: 'unsupported-media-content-type',
+    }
+  }
+
   return {
     ok: true,
     size: Number.parseInt(response.headers.get('content-length') || '0', 10),
   }
 }
 
-async function handleMediaFetch(
+export async function handleMediaFetch(
   message: MediaFetchMessage,
   referrer: string,
 ): Promise<MediaFetchResponse> {
@@ -288,9 +369,23 @@ async function handleMediaFetch(
     }
   }
 
+  const contentType = getMediaContentType(response)
+  if (!isMediaContentType(contentType)) {
+    return {
+      ok: false,
+      error: 'unsupported-media-content-type',
+    }
+  }
+  const mediaContentType = contentType
+
+  const data = await readArrayBufferWithLimit(response)
+  if (!data.ok) {
+    return data
+  }
+
   return {
     ok: true,
-    contentType: response.headers.get('content-type') || 'application/octet-stream',
-    data: arrayBufferToBase64(await response.arrayBuffer()),
+    contentType: mediaContentType,
+    data: arrayBufferToBase64(data.data),
   }
 }

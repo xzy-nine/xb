@@ -520,4 +520,74 @@ describe('download media proxy', () => {
 
     click.mockRestore()
   })
+
+  it('应该在主图过大时继续尝试候选 URL', async () => {
+    const sendMessage = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, error: 'media-fetch-too-large' })
+      .mockResolvedValueOnce({
+        ok: true,
+        contentType: 'image/jpeg',
+        data: Buffer.from('fallback-image-bytes').toString('base64'),
+      })
+    const createObjectURL = vi.fn().mockReturnValue('blob:zip')
+    const revokeObjectURL = vi.fn()
+    const setTimeoutSpy = vi
+      .spyOn(window, 'setTimeout')
+      .mockImplementation(() => 1 as unknown as ReturnType<typeof window.setTimeout>)
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    Object.defineProperty(globalThis, 'browser', {
+      writable: true,
+      configurable: true,
+      value: {
+        runtime: {
+          sendMessage,
+        },
+      },
+    })
+    Object.defineProperty(URL, 'createObjectURL', {
+      writable: true,
+      configurable: true,
+      value: createObjectURL,
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      writable: true,
+      configurable: true,
+      value: revokeObjectURL,
+    })
+
+    await expect(
+      downloadAsZip(
+        [
+          {
+            url: 'https://wx1.sinaimg.cn/large/a.jpg',
+            fallbackUrls: ['https://wx1.sinaimg.cn/orj1080/a.jpg'],
+            filename: 'a.jpg',
+            type: 'image',
+          },
+        ],
+        'media.zip',
+      ),
+    ).resolves.toEqual({ successCount: 1, failCount: 0 })
+
+    expect(sendMessage).toHaveBeenCalledTimes(2)
+    expect(sendMessage).toHaveBeenNthCalledWith(1, {
+      type: 'media-fetch',
+      url: 'https://wx1.sinaimg.cn/large/a.jpg',
+    })
+    expect(sendMessage).toHaveBeenNthCalledWith(2, {
+      type: 'media-fetch',
+      url: 'https://wx1.sinaimg.cn/orj1080/a.jpg',
+    })
+    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 60_000)
+
+    const revoke = setTimeoutSpy.mock.calls[0]?.[0]
+    if (typeof revoke === 'function') {
+      revoke()
+    }
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:zip')
+
+    click.mockRestore()
+  })
 })

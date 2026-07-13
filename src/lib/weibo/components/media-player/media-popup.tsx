@@ -1,4 +1,4 @@
-import { PopoverCSSVars, TooltipCSSVars } from '@videojs/core'
+import { PopoverCSSVars } from '@videojs/core'
 import {
   getManualPositionStyle,
   getPopupPositionRect,
@@ -9,14 +9,7 @@ import {
   resolvePositioningBoundary,
 } from '@videojs/core/dom'
 import type { PositioningCSSVars } from '@videojs/core/dom'
-import {
-  Popover,
-  Tooltip,
-  composeRefs,
-  renderElement,
-  usePopoverContext,
-  useTooltipContext,
-} from '@videojs/react'
+import { Popover, composeRefs, renderElement, usePopoverContext } from '@videojs/react'
 import type { ComponentProps, ForwardedRef, ReactElement } from 'react'
 import { forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -230,139 +223,4 @@ function ManualPopoverPopup(
   return renderInMediaPopupHost(popup)
 }
 
-function ManualTooltipPopup(
-  { render, className, style, ...elementProps }: ComponentProps<typeof Tooltip.Popup>,
-  forwardedRef: ForwardedRef<HTMLDivElement>,
-) {
-  const { core, tooltip, state, stateAttrMap, popupId, content, boundary, container } =
-    useTooltipContext()
-  const internalRef = useRef<HTMLDivElement | null>(null)
-  const composedRef = composeRefs(
-    forwardedRef,
-    useCallback(
-      (element: HTMLDivElement | null) => {
-        tooltip.setPopupElement(element)
-      },
-      [tooltip],
-    ),
-    internalRef,
-  )
-  const positionOptions = useMemo(
-    () => ({
-      side: state.side,
-      align: state.align,
-    }),
-    [state.side, state.align],
-  )
-  const [manualStyle, setManualStyle] = useState<Record<string, string | number> | null>(null)
-
-  useLayoutEffect(() => {
-    if (!state.open) {
-      setManualStyle(null)
-      return
-    }
-
-    function measure() {
-      const triggerElement = tooltip.triggerElement
-      const popupElement = internalRef.current
-      if (!triggerElement || !popupElement) return
-
-      const triggerRect = triggerElement.getBoundingClientRect()
-      const popupRect = getPopupPositionRect(popupElement)
-      const boundaryElement = resolvePositioningBoundary(boundary, {
-        container,
-        root: getPopupRoot(popupElement),
-      })
-      const boundaryRect = getPositioningBoundaryRect(boundaryElement)
-      const offsets = resolveOffsets(popupElement, TooltipCSSVars)
-
-      setManualStyle(
-        buildManualPopupStyle({
-          triggerRect,
-          popupRect,
-          boundaryRect,
-          side: positionOptions.side,
-          align: positionOptions.align,
-          offsets,
-          cssVars: TooltipCSSVars,
-        }),
-      )
-    }
-
-    measure()
-
-    const triggerElement = tooltip.triggerElement
-    const popupElement = internalRef.current
-    const boundaryElement = popupElement
-      ? resolvePositioningBoundary(boundary, {
-          container,
-          root: getPopupRoot(popupElement),
-        })
-      : null
-
-    let rafId = 0
-    function reposition(event?: Event) {
-      if (event && isEventWithinElement(event, internalRef.current)) return
-      cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(measure)
-    }
-
-    reposition()
-
-    const resizeObserver =
-      typeof ResizeObserver === 'function'
-        ? new ResizeObserver(() => {
-            reposition()
-          })
-        : null
-
-    if (triggerElement && resizeObserver) resizeObserver.observe(triggerElement)
-    if (popupElement && resizeObserver) resizeObserver.observe(popupElement)
-    if (boundaryElement && resizeObserver) resizeObserver.observe(boundaryElement)
-
-    window.addEventListener('scroll', reposition, { capture: true, passive: true })
-    window.addEventListener('resize', reposition)
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      resizeObserver?.disconnect()
-      window.removeEventListener('scroll', reposition, true)
-      window.removeEventListener('resize', reposition)
-    }
-  }, [state.open, tooltip, boundary, container, positionOptions])
-
-  if (!state.open) return null
-
-  const { onFocusOut, ...restPopupProps } = tooltip.popupProps
-  const popup = renderElement(
-    'div',
-    {
-      render,
-      className,
-      style,
-    },
-    {
-      state,
-      stateAttrMap,
-      ref: composedRef,
-      props: [
-        {
-          id: popupId,
-          style: manualStyle ?? POPUP_RESET_STYLE,
-          ...core.getPopupAttrs(state),
-        },
-        { children: content },
-        {
-          ...restPopupProps,
-          onBlur: onFocusOut,
-        },
-        elementProps,
-      ],
-    },
-  )
-
-  return renderInMediaPopupHost(popup)
-}
-
 export const MediaPopoverPopup = forwardRef(ManualPopoverPopup)
-export const MediaTooltipPopup = forwardRef(ManualTooltipPopup)

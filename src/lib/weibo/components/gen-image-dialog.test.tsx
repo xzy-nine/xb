@@ -98,4 +98,17 @@ describe('GenImageDialog', () => {
     expect(mockFeedItem).toHaveProperty('text')
     expect(mockFeedItem).toHaveProperty('createdAt')
   })
+
+  it('sets theme primary colors for status links in generated cards', async () => {
+    const { getGenImageThemeStyle } = await import('./gen-image-dialog')
+
+    expect(getGenImageThemeStyle('light')).toMatchObject({
+      '--primary': 'oklch(0.205 0 0)',
+      '--primary-foreground': 'oklch(0.985 0 0)',
+    })
+    expect(getGenImageThemeStyle('dark')).toMatchObject({
+      '--primary': 'oklch(0.922 0 0)',
+      '--primary-foreground': 'oklch(0.205 0 0)',
+    })
+  })
 })

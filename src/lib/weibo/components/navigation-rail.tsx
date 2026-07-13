@@ -91,7 +91,7 @@ function NavButton({
     >
       <Button
         className={cn(
-          'w-full flex items-center gap-2 transition-transform duration-200 active:scale-[0.96]',
+          'w-full flex items-center gap-2',
           showLabel ? 'justify-start' : 'justify-center',
         )}
         variant={buttonVariant}

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Globe2, Lock, Plus, Users } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -57,7 +57,6 @@ function ProfileGroupForm({
   availableGroups: ProfileFollowGroup[]
   onOpenChange: (open: boolean) => void
 }) {
-  const queryClient = useQueryClient()
   const originIds = getGroupIds(assignedGroups)
   const [selectedIds, setSelectedIds] = useState(() => new Set(originIds))
   const [createOpen, setCreateOpen] = useState(false)
@@ -65,12 +64,17 @@ function ProfileGroupForm({
   const [newGroupOpen, setNewGroupOpen] = useState(true)
   const mutation = useMutation({
     mutationFn: () => setProfileGroups(uid, Array.from(selectedIds), originIds),
+    meta: {
+      invalidates: [
+        ['weibo', 'profile'],
+        ['weibo', 'profile-hover'],
+        ['weibo', 'profile', 'groups', uid],
+        ['weibo', 'follow-groups'],
+      ],
+    },
     onSuccess: () => {
       toast.success('分组已更新')
       onOpenChange(false)
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'profile', 'groups', uid] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'follow-groups'] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'timeline'] })
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '设置分组失败')
@@ -78,13 +82,17 @@ function ProfileGroupForm({
   })
   const createGroupMutation = useMutation({
     mutationFn: () => createProfileGroup(newGroupName.trim(), newGroupOpen),
+    meta: {
+      invalidates: [
+        ['weibo', 'profile', 'groups', uid],
+        ['weibo', 'follow-groups'],
+      ],
+    },
     onSuccess: () => {
       toast.success('分组已创建')
       setNewGroupName('')
       setNewGroupOpen(true)
       setCreateOpen(false)
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'profile', 'groups', uid] })
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'follow-groups'] })
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '创建分组失败')

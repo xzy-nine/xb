@@ -54,12 +54,18 @@ export function CardDefault({
             videoCoverUrl={data.videoCoverUrl}
             showFullImages={showFullImages}
           />
-          {data.retweetedStatus ? <RetweetedShareCard data={data.retweetedStatus} /> : null}
+          {data.retweetedStatus ? (
+            <RetweetedShareCard
+              data={data.retweetedStatus}
+              showStats={showStats}
+              showFullImages={showFullImages}
+            />
+          ) : null}
         </CardContent>
-        {showStats && (
+        {(showStats || (showLink && data.mblogId)) && (
           <CardFooter className="flex justify-between px-4">
             <div className="flex flex-col gap-1">
-              <ShareCardActions stats={data.stats} />
+              {showStats ? <ShareCardActions stats={data.stats} /> : null}
               {showLink && data.mblogId && (
                 <div className="text-muted-foreground flex w-full items-center gap-1 text-xs">
                   <Link className="size-3" />

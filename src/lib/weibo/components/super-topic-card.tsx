@@ -11,15 +11,10 @@ import type { SuperTopicItem } from '@/lib/weibo/models/super-topic'
 
 function SuperTopicItemLink({ item }: { item: SuperTopicItem }) {
   const fallback = item.title.trim().slice(0, 1) || '#'
-
-  return (
-    <a
-      href={item.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-      title={item.title}
-    >
+  const className =
+    'group hover:bg-accent/80 focus-visible:bg-accent/80 focus-visible:ring-ring/50 flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none'
+  const content = (
+    <>
       <Avatar size="sm" className="size-8">
         <AvatarImage src={item.pic} alt={item.title} />
         <AvatarFallback>{fallback}</AvatarFallback>
@@ -32,6 +27,26 @@ function SuperTopicItemLink({ item }: { item: SuperTopicItem }) {
           {item.fansText || item.intro || '超话'}
         </span>
       </span>
+    </>
+  )
+
+  if (!item.link) {
+    return (
+      <div className={className} title={item.title}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <a
+      href={item.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      title={item.title}
+    >
+      {content}
     </a>
   )
 }

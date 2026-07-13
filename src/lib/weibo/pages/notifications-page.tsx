@@ -9,6 +9,7 @@ import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { NotificationList } from '@/lib/weibo/components/notification-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { TimelineTopBar, type TimelineTopBarOption } from '@/lib/weibo/components/timeline-top-bar'
+import { NOTIFICATION_INFINITE_QUERY_MAX_PAGES } from '@/lib/weibo/data/weibo-data'
 import type { NotificationItem } from '@/lib/weibo/models/notification'
 import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
@@ -53,6 +54,8 @@ function NotificationTabContent({
   emptyLabel: string
 }) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const isFetchingNextPageRef = useRef(isFetchingNextPage)
+  isFetchingNextPageRef.current = isFetchingNextPage
 
   useEffect(() => {
     const el = loadMoreRef.current
@@ -60,7 +63,7 @@ function NotificationTabContent({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        if (entries[0]?.isIntersecting && !isFetchingNextPageRef.current) {
           onFetchNextPage()
         }
       },
@@ -129,6 +132,7 @@ export function NotificationsPage() {
     },
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    maxPages: NOTIFICATION_INFINITE_QUERY_MAX_PAGES,
     staleTime: 30 * 60 * 1000,
     enabled: isEnabled,
   })

@@ -1,4 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  matchQuery,
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+  type QueryKey,
+} from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -78,6 +84,18 @@ function renderProfileGroupButton({
   following?: boolean
 } = {}) {
   const queryClient = new QueryClient({
+    mutationCache: new MutationCache({
+      onSuccess(data, variables, context, mutation) {
+        const invalidates = mutation.meta?.invalidates as QueryKey[] | undefined
+
+        if (invalidates) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              invalidates.some((queryKey: QueryKey) => matchQuery({ queryKey }, query)),
+          })
+        }
+      },
+    }),
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },

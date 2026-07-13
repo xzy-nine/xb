@@ -25,6 +25,8 @@ export function UserList({
   msg,
 }: UserListProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const isFetchingNextPageRef = useRef(isFetchingNextPage)
+  isFetchingNextPageRef.current = isFetchingNextPage
 
   useEffect(() => {
     const el = loadMoreRef.current
@@ -32,7 +34,7 @@ export function UserList({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        if (entries[0]?.isIntersecting && !isFetchingNextPageRef.current) {
           onLoadMore()
         }
       },

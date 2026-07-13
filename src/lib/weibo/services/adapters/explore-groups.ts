@@ -86,14 +86,6 @@ export function adaptFollowGroupsDataResponse(payload: ExploreGroupsPayload): Fo
   }
 }
 
-export function getDefaultFollowGroupForHomeTab(
-  defaultGroups: DefaultFollowGroups | null | undefined,
-  tab: DefaultFollowHomeTab,
-): FollowGroup | null {
-  if (!defaultGroups) return null
-  return tab === 'special-follow' ? defaultGroups.specialFollow : defaultGroups.friendCircle
-}
-
 export function getHomeTabForDefaultFollowGroupId(
   defaultGroups: DefaultFollowGroups | null | undefined,
   gid: string | null | undefined,
