@@ -328,7 +328,7 @@ export function NavigationRail({
         <SidebarSection>
           <div
             className={cn(
-              'border-border/40 mt-auto space-y-3 border-t pt-3',
+              'border-border/40 mt-auto space-y-3 border-t px-1 pt-3 transition md:px-2 xl:px-3',
               !isCollapsed && 'w-[180px] space-y-3.5 pt-4',
             )}
           >
