@@ -18,7 +18,10 @@ import { useFontSettings } from '@/lib/weibo/hooks/use-font-settings'
 import { type ComposeTarget, composeTargetFromComment } from '@/lib/weibo/models/compose'
 import type { CommentItem } from '@/lib/weibo/models/status'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
-import { restoreStatusCacheMutation } from '@/lib/weibo/queries/status-cache'
+import {
+  optimisticallyToggleCommentLike,
+  restoreStatusCacheMutation,
+} from '@/lib/weibo/queries/status-cache'
 import {
   cancelCommentLike,
   deleteWeiboComment,
@@ -60,44 +63,7 @@ export const CommentCard = memo(function CommentCard({
       }
     },
     onMutate: (target: CommentItem) => {
-      queryClient.cancelQueries({ queryKey: ['weibo'] })
-
-      const previousItems = queryClient.getQueriesData({ queryKey: ['weibo'] })
-
-      queryClient.setQueriesData({ queryKey: ['weibo'] }, (old) => {
-        if (!old || typeof old !== 'object') return old
-
-        const updateCommentInTree = (comment: CommentItem): CommentItem => {
-          if (comment.id === target.id) {
-            return {
-              ...comment,
-              liked: !comment.liked,
-              likeCount: comment.likeCount + (comment.liked ? -1 : 1),
-            }
-          }
-          if ((comment.comments?.length ?? 0) > 0) {
-            return {
-              ...comment,
-              comments: comment.comments!.map(updateCommentInTree),
-            }
-          }
-          return comment
-        }
-
-        if ('pages' in old) {
-          const data = old as { pages: { items: CommentItem[] }[] }
-          return {
-            ...data,
-            pages: data.pages.map((page) => ({
-              ...page,
-              items: page.items.map(updateCommentInTree),
-            })),
-          }
-        }
-        return old
-      })
-
-      return { previousItems }
+      return optimisticallyToggleCommentLike(queryClient, target)
     },
     onError: (_error, _target, context) => {
       restoreStatusCacheMutation(queryClient, context)
