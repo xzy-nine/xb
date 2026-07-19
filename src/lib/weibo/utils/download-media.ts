@@ -114,7 +114,7 @@ function normalizeDownloadUrl(url: string | undefined): string | undefined {
 
   try {
     const parsed = new URL(trimmed)
-    if (parsed.protocol === 'http:' && isSinaimgHost(parsed.hostname)) {
+    if (parsed.protocol === 'http:' && isWeiboMediaHost(parsed.hostname)) {
       parsed.protocol = 'https:'
       return parsed.toString()
     }
@@ -123,6 +123,15 @@ function normalizeDownloadUrl(url: string | undefined): string | undefined {
   }
 
   return trimmed
+}
+
+function isWeiboMediaHost(hostname: string): boolean {
+  return (
+    hostname === 'sinaimg.cn' ||
+    hostname.endsWith('.sinaimg.cn') ||
+    hostname === 'weibocdn.com' ||
+    hostname.endsWith('.weibocdn.com')
+  )
 }
 
 function isSinaimgHost(hostname: string): boolean {
@@ -182,13 +191,19 @@ async function fetchMediaBlob(mediaUrl: MediaUrl): Promise<Blob> {
 
   for (const url of urls) {
     try {
-      return await fetchMediaBlobFromUrl(url)
+      const blob = await fetchMediaBlobFromUrl(url)
+
+      return blob
     } catch (error) {
-      errors.push(`${url}: ${error instanceof Error ? error.message : String(error)}`)
+      const errorMsg = `${url}: ${error instanceof Error ? error.message : String(error)}`
+
+      errors.push(errorMsg)
     }
   }
 
-  throw new Error(errors.join('; ') || '媒体下载失败')
+  const finalError = errors.join('; ') || '媒体下载失败'
+
+  throw new Error(finalError)
 }
 
 function triggerBlobDownload(blob: Blob, filename: string): void {
@@ -272,7 +287,9 @@ export function extractMediaUrls(item: FeedItem): MediaUrl[] {
 
   // 2. 处理单视频
   if (item.media) {
-    const videoUrl = item.media.downloadUrl || item.media.streamUrl
+    const videoUrl =
+      normalizeDownloadUrl(item.media.downloadUrl || item.media.streamUrl) ??
+      (item.media.downloadUrl || item.media.streamUrl)
     urls.push({
       url: videoUrl,
       filename: generateFilename(author, text, index++, videoUrl),
@@ -304,13 +321,18 @@ export function extractMediaUrls(item: FeedItem): MediaUrl[] {
           })
         }
       } else if (mixItem.type === 'video') {
-        const videoUrl = mixItem.videoDownloadUrl || mixItem.videoStreamUrl
+        const videoUrl =
+          normalizeDownloadUrl(mixItem.videoDownloadUrl || mixItem.videoStreamUrl) ??
+          (mixItem.videoDownloadUrl || mixItem.videoStreamUrl)
+
         if (videoUrl) {
           urls.push({
             url: videoUrl,
             filename: generateFilename(author, text, index++, videoUrl),
             type: 'video',
           })
+        } else {
+          // do nothing
         }
       }
     }
