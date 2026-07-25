@@ -67,6 +67,10 @@ function mediaRatio(item: GridItem, total: number) {
   return 1
 }
 
+/** Inset media outline: pure black/white only (never tinted neutrals). */
+const mediaOutlineClassName =
+  'outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10'
+
 function ImageOverlay({ image, dim }: { image: FeedImage; dim: boolean }) {
   return (
     <>
@@ -272,7 +276,11 @@ export const ImageCarousel = memo(function ImageCarousel({
                   <ImagePhotoView image={item.image}>
                     <AspectRatio
                       ratio={ratio}
-                      className={cn('bg-muted relative overflow-hidden', roundedClassName)}
+                      className={cn(
+                        'bg-muted relative overflow-hidden',
+                        mediaOutlineClassName,
+                        roundedClassName,
+                      )}
                     >
                       <ImageOverlay image={item.image} dim={darkModeImageDim} />
                     </AspectRatio>
@@ -326,7 +334,8 @@ export const ImageCarousel = memo(function ImageCarousel({
                     <AspectRatio
                       ratio={ratio}
                       className={cn(
-                        'border-foreground/10 bg-muted relative overflow-hidden border',
+                        'bg-muted relative overflow-hidden',
+                        mediaOutlineClassName,
                         roundedClassName,
                       )}
                     >

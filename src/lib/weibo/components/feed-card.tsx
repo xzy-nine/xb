@@ -33,7 +33,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   type FeedInteractionMode,
   type FeedPrimaryActionId,
@@ -164,7 +163,10 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
           event.preventDefault()
         }}
       >
-        <AspectRatio ratio={16 / 9}>
+        <AspectRatio
+          ratio={16 / 9}
+          className="overflow-hidden rounded-xl outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+        >
           <LivePlayer
             streamUrl={item.media.streamUrl}
             coverUrl={item.media.coverUrl ?? ''}
@@ -195,7 +197,10 @@ function FeedMediaBlock({ item }: { item: FeedItem }) {
       }}
       className="max-w-[650px]"
     >
-      <AspectRatio ratio={item.media.videoOrientation === 'vertical' ? 4 / 3 : 16 / 9}>
+      <AspectRatio
+        ratio={item.media.videoOrientation === 'vertical' ? 4 / 3 : 16 / 9}
+        className="overflow-hidden rounded-xl outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+      >
         <VideoPlayer
           progressiveSrc={item.media.streamUrl}
           poster={item.media.coverUrl ?? undefined}
@@ -356,44 +361,13 @@ function FeedTextBlock({
   onLoadLongText: () => void
   onNavigateTopic?: (topic: string) => void
 }) {
-  const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
-    useFontSettings()
+  const { textClassName } = useFontSettings()
   const [textMode, setTextMode] = useState<'markdown' | 'plain'>('markdown')
-  const canRenderMarkdown = item.isMarkdown && item.markdownText
+  const canRenderMarkdown = Boolean(item.isMarkdown && item.markdownText)
   const resolvedTextMode = canRenderMarkdown ? textMode : 'plain'
 
   return (
-    <div
-      className={cn(
-        'text-foreground',
-        fontSizeClass,
-        fontWeightClass,
-        letterSpacingClass,
-        lineHeightClass,
-        fontFamilyClass,
-      )}
-    >
-      {canRenderMarkdown ? (
-        <Tabs
-          value={resolvedTextMode}
-          onValueChange={(value) => setTextMode(value as 'markdown' | 'plain')}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <TabsList>
-            <TabsTrigger
-              value="markdown"
-              className="text-xs"
-              onClick={() => setTextMode('markdown')}
-            >
-              Markdown
-            </TabsTrigger>
-            <TabsTrigger value="plain" className="text-xs" onClick={() => setTextMode('plain')}>
-              原文
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      ) : null}
-
+    <div className={cn('text-foreground', textClassName)}>
       <StatusText
         item={item}
         text={item.text}
@@ -410,6 +384,21 @@ function FeedTextBlock({
           isLoading={isLongTextLoading}
           hasError={hasLongTextError}
         />
+      ) : null}
+
+      {canRenderMarkdown ? (
+        <Button
+          type="button"
+          variant="link"
+          size="xs"
+          className="text-muted-foreground h-auto px-0 py-1 text-xs"
+          onClick={(event) => {
+            event.stopPropagation()
+            setTextMode((mode) => (mode === 'markdown' ? 'plain' : 'markdown'))
+          }}
+        >
+          {textMode === 'markdown' ? '查看原文' : '查看渲染'}
+        </Button>
       ) : null}
     </div>
   )
@@ -436,6 +425,75 @@ function LongTextButton({
       aria-busy={isLoading}
     >
       {label}
+    </Button>
+  )
+}
+
+const FEED_ACTION_TINT = {
+  comment: 'hover:bg-sky-500/10 hover:text-sky-500',
+  repost: 'hover:bg-emerald-500/10 hover:text-emerald-500',
+  like: 'hover:bg-rose-500/10 hover:text-rose-500',
+  genImage: 'hover:bg-violet-500/10 hover:text-violet-500',
+  download: 'hover:bg-indigo-500/10 hover:text-indigo-500',
+  favorite: 'hover:bg-amber-500/10 hover:text-amber-500',
+  copyLink: 'hover:bg-cyan-500/10 hover:text-cyan-500',
+  copyText: 'hover:bg-muted hover:text-foreground',
+} as const
+
+const FEED_ACTION_ICON_TINT = {
+  comment: 'group-hover:text-sky-500',
+  repost: 'group-hover:text-emerald-500',
+  like: 'group-hover:text-rose-500',
+  genImage: 'group-hover:text-violet-500',
+  download: 'group-hover:text-indigo-500',
+  favorite: 'group-hover:text-amber-500',
+  copyLink: 'group-hover:text-cyan-500',
+  copyText: 'group-hover:text-foreground',
+} as const
+
+function FeedActionButton({
+  tint,
+  iconTint,
+  icon,
+  count,
+  countClassName,
+  ariaLabel,
+  ariaPressed,
+  ariaControls,
+  ariaExpanded,
+  disabled,
+  onClick,
+}: {
+  tint: string
+  iconTint: string
+  icon: ReactNode
+  count?: number
+  countClassName?: string
+  ariaLabel: string
+  ariaPressed?: boolean
+  ariaControls?: string
+  ariaExpanded?: boolean
+  disabled?: boolean
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      aria-controls={ariaControls}
+      aria-expanded={ariaExpanded}
+      disabled={disabled}
+      className={cn('group rounded-full py-2 font-normal', tint)}
+      onClick={onClick}
+    >
+      {icon}
+      {count !== undefined ? (
+        <span className={cn('tabular-nums transition-colors', iconTint, countClassName)}>
+          {formatWeiboCount(count)}
+        </span>
+      ) : null}
     </Button>
   )
 }
@@ -497,20 +555,25 @@ function FeedActions({
   function renderPrimaryAction(id: FeedPrimaryActionId) {
     if (id === 'comment') {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-controls={controlsInlineComments ? commentsPanelId : undefined}
-          aria-expanded={controlsInlineComments ? commentsExpanded === true : undefined}
-          aria-label={
+          tint={FEED_ACTION_TINT.comment}
+          iconTint={FEED_ACTION_ICON_TINT.comment}
+          ariaControls={controlsInlineComments ? commentsPanelId : undefined}
+          ariaExpanded={controlsInlineComments ? commentsExpanded === true : undefined}
+          ariaLabel={
             controlsInlineComments
               ? commentsExpanded
                 ? '收起精选评论'
                 : '展开精选评论'
               : '回复微博'
           }
-          className="group rounded-full py-2 font-normal hover:bg-sky-50 hover:text-sky-500"
+          icon={
+            <MessageCircle
+              className={cn('size-3.5 transition-colors', FEED_ACTION_ICON_TINT.comment)}
+            />
+          }
+          count={item.stats.comments}
           onClick={(event) => {
             event.stopPropagation()
             if (!controlsInlineComments) {
@@ -519,164 +582,157 @@ function FeedActions({
               onCommentExpand?.(item)
             }
           }}
-        >
-          <MessageCircle className="size-3.5 transition-colors group-hover:text-sky-500" />
-          <span className="tabular-nums transition-colors group-hover:text-sky-500">
-            {formatWeiboCount(item.stats.comments)}
-          </span>
-        </Button>
+        />
       )
     }
 
     if (id === 'repost') {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-label="转发微博"
-          className="group rounded-full py-2 font-normal hover:bg-emerald-50 hover:text-emerald-500"
+          tint={FEED_ACTION_TINT.repost}
+          iconTint={FEED_ACTION_ICON_TINT.repost}
+          ariaLabel="转发微博"
+          icon={
+            <Repeat2 className={cn('size-3.5 transition-colors', FEED_ACTION_ICON_TINT.repost)} />
+          }
+          count={item.stats.reposts}
           onClick={(event) => {
             event.stopPropagation()
             onRepostClick?.(item)
           }}
-        >
-          <Repeat2 className="size-3.5 transition-colors group-hover:text-emerald-500" />
-          <span className="tabular-nums transition-colors group-hover:text-emerald-500">
-            {formatWeiboCount(item.stats.reposts)}
-          </span>
-        </Button>
+        />
       )
     }
 
     return (
-      <Button
+      <FeedActionButton
         key={id}
-        type="button"
-        variant="ghost"
-        aria-label={liked ? '取消点赞' : '点赞微博'}
-        aria-pressed={liked}
+        tint={FEED_ACTION_TINT.like}
+        iconTint={FEED_ACTION_ICON_TINT.like}
+        ariaLabel={liked ? '取消点赞' : '点赞微博'}
+        ariaPressed={liked}
         disabled={likePending}
-        className="group rounded-full py-2 font-normal hover:bg-rose-50 hover:text-rose-500"
+        icon={
+          <Heart
+            className={cn(
+              'size-3.5 transition-[color,fill] duration-200',
+              FEED_ACTION_ICON_TINT.like,
+              liked && 'fill-rose-500 text-rose-500',
+            )}
+          />
+        }
+        count={item.stats.likes}
+        countClassName={liked ? 'text-rose-500' : undefined}
         onClick={(event) => {
           event.stopPropagation()
           onLikeClick?.(item)
         }}
-      >
-        <Heart
-          className={cn(
-            'size-3.5 transition-colors group-hover:text-rose-500',
-            liked && 'fill-rose-500 text-rose-500',
-          )}
-        />
-        <span
-          className={cn(
-            'tabular-nums transition-colors group-hover:text-rose-500',
-            liked && 'text-rose-500',
-          )}
-        >
-          {formatWeiboCount(item.stats.likes)}
-        </span>
-      </Button>
+      />
     )
   }
 
   function renderToolbarButton(id: FeedToolbarButtonId) {
     if (id === 'gen-image' && onGenImage) {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-label="生图"
-          className="group rounded-full py-2 font-normal hover:bg-violet-50 hover:text-violet-500"
+          tint={FEED_ACTION_TINT.genImage}
+          iconTint={FEED_ACTION_ICON_TINT.genImage}
+          ariaLabel="生图"
+          icon={
+            <Image className={cn('size-3.5 transition-colors', FEED_ACTION_ICON_TINT.genImage)} />
+          }
           onClick={(event) => {
             event.stopPropagation()
             onGenImage()
           }}
-        >
-          <Image className="size-3.5 transition-colors group-hover:text-violet-500" />
-        </Button>
+        />
       )
     }
 
     if (id === 'download-media' && canDownload && onDownload) {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-label="批量下载"
+          tint={FEED_ACTION_TINT.download}
+          iconTint={FEED_ACTION_ICON_TINT.download}
+          ariaLabel="批量下载"
           disabled={downloadPending}
-          className="group rounded-full py-2 font-normal hover:bg-indigo-50 hover:text-indigo-500"
+          icon={
+            <Download
+              className={cn('size-3.5 transition-colors', FEED_ACTION_ICON_TINT.download)}
+            />
+          }
           onClick={(event) => {
             event.stopPropagation()
             onDownload()
           }}
-        >
-          <Download className="size-3.5 transition-colors group-hover:text-indigo-500" />
-        </Button>
+        />
       )
     }
 
     if (id === 'favorite' && onFavorite) {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-label={isBookmarked ? '取消收藏' : '收藏'}
-          aria-pressed={isBookmarked}
+          tint={FEED_ACTION_TINT.favorite}
+          iconTint={FEED_ACTION_ICON_TINT.favorite}
+          ariaLabel={isBookmarked ? '取消收藏' : '收藏'}
+          ariaPressed={isBookmarked}
           disabled={favoritePending}
-          className="group rounded-full py-2 font-normal hover:bg-amber-50 hover:text-amber-500"
+          icon={
+            <Bookmark
+              className={cn(
+                'size-3.5 transition-[color,fill] duration-200',
+                FEED_ACTION_ICON_TINT.favorite,
+                isBookmarked && 'fill-amber-500 text-amber-500',
+              )}
+            />
+          }
           onClick={(event) => {
             event.stopPropagation()
             void onFavorite()
           }}
-        >
-          <Bookmark
-            className={cn(
-              'size-3.5 transition-colors group-hover:text-amber-500',
-              isBookmarked && 'fill-amber-500 text-amber-500',
-            )}
-          />
-        </Button>
+        />
       )
     }
 
     if (id === 'copy-link' && item.mblogId && onCopyLink) {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-label="复制链接"
-          className="group rounded-full py-2 font-normal hover:bg-cyan-50 hover:text-cyan-500"
+          tint={FEED_ACTION_TINT.copyLink}
+          iconTint={FEED_ACTION_ICON_TINT.copyLink}
+          ariaLabel="复制链接"
+          icon={
+            <LinkIcon
+              className={cn('size-3.5 transition-colors', FEED_ACTION_ICON_TINT.copyLink)}
+            />
+          }
           onClick={(event) => {
             event.stopPropagation()
             onCopyLink()
           }}
-        >
-          <LinkIcon className="size-3.5 transition-colors group-hover:text-cyan-500" />
-        </Button>
+        />
       )
     }
 
     if (id === 'copy-text' && onCopyText) {
       return (
-        <Button
+        <FeedActionButton
           key={id}
-          type="button"
-          variant="ghost"
-          aria-label="复制内容"
-          className="group rounded-full py-2 font-normal hover:bg-slate-50 hover:text-slate-500"
+          tint={FEED_ACTION_TINT.copyText}
+          iconTint={FEED_ACTION_ICON_TINT.copyText}
+          ariaLabel="复制内容"
+          icon={
+            <Copy className={cn('size-3.5 transition-colors', FEED_ACTION_ICON_TINT.copyText)} />
+          }
           onClick={(event) => {
             event.stopPropagation()
             onCopyText()
           }}
-        >
-          <Copy className="size-3.5 transition-colors group-hover:text-slate-500" />
-        </Button>
+        />
       )
     }
 

@@ -1,4 +1,4 @@
-import { FONT_FAMILY_CLASSES, RemoteFontFamily, SystemFontFamily } from './font-loader'
+import { FONT_FAMILY_CLASSES, type RemoteFontFamily, type SystemFontFamily } from './font-loader'
 
 export type AppTheme = 'system' | 'light' | 'dark'
 
@@ -51,40 +51,22 @@ export const DARK_BG_PRESETS: BgColorPresetDef[] = [
 
 export type FontFamilyClass = SystemFontFamily | RemoteFontFamily
 
+/** 字体应用范围：正文仅 Feed/评论；应用额外共享字族到 UI chrome */
+export type FontApplyScope = 'content' | 'app'
+
 export type HotSearchType = 'hot' | 'mine' | 'entertainment' | 'life' | 'social'
 
-export type FontSizeClass =
-  | 'text-xs'
-  | 'text-sm'
-  | 'text-base'
-  | 'text-lg'
-  | 'text-xl'
-  | 'text-2xl'
-  | 'text-3xl'
-  | 'text-4xl'
+/** 正文阅读尺度：最小 14px，最大 24px */
+export type FontSizeClass = 'text-sm' | 'text-base' | 'text-lg' | 'text-xl' | 'text-2xl'
 
-export type FontWeightClass =
-  | 'font-thin'
-  | 'font-extralight'
-  | 'font-light'
-  | 'font-normal'
-  | 'font-medium'
-  | 'font-semibold'
-  | 'font-bold'
-  | 'font-extrabold'
-  | 'font-black'
+/** 正文字重：本地与远程字体均可调节（远程多为合成字重） */
+export type FontWeightClass = 'font-normal' | 'font-medium' | 'font-semibold' | 'font-bold'
 
-export type LetterSpacingClass =
-  | 'tracking-tighter'
-  | 'tracking-tight'
-  | 'tracking-normal'
-  | 'tracking-wide'
-  | 'tracking-wider'
-  | 'tracking-widest'
+/** 中文正文不宜极端字距 */
+export type LetterSpacingClass = 'tracking-tight' | 'tracking-normal' | 'tracking-wide'
 
+/** 正文行高：排除 leading-none / tight */
 export type LineHeightClass =
-  | 'leading-none'
-  | 'leading-tight'
   | 'leading-snug'
   | 'leading-normal'
   | 'leading-relaxed'
@@ -151,6 +133,7 @@ export interface AppSettings {
   letterSpacingClass: LetterSpacingClass
   lineHeightClass: LineHeightClass
   fontFamilyClass: FontFamilyClass
+  fontApplyScope: FontApplyScope
   showExplore: boolean
   showFavorites: boolean
   showHistory: boolean
@@ -236,6 +219,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   letterSpacingClass: 'tracking-normal',
   lineHeightClass: 'leading-relaxed',
   fontFamilyClass: 'font-sans',
+  fontApplyScope: 'content',
   showExplore: true,
   showFavorites: true,
   showHistory: true,
@@ -300,16 +284,58 @@ function isFontFamilyClass(value: unknown): value is FontFamilyClass {
   return FONT_FAMILY_CLASSES.includes(value as FontFamilyClass)
 }
 
-function normalizeFontFamilyClass(value: unknown): FontFamilyClass {
-  if (value === 'font-lxgw-neo-xihei') {
-    return 'font-lxgw-marker-gothic'
-  }
+function isFontApplyScope(value: unknown): value is FontApplyScope {
+  return value === 'content' || value === 'app'
+}
 
-  if (value === 'font-sarasa-gothic' || value === 'font-ibm-plex-sans-sc') {
+function normalizeFontApplyScope(value: unknown): FontApplyScope {
+  return isFontApplyScope(value) ? value : DEFAULT_APP_SETTINGS.fontApplyScope
+}
+
+function normalizeFontFamilyClass(value: unknown): FontFamilyClass {
+  // 仓耳今楷（~27MB TTF + 不可靠 CDN）已下架
+  if (
+    value === 'font-canger-jinkai' ||
+    value === 'font-sarasa-gothic' ||
+    value === 'font-ibm-plex-sans-sc'
+  ) {
     return DEFAULT_APP_SETTINGS.fontFamilyClass
   }
 
   return isFontFamilyClass(value) ? value : DEFAULT_APP_SETTINGS.fontFamilyClass
+}
+
+function normalizeFontSizeClass(value: unknown): FontSizeClass {
+  if (isFontSizeClass(value)) return value
+  // 旧版过大/过小字号钳制到阅读尺度
+  if (value === 'text-xs') return 'text-sm'
+  if (value === 'text-3xl' || value === 'text-4xl') return 'text-2xl'
+  return DEFAULT_APP_SETTINGS.fontSizeClass
+}
+
+function normalizeFontWeightClass(value: unknown): FontWeightClass {
+  if (isFontWeightClass(value)) return value
+  // 旧版极细/极粗映射到可用档
+  if (value === 'font-thin' || value === 'font-extralight' || value === 'font-light') {
+    return 'font-normal'
+  }
+  if (value === 'font-extrabold' || value === 'font-black') {
+    return 'font-bold'
+  }
+  return DEFAULT_APP_SETTINGS.fontWeightClass
+}
+
+function normalizeLetterSpacingClass(value: unknown): LetterSpacingClass {
+  if (isLetterSpacingClass(value)) return value
+  if (value === 'tracking-tighter') return 'tracking-tight'
+  if (value === 'tracking-wider' || value === 'tracking-widest') return 'tracking-wide'
+  return DEFAULT_APP_SETTINGS.letterSpacingClass
+}
+
+function normalizeLineHeightClass(value: unknown): LineHeightClass {
+  if (isLineHeightClass(value)) return value
+  if (value === 'leading-none' || value === 'leading-tight') return 'leading-snug'
+  return DEFAULT_APP_SETTINGS.lineHeightClass
 }
 
 function isHotSearchType(value: unknown): value is HotSearchType {
@@ -372,46 +398,29 @@ function isDarkBgColorPreset(value: unknown): value is DarkBgColorPreset {
 
 function isFontSizeClass(value: unknown): value is FontSizeClass {
   return (
-    value === 'text-xs' ||
     value === 'text-sm' ||
     value === 'text-base' ||
     value === 'text-lg' ||
     value === 'text-xl' ||
-    value === 'text-2xl' ||
-    value === 'text-3xl' ||
-    value === 'text-4xl'
+    value === 'text-2xl'
   )
 }
 
 function isFontWeightClass(value: unknown): value is FontWeightClass {
   return (
-    value === 'font-thin' ||
-    value === 'font-extralight' ||
-    value === 'font-light' ||
     value === 'font-normal' ||
     value === 'font-medium' ||
     value === 'font-semibold' ||
-    value === 'font-bold' ||
-    value === 'font-extrabold' ||
-    value === 'font-black'
+    value === 'font-bold'
   )
 }
 
 function isLetterSpacingClass(value: unknown): value is LetterSpacingClass {
-  return (
-    value === 'tracking-tighter' ||
-    value === 'tracking-tight' ||
-    value === 'tracking-normal' ||
-    value === 'tracking-wide' ||
-    value === 'tracking-wider' ||
-    value === 'tracking-widest'
-  )
+  return value === 'tracking-tight' || value === 'tracking-normal' || value === 'tracking-wide'
 }
 
 function isLineHeightClass(value: unknown): value is LineHeightClass {
   return (
-    value === 'leading-none' ||
-    value === 'leading-tight' ||
     value === 'leading-snug' ||
     value === 'leading-normal' ||
     value === 'leading-relaxed' ||
@@ -506,19 +515,12 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       typeof candidate.rewriteEnabled === 'boolean'
         ? candidate.rewriteEnabled
         : DEFAULT_APP_SETTINGS.rewriteEnabled,
-    fontSizeClass: isFontSizeClass(candidate.fontSizeClass)
-      ? candidate.fontSizeClass
-      : DEFAULT_APP_SETTINGS.fontSizeClass,
-    fontWeightClass: isFontWeightClass(candidate.fontWeightClass)
-      ? candidate.fontWeightClass
-      : DEFAULT_APP_SETTINGS.fontWeightClass,
-    letterSpacingClass: isLetterSpacingClass(candidate.letterSpacingClass)
-      ? candidate.letterSpacingClass
-      : DEFAULT_APP_SETTINGS.letterSpacingClass,
-    lineHeightClass: isLineHeightClass(candidate.lineHeightClass)
-      ? candidate.lineHeightClass
-      : DEFAULT_APP_SETTINGS.lineHeightClass,
+    fontSizeClass: normalizeFontSizeClass(candidate.fontSizeClass),
+    fontWeightClass: normalizeFontWeightClass(candidate.fontWeightClass),
+    letterSpacingClass: normalizeLetterSpacingClass(candidate.letterSpacingClass),
+    lineHeightClass: normalizeLineHeightClass(candidate.lineHeightClass),
     fontFamilyClass: normalizeFontFamilyClass(candidate.fontFamilyClass),
+    fontApplyScope: normalizeFontApplyScope(candidate.fontApplyScope),
     showExplore:
       typeof candidate.showExplore === 'boolean'
         ? candidate.showExplore

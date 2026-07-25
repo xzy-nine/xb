@@ -32,6 +32,9 @@ vi.mock('@/lib/weibo/hooks/use-font-settings', () => ({
     letterSpacingClass: 'tracking-normal',
     lineHeightClass: 'leading-relaxed',
     fontFamilyClass: 'font-sans',
+    textClassName: 'xb-status-text text-sm font-normal tracking-normal leading-relaxed font-sans',
+    loadStatus: 'idle' as const,
+    isRemote: false,
   }),
 }))
 
@@ -297,13 +300,14 @@ describe('FeedCard', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.click(screen.getByRole('tab', { name: '原文' }))
+    fireEvent.click(screen.getByRole('button', { name: '查看原文' }))
 
     await waitFor(() => {
       expect(document.body).toHaveTextContent('# Preview')
     })
     expect(document.body).toHaveTextContent('**raw marker**')
     expect(screen.queryByRole('heading', { level: 1, name: 'Preview' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '查看渲染' })).toBeInTheDocument()
   })
 
   it('copies plain status text from the toolbar action without navigating', async () => {

@@ -49,6 +49,38 @@ describe('app-settings', () => {
     expect(normalizeAppSettings({ xLayoutEnabled: false }).feedInteractionMode).toBe('weibo')
   })
 
+  it('migrates legacy font options to reading-scale defaults', () => {
+    expect(normalizeAppSettings({ fontSizeClass: 'text-xs' as never }).fontSizeClass).toBe(
+      'text-sm',
+    )
+    expect(normalizeAppSettings({ fontSizeClass: 'text-4xl' as never }).fontSizeClass).toBe(
+      'text-2xl',
+    )
+    expect(normalizeAppSettings({ fontWeightClass: 'font-thin' as never }).fontWeightClass).toBe(
+      'font-normal',
+    )
+    expect(normalizeAppSettings({ fontWeightClass: 'font-black' as never }).fontWeightClass).toBe(
+      'font-bold',
+    )
+    expect(
+      normalizeAppSettings({ letterSpacingClass: 'tracking-widest' as never }).letterSpacingClass,
+    ).toBe('tracking-wide')
+    expect(normalizeAppSettings({ lineHeightClass: 'leading-none' as never }).lineHeightClass).toBe(
+      'leading-snug',
+    )
+    expect(
+      normalizeAppSettings({ fontFamilyClass: 'font-canger-jinkai' as never }).fontFamilyClass,
+    ).toBe('font-sans')
+    expect(
+      normalizeAppSettings({ fontFamilyClass: 'font-lxgw-neo-xihei' as never }).fontFamilyClass,
+    ).toBe('font-lxgw-neo-xihei')
+    expect(normalizeAppSettings({}).fontApplyScope).toBe('content')
+    expect(normalizeAppSettings({ fontApplyScope: 'app' }).fontApplyScope).toBe('app')
+    expect(normalizeAppSettings({ fontApplyScope: 'unknown' as never }).fontApplyScope).toBe(
+      'content',
+    )
+  })
+
   it('normalizes feed toolbar settings', () => {
     expect(
       normalizeAppSettings({
@@ -87,6 +119,7 @@ describe('app-settings', () => {
       letterSpacingClass: 'tracking-normal',
       lineHeightClass: 'leading-relaxed',
       fontFamilyClass: 'font-serif',
+      fontApplyScope: 'content',
       showHotSearchCard: false,
       showFollowedSuperTopicsCard: false,
       showExplore: true,
@@ -153,6 +186,7 @@ describe('app-settings', () => {
         letterSpacingClass: 'tracking-wide',
         lineHeightClass: 'leading-loose',
         fontFamilyClass: 'font-serif',
+        fontApplyScope: 'app',
         showHotSearchCard: true,
         showFollowedSuperTopicsCard: false,
         showExplore: true,
@@ -220,6 +254,7 @@ describe('app-settings', () => {
       letterSpacingClass: 'tracking-wide',
       lineHeightClass: 'leading-loose',
       fontFamilyClass: 'font-serif',
+      fontApplyScope: 'app',
       showHotSearchCard: true,
       showFollowedSuperTopicsCard: false,
       showExplore: true,

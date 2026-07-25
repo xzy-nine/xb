@@ -42,8 +42,7 @@ export const CommentCard = memo(function CommentCard({
   const [showNestedCommentsDialog, setShowNestedCommentsDialog] = useState(false)
   const uid = getCurrentUserUid()
   const showOwnerMenu = uid !== null && uid === item.author.id
-  const { fontSizeClass, fontWeightClass, letterSpacingClass, lineHeightClass, fontFamilyClass } =
-    useFontSettings()
+  const { textClassName } = useFontSettings()
   const queryClient = useQueryClient()
   const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
   const ctx = useAppShellContext()
@@ -154,16 +153,7 @@ export const CommentCard = memo(function CommentCard({
           <p className="text-muted-foreground truncate text-xs">{item.source}</p>
         ) : null}
 
-        <div
-          className={cn(
-            'whitespace-pre-wrap text-foreground',
-            fontSizeClass,
-            fontWeightClass,
-            letterSpacingClass,
-            lineHeightClass,
-            fontFamilyClass,
-          )}
-        >
+        <div className={cn('whitespace-pre-wrap text-foreground', textClassName)}>
           <StatusText item={item} text={item.text || ''} />
         </div>
 
@@ -175,9 +165,9 @@ export const CommentCard = memo(function CommentCard({
           <Button
             type="button"
             variant="ghost"
-            size="icon-xs"
+            size="icon-sm"
             aria-label="回复评论"
-            className="text-muted-foreground transition-transform duration-200 hover:text-sky-500 active:scale-[0.96]"
+            className="text-muted-foreground relative after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-x-1/2 after:-translate-y-1/2 hover:bg-sky-500/10 hover:text-sky-500"
             onClick={() => onCommentReply?.(composeTargetFromComment(rootStatusId, item))}
           >
             <MessageCircleIcon className="size-3" />
@@ -185,16 +175,16 @@ export const CommentCard = memo(function CommentCard({
           <Button
             type="button"
             variant="ghost"
-            size="xs"
+            size="sm"
             aria-label={liked ? '取消点赞' : '点赞评论'}
             aria-pressed={liked}
             disabled={likeMutation.isPending}
-            className="text-muted-foreground gap-1 transition-transform duration-200 hover:text-rose-500 active:scale-[0.96]"
+            className="text-muted-foreground relative min-h-10 gap-1 hover:bg-rose-500/10 hover:text-rose-500"
             onClick={() => likeMutation.mutate(item)}
           >
             <Heart
               className={cn(
-                'size-3 transition-all duration-200',
+                'size-3 transition-[color,fill] duration-200',
                 liked ? 'fill-rose-500 text-rose-500' : 'hover:text-rose-500',
               )}
             />
