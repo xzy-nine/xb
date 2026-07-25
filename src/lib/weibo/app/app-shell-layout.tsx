@@ -8,6 +8,7 @@ import { useLocation, useOutletContext } from 'react-router'
 import { getUiPortalContainer } from '@/components/ui/portal'
 import type { AppTheme, ContentWidth } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { getCachedImageUrl } from '@/lib/image-cache'
 import { cn } from '@/lib/utils'
 import type { AppShellContext } from '@/lib/weibo/app/app-shell'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
@@ -84,6 +85,16 @@ export function ShellFrame({
   const glassOpacity = useAppSettings((s) => s.glassOpacity)
   const glassBlur = useAppSettings((s) => s.glassBlur)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
+
+  const [cachedBackgroundImageUrl, setCachedBackgroundImageUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    setCachedBackgroundImageUrl(null)
+    if (!backgroundImageUrl) return
+    getCachedImageUrl(backgroundImageUrl)
+      .then((url) => setCachedBackgroundImageUrl(url))
+      .catch(() => setCachedBackgroundImageUrl(backgroundImageUrl))
+  }, [backgroundImageUrl])
 
   const glassStyle = useMemo<React.CSSProperties>(
     () =>
@@ -214,9 +225,9 @@ export function ShellFrame({
       style={{
         ...glassStyle,
         ...(backgroundEnabled
-          ? backgroundImageUrl
+          ? cachedBackgroundImageUrl
             ? {
-                backgroundImage: `url(${backgroundImageUrl})`,
+                backgroundImage: `url(${cachedBackgroundImageUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
