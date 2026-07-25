@@ -98,7 +98,11 @@ export const CommentCard = memo(function CommentCard({
     <div className="group flex gap-3">
       <UserHoverCard uid={item.author.id}>
         {statusDetailPopupEnabled ? (
-          <button type="button" onClick={handleUserClick}>
+          <button
+            type="button"
+            onClick={handleUserClick}
+            className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
+          >
             <UserAvatar
               author={item.author}
               sizeClassName="size-8"
@@ -120,7 +124,11 @@ export const CommentCard = memo(function CommentCard({
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <UserHoverCard uid={item.author.id}>
               {statusDetailPopupEnabled ? (
-                <button type="button" onClick={handleUserClick}>
+                <button
+                  type="button"
+                  onClick={handleUserClick}
+                  className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
+                >
                   <span className="text-foreground truncate text-sm font-semibold hover:underline">
                     {item.author.name}
                   </span>

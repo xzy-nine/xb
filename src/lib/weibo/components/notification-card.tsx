@@ -49,7 +49,11 @@ function NotificationHeader({
     <CardHeader className="flex flex-row gap-3 px-4">
       <UserHoverCard uid={user.id}>
         {statusDetailPopupEnabled ? (
-          <button type="button" onClick={handleUserClick}>
+          <button
+            type="button"
+            onClick={handleUserClick}
+            className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
+          >
             <UserAvatar
               author={user}
               sizeClassName="size-12"
@@ -72,7 +76,11 @@ function NotificationHeader({
             <div className="flex flex-wrap items-center gap-2">
               <UserHoverCard uid={user.id}>
                 {statusDetailPopupEnabled ? (
-                  <button type="button" onClick={handleUserClick}>
+                  <button
+                    type="button"
+                    onClick={handleUserClick}
+                    className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
+                  >
                     <span className="truncate text-base hover:underline">{user.name}</span>
                   </button>
                 ) : (
