@@ -59,7 +59,7 @@ function DialogContent({
   zIndex?: number
 }) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
-  const resolvedZIndex = zIndex ?? getNextZIndex()
+  const resolvedZIndex = React.useMemo(() => zIndex ?? getNextZIndex(), [zIndex])
 
   return (
     <DialogPortal data-slot="dialog-portal" container={container}>
