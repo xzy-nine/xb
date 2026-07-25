@@ -265,7 +265,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   statusDetailPopupWidth: 50,
   backgroundEnabled: true,
   backgroundColor: '#1e40af',
-  backgroundImageUrl: 'https://bing.img.run/1920x1080.php',
+  backgroundImageUrl: 'https://uapis.cn/api/v1/image/bing-daily',
   glassOpacity: 80,
   glassBlur: 12,
   xLayoutEnabled: true,
