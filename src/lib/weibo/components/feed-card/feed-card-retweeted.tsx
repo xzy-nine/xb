@@ -104,12 +104,20 @@ export function RetweetedFeedBlock({
     }
 
     const target = event.target as HTMLElement
-    const isOnInteractiveChild = target.closest(
-      'a,button,[role="button"],input,textarea,select,label',
-    )
+    const interactiveSelectors = 'a,button,[role="button"],input,textarea,select,label'
+    const closestInteractive = target.closest(interactiveSelectors)
+
+    // Check if the closest interactive element is inside this retweeted block (not the outer card's <a>)
+    const isOnInteractiveChild = closestInteractive
+      ? event.currentTarget.contains(closestInteractive) &&
+        closestInteractive !== event.currentTarget
+      : false
+
+    // Normalize button value: 0 (left), 1 (middle), 2 (right)
+    const button = event.button ?? 0
 
     if (
-      event.button === 0 &&
+      button === 0 &&
       (event.metaKey || event.ctrlKey) &&
       !isOnInteractiveChild &&
       !hasTextSelectionWithin(event.currentTarget) &&
@@ -119,7 +127,7 @@ export function RetweetedFeedBlock({
       return
     }
 
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    if (button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return
     }
 
@@ -146,7 +154,15 @@ export function RetweetedFeedBlock({
     }
 
     const target = event.target as HTMLElement
-    if (target.closest('a,button,[role="button"],input,textarea,select,label')) {
+    const interactiveSelectors = 'a,button,[role="button"],input,textarea,select,label'
+    const closestInteractive = target.closest(interactiveSelectors)
+
+    // Check if the closest interactive element is inside this retweeted block
+    if (
+      closestInteractive &&
+      event.currentTarget.contains(closestInteractive) &&
+      closestInteractive !== event.currentTarget
+    ) {
       return
     }
 

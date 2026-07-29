@@ -9,7 +9,6 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react'
-import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +22,7 @@ import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expan
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { RatingSummaryBadge } from '@/lib/weibo/components/rating-panel'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
 import {
   cancelStatusLike,
@@ -56,7 +56,6 @@ import {
   getStatusCopyText,
   getStatusDetailPath,
   hasTextSelectionWithin,
-  openStatusDetailInNewTab,
 } from './feed-card/feed-card-utils'
 
 export const FeedCard = memo(function FeedCard({
@@ -225,7 +224,10 @@ export const FeedCard = memo(function FeedCard({
       } as const)
     : {}
 
-  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+  const handleCardClick = (
+    event?: MouseEvent<HTMLAnchorElement> | KeyboardEvent<HTMLAnchorElement>,
+  ) => {
+    if (!event) return
     event.stopPropagation()
     if (!canNavigate) {
       return
@@ -236,69 +238,28 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    const target = event.target as HTMLElement
-    const isOnInteractiveChild = target.closest(
-      'a,button,[role="button"],input,textarea,select,label',
-    )
+    const target = event.target as HTMLElement | null
+    const interactiveSelectors =
+      'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
 
-    // cmd/ctrl + left click on the inert area → open in new tab. The browser
-    // already handles modifier+click on inner <a>/<button> children natively.
-    if (
-      event.button === 0 &&
-      (event.metaKey || event.ctrlKey) &&
-      !isOnInteractiveChild &&
-      !hasTextSelectionWithin(event.currentTarget) &&
-      detailPath !== null
-    ) {
-      openStatusDetailInNewTab(detailPath)
+    // Check if the click target is a nested interactive element (not the card itself)
+    if (target) {
+      const closestInteractive = target.closest(interactiveSelectors)
+      if (closestInteractive && closestInteractive !== event.currentTarget) {
+        return
+      }
+    }
+
+    if (event.currentTarget && hasTextSelectionWithin(event.currentTarget)) {
       return
     }
 
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-      return
-    }
-
-    const interactiveSelectors = shouldUsePopupMode
-      ? 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-      : 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-    if (target !== event.currentTarget && target.closest(interactiveSelectors)) {
-      return
-    }
-
-    if (hasTextSelectionWithin(event.currentTarget)) {
-      return
-    }
-
+    // Trigger navigation for both popup and non-popup modes
     event.preventDefault()
     onNavigate?.(resolvedItem)
   }
 
-  const handleCardAuxClick = (event: MouseEvent<HTMLElement>) => {
-    if (!canNavigate || event.button !== 1 || detailPath === null) {
-      return
-    }
-
-    if (suppressNextClickRef.current) {
-      suppressNextClickRef.current = false
-      return
-    }
-
-    const target = event.target as HTMLElement
-    const interactiveSelectors = shouldUsePopupMode
-      ? 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-      : 'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-    if (target !== event.currentTarget && target.closest(interactiveSelectors)) {
-      return
-    }
-
-    if (hasTextSelectionWithin(event.currentTarget)) {
-      return
-    }
-
-    openStatusDetailInNewTab(detailPath)
-  }
-
-  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLAnchorElement>) => {
     if (!canNavigate) {
       return
     }
@@ -311,8 +272,11 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    event.preventDefault()
-    onNavigate?.(resolvedItem)
+    if (shouldUsePopupMode) {
+      event.preventDefault()
+      onNavigate?.(resolvedItem)
+    }
+    // For non-popup mode, SmartLink will handle keyboard navigation natively via href
   }
 
   const handleCommentExpand = useCallback(() => {
@@ -510,38 +474,77 @@ export const FeedCard = memo(function FeedCard({
     </>
   )
 
-  // 弹窗模式：使用 div + role="button" 避免嵌套 button 的 HTML 错误；
-  // 仍然保留 data-slot="card" 以应用玻璃效果
-  if (shouldUsePopupMode) {
-    return (
-      <div
-        role="button"
-        tabIndex={0}
-        className={cardClassName}
-        data-testid="feed-card-body"
-        data-slot="card"
-        onClick={handleCardClick}
-        onAuxClick={handleCardAuxClick}
-        onKeyDown={handleCardKeyDown}
-        {...navigationProps}
-      >
-        {cardContent}
-      </div>
-    )
-  }
-
-  // 非弹窗模式：使用 Link 组件，支持中键在新标签页打开
+  // 弹窗模式：使用 SmartLink 处理点击和键盘事件
+  // 非弹窗模式：使用 SmartLink 的 auto 模式处理链接行为
   return (
-    <Link
-      to={canNavigate ? detailPath : ''}
+    <SmartLink
+      to={canNavigate ? detailPath : '#'}
+      mode={shouldUsePopupMode ? 'modal' : 'auto'}
+      onNavigate={handleCardClick}
+      onClick={(e) => {
+        // UI-level suppression: prevent navigation when clicking interactive children,
+        // text selection, or after a drag. Use preventDefault to stop SmartLink from navigating.
+        if (!canNavigate) {
+          e.preventDefault()
+          return
+        }
+
+        if (suppressNextClickRef.current) {
+          suppressNextClickRef.current = false
+          e.preventDefault()
+          return
+        }
+
+        const target = e.target as HTMLElement | null
+        const interactiveSelectors =
+          'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+
+        // Check if the click target is a nested interactive element (not the card itself)
+        if (target) {
+          const closestInteractive = target.closest(interactiveSelectors)
+          if (closestInteractive && closestInteractive !== e.currentTarget) {
+            e.preventDefault()
+            return
+          }
+        }
+
+        if (e.currentTarget && hasTextSelectionWithin(e.currentTarget)) {
+          e.preventDefault()
+          return
+        }
+      }}
+      onAuxClick={(e) => {
+        // UI-level suppression for middle click
+        if (!canNavigate) {
+          e.preventDefault()
+          return
+        }
+
+        const target = e.target as HTMLElement | null
+        const interactiveSelectors =
+          'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+
+        // Check if the click target is a nested interactive element (not the card itself)
+        if (target) {
+          const closestInteractive = target.closest(interactiveSelectors)
+          if (closestInteractive && closestInteractive !== e.currentTarget) {
+            e.preventDefault()
+            return
+          }
+        }
+
+        if (e.currentTarget && hasTextSelectionWithin(e.currentTarget)) {
+          e.preventDefault()
+          return
+        }
+      }}
+      onKeyDown={handleCardKeyDown}
       className={cardClassName}
       data-testid="feed-card-body"
       data-slot="card"
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
-      {...(canNavigate ? navigationProps : { as: 'div' as const })}
+      {...(canNavigate ? navigationProps : {})}
     >
       {cardContent}
-    </Link>
+    </SmartLink>
   )
 })

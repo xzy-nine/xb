@@ -1,7 +1,6 @@
 import { ChevronRightIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Link } from 'react-router'
 import remarkGfm from 'remark-gfm'
 
 import { Button } from '@/components/ui/button'
@@ -20,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { useEmoticonConfigQuery } from '@/lib/weibo/app/emoticon-query'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import type { WeiboEmoticonItem } from '@/lib/weibo/models/emoticon'
 import type { FeedImage, FeedItem, FeedTopicEntity, FeedUrlEntity } from '@/lib/weibo/models/feed'
@@ -112,17 +112,18 @@ function MentionLink({ screenName, key: keyProp }: { screenName: string; key: st
     }
   }
 
+  const navMode = statusDetailPopupEnabled ? 'modal' : 'auto'
+
   return (
     <UserHoverCard key={keyProp} screenName={screenName}>
-      {statusDetailPopupEnabled ? (
-        <button type="button" onClick={handleUserClick} className={MENTION_TEXT_CLASS_NAME}>
-          @{screenName}
-        </button>
-      ) : (
-        <Link to={`/n/${encodeURIComponent(screenName)}`} className={MENTION_TEXT_CLASS_NAME}>
-          @{screenName}
-        </Link>
-      )}
+      <SmartLink
+        to={`/n/${encodeURIComponent(screenName)}`}
+        mode={navMode}
+        onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+        className={MENTION_TEXT_CLASS_NAME}
+      >
+        @{screenName}
+      </SmartLink>
     </UserHoverCard>
   )
 }
@@ -218,35 +219,35 @@ function TopicLink({
 
   if (!xbTopicPage) {
     return (
-      <a
+      <SmartLink
         key={topicKey}
         href={`https://s.weibo.com/weibo?q=${encodeURIComponent(`#${entity.title}#`)}`}
-        target="_blank"
-        rel="noreferrer"
+        external
         className={LINK_TEXT_CLASS_NAME}
       >
         #{entity.title}#
-      </a>
+      </SmartLink>
     )
   }
 
-  if (statusDetailPopupEnabled && handleTopicClick) {
-    return (
-      <button
-        key={topicKey}
-        type="button"
-        onClick={() => handleTopicClick(entity.title)}
-        className={LINK_TEXT_CLASS_NAME}
-      >
-        #{entity.title}#
-      </button>
-    )
+  const navMode = statusDetailPopupEnabled && handleTopicClick != null ? 'modal' : 'auto'
+
+  const handleNavigate = () => {
+    if (handleTopicClick) {
+      handleTopicClick(entity.title)
+    }
   }
 
   return (
-    <Link key={topicKey} to={entity.url} className={LINK_TEXT_CLASS_NAME}>
+    <SmartLink
+      key={topicKey}
+      to={entity.url}
+      mode={navMode}
+      onNavigate={statusDetailPopupEnabled && handleTopicClick != null ? handleNavigate : undefined}
+      className={LINK_TEXT_CLASS_NAME}
+    >
       #{entity.title}#
-    </Link>
+    </SmartLink>
   )
 }
 

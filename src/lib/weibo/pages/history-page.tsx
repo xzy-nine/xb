@@ -2,7 +2,6 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { BrushCleaning, CalendarDays, Clock, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -29,6 +28,7 @@ import {
 } from '@/components/ui/item'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useAppSettings } from '@/lib/app-settings-store'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
 import { browsingHistoryStore, useBrowsingHistory } from '@/lib/weibo/hooks/use-browsing-history'
 
@@ -233,7 +233,7 @@ export function HistoryPage() {
                     : `/u/${entry.authorId}`
                 return (
                   <Item key={entry.id} asChild size="sm">
-                    <Link to={to}>
+                    <SmartLink to={to}>
                       <ItemMedia variant="image">
                         <Avatar className="size-9">
                           {entry.authorAvatar && <AvatarImage src={entry.authorAvatar} />}
@@ -266,7 +266,7 @@ export function HistoryPage() {
                           <Trash2 className="size-3.5" />
                         </Button>
                       </ItemActions>
-                    </Link>
+                    </SmartLink>
                   </Item>
                 )
               })}

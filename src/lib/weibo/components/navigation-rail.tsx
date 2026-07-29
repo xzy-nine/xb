@@ -19,6 +19,7 @@ import { ZapOffIcon } from '@/components/ui/zap-off'
 import type { AppTheme } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { ThemeModeToggle } from '@/lib/weibo/components/theme-mode-toggle'
 import {
   hasDmBadge,
@@ -87,10 +88,9 @@ function NavButton({
     )
   const sharedClassName = navButtonClassName(showLabel)
   const button = href ? (
-    <a
+    <SmartLink
       href={href}
-      target={isExternal ? '_blank' : undefined}
-      rel={isExternal ? 'noopener noreferrer' : undefined}
+      external={isExternal}
       aria-label={showLabel ? undefined : String(label)}
       aria-current={isActive ? 'page' : undefined}
     >
@@ -103,7 +103,7 @@ function NavButton({
         {iconWrap(children)}
         {showLabel && <span>{label}</span>}
       </Button>
-    </a>
+    </SmartLink>
   ) : (
     <Button
       variant={buttonVariant}

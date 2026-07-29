@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronUp, MessageCircle } from 'lucide-react'
-import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { PageLoadingState } from '@/lib/weibo/components/page-state'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { feedCommentsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 import type { CommentItem } from '@/lib/weibo/models/status'
@@ -31,6 +31,8 @@ export function FeedCommentsExpanded({
 
   const comments = (commentsQuery.data?.items ?? []) as CommentItem[]
   const totalNumber = commentsQuery.data?.totalNumber ?? 0
+
+  const canUseModal = statusDetailPopupEnabled && onNavigate
 
   return (
     <div
@@ -67,24 +69,19 @@ export function FeedCommentsExpanded({
             onCommentReply={onCommentReply}
           />
           <div className="flex gap-2">
-            {totalNumber > 0 &&
-              (statusDetailPopupEnabled && onNavigate ? (
-                <Button
-                  variant="ghost"
-                  className="text-primary w-full flex-1 gap-2"
-                  onClick={() => onNavigate(item)}
-                >
+            {totalNumber > 0 && (
+              <SmartLink
+                to={`/${item.author.id}/${item.mblogId}`}
+                mode={canUseModal ? 'modal' : 'auto'}
+                onNavigate={canUseModal ? () => onNavigate!(item) : undefined}
+                className="flex-1"
+              >
+                <Button variant="ghost" className="text-primary w-full gap-2">
                   <MessageCircle className="size-3.5" />
                   查看全部 {totalNumber} 条评论
                 </Button>
-              ) : (
-                <Link to={`/${item.author.id}/${item.mblogId}`} className="flex-1">
-                  <Button variant="ghost" className="text-primary w-full gap-2">
-                    <MessageCircle className="size-3.5" />
-                    查看全部 {totalNumber} 条评论
-                  </Button>
-                </Link>
-              ))}
+              </SmartLink>
+            )}
             {onCollapse && (
               <Button
                 variant="ghost"

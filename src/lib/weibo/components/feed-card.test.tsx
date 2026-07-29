@@ -639,6 +639,8 @@ describe('FeedCard', () => {
     })
 
     it('does not open a new tab when retweeted card body left-clicks without modifier', () => {
+      const store = getAppSettingsStore()
+      store.setState({ feedInteractionMode: 'x' })
       const onNavigate = vi.fn()
       const queryClient = new QueryClient()
 

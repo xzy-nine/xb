@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
 
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
 import type { FeedItem } from '@/lib/weibo/models/feed'
@@ -17,45 +17,45 @@ export function FeedAuthorHeader({
   trailing?: ReactNode
   onNavigateProfile?: (lookup: ProfileLookup) => void
 }) {
+  const navigateToProfile = () => {
+    if (onNavigateProfile) {
+      onNavigateProfile({ uid: item.author.id })
+    }
+  }
+
+  const navMode = onNavigateProfile ? 'modal' : 'auto'
+
   return (
     <CardHeader className="flex flex-row gap-3 px-4">
       <UserHoverCard uid={item.author.id}>
-        <Link
+        <SmartLink
           to={`/n/${encodeURIComponent(item.author.name)}`}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            if (onNavigateProfile) {
-              onNavigateProfile({ uid: item.author.id })
-            }
-          }}
+          mode={navMode}
+          onNavigate={navigateToProfile}
+          onClick={(e) => e.stopPropagation()}
         >
           <UserAvatar
             author={item.author}
             sizeClassName="size-12"
             fallbackClassName="text-sm font-semibold"
           />
-        </Link>
+        </SmartLink>
       </UserHoverCard>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <UserHoverCard uid={item.author.id}>
-                <Link
+                <SmartLink
                   to={`/n/${encodeURIComponent(item.author.name)}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    if (onNavigateProfile) {
-                      onNavigateProfile({ uid: item.author.id })
-                    }
-                  }}
+                  mode={navMode}
+                  onNavigate={navigateToProfile}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <CardTitle className="truncate text-base hover:underline">
                     {item.author.name}
                   </CardTitle>
-                </Link>
+                </SmartLink>
               </UserHoverCard>
               <CreatedAtBadge label={item.createdAtLabel} />
               {trailing ? (
@@ -90,43 +90,43 @@ export function RetweetedAuthorHeader({
     return <div className="text-muted-foreground text-sm">未知用户</div>
   }
 
+  const navigateToProfile = () => {
+    if (onNavigateProfile) {
+      onNavigateProfile({ uid: item.author.id })
+    }
+  }
+
+  const navMode = onNavigateProfile ? 'modal' : 'auto'
+
   return (
     <div className="grid grid-cols-[36px_minmax(0,1fr)] gap-2">
       <UserHoverCard uid={item.author.id}>
-        <Link
+        <SmartLink
           to={`/n/${encodeURIComponent(item.author.name)}`}
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            if (onNavigateProfile) {
-              onNavigateProfile({ uid: item.author.id })
-            }
-          }}
+          mode={navMode}
+          onNavigate={navigateToProfile}
+          onClick={(e) => e.stopPropagation()}
         >
           <UserAvatar
             author={item.author}
             sizeClassName="size-9"
             fallbackClassName="text-xs font-semibold"
           />
-        </Link>
+        </SmartLink>
       </UserHoverCard>
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <UserHoverCard uid={item.author.id}>
-            <Link
+            <SmartLink
               to={`/n/${encodeURIComponent(item.author.name)}`}
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                if (onNavigateProfile) {
-                  onNavigateProfile({ uid: item.author.id })
-                }
-              }}
+              mode={navMode}
+              onNavigate={navigateToProfile}
+              onClick={(e) => e.stopPropagation()}
             >
               <p className="text-foreground truncate text-sm font-medium hover:underline">
                 {item.author.name}
               </p>
-            </Link>
+            </SmartLink>
           </UserHoverCard>
           <CreatedAtBadge label={item.createdAtLabel} />
         </div>
