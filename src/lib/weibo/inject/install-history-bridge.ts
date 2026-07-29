@@ -57,4 +57,32 @@ export function installHistoryBridge(targetWindow: Window) {
     },
     true,
   )
+
+  // Intercept document.addEventListener('click', ...) so that any click handler
+  // registered by the host page (Weibo) is wrapped with a guard that skips
+  // processing when the click originates from our modal SmartLink elements.
+  // This runs in the page context (MAIN world) and must execute BEFORE Weibo's
+  // scripts register their listeners (weibo-main-world is loaded early).
+  const documentAddEventListener = targetWindow.document.addEventListener.bind(
+    targetWindow.document,
+  )
+  targetWindow.document.addEventListener = function (
+    type: string,
+    handler: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    if (type === 'click' && typeof handler === 'function') {
+      const wrappedHandler: EventListener = (event: Event) => {
+        const path = (event as MouseEvent).composedPath()
+        for (const el of path) {
+          if (el instanceof HTMLElement && el.dataset?.smartLink === 'modal') {
+            return // Skip — click is on our UI, don't let host process it
+          }
+        }
+        return (handler as EventListener)(event)
+      }
+      return documentAddEventListener(type, wrappedHandler as EventListener, options)
+    }
+    return documentAddEventListener(type, handler, options)
+  }
 }

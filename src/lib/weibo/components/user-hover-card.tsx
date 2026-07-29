@@ -3,10 +3,8 @@ import { BadgeCheck, MapPin, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { FollowGroup } from '@/lib/weibo/components/follow-group'
 import {
   formatProfileCount,
@@ -68,8 +66,6 @@ export function UserHoverCard(props: UserHoverCardProps) {
   const profileUid = profile?.id ?? ''
   const displayLocation = profile?.location ?? profile?.ipLocation ?? null
   const ratingEnabled = useAppSettings((s) => s.ratingEnabled)
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
-  const ctx = useAppShellContext()
 
   return (
     <HoverCard
@@ -179,25 +175,14 @@ export function UserHoverCard(props: UserHoverCardProps) {
                 }
               />
 
-              {statusDetailPopupEnabled ? (
-                <SmartLink
-                  to={`/n/${encodeURIComponent(profile.name)}`}
-                  mode="modal"
-                  onNavigate={() => ctx?.navigateToProfile({ screenName: profile.name })}
-                >
-                  <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
-                    <UserRound className="size-3.5" />
-                    主页
-                  </Button>
-                </SmartLink>
-              ) : (
-                <SmartLink to={`/n/${encodeURIComponent(profile.name)}`}>
-                  <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
-                    <UserRound className="size-3.5" />
-                    主页
-                  </Button>
-                </SmartLink>
-              )}
+              <SmartLink
+                to={`/n/${encodeURIComponent(profile.name)}`}
+                mode="newTab"
+                className="border-border bg-background hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 dark:border-input dark:bg-input/30 dark:hover:bg-input/50 inline-flex w-full flex-1 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-sm font-medium whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-100 ease-out outline-none select-none focus-visible:ring-3 active:duration-150 active:not-disabled:scale-[0.96]"
+              >
+                <UserRound className="size-3.5 shrink-0" />
+                主页
+              </SmartLink>
             </div>
           </div>
         )}
