@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronUp, MessageCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { useAppSettings } from '@/lib/app-settings-store'
 import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { CommentList } from '@/lib/weibo/components/comment-list'
 import { PageLoadingState } from '@/lib/weibo/components/page-state'
@@ -26,13 +25,10 @@ export function FeedCommentsExpanded({
   onCollapse,
   onNavigate,
 }: FeedCommentsExpandedProps) {
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
   const commentsQuery = useQuery(feedCommentsQueryOptions(item.id, item.author.id))
 
   const comments = (commentsQuery.data?.items ?? []) as CommentItem[]
   const totalNumber = commentsQuery.data?.totalNumber ?? 0
-
-  const canUseModal = statusDetailPopupEnabled && onNavigate
 
   return (
     <div
@@ -71,9 +67,9 @@ export function FeedCommentsExpanded({
           <div className="flex gap-2">
             {totalNumber > 0 && (
               <SmartLink
-                to={`/${item.author.id}/${item.mblogId}`}
-                mode={canUseModal ? 'modal' : 'auto'}
-                onNavigate={canUseModal ? () => onNavigate!(item) : undefined}
+                to={`/${item.author.id}/${item.mblogId ?? item.id}`}
+                mode={onNavigate ? 'modal' : 'auto'}
+                onNavigate={onNavigate ? () => onNavigate(item) : undefined}
                 className="flex-1"
               >
                 <Button variant="ghost" className="text-primary w-full gap-2">
