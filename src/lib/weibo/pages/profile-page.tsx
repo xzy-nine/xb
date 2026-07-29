@@ -13,6 +13,7 @@ import {
   profilePostsInfiniteOptions,
   profileSearchInfiniteOptions,
 } from '@/lib/weibo/data/weibo-data'
+import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-data'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
@@ -21,7 +22,6 @@ import {
   writeProfileSearchParams,
 } from '@/lib/weibo/route/profile-search-params'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
-import { loadProfileHoverCard } from '@/lib/weibo/services/weibo-repository'
 
 export function ProfilePostsTabs({
   profileId,
@@ -42,7 +42,7 @@ export function ProfilePostsTabs({
   onNavigate: ReturnType<typeof useAppShellContext>['navigateToStatusDetail']
   onCommentClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
   onRepostClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
-  onCommentReply: ReturnType<typeof useAppShellContext>['setComposeTarget']
+  onCommentReply?: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
 }) {
   const isSearchEnabled =
     searchState !== undefined && searchParams !== undefined && setSearchParams !== undefined
@@ -57,7 +57,14 @@ export function ProfilePostsTabs({
   })
 
   const activeQuery = isSearchEnabled && searchState?.active ? searchQuery : postsQuery
-  const errorMessage = activeQuery.error instanceof Error ? activeQuery.error.message : null
+  const errorMessage =
+    activeQuery.error instanceof Error && !activeQuery.isFetchNextPageError
+      ? activeQuery.error.message
+      : null
+  const loadMoreErrorMessage =
+    activeQuery.error instanceof Error && activeQuery.isFetchNextPageError
+      ? activeQuery.error.message
+      : null
   const hasNextPage = Boolean(activeQuery.hasNextPage)
   const isFetchingNextPage = activeQuery.isFetchingNextPage
   const total = searchQuery.data?.pages[0]?.total
@@ -89,6 +96,7 @@ export function ProfilePostsTabs({
           isSearchEnabled && searchState?.active ? '正在搜索此用户微博...' : '正在加载此用户微博...'
         }
         errorMessage={errorMessage}
+        loadMoreErrorMessage={loadMoreErrorMessage}
         isLoading={activeQuery.isLoading}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}

@@ -14,9 +14,9 @@ import type { CommentItem } from '@/lib/weibo/models/status'
 interface FeedCommentsExpandedProps {
   id?: string
   item: FeedItem
-  onCommentReply: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
   onCollapse?: () => void
   onNavigate?: (item: FeedItem) => void
+  onCommentReply?: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
 }
 
 export function FeedCommentsExpanded({

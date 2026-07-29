@@ -277,9 +277,10 @@ export function extractMediaUrls(item: FeedItem): MediaUrl[] {
 
     // Live Photo 视频
     if (image.livePhotoVideoUrl) {
+      const videoUrl = normalizeDownloadUrl(image.livePhotoVideoUrl) ?? image.livePhotoVideoUrl
       urls.push({
-        url: image.livePhotoVideoUrl,
-        filename: generateFilename(author, text, index++, image.livePhotoVideoUrl),
+        url: videoUrl,
+        filename: generateFilename(author, text, index++, videoUrl),
         type: 'video',
       })
     }
@@ -314,9 +315,11 @@ export function extractMediaUrls(item: FeedItem): MediaUrl[] {
 
         // 混合媒体中的 Live Photo
         if (mixItem.image.livePhotoVideoUrl) {
+          const videoUrl =
+            normalizeDownloadUrl(mixItem.image.livePhotoVideoUrl) ?? mixItem.image.livePhotoVideoUrl
           urls.push({
-            url: mixItem.image.livePhotoVideoUrl,
-            filename: generateFilename(author, text, index++, mixItem.image.livePhotoVideoUrl),
+            url: videoUrl,
+            filename: generateFilename(author, text, index++, videoUrl),
             type: 'video',
           })
         }
@@ -367,31 +370,10 @@ export async function estimateTotalSize(urls: MediaUrl[]): Promise<number> {
 }
 
 /**
- * 并发下载（限制并发数）
- */
-async function downloadWithConcurrency(
-  urls: MediaUrl[],
-  limit: number,
-): Promise<Array<{ url: MediaUrl; result: PromiseSettledResult<Blob> }>> {
-  const results: Array<{ url: MediaUrl; result: PromiseSettledResult<Blob> }> = []
-
-  for (let i = 0; i < urls.length; i += limit) {
-    const batch = urls.slice(i, i + limit)
-    const batchResults = await Promise.allSettled(batch.map((mediaUrl) => fetchMediaBlob(mediaUrl)))
-
-    for (let j = 0; j < batch.length; j++) {
-      results.push({
-        url: batch[j],
-        result: batchResults[j],
-      })
-    }
-  }
-
-  return results
-}
-
-/**
  * 下载并打包为 zip
+ *
+ * Blobs are zip.file'd inside each concurrent batch so we do not retain an outer
+ * results array of every Blob until after generateAsync (lower peak memory).
  */
 export async function downloadAsZip(
   urls: MediaUrl[],
@@ -402,18 +384,21 @@ export async function downloadAsZip(
   }
 
   const zip = new JSZip()
-
-  const results = await downloadWithConcurrency(urls, MEDIA_DOWNLOAD_CONCURRENCY)
-
   let successCount = 0
   let failCount = 0
 
-  for (const { url, result } of results) {
-    if (result.status === 'fulfilled') {
-      zip.file(url.filename, result.value)
-      successCount++
-    } else {
-      failCount++
+  for (let i = 0; i < urls.length; i += MEDIA_DOWNLOAD_CONCURRENCY) {
+    const batch = urls.slice(i, i + MEDIA_DOWNLOAD_CONCURRENCY)
+    const batchResults = await Promise.allSettled(batch.map((mediaUrl) => fetchMediaBlob(mediaUrl)))
+
+    for (let j = 0; j < batch.length; j++) {
+      const result = batchResults[j]
+      if (result.status === 'fulfilled') {
+        zip.file(batch[j].filename, result.value)
+        successCount++
+      } else {
+        failCount++
+      }
     }
   }
 
@@ -421,10 +406,7 @@ export async function downloadAsZip(
     throw new Error('所有资源下载失败')
   }
 
-  // 生成 zip
   const content = await zip.generateAsync({ type: 'blob' })
-
-  // 触发浏览器下载
   triggerBlobDownload(content, zipFilename)
 
   return { successCount, failCount }

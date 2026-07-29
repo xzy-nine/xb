@@ -92,7 +92,14 @@ export function HomeTimelinePage() {
     [timelineQuery.data?.pages],
   )
 
-  const errorMessage = timelineQuery.error instanceof Error ? timelineQuery.error.message : null
+  const errorMessage =
+    timelineQuery.error instanceof Error && !timelineQuery.isFetchNextPageError
+      ? timelineQuery.error.message
+      : null
+  const loadMoreErrorMessage =
+    timelineQuery.error instanceof Error && timelineQuery.isFetchNextPageError
+      ? timelineQuery.error.message
+      : null
   const hasNextPage = Boolean(timelineQuery.hasNextPage)
   const isFetchingNextPage = timelineQuery.isFetchingNextPage
   const isLoading = timelineQuery.isLoading
@@ -202,6 +209,7 @@ export function HomeTimelinePage() {
           emptyLabel="此时间线暂无内容"
           loadingLabel="正在加载微博时间线..."
           errorMessage={errorMessage}
+          loadMoreErrorMessage={loadMoreErrorMessage}
           isLoading={isLoading}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
@@ -212,7 +220,6 @@ export function HomeTimelinePage() {
             ctx.setComposeTarget(composeTargetFromFeedItem(item, 'comment'))
           }
           onRepostClick={(item) => ctx.setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-          onCommentReply={ctx.setComposeTarget}
         />
       </div>
     </div>

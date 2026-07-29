@@ -44,7 +44,7 @@ export function StatusCommentsSection({
   authorName: string
   statusText: string
   commentsCount: number
-  onCommentReply: ReturnType<typeof useAppShellContext>['setComposeTarget']
+  onCommentReply?: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
 }) {
   const [filter, setFilter] = useState<string | undefined>(undefined)
   const commentsQuery = useInfiniteQuery({

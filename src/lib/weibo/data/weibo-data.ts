@@ -1,26 +1,12 @@
 /**
- * Weibo Data Layer
+ * Weibo Data Layer — public seam for all Weibo IO + TanStack Query options.
  *
- * Consolidated data access layer combining TanStack Query configuration,
- * API calls via client.ts, and response adaptation via adapters/.
- *
- * Replaces the three-layer architecture:
- * - weibo-queries.ts (query options)
- * - weibo-repository.ts (API calls)
- * - client.ts (postMessage bridge - preserved)
+ * Production code imports only from this module (or `@/lib/weibo/data`).
+ * Transport + adapt live in private `weibo-io.ts` (not for UI imports).
+ * `client.ts` remains the postMessage bridge behind weibo-io.
  */
 
 import type { HotSearchType } from '@/lib/app-settings'
-import type { ExploreGroup } from '@/lib/weibo/models/explore'
-import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
-import type { NotificationsPage } from '@/lib/weibo/models/notification'
-import type { StatusCommentsPage } from '@/lib/weibo/models/status'
-import type { RelationPage } from '@/lib/weibo/models/user-relation'
-import type { NotificationTab } from '@/lib/weibo/route/page-descriptor'
-import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
-import type { ProfileSearchParams } from '@/lib/weibo/route/profile-search-params'
-import { PROFILE_SEARCH_FILTER_KEYS } from '@/lib/weibo/route/profile-search-params'
-import type { UnreadCounts } from '@/lib/weibo/services/weibo-repository'
 import {
   loadComments,
   checkUnreadNotifications,
@@ -47,7 +33,74 @@ import {
   loadStatusLongText,
   loadTopicSearch,
   type HomeTimelineTab,
-} from '@/lib/weibo/services/weibo-repository'
+  type UnreadCounts,
+} from '@/lib/weibo/data/weibo-io'
+import type { ExploreGroup } from '@/lib/weibo/models/explore'
+import type { FeedAuthor, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
+import type { NotificationsPage } from '@/lib/weibo/models/notification'
+import type { StatusCommentsPage } from '@/lib/weibo/models/status'
+import type { RelationPage } from '@/lib/weibo/models/user-relation'
+import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
+import type { ProfileSearchParams } from '@/lib/weibo/route/profile-search-params'
+import { PROFILE_SEARCH_FILTER_KEYS } from '@/lib/weibo/route/profile-search-params'
+
+// ─── Public re-exports of load* / mutations / IO types (implementation: weibo-io) ───
+
+export type {
+  FeedCommentsResult,
+  HomeTimelineTab,
+  LoadExploreHotOptions,
+  LoadFavoritesOptions,
+  LoadProfileSearchParams,
+  LoadTimelineOptions,
+  ProfileSearchPage,
+  UnreadCounts,
+} from '@/lib/weibo/data/weibo-io'
+
+export {
+  cancelCommentLike,
+  cancelStatusLike,
+  checkUnreadNotifications,
+  createFavorite,
+  createProfileGroup,
+  deleteWeiboComment,
+  deleteWeiboStatus,
+  destroyFavorite,
+  followUser,
+  loadComments,
+  loadEmoticonConfig,
+  loadExploreGroups,
+  loadExploreHot,
+  loadFavorites,
+  loadFeedComments,
+  loadFollowGroups,
+  loadFollowedSuperTopics,
+  loadFriends,
+  loadGroupTimeline,
+  loadHomeTimeline,
+  loadHotSearchByType,
+  loadLikedStatuses,
+  loadLikes,
+  loadMentions,
+  loadNestedComments,
+  loadProfileAssignedGroups,
+  loadProfileAvailableGroups,
+  loadProfileHoverCard,
+  loadProfilePosts,
+  loadProfileSearchPosts,
+  loadSearch,
+  loadStatusComments,
+  loadStatusDetail,
+  loadStatusLongText,
+  loadTopicSearch,
+  publishWeiboStatus,
+  setCommentLike,
+  setProfileGroups,
+  setSpecialFollowUser,
+  setStatusLike,
+  submitComposeAction,
+  unfollowUser,
+} from '@/lib/weibo/data/weibo-io'
 
 // ─── Utility Functions ───
 
@@ -92,6 +145,8 @@ export const COMMENT_INFINITE_QUERY_MAX_PAGES = 8
 export const RELATION_INFINITE_QUERY_MAX_PAGES = 8
 export const TOPIC_INFINITE_QUERY_MAX_PAGES = 8
 export const NOTIFICATION_INFINITE_QUERY_MAX_PAGES = 8
+/** Inactive home/explore timeline group keys are GC'd after 1 hour. */
+export const FEED_TIMELINE_GC_TIME_MS = 60 * 60 * 1000
 
 /** Result of checking for new posts on the "following" timeline. */
 export interface FollowingNewPostsCheck {
@@ -138,6 +193,7 @@ export function followingNewPostsCheckOptions(
     },
     staleTime: 0,
     refetchInterval: 5 * 60 * 1000,
+    refetchIntervalInBackground: false,
     gcTime: 5 * 60 * 1000,
   }
 }
@@ -156,12 +212,12 @@ export function homeTimelineInfiniteOptions(
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
       useGroupTimeline
         ? loadGroupTimeline(groupListId!, { cursor: pageParam })
-        : loadHomeTimeline(activeTimelineTab, { cursor: pageParam, existingCount: 0 }),
+        : loadHomeTimeline(activeTimelineTab, { cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: Infinity,
-    gcTime: Infinity,
+    gcTime: FEED_TIMELINE_GC_TIME_MS,
   }
 }
 
@@ -237,6 +293,8 @@ export function favoritesInfiniteOptions(uid: string) {
     staleTime: 30 * 60 * 1000,
   }
 }
+
+export type NotificationTab = 'mentions' | 'comments' | 'likes'
 
 export function notificationsInfiniteOptions(_tab: NotificationTab) {
   return {
@@ -324,6 +382,7 @@ export function hotSearchQueryOptions(type: HotSearchType = 'hot') {
     queryFn: () => loadHotSearchByType(type),
     staleTime: 5 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
+    refetchIntervalInBackground: false,
   }
 }
 
@@ -352,7 +411,7 @@ export function exploreTimelineInfiniteOptions(group: ExploreGroup) {
     getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
     maxPages: FEED_INFINITE_QUERY_MAX_PAGES,
     staleTime: Infinity,
-    gcTime: Infinity,
+    gcTime: FEED_TIMELINE_GC_TIME_MS,
   }
 }
 
@@ -390,8 +449,14 @@ export function topicSearchInfiniteOptions(topic: string, channelType?: string) 
     queryFn: ({ pageParam }: { pageParam: number }) =>
       loadTopicSearch(topic, pageParam, channelType),
     initialPageParam: 1 as number,
-    getNextPageParam: (lastPage: TimelinePage, allPages: TimelinePage[]) =>
-      lastPage.items.length > 0 ? allPages.length + 1 : undefined,
+    getNextPageParam: (
+      lastPage: TimelinePage,
+      _allPages: TimelinePage[],
+      lastPageParam: number,
+    ) => {
+      if (!lastPage.nextCursor || lastPage.items.length === 0) return undefined
+      return lastPageParam + 1
+    },
     maxPages: TOPIC_INFINITE_QUERY_MAX_PAGES,
     staleTime: 5 * 60 * 1000,
   }
@@ -403,5 +468,6 @@ export const unreadNotificationsQueryOptions = {
   queryFn: (): Promise<UnreadCounts> => checkUnreadNotifications(),
   staleTime: 30 * 1000,
   refetchInterval: 60 * 1000,
+  refetchIntervalInBackground: false,
   gcTime: 5 * 60 * 1000,
 }

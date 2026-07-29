@@ -54,6 +54,8 @@ function NotificationTabContent({
   emptyLabel: string
 }) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const onFetchNextPageRef = useRef(onFetchNextPage)
+  onFetchNextPageRef.current = onFetchNextPage
   const isFetchingNextPageRef = useRef(isFetchingNextPage)
   isFetchingNextPageRef.current = isFetchingNextPage
 
@@ -64,7 +66,7 @@ function NotificationTabContent({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && !isFetchingNextPageRef.current) {
-          onFetchNextPage()
+          onFetchNextPageRef.current()
         }
       },
       { threshold: 0.2 },
@@ -72,7 +74,7 @@ function NotificationTabContent({
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasNextPage, onFetchNextPage])
+  }, [hasNextPage])
 
   if (isLoading) {
     return <PageLoadingState label="正在加载..." />
@@ -117,15 +119,15 @@ export function NotificationsPage() {
     queryKey: ['weibo', 'notifications', activeTab],
     queryFn: async ({ pageParam }) => {
       if (activeTab === 'mentions') {
-        const { loadMentions } = await import('@/lib/weibo/services/weibo-repository')
+        const { loadMentions } = await import('@/lib/weibo/data/weibo-data')
         return loadMentions(pageParam)
       }
       if (activeTab === 'comments') {
-        const { loadComments } = await import('@/lib/weibo/services/weibo-repository')
+        const { loadComments } = await import('@/lib/weibo/data/weibo-data')
         return loadComments(pageParam)
       }
       if (activeTab === 'likes') {
-        const { loadLikes } = await import('@/lib/weibo/services/weibo-repository')
+        const { loadLikes } = await import('@/lib/weibo/data/weibo-data')
         return loadLikes(pageParam)
       }
       return { items: [], nextCursor: null }

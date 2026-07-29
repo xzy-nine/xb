@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { DialogContainer } from '@/lib/weibo/components/dialog-container'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { ProfileHeader } from '@/lib/weibo/components/profile-header'
+import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-io'
 import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { ProfilePostsTabs } from '@/lib/weibo/pages/profile-page'
-import { loadProfileHoverCard } from '@/lib/weibo/services/weibo-repository'
 
 type ProfileLookup = { uid: string } | { screenName: string }
 

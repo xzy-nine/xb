@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 import {
+  cancelStatusLike,
+  createFavorite,
   createProfileGroup,
+  destroyFavorite,
+  loadExploreHot,
   loadHomeTimeline,
   loadLikedStatuses,
   loadProfileAssignedGroups,
@@ -10,8 +13,10 @@ import {
   loadProfileSearchPosts,
   setSpecialFollowUser,
   setProfileGroups,
+  setStatusLike,
   submitComposeAction,
-} from '@/lib/weibo/services/weibo-repository'
+} from '@/lib/weibo/data/weibo-io'
+import type { SubmitComposeInput } from '@/lib/weibo/models/compose'
 
 const { wbGet, wbPostForm } = vi.hoisted(() => ({
   wbGet: vi.fn(),
@@ -23,7 +28,7 @@ vi.mock('@/lib/weibo/services/client', () => ({
   wbPostForm,
 }))
 
-describe('weibo-repository', () => {
+describe('weibo-io', () => {
   beforeEach(() => {
     vi.mocked(wbGet).mockReset()
     vi.mocked(wbPostForm).mockReset()
@@ -398,6 +403,96 @@ describe('submitComposeAction', () => {
       is_comment: '1',
       visible: '0',
       share_id: '',
+    })
+  })
+
+  it('loads explore hot first page with max_id 0 and refresh 0', async () => {
+    await expect(loadExploreHot()).resolves.toEqual({
+      items: [],
+      nextCursor: null,
+    })
+
+    expect(wbGet).toHaveBeenCalledWith('/ajax/feed/hottimeline', {
+      refresh: 0,
+      group_id: '102803',
+      containerid: '102803',
+      extparam: 'discover|new_feed',
+      max_id: 0,
+      count: 10,
+    })
+  })
+
+  it('loads explore hot next page with cursor as max_id without +1', async () => {
+    await expect(loadExploreHot({ cursor: '42', groupId: 'g', containerid: 'c' })).resolves.toEqual(
+      {
+        items: [],
+        nextCursor: null,
+      },
+    )
+
+    expect(wbGet).toHaveBeenCalledWith('/ajax/feed/hottimeline', {
+      refresh: 2,
+      group_id: 'g',
+      containerid: 'c',
+      extparam: 'discover|new_feed',
+      max_id: '42',
+      count: 10,
+    })
+  })
+})
+
+describe('status like and favorite mutations', () => {
+  beforeEach(() => {
+    vi.mocked(wbPostForm).mockReset()
+  })
+
+  it('posts setStatusLike to /ajax/statuses/setLike', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(setStatusLike('id')).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/statuses/setLike', {
+      id: 'id',
+    })
+  })
+
+  it('rejects setStatusLike when response is not ok', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 0, msg: 'x' })
+
+    await expect(setStatusLike('id')).rejects.toThrow('x')
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/statuses/setLike', {
+      id: 'id',
+    })
+  })
+
+  it('posts cancelStatusLike to /ajax/statuses/cancelLike', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(cancelStatusLike('id')).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/statuses/cancelLike', {
+      id: 'id',
+    })
+  })
+
+  it('posts createFavorite to /ajax/statuses/createFavorites', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(createFavorite('id')).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/statuses/createFavorites', {
+      id: 'id',
+    })
+  })
+
+  it('posts destroyFavorite to /ajax/statuses/destoryFavorites', async () => {
+    vi.mocked(wbPostForm).mockResolvedValue({ ok: 1 })
+
+    await expect(destroyFavorite('id')).resolves.toBeUndefined()
+
+    expect(wbPostForm).toHaveBeenCalledWith('/ajax/statuses/destoryFavorites', {
+      id: 'id',
     })
   })
 })
