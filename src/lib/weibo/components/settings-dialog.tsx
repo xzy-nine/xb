@@ -769,9 +769,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                           )}
                         >
                           <img
-                            src={backgroundImageUrl}
+                            src={`${backgroundImageUrl}${backgroundImageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
                             alt="背景预览"
-                            className="size-full object-cover"
+                            className="block size-full object-cover"
                             onError={() => setImagePreviewError(true)}
                             onLoad={() => setImagePreviewError(false)}
                           />
