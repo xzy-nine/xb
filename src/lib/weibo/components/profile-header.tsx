@@ -1,5 +1,4 @@
 import { BadgeCheck, CalendarDays, MapPin } from 'lucide-react'
-import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,6 +10,7 @@ import {
   ProfileMutualFollowers as SharedProfileMutualFollowers,
 } from '@/lib/weibo/components/profile-shared'
 import { RatingPanel } from '@/lib/weibo/components/rating-panel'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import type { UserProfile } from '@/lib/weibo/models/profile'
 
 function ProfileIdentity({ profile }: { profile: UserProfile }) {
@@ -94,7 +94,7 @@ function ProfileMetadata({ profile }: { profile: UserProfile }) {
             </span>
           ) : null}
           {hasFriendsCount ? (
-            <Link
+            <SmartLink
               to={`/u/page/follow/${profile.id}?tab=following`}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -102,10 +102,10 @@ function ProfileMetadata({ profile }: { profile: UserProfile }) {
                 {formatProfileCount(profile.friendsCount)}
               </span>{' '}
               正在关注
-            </Link>
+            </SmartLink>
           ) : null}
           {hasFollowersCount ? (
-            <Link
+            <SmartLink
               to={`/u/page/follow/${profile.id}?tab=fans`}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -113,7 +113,7 @@ function ProfileMetadata({ profile }: { profile: UserProfile }) {
                 {formatProfileCount(profile.followersCount)}
               </span>{' '}
               粉丝
-            </Link>
+            </SmartLink>
           ) : null}
         </div>
       ) : null}

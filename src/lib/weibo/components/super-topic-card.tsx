@@ -6,6 +6,7 @@ import { Card, CardDescription } from '@/components/ui/card'
 import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { followedSuperTopicsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { SuperTopicItem } from '@/lib/weibo/models/super-topic'
 
@@ -39,15 +40,9 @@ function SuperTopicItemLink({ item }: { item: SuperTopicItem }) {
   }
 
   return (
-    <a
-      href={item.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={className}
-      title={item.title}
-    >
+    <SmartLink href={item.link} external className={className} aria-label={item.title}>
       {content}
-    </a>
+    </SmartLink>
   )
 }
 

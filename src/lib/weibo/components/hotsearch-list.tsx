@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription } from '@/components/ui/card'
@@ -15,6 +14,7 @@ import { Spinner } from '@/components/ui/spinner'
 import type { HotSearchType } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { hotSearchQueryOptions } from '@/lib/weibo/data/weibo-data'
 
 const HOT_SEARCH_TYPES: { value: HotSearchType; label: string }[] = [
@@ -54,7 +54,7 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
   if (!xbTopicPage) {
     const url = `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${word}#`)}`
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className={className}>
+      <SmartLink href={url} external className={className}>
         <span
           className={cn(getRankClassName(index), 'w-4 shrink-0 text-xs font-medium tabular-nums')}
         >
@@ -63,12 +63,12 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
         <span className="text-foreground group-hover:text-foreground min-w-0 flex-1 truncate text-sm transition-colors">
           {word}
         </span>
-      </a>
+      </SmartLink>
     )
   }
 
   return (
-    <Link to={`/topic?q=${encodeURIComponent(word)}`} className={className}>
+    <SmartLink to={`/topic?q=${encodeURIComponent(word)}`} className={className}>
       <span
         className={cn(getRankClassName(index), 'w-4 shrink-0 text-xs font-medium tabular-nums')}
       >
@@ -77,7 +77,7 @@ function HotSearchItemComponent({ item, index }: { item: HotSearchListData; inde
       <span className="text-foreground group-hover:text-foreground min-w-0 flex-1 truncate text-sm transition-colors">
         {word}
       </span>
-    </Link>
+    </SmartLink>
   )
 }
 

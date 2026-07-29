@@ -1,7 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircleIcon, Trash2 } from 'lucide-react'
 import { memo, useState } from 'react'
-import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -18,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { CommentBox } from '@/lib/weibo/components/comment-box'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { StatusText } from '@/lib/weibo/components/status-text'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
@@ -45,13 +45,13 @@ function ReplyCommentPreview({ reply }: { reply: NonNullable<CommentItem['replyC
     <p className="text-muted-foreground truncate text-xs">
       回复{' '}
       <UserHoverCard uid={reply.author.id}>
-        <Link
+        <SmartLink
           to={`/n/${encodeURIComponent(reply.author.name)}`}
           className="text-foreground/80 font-medium hover:underline"
           onClick={(event) => event.stopPropagation()}
         >
           @{reply.author.name}
-        </Link>
+        </SmartLink>
       </UserHoverCard>
       {reply.text ? (
         <>
@@ -137,13 +137,7 @@ export const CommentCard = memo(function CommentCard({
   const liked = item.liked === true
   const nestedPreview = Array.isArray(item.comments) ? item.comments : []
   const avatarSize = depth > 0 ? 'size-7' : 'size-8'
-
-  const handleUserLinkClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.stopPropagation()
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-      return
-    }
-  }
+  const navMode = statusDetailPopupEnabled ? 'modal' : 'auto'
 
   const handleReplyClick = () => {
     setShowInlineReply((open) => !open)
@@ -152,27 +146,18 @@ export const CommentCard = memo(function CommentCard({
   return (
     <div className={cn('flex gap-3', depth > 0 && 'border-border/60 relative border-l pl-3')}>
       <UserHoverCard uid={item.author.id}>
-        {statusDetailPopupEnabled ? (
-          <button
-            type="button"
-            onClick={handleUserClick}
-            className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
-          >
-            <UserAvatar
-              author={item.author}
-              sizeClassName={avatarSize}
-              fallbackClassName="text-[10px] font-semibold"
-            />
-          </button>
-        ) : (
-          <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
-            <UserAvatar
-              author={item.author}
-              sizeClassName={avatarSize}
-              fallbackClassName="text-[10px] font-semibold"
-            />
-          </Link>
-        )}
+        <SmartLink
+          to={`/n/${encodeURIComponent(item.author.name)}`}
+          mode={navMode}
+          onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <UserAvatar
+            author={item.author}
+            sizeClassName={avatarSize}
+            fallbackClassName="text-[10px] font-semibold"
+          />
+        </SmartLink>
       </UserHoverCard>
       <div className="relative flex min-w-0 flex-1 flex-col gap-0.5">
         {isOwner ? (
@@ -192,23 +177,16 @@ export const CommentCard = memo(function CommentCard({
 
         <div className={cn('flex min-w-0 flex-wrap items-center gap-1.5', isOwner && 'pr-9')}>
           <UserHoverCard uid={item.author.id}>
-            {statusDetailPopupEnabled ? (
-              <button
-                type="button"
-                onClick={handleUserClick}
-                className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
-              >
-                <span className="text-foreground truncate text-sm font-semibold hover:underline">
-                  {item.author.name}
-                </span>
-              </button>
-            ) : (
-              <Link to={`/n/${encodeURIComponent(item.author.name)}`} onClick={handleUserLinkClick}>
-                <span className="text-foreground truncate text-sm font-semibold hover:underline">
-                  {item.author.name}
-                </span>
-              </Link>
-            )}
+            <SmartLink
+              to={`/n/${encodeURIComponent(item.author.name)}`}
+              mode={navMode}
+              onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <span className="text-foreground truncate text-sm font-semibold hover:underline">
+                {item.author.name}
+              </span>
+            </SmartLink>
           </UserHoverCard>
           {isStatusAuthor ? (
             <span className="bg-muted text-muted-foreground rounded px-1 py-0.5 text-[10px] font-medium">

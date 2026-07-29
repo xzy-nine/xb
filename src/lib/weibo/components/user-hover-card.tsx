@@ -1,7 +1,6 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
 import { BadgeCheck, MapPin, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -15,6 +14,7 @@ import {
   ProfileMutualFollowers,
 } from '@/lib/weibo/components/profile-shared'
 import { RatingPanel } from '@/lib/weibo/components/rating-panel'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-data'
 
 function UserHoverCardSkeleton() {
@@ -136,7 +136,7 @@ export function UserHoverCard(props: UserHoverCardProps) {
 
               <div className="flex items-center gap-4 text-sm">
                 {profile.friendsCount != null ? (
-                  <Link
+                  <SmartLink
                     to={`/u/page/follow/${profile.id}?tab=following`}
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -144,10 +144,10 @@ export function UserHoverCard(props: UserHoverCardProps) {
                       {formatProfileCount(profile.friendsCount)}
                     </span>{' '}
                     关注
-                  </Link>
+                  </SmartLink>
                 ) : null}
                 {profile.followersCount != null ? (
-                  <Link
+                  <SmartLink
                     to={`/u/page/follow/${profile.id}?tab=fans`}
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -155,7 +155,7 @@ export function UserHoverCard(props: UserHoverCardProps) {
                       {profile.followersCountStr}
                     </span>{' '}
                     粉丝
-                  </Link>
+                  </SmartLink>
                 ) : null}
               </div>
 
@@ -180,23 +180,23 @@ export function UserHoverCard(props: UserHoverCardProps) {
               />
 
               {statusDetailPopupEnabled ? (
-                <Button
-                  variant="outline"
-                  className="w-full flex-1 gap-1.5 py-2"
-                  onClick={() => {
-                    ctx?.navigateToProfile({ screenName: profile.name })
-                  }}
+                <SmartLink
+                  to={`/n/${encodeURIComponent(profile.name)}`}
+                  mode="modal"
+                  onNavigate={() => ctx?.navigateToProfile({ screenName: profile.name })}
                 >
-                  <UserRound className="size-3.5" />
-                  主页
-                </Button>
-              ) : (
-                <Link to={`/n/${encodeURIComponent(profile.name)}`}>
                   <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
                     <UserRound className="size-3.5" />
                     主页
                   </Button>
-                </Link>
+                </SmartLink>
+              ) : (
+                <SmartLink to={`/n/${encodeURIComponent(profile.name)}`}>
+                  <Button variant="outline" className="w-full flex-1 gap-1.5 py-2">
+                    <UserRound className="size-3.5" />
+                    主页
+                  </Button>
+                </SmartLink>
               )}
             </div>
           </div>

@@ -196,9 +196,9 @@ function renderEntityLink(entity: FeedUrlEntity, key: string) {
   }
 
   return (
-    <a key={key} href={href} target="_blank" rel="noreferrer" className={LINK_TEXT_CLASS_NAME}>
+    <SmartLink key={key} href={href} external className={LINK_TEXT_CLASS_NAME}>
       {entity.title}
-    </a>
+    </SmartLink>
   )
 }
 

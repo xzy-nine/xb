@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowUpRightIcon, Search, X } from 'lucide-react'
 import { useState, useRef } from 'react'
-import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -17,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { searchQueryOptions } from '@/lib/weibo/data/weibo-data'
 
 type ProfileLookup = { uid: string } | { screenName: string }
@@ -73,25 +73,16 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
     setOpen(false)
   }
 
-  const handleHotQueryClick = (suggestion: string, event?: React.MouseEvent) => {
-    // 如果是修饰键点击，在新Tab打开微博搜索页
-    if (event && (event.metaKey || event.ctrlKey)) {
-      window.open(
-        `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
-        '_blank',
-        'noopener,noreferrer',
-      )
-      setOpen(false)
-      return
-    }
+  const handleHotQueryExternal = (suggestion: string) => {
+    window.open(
+      `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
+      '_blank',
+      'noopener,noreferrer',
+    )
+    setOpen(false)
+  }
 
-    if (!xbTopicPage) {
-      window.open(
-        `https://s.weibo.com/weibo?q=${encodeURIComponent(suggestion)}`,
-        '_blank',
-        'noopener,noreferrer',
-      )
-    }
+  const handleHotQueryInternal = () => {
     setOpen(false)
   }
 
@@ -159,18 +150,10 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
                   <DropdownMenuLabel className="text-xs">热搜</DropdownMenuLabel>
                   {xbTopicPage
                     ? topHotQueries.map((item, index) => (
-                        <Link
+                        <SmartLink
                           key={`hot-${index}`}
                           to={`/topic?q=${encodeURIComponent(item.suggestion)}`}
-                          onClick={(e) => {
-                            // 修饰键时在新Tab打开外部微博搜索
-                            if (e.metaKey || e.ctrlKey) {
-                              e.preventDefault()
-                              handleHotQueryClick(item.suggestion, e)
-                              return
-                            }
-                            setOpen(false)
-                          }}
+                          onNavigate={handleHotQueryInternal}
                         >
                           <DropdownMenuItem className="flex items-center gap-2">
                             <span className="text-muted-foreground w-4 text-xs tabular-nums">
@@ -178,19 +161,22 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
                             </span>
                             <span className="truncate">{item.suggestion}</span>
                           </DropdownMenuItem>
-                        </Link>
+                        </SmartLink>
                       ))
                     : topHotQueries.map((item, index) => (
-                        <DropdownMenuItem
+                        <SmartLink
                           key={`hot-${index}`}
-                          onSelect={() => handleHotQueryClick(item.suggestion)}
-                          className="flex items-center gap-2"
+                          href={`https://s.weibo.com/weibo?q=${encodeURIComponent(item.suggestion)}`}
+                          external
+                          onNavigate={() => handleHotQueryExternal(item.suggestion)}
                         >
-                          <span className="text-muted-foreground w-4 text-xs tabular-nums">
-                            {index + 1}
-                          </span>
-                          <span className="truncate">{item.suggestion}</span>
-                        </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-2">
+                            <span className="text-muted-foreground w-4 text-xs tabular-nums">
+                              {index + 1}
+                            </span>
+                            <span className="truncate">{item.suggestion}</span>
+                          </DropdownMenuItem>
+                        </SmartLink>
                       ))}
                 </DropdownMenuGroup>
               )}
@@ -200,34 +186,11 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
                   <DropdownMenuLabel className="text-xs">用户</DropdownMenuLabel>
                   {users.map((user) =>
                     statusDetailPopupEnabled && onNavigateProfile ? (
-                      <DropdownMenuItem
-                        key={user.uid}
-                        onSelect={() => handleUserClick(user.uid)}
-                        className="flex items-center gap-3 py-2"
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.profile_image_url} />
-                          <AvatarFallback>{user.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium">
-                            {user.name}
-                            <span className="text-muted-foreground ml-2 truncate text-xs">
-                              {user.followers_count_str} 粉丝
-                            </span>
-                          </div>
-
-                          <div className="text-muted-foreground truncate text-xs">
-                            {user.description}
-                          </div>
-                        </div>
-                      </DropdownMenuItem>
-                    ) : (
-                      <Link
+                      <SmartLink
                         key={user.uid}
                         to={`/n/${encodeURIComponent(user.screen_name)}`}
-                        onClick={() => handleUserClick(user.uid)}
-                        className="flex items-center gap-3 py-2"
+                        mode="modal"
+                        onNavigate={() => handleUserClick(user.uid)}
                       >
                         <DropdownMenuItem className="flex items-center gap-3 py-2">
                           <Avatar className="h-8 w-8">
@@ -247,7 +210,32 @@ export function SearchCard({ className, onNavigateProfile }: SearchCardProps) {
                             </div>
                           </div>
                         </DropdownMenuItem>
-                      </Link>
+                      </SmartLink>
+                    ) : (
+                      <SmartLink
+                        key={user.uid}
+                        to={`/n/${encodeURIComponent(user.screen_name)}`}
+                        onNavigate={() => handleUserClick(user.uid)}
+                      >
+                        <DropdownMenuItem className="flex items-center gap-3 py-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.profile_image_url} />
+                            <AvatarFallback>{user.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium">
+                              {user.name}
+                              <span className="text-muted-foreground ml-2 truncate text-xs">
+                                {user.followers_count_str} 粉丝
+                              </span>
+                            </div>
+
+                            <div className="text-muted-foreground truncate text-xs">
+                              {user.description}
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      </SmartLink>
                     ),
                   )}
                 </DropdownMenuGroup>

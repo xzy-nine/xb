@@ -86,7 +86,13 @@ export async function mountWeiboHostShell({
     append: 'first',
     onMount(container, shadow) {
       injectSonnerStyles(shadow, sonnerStyles)
-      setUiPortalContainer(container)
+      // Create a portal container inside the shadow root so portal-rendered
+      // content (e.g. HoverCard, DropdownMenu) stays within the shadow DOM.
+      // This prevents host page JavaScript from intercepting click events.
+      const portalContainer = document.createElement('div')
+      portalContainer.id = 'xb-portal-root'
+      shadow.appendChild(portalContainer)
+      setUiPortalContainer(portalContainer)
       const cleanup = bindShellState({
         container: container as unknown as HTMLElement,
         appRoot: regions.appRoot,

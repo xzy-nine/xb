@@ -1,10 +1,10 @@
 import { memo } from 'react'
-import { Link } from 'react-router'
 
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
+import { SmartLink } from '@/lib/weibo/components/smart-link'
 import { MentionInlineText } from '@/lib/weibo/components/status-text'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
@@ -45,49 +45,35 @@ function NotificationHeader({
     }
   }
 
+  const navMode = statusDetailPopupEnabled ? 'modal' : 'auto'
+
   return (
     <CardHeader className="flex flex-row gap-3 px-4">
       <UserHoverCard uid={user.id}>
-        {statusDetailPopupEnabled ? (
-          <button
-            type="button"
-            onClick={handleUserClick}
-            className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
-          >
-            <UserAvatar
-              author={user}
-              sizeClassName="size-12"
-              fallbackClassName="text-sm font-semibold"
-            />
-          </button>
-        ) : (
-          <Link to={`/n/${encodeURIComponent(user.name)}`}>
-            <UserAvatar
-              author={user}
-              sizeClassName="size-12"
-              fallbackClassName="text-sm font-semibold"
-            />
-          </Link>
-        )}
+        <SmartLink
+          to={`/n/${encodeURIComponent(user.name)}`}
+          mode={navMode}
+          onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+        >
+          <UserAvatar
+            author={user}
+            sizeClassName="size-12"
+            fallbackClassName="text-sm font-semibold"
+          />
+        </SmartLink>
       </UserHoverCard>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <UserHoverCard uid={user.id}>
-                {statusDetailPopupEnabled ? (
-                  <button
-                    type="button"
-                    onClick={handleUserClick}
-                    className="m-0 inline-flex cursor-pointer appearance-none border-none bg-transparent p-0"
-                  >
-                    <span className="truncate text-base hover:underline">{user.name}</span>
-                  </button>
-                ) : (
-                  <Link to={`/n/${encodeURIComponent(user.name)}`}>
-                    <span className="truncate text-base hover:underline">{user.name}</span>
-                  </Link>
-                )}
+                <SmartLink
+                  to={`/n/${encodeURIComponent(user.name)}`}
+                  mode={navMode}
+                  onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+                >
+                  <span className="truncate text-base hover:underline">{user.name}</span>
+                </SmartLink>
               </UserHoverCard>
               <CreatedAtBadge label={createdAtLabel} />
             </div>
@@ -117,22 +103,20 @@ function ReplyCommentBlock({
     }
   }
 
+  const navMode = statusDetailPopupEnabled ? 'modal' : 'auto'
+
   return (
     <div className="border-border/70 bg-muted/40 flex flex-col gap-2 border p-3">
       <div className="flex flex-col gap-1">
         <UserHoverCard uid={replyComment.user.id}>
-          {statusDetailPopupEnabled ? (
-            <button type="button" onClick={handleUserClick} className="text-sm hover:underline">
-              @{replyComment.user.name}
-            </button>
-          ) : (
-            <Link
-              to={`/n/${encodeURIComponent(replyComment.user.name)}`}
-              className="text-sm hover:underline"
-            >
-              @{replyComment.user.name}
-            </Link>
-          )}
+          <SmartLink
+            to={`/n/${encodeURIComponent(replyComment.user.name)}`}
+            mode={navMode}
+            onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+            className="text-sm hover:underline"
+          >
+            @{replyComment.user.name}
+          </SmartLink>
         </UserHoverCard>
         <p className="text-foreground text-sm">
           <MentionInlineText text={replyComment.text} />
@@ -163,6 +147,8 @@ function MentionNotificationContent({ item }: { item: MentionNotification }) {
     }
   }
 
+  const navMode = statusDetailPopupEnabled ? 'modal' : 'auto'
+
   return (
     <div className="flex flex-col gap-3">
       <p className="text-foreground text-sm">
@@ -172,18 +158,14 @@ function MentionNotificationContent({ item }: { item: MentionNotification }) {
         <div className="border-border/70 bg-muted/40 flex flex-col gap-2 border p-3">
           <div className="flex flex-col gap-1">
             <UserHoverCard uid={item.status.author.id}>
-              {statusDetailPopupEnabled ? (
-                <button type="button" onClick={handleUserClick} className="text-sm hover:underline">
-                  @{item.status.author.name}
-                </button>
-              ) : (
-                <Link
-                  to={`/n/${encodeURIComponent(item.status.author.name)}`}
-                  className="text-sm hover:underline"
-                >
-                  @{item.status.author.name}
-                </Link>
-              )}
+              <SmartLink
+                to={`/n/${encodeURIComponent(item.status.author.name)}`}
+                mode={navMode}
+                onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+                className="text-sm hover:underline"
+              >
+                @{item.status.author.name}
+              </SmartLink>
             </UserHoverCard>
             <p className="text-foreground text-sm">
               <MentionInlineText text={item.status.textRaw} />
@@ -205,6 +187,8 @@ function LikeNotificationContent({ item }: { item: LikeNotification }) {
     }
   }
 
+  const navMode = statusDetailPopupEnabled ? 'modal' : 'auto'
+
   return (
     <div className="flex flex-col gap-2">
       <p className="text-muted-foreground text-sm">赞了你的微博</p>
@@ -212,18 +196,14 @@ function LikeNotificationContent({ item }: { item: LikeNotification }) {
         <div className="border-border/70 bg-muted/40 flex flex-col gap-2 border p-3">
           <div className="flex flex-col gap-1">
             <UserHoverCard uid={item.status.author.id}>
-              {statusDetailPopupEnabled ? (
-                <button type="button" onClick={handleUserClick} className="text-sm hover:underline">
-                  @{item.status.author.name}
-                </button>
-              ) : (
-                <Link
-                  to={`/n/${encodeURIComponent(item.status.author.name)}`}
-                  className="text-sm hover:underline"
-                >
-                  @{item.status.author.name}
-                </Link>
-              )}
+              <SmartLink
+                to={`/n/${encodeURIComponent(item.status.author.name)}`}
+                mode={navMode}
+                onNavigate={statusDetailPopupEnabled ? handleUserClick : undefined}
+                className="text-sm hover:underline"
+              >
+                @{item.status.author.name}
+              </SmartLink>
             </UserHoverCard>
             <p className="text-foreground text-sm">
               <MentionInlineText text={item.status.text} />
