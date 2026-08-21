@@ -27,6 +27,7 @@ interface SettingsFeaturesSectionProps {
   glassOpacity: number
   glassBlur: number
   waterfallColumnCount: number
+  waterfallExpandOnWideLayout: boolean
   updateSettings: (patch: Record<string, unknown>) => void
 }
 
@@ -39,6 +40,7 @@ export function SettingsFeaturesSection({
   glassOpacity,
   glassBlur,
   waterfallColumnCount,
+  waterfallExpandOnWideLayout,
   updateSettings,
 }: SettingsFeaturesSectionProps) {
   const [imagePreviewError, setImagePreviewError] = useState(false)
@@ -139,6 +141,18 @@ export function SettingsFeaturesSection({
           onValueChange={([value]) => void updateSettings({ waterfallColumnCount: value })}
         />
       </div>
+
+      <Field
+        label="展开时放大卡片"
+        description="当主栏空间变宽时（沉浸模式/收起左栏），增加单个卡片宽度而非列数"
+      >
+        <Switch
+          checked={waterfallExpandOnWideLayout}
+          onCheckedChange={(checked) =>
+            void updateSettings({ waterfallExpandOnWideLayout: checked })
+          }
+        />
+      </Field>
 
       <Field label="自定义背景" description="为页面添加自定义背景图片">
         <Switch

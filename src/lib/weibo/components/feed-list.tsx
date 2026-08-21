@@ -31,14 +31,21 @@ export function FeedList({
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth] = useElementSize(containerRef)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
+  const immersiveMode = useAppSettings((s) => s.immersiveMode)
+  const sidebarCollapsed = useAppSettings((s) => s.sidebarCollapsed)
+  const waterfallExpandOnWideLayout = useAppSettings((s) => s.waterfallExpandOnWideLayout)
 
   if (items.length === 0) {
     return <PageEmptyState label={emptyLabel} />
   }
 
+  const isExpanded = waterfallExpandOnWideLayout && (immersiveMode || sidebarCollapsed)
+
   const effectiveColumnCount =
     waterfallColumnCount > 1 && containerWidth > 0
-      ? Math.min(waterfallColumnCount, Math.max(1, Math.floor(containerWidth / MIN_CARD_WIDTH)))
+      ? isExpanded
+        ? waterfallColumnCount
+        : Math.min(waterfallColumnCount, Math.max(1, Math.floor(containerWidth / MIN_CARD_WIDTH)))
       : 1
 
   if (effectiveColumnCount <= 1) {

@@ -11,6 +11,7 @@ export interface CustomAppSettingsFields {
   glassBlur: number
   xLayoutEnabled: boolean
   waterfallColumnCount: number
+  waterfallExpandOnWideLayout: boolean
   browsingHistoryEnabled: boolean
   followGroupsEnabled: boolean
 }
@@ -26,6 +27,7 @@ export const CUSTOM_SETTINGS_DEFAULTS: CustomAppSettingsFields = {
   glassBlur: 12,
   xLayoutEnabled: true,
   waterfallColumnCount: 1,
+  waterfallExpandOnWideLayout: true,
   browsingHistoryEnabled: true,
   followGroupsEnabled: true,
 }
@@ -86,6 +88,10 @@ export function normalizeCustomSettings(
       candidate.waterfallColumnCount <= 5
         ? candidate.waterfallColumnCount
         : CUSTOM_SETTINGS_DEFAULTS.waterfallColumnCount,
+    waterfallExpandOnWideLayout:
+      typeof candidate.waterfallExpandOnWideLayout === 'boolean'
+        ? candidate.waterfallExpandOnWideLayout
+        : CUSTOM_SETTINGS_DEFAULTS.waterfallExpandOnWideLayout,
     browsingHistoryEnabled:
       typeof candidate.browsingHistoryEnabled === 'boolean'
         ? candidate.browsingHistoryEnabled

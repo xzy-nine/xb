@@ -288,6 +288,7 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                 glassOpacity={useAppSettings((s) => s.glassOpacity)}
                 glassBlur={useAppSettings((s) => s.glassBlur)}
                 waterfallColumnCount={useAppSettings((s) => s.waterfallColumnCount)}
+                waterfallExpandOnWideLayout={useAppSettings((s) => s.waterfallExpandOnWideLayout)}
                 updateSettings={updateSettings}
               />
             )}
