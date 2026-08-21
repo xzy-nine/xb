@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/item'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
 import { browsingHistoryStore, useBrowsingHistory } from '@/lib/weibo/hooks/use-browsing-history'
 

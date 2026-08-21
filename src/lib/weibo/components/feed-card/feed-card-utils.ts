@@ -1,6 +1,18 @@
 import type { FeedItem } from '@/lib/weibo/models/feed'
 import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
+export const INTERACTIVE_SELECTORS =
+  'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+
+export function isInteractiveClickTarget(
+  target: HTMLElement | null,
+  currentTarget: HTMLElement,
+): boolean {
+  if (!target) return false
+  const closestInteractive = target.closest(INTERACTIVE_SELECTORS)
+  return closestInteractive !== null && closestInteractive !== currentTarget
+}
+
 export function hasTextSelectionWithin(container: HTMLElement) {
   const selection = window.getSelection()
   if (!selection || selection.isCollapsed || selection.rangeCount === 0) {

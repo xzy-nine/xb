@@ -2,7 +2,7 @@ import { HoverCard as HoverCardPrimitive } from 'radix-ui'
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 function HoverCard({
   openDelay = 300,

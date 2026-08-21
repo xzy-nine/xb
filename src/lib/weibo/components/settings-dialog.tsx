@@ -25,11 +25,10 @@ import {
 } from 'lucide-react'
 import { Reorder } from 'motion/react'
 import React from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { TreeView, type TreeDataItem } from '@/components/tree-view'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -38,15 +37,6 @@ import {
   DialogTitle,
   VisuallyHidden,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -62,13 +52,11 @@ import type {
   FeedPrimaryActionId,
   FeedToolbarButtonId,
   FontFamilyClass,
-  StatusDetailPopupPosition,
   UserTheme,
 } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { CUSTOM_THEME_PRESETS } from '@/lib/custom-theme'
 import { isRemoteFont, loadFont, type RemoteFontFamily } from '@/lib/font-loader'
-import { cn } from '@/lib/utils'
 import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 
 import {
@@ -78,6 +66,7 @@ import {
   SidebarItem,
   StackedField,
 } from './settings-dialog-ui'
+import { SettingsFeaturesSection } from './settings-features-section.custom'
 import { SettingsFontSection } from './settings-font-section'
 import { SettingsPersonalizeSection } from './settings-personalize-section'
 import { SettingsThemePicker } from './settings-theme-picker'
@@ -160,18 +149,10 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     collapseRepliesEnabled,
     renderReplyChainEnabled,
     darkModeImageDim,
-    statusDetailPopupEnabled,
-    statusDetailPopupPosition,
-    statusDetailPopupWidth,
     autoLoadLongText,
     textOnlyFeed,
     theme,
-    backgroundEnabled,
-    backgroundImageUrl,
-    glassOpacity,
-    glassBlur,
     xLayoutEnabled,
-    waterfallColumnCount,
     feedInteractionMode,
     feedPrimaryActionOrder,
     feedToolbarButtonIds,
@@ -213,18 +194,10 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
       collapseRepliesEnabled: s.collapseRepliesEnabled,
       renderReplyChainEnabled: s.renderReplyChainEnabled,
       darkModeImageDim: s.darkModeImageDim,
-      statusDetailPopupEnabled: s.statusDetailPopupEnabled,
-      statusDetailPopupPosition: s.statusDetailPopupPosition,
-      statusDetailPopupWidth: s.statusDetailPopupWidth,
       autoLoadLongText: s.autoLoadLongText,
       textOnlyFeed: s.textOnlyFeed,
       theme: s.theme,
-      backgroundEnabled: s.backgroundEnabled,
-      backgroundImageUrl: s.backgroundImageUrl,
-      glassOpacity: s.glassOpacity,
-      glassBlur: s.glassBlur,
       xLayoutEnabled: s.xLayoutEnabled,
-      waterfallColumnCount: s.waterfallColumnCount,
       feedInteractionMode: s.feedInteractionMode,
       feedPrimaryActionOrder: s.feedPrimaryActionOrder,
       feedToolbarButtonIds: s.feedToolbarButtonIds,
@@ -246,38 +219,6 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
       deleteUserTheme: s.deleteUserTheme,
       updateUserTheme: s.updateUserTheme,
     })),
-  )
-  const [imagePreviewError, setImagePreviewError] = useState(false)
-  const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const validateImageUrl = useCallback((url: string) => {
-    if (validateTimerRef.current) {
-      clearTimeout(validateTimerRef.current)
-    }
-    setImagePreviewError(false)
-
-    if (!url) return
-
-    validateTimerRef.current = setTimeout(async () => {
-      try {
-        const resp = await fetch(url, { method: 'HEAD', mode: 'no-cors' })
-        if (resp.type === 'opaque') return
-        if (!resp.ok) {
-          toast.warning(`背景图片加载失败 (HTTP ${resp.status})`, {
-            description: '请检查 URL 是否正确',
-          })
-          setImagePreviewError(true)
-        }
-      } catch {}
-    }, 800)
-  }, [])
-
-  const handleBackgroundImageUrlChange = useCallback(
-    (url: string) => {
-      updateSettings({ backgroundImageUrl: url })
-      validateImageUrl(url)
-    },
-    [updateSettings, validateImageUrl],
   )
 
   const pageElementTreeData = useMemo<TreeDataItem[]>(
@@ -366,11 +307,6 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
   useEffect(() => {
     if (typeof browser !== 'undefined' && browser.runtime?.getManifest) {
       setVersion(browser.runtime.getManifest().version)
-    }
-    return () => {
-      if (validateTimerRef.current) {
-        clearTimeout(validateTimerRef.current)
-      }
     }
   }, [])
 
@@ -686,166 +622,17 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
             )}
 
             {activeGroup === 'features' && (
-              <div className="divide-border/40 divide-y px-6 py-4">
-                <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
-                  <Switch
-                    checked={statusDetailPopupEnabled}
-                    onCheckedChange={(checked) =>
-                      void updateSettings({
-                        statusDetailPopupEnabled: checked,
-                        ...(checked && { feedInteractionMode: 'x' }),
-                      })
-                    }
-                  />
-                </Field>
-
-                {statusDetailPopupEnabled && (
-                  <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
-                    <Select
-                      value={statusDetailPopupPosition}
-                      onValueChange={(value) =>
-                        updateSettings({
-                          statusDetailPopupPosition: value as StatusDetailPopupPosition,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="left">左</SelectItem>
-                        <SelectItem value="center">中</SelectItem>
-                        <SelectItem value="right">右</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
-
-                {statusDetailPopupEnabled && (
-                  <div className="flex flex-col gap-2">
-                    <Label>弹窗宽度</Label>
-                    <p className="text-muted-foreground text-xs">
-                      详情弹窗占页面宽度的比例 ({statusDetailPopupWidth}%)
-                    </p>
-                    <Slider
-                      value={[statusDetailPopupWidth]}
-                      min={50}
-                      max={80}
-                      step={5}
-                      onValueChange={([value]) =>
-                        void updateSettings({ statusDetailPopupWidth: value })
-                      }
-                    />
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <Label>瀑布流栏数</Label>
-                  <p className="text-muted-foreground text-xs">
-                    设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于
-                    300px
-                  </p>
-                  <Slider
-                    value={[waterfallColumnCount]}
-                    min={1}
-                    max={5}
-                    step={1}
-                    onValueChange={([value]) =>
-                      void updateSettings({ waterfallColumnCount: value })
-                    }
-                  />
-                </div>
-
-                <Field label="自定义背景" description="为页面添加自定义背景图片">
-                  <Switch
-                    checked={backgroundEnabled}
-                    onCheckedChange={(checked) =>
-                      void updateSettings({ backgroundEnabled: checked })
-                    }
-                  />
-                </Field>
-
-                {backgroundEnabled && (
-                  <Field label="背景图片" description="输入图片 URL 作为背景">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="url"
-                        placeholder="https://example.com/bg.jpg"
-                        value={backgroundImageUrl}
-                        onChange={(e) => handleBackgroundImageUrlChange(e.target.value)}
-                        className="h-8 w-[180px]"
-                      />
-                      {backgroundImageUrl ? (
-                        <div
-                          className={cn(
-                            'size-8 shrink-0 overflow-hidden rounded-md border',
-                            imagePreviewError && 'border-destructive',
-                          )}
-                        >
-                          <img
-                            src={`${backgroundImageUrl}${backgroundImageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
-                            alt="背景预览"
-                            className="block size-full object-cover"
-                            onError={() => setImagePreviewError(true)}
-                            onLoad={() => setImagePreviewError(false)}
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  </Field>
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <Label>玻璃透明度</Label>
-                  <p className="text-muted-foreground text-xs">
-                    卡片和弹窗的半透明程度 ({glassOpacity}%)
-                  </p>
-                  <Slider
-                    value={[glassOpacity]}
-                    min={0}
-                    max={100}
-                    step={5}
-                    onValueChange={([v]) => void updateSettings({ glassOpacity: v })}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>玻璃模糊</Label>
-                  <p className="text-muted-foreground text-xs">
-                    卡片和弹窗的背景模糊程度 ({glassBlur}px)
-                  </p>
-                  <Slider
-                    value={[glassBlur]}
-                    min={0}
-                    max={20}
-                    step={1}
-                    onValueChange={([v]) => void updateSettings({ glassBlur: v })}
-                  />
-                </div>
-
-                <div className="mt-3 flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      void updateSettings({
-                        contentWidth: DEFAULT_APP_SETTINGS.contentWidth,
-                        statusDetailPopupEnabled: DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
-                        statusDetailPopupPosition: DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
-                        statusDetailPopupWidth: DEFAULT_APP_SETTINGS.statusDetailPopupWidth,
-                        waterfallColumnCount: DEFAULT_APP_SETTINGS.waterfallColumnCount,
-                        backgroundEnabled: DEFAULT_APP_SETTINGS.backgroundEnabled,
-                        backgroundImageUrl: DEFAULT_APP_SETTINGS.backgroundImageUrl,
-                        glassOpacity: DEFAULT_APP_SETTINGS.glassOpacity,
-                        glassBlur: DEFAULT_APP_SETTINGS.glassBlur,
-                        followGroupsEnabled: DEFAULT_APP_SETTINGS.followGroupsEnabled,
-                      })
-                    }}
-                  >
-                    恢复默认
-                  </Button>
-                </div>
-              </div>
+              <SettingsFeaturesSection
+                statusDetailPopupEnabled={useAppSettings((s) => s.statusDetailPopupEnabled)}
+                statusDetailPopupPosition={useAppSettings((s) => s.statusDetailPopupPosition)}
+                statusDetailPopupWidth={useAppSettings((s) => s.statusDetailPopupWidth)}
+                backgroundEnabled={useAppSettings((s) => s.backgroundEnabled)}
+                backgroundImageUrl={useAppSettings((s) => s.backgroundImageUrl)}
+                glassOpacity={useAppSettings((s) => s.glassOpacity)}
+                glassBlur={useAppSettings((s) => s.glassBlur)}
+                waterfallColumnCount={useAppSettings((s) => s.waterfallColumnCount)}
+                updateSettings={updateSettings}
+              />
             )}
 
             {activeGroup === 'advanced' && (

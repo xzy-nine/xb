@@ -26,7 +26,7 @@ import { ZapOffIcon } from '@/components/ui/zap-off'
 import type { AppTheme } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { ThemeModeToggle } from '@/lib/weibo/components/theme-mode-toggle'
 import {
   hasDmBadge,

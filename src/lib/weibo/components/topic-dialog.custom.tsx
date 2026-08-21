@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
-import { DialogContainer } from '@/lib/weibo/components/dialog-container'
+import { DialogContainer } from '@/lib/weibo/components/dialog-container.custom'
 import { FeedList } from '@/lib/weibo/components/feed-list'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import {

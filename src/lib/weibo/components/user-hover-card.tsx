@@ -12,7 +12,7 @@ import {
   ProfileMutualFollowers,
 } from '@/lib/weibo/components/profile-shared'
 import { RatingPanel } from '@/lib/weibo/components/rating-panel'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-data'
 
 function UserHoverCardSkeleton() {

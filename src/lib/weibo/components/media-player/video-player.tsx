@@ -39,7 +39,7 @@ import { getUiPortalContainer } from '@/components/ui/portal'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
-import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 import { sanitizeFilename } from '@/lib/weibo/utils/filename'
 
 import { useInlineFullscreen } from './inline-fullscreen'

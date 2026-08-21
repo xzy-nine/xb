@@ -22,7 +22,7 @@ import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expan
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
 import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { RatingSummaryBadge } from '@/lib/weibo/components/rating-panel'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
 import {
   cancelStatusLike,
@@ -57,6 +57,7 @@ import {
   getStatusCopyText,
   getStatusDetailPath,
   hasTextSelectionWithin,
+  isInteractiveClickTarget,
 } from './feed-card/feed-card-utils'
 
 export const FeedCard = memo(function FeedCard({
@@ -250,19 +251,12 @@ export const FeedCard = memo(function FeedCard({
       return
     }
 
-    const target = event.target as HTMLElement | null
-    const interactiveSelectors =
-      'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-
     // Check if the click target is a nested interactive element (not the card itself)
-    if (target) {
-      const closestInteractive = target.closest(interactiveSelectors)
-      if (closestInteractive && closestInteractive !== event.currentTarget) {
-        return
-      }
+    if (isInteractiveClickTarget(event.target as HTMLElement | null, event.currentTarget)) {
+      return
     }
 
-    if (event.currentTarget && hasTextSelectionWithin(event.currentTarget)) {
+    if (hasTextSelectionWithin(event.currentTarget)) {
       return
     }
 

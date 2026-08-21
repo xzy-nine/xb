@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import type { StatusDetailPopupPosition } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
-import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 interface DialogContainerProps {
   open: boolean

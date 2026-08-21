@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { MentionInlineText } from '@/lib/weibo/components/status-text'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'

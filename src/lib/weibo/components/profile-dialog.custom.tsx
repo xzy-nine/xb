@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { DialogContainer } from '@/lib/weibo/components/dialog-container'
+import { DialogContainer } from '@/lib/weibo/components/dialog-container.custom'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { ProfileHeader } from '@/lib/weibo/components/profile-header'
 import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-io'

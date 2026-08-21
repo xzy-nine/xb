@@ -10,7 +10,7 @@ import {
   ProfileMutualFollowers as SharedProfileMutualFollowers,
 } from '@/lib/weibo/components/profile-shared'
 import { RatingPanel } from '@/lib/weibo/components/rating-panel'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import type { UserProfile } from '@/lib/weibo/models/profile'
 
 function ProfileIdentity({ profile }: { profile: UserProfile }) {

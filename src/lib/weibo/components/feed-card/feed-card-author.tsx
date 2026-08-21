@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { UserHoverCard } from '@/lib/weibo/components/user-hover-card'
 import { CreatedAtBadge, UserAvatar } from '@/lib/weibo/components/user-presenter'
 import type { FeedItem } from '@/lib/weibo/models/feed'

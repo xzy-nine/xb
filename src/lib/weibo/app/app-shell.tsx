@@ -10,10 +10,7 @@ import { AuthRequiredDialog } from '@/lib/weibo/components/auth-required-dialog'
 import { CommentModal } from '@/lib/weibo/components/comment-modal'
 import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
-import { ProfileDialog } from '@/lib/weibo/components/profile-dialog'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
-import { StatusDetailDialog } from '@/lib/weibo/components/status-detail-dialog'
-import { TopicDialog } from '@/lib/weibo/components/topic-dialog'
 import { followGroupsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import { getDefaultFollowGroupForHomeTab } from '@/lib/weibo/models/explore-utils'
@@ -22,7 +19,9 @@ import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
 import { onUnauthorized } from '@/lib/weibo/services/auth-events'
 
-type ProfileLookup = { uid: string } | { screenName: string }
+import { AppShellDialogs } from './app-shell-dialogs.custom'
+import type { ProfileLookup } from './use-app-dialogs.custom'
+import { useAppDialogs } from './use-app-dialogs.custom'
 
 const GenImageDialog = lazy(() =>
   import('@/lib/weibo/components/gen-image-dialog').then((m) => ({ default: m.GenImageDialog })),
@@ -77,14 +76,10 @@ export function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
-  const [statusDetailDialogOpen, setStatusDetailDialogOpen] = useState(false)
-  const [statusDetailItem, setStatusDetailItem] = useState<StatusDetailNavigationItem | null>(null)
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false)
-  const [profileLookup, setProfileLookup] = useState<ProfileLookup | null>(null)
-  const [topicDialogOpen, setTopicDialogOpen] = useState(false)
-  const [topicDialogTopic, setTopicDialogTopic] = useState<string | null>(null)
   const mainRef = useRef<HTMLDivElement | null>(null)
   const homeTabNavigationRequestRef = useRef(0)
+
+  const dialogs = useAppDialogs({ navigate, statusDetailPopupEnabled })
 
   useEffect(() => onUnauthorized(() => setAuthDialogOpen(true)), [])
 
@@ -105,45 +100,13 @@ export function AppShell() {
         return
       }
       if (statusDetailPopupEnabled) {
-        setStatusDetailItem(item)
-        setStatusDetailDialogOpen(true)
+        dialogs.openStatusDetailDialog(item)
       } else {
         navigate(`/${item.author.id}/${statusId}`)
       }
     },
-    [navigate, statusDetailPopupEnabled],
+    [navigate, statusDetailPopupEnabled, dialogs],
   )
-
-  const openStatusDetailDialog = useCallback((item: StatusDetailNavigationItem) => {
-    setStatusDetailItem(item)
-    setStatusDetailDialogOpen(true)
-  }, [])
-
-  const navigateToProfile = useCallback(
-    (lookup: ProfileLookup) => {
-      if (statusDetailPopupEnabled) {
-        setProfileLookup(lookup)
-        setProfileDialogOpen(true)
-      } else {
-        if ('uid' in lookup && lookup.uid) {
-          navigate(`/u/${lookup.uid}`)
-        } else if ('screenName' in lookup && lookup.screenName) {
-          navigate(`/n/${encodeURIComponent(lookup.screenName)}`)
-        }
-      }
-    },
-    [navigate, statusDetailPopupEnabled],
-  )
-
-  const openProfileDialog = useCallback((lookup: ProfileLookup) => {
-    setProfileLookup(lookup)
-    setProfileDialogOpen(true)
-  }, [])
-
-  const openTopicDialog = useCallback((topic: string) => {
-    setTopicDialogTopic(topic)
-    setTopicDialogOpen(true)
-  }, [])
 
   const handleSetComposeTarget = useCallback((target: ComposeTarget | null) => {
     setComposeTarget(target)
@@ -199,10 +162,10 @@ export function AppShell() {
     () => ({
       page,
       navigateToStatusDetail,
-      openStatusDetailDialog,
-      navigateToProfile,
-      openProfileDialog,
-      openTopicDialog,
+      openStatusDetailDialog: dialogs.openStatusDetailDialog,
+      navigateToProfile: dialogs.navigateToProfile,
+      openProfileDialog: dialogs.openProfileDialog,
+      openTopicDialog: dialogs.openTopicDialog,
       resetMainScroll,
       scrollMainToTop,
       composeTarget,
@@ -216,10 +179,10 @@ export function AppShell() {
     [
       page,
       navigateToStatusDetail,
-      openStatusDetailDialog,
-      navigateToProfile,
-      openProfileDialog,
-      openTopicDialog,
+      dialogs.openStatusDetailDialog,
+      dialogs.navigateToProfile,
+      dialogs.openProfileDialog,
+      dialogs.openTopicDialog,
       resetMainScroll,
       scrollMainToTop,
       composeTarget,
@@ -249,35 +212,22 @@ export function AppShell() {
         <RewritePausedCard onResume={() => void updateSettings({ rewriteEnabled: true })} />
         {composeModal}
         <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
-        <StatusDetailDialog
-          open={statusDetailDialogOpen}
-          item={statusDetailItem}
+        <AppShellDialogs
+          statusDetailDialogOpen={dialogs.statusDetailDialogOpen}
+          statusDetailItem={dialogs.statusDetailItem}
+          profileDialogOpen={dialogs.profileDialogOpen}
+          profileLookup={dialogs.profileLookup}
+          topicDialogOpen={dialogs.topicDialogOpen}
+          topicDialogTopic={dialogs.topicDialogTopic}
           position={statusDetailPopupPosition}
           width={statusDetailPopupWidth}
-          onOpenChange={setStatusDetailDialogOpen}
-          setComposeTarget={handleSetComposeTarget}
-          onNavigate={navigateToStatusDetail}
-          onNavigateProfile={openProfileDialog}
-          onNavigateTopic={openTopicDialog}
-        />
-        <ProfileDialog
-          open={profileDialogOpen}
-          lookup={profileLookup}
-          position={statusDetailPopupPosition}
-          width={statusDetailPopupWidth}
-          onOpenChange={setProfileDialogOpen}
+          setStatusDetailDialogOpen={dialogs.setStatusDetailDialogOpen}
+          setProfileDialogOpen={dialogs.setProfileDialogOpen}
+          setTopicDialogOpen={dialogs.setTopicDialogOpen}
           setComposeTarget={handleSetComposeTarget}
           onNavigateStatusDetail={navigateToStatusDetail}
-        />
-        <TopicDialog
-          open={topicDialogOpen}
-          topic={topicDialogTopic}
-          position={statusDetailPopupPosition}
-          width={statusDetailPopupWidth}
-          onOpenChange={setTopicDialogOpen}
-          setComposeTarget={handleSetComposeTarget}
-          onNavigate={navigateToStatusDetail}
-          onNavigateProfile={openProfileDialog}
+          onNavigateProfile={dialogs.navigateToProfile}
+          onNavigateTopic={dialogs.openTopicDialog}
         />
       </>
     )
@@ -324,35 +274,22 @@ export function AppShell() {
             window.location.href = 'https://weibo.com/newlogin'
           }}
         />
-        <StatusDetailDialog
-          open={statusDetailDialogOpen}
-          item={statusDetailItem}
+        <AppShellDialogs
+          statusDetailDialogOpen={dialogs.statusDetailDialogOpen}
+          statusDetailItem={dialogs.statusDetailItem}
+          profileDialogOpen={dialogs.profileDialogOpen}
+          profileLookup={dialogs.profileLookup}
+          topicDialogOpen={dialogs.topicDialogOpen}
+          topicDialogTopic={dialogs.topicDialogTopic}
           position={statusDetailPopupPosition}
           width={statusDetailPopupWidth}
-          onOpenChange={setStatusDetailDialogOpen}
-          setComposeTarget={handleSetComposeTarget}
-          onNavigate={navigateToStatusDetail}
-          onNavigateProfile={openProfileDialog}
-          onNavigateTopic={openTopicDialog}
-        />
-        <ProfileDialog
-          open={profileDialogOpen}
-          lookup={profileLookup}
-          position={statusDetailPopupPosition}
-          width={statusDetailPopupWidth}
-          onOpenChange={setProfileDialogOpen}
+          setStatusDetailDialogOpen={dialogs.setStatusDetailDialogOpen}
+          setProfileDialogOpen={dialogs.setProfileDialogOpen}
+          setTopicDialogOpen={dialogs.setTopicDialogOpen}
           setComposeTarget={handleSetComposeTarget}
           onNavigateStatusDetail={navigateToStatusDetail}
-        />
-        <TopicDialog
-          open={topicDialogOpen}
-          topic={topicDialogTopic}
-          position={statusDetailPopupPosition}
-          width={statusDetailPopupWidth}
-          onOpenChange={setTopicDialogOpen}
-          setComposeTarget={handleSetComposeTarget}
-          onNavigate={navigateToStatusDetail}
-          onNavigateProfile={openProfileDialog}
+          onNavigateProfile={dialogs.navigateToProfile}
+          onNavigateTopic={dialogs.openTopicDialog}
         />
       </ShellFrame>
     </GenImageDialogProvider>

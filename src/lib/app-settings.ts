@@ -1,4 +1,11 @@
+import {
+  type CustomAppSettingsFields,
+  CUSTOM_SETTINGS_DEFAULTS,
+  normalizeCustomSettings,
+} from './app-settings.custom'
 import { FONT_FAMILY_CLASSES, type RemoteFontFamily, type SystemFontFamily } from './font-loader'
+
+export type { StatusDetailPopupPosition } from './app-settings.custom'
 
 export type AppTheme = 'system' | 'light' | 'dark'
 
@@ -79,8 +86,6 @@ export const CUSTOM_CONTENT_WIDTH_MAX = 1600
 export const CUSTOM_CONTENT_WIDTH_STEP = 20
 export const DEFAULT_CUSTOM_CONTENT_WIDTH = 1200
 
-export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
-
 export type HomeTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 
 export type CustomThemePreset =
@@ -130,7 +135,7 @@ const PLAYBACK_RATE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
 
 type PlaybackRate = (typeof PLAYBACK_RATE_OPTIONS)[number]
 
-export interface AppSettings {
+export interface AppSettings extends CustomAppSettingsFields {
   contentWidth: ContentWidth
   customContentWidth: number
   theme: AppTheme
@@ -168,17 +173,6 @@ export interface AppSettings {
   imageGenTheme: GenImageCardTheme
   imageGenCardStyle: CardStyle
   hotSearchType: HotSearchType
-  statusDetailPopupEnabled: boolean
-  statusDetailPopupPosition: StatusDetailPopupPosition
-  statusDetailPopupWidth: number
-  backgroundEnabled: boolean
-  backgroundColor: string
-  backgroundImageUrl: string
-  glassOpacity: number
-  glassBlur: number
-  xLayoutEnabled: boolean
-  waterfallColumnCount: number
-  browsingHistoryEnabled: boolean
   feedInteractionMode: FeedInteractionMode
   feedPrimaryActionOrder: FeedPrimaryActionId[]
   feedToolbarButtonIds: FeedToolbarButtonId[]
@@ -196,7 +190,6 @@ export interface AppSettings {
   selectedThemeType: SelectedThemeType
   selectedThemeId: string
   userThemes: UserTheme[]
-  followGroupsEnabled: boolean
   photoLoopEnabled: boolean
 }
 
@@ -258,17 +251,6 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   imageGenTheme: 'light' as GenImageCardTheme,
   imageGenCardStyle: 'default' as CardStyle,
   hotSearchType: 'hot' as HotSearchType,
-  statusDetailPopupEnabled: true,
-  statusDetailPopupPosition: 'right',
-  statusDetailPopupWidth: 50,
-  backgroundEnabled: true,
-  backgroundColor: '#1e40af',
-  backgroundImageUrl: 'https://uapis.cn/api/v1/image/bing-daily',
-  glassOpacity: 80,
-  glassBlur: 12,
-  xLayoutEnabled: true,
-  waterfallColumnCount: 1,
-  browsingHistoryEnabled: true,
   feedInteractionMode: 'x',
   feedPrimaryActionOrder: ['comment', 'repost', 'like'],
   feedToolbarButtonIds: [],
@@ -286,8 +268,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   selectedThemeType: 'preset',
   selectedThemeId: 'default',
   userThemes: [],
-  followGroupsEnabled: true,
   photoLoopEnabled: true,
+  ...CUSTOM_SETTINGS_DEFAULTS,
 }
 
 function isAppTheme(value: unknown): value is AppTheme {
@@ -465,14 +447,6 @@ export function normalizeCustomContentWidth(value: unknown): number {
       CUSTOM_CONTENT_WIDTH_STEP +
     CUSTOM_CONTENT_WIDTH_MIN
   )
-}
-
-function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopupPosition {
-  return value === 'left' || value === 'center' || value === 'right'
-}
-
-function isStatusDetailPopupWidth(value: unknown): value is number {
-  return typeof value === 'number' && value >= 50 && value <= 80
 }
 
 function isHomeTab(value: unknown): value is HomeTab {
@@ -660,54 +634,7 @@ export function normalizeAppSettings(value: unknown): AppSettings {
     hotSearchType: isHotSearchType(candidate.hotSearchType)
       ? candidate.hotSearchType
       : DEFAULT_APP_SETTINGS.hotSearchType,
-    statusDetailPopupEnabled:
-      typeof candidate.statusDetailPopupEnabled === 'boolean'
-        ? candidate.statusDetailPopupEnabled
-        : DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
-    statusDetailPopupPosition: isStatusDetailPopupPosition(candidate.statusDetailPopupPosition)
-      ? candidate.statusDetailPopupPosition
-      : DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
-    statusDetailPopupWidth: isStatusDetailPopupWidth(candidate.statusDetailPopupWidth)
-      ? candidate.statusDetailPopupWidth
-      : DEFAULT_APP_SETTINGS.statusDetailPopupWidth,
-    backgroundEnabled:
-      typeof candidate.backgroundEnabled === 'boolean'
-        ? candidate.backgroundEnabled
-        : DEFAULT_APP_SETTINGS.backgroundEnabled,
-    backgroundColor:
-      typeof candidate.backgroundColor === 'string'
-        ? candidate.backgroundColor
-        : DEFAULT_APP_SETTINGS.backgroundColor,
-    backgroundImageUrl:
-      typeof candidate.backgroundImageUrl === 'string'
-        ? candidate.backgroundImageUrl
-        : DEFAULT_APP_SETTINGS.backgroundImageUrl,
-    glassOpacity:
-      typeof candidate.glassOpacity === 'number' &&
-      candidate.glassOpacity >= 0 &&
-      candidate.glassOpacity <= 100
-        ? candidate.glassOpacity
-        : DEFAULT_APP_SETTINGS.glassOpacity,
-    glassBlur:
-      typeof candidate.glassBlur === 'number' &&
-      candidate.glassBlur >= 0 &&
-      candidate.glassBlur <= 20
-        ? candidate.glassBlur
-        : DEFAULT_APP_SETTINGS.glassBlur,
-    xLayoutEnabled:
-      typeof candidate.xLayoutEnabled === 'boolean'
-        ? candidate.xLayoutEnabled
-        : DEFAULT_APP_SETTINGS.xLayoutEnabled,
-    waterfallColumnCount:
-      typeof candidate.waterfallColumnCount === 'number' &&
-      candidate.waterfallColumnCount >= 1 &&
-      candidate.waterfallColumnCount <= 5
-        ? candidate.waterfallColumnCount
-        : DEFAULT_APP_SETTINGS.waterfallColumnCount,
-    browsingHistoryEnabled:
-      typeof candidate.browsingHistoryEnabled === 'boolean'
-        ? candidate.browsingHistoryEnabled
-        : DEFAULT_APP_SETTINGS.browsingHistoryEnabled,
+    ...normalizeCustomSettings(candidate as Record<string, unknown>),
     feedInteractionMode: isFeedInteractionMode(candidate.feedInteractionMode)
       ? candidate.feedInteractionMode
       : typeof legacyCandidate.xLayoutEnabled === 'boolean'
@@ -775,10 +702,6 @@ export function normalizeAppSettings(value: unknown): AppSettings {
             typeof (t as UserTheme).name === 'string',
         )
       : DEFAULT_APP_SETTINGS.userThemes,
-    followGroupsEnabled:
-      typeof candidate.followGroupsEnabled === 'boolean'
-        ? candidate.followGroupsEnabled
-        : DEFAULT_APP_SETTINGS.followGroupsEnabled,
     photoLoopEnabled:
       typeof candidate.photoLoopEnabled === 'boolean'
         ? candidate.photoLoopEnabled

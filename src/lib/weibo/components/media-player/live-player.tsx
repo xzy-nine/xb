@@ -40,7 +40,7 @@ import { createPortal } from 'react-dom'
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { cn } from '@/lib/utils'
 import type { FeedDashSource } from '@/lib/weibo/models/feed'
-import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 import { useInlineFullscreen } from './inline-fullscreen'
 import { MediaPopoverPopup } from './media-popup'

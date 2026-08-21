@@ -6,7 +6,7 @@ import { Card, CardDescription } from '@/components/ui/card'
 import { RefreshCWIcon } from '@/components/ui/refresh-cw'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { followedSuperTopicsQueryOptions } from '@/lib/weibo/data/weibo-data'
 import type { SuperTopicItem } from '@/lib/weibo/models/super-topic'
 

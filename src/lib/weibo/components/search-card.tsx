@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
-import { SmartLink } from '@/lib/weibo/components/smart-link'
+import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { searchQueryOptions } from '@/lib/weibo/data/weibo-data'
 
 type ProfileLookup = { uid: string } | { screenName: string }

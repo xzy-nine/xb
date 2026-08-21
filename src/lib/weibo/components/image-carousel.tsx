@@ -11,7 +11,7 @@ import { getUiPortalContainer } from '@/components/ui/portal'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 import type { FeedImage, FeedMixMediaItem } from '@/lib/weibo/models/feed'
-import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 import { VideoPlayer } from './media-player/video-player'
 import { PhotoToolbar } from './photo-toolbar'
