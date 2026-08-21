@@ -163,6 +163,8 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     statusDetailPopupEnabled,
     statusDetailPopupPosition,
     statusDetailPopupWidth,
+    autoLoadLongText,
+    textOnlyFeed,
     theme,
     backgroundEnabled,
     backgroundImageUrl,
@@ -174,6 +176,7 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     feedPrimaryActionOrder,
     feedToolbarButtonIds,
     contentWidth,
+    customContentWidth,
     xbTopicPage,
     ratingEnabled,
     rememberPlaybackRate,
@@ -213,6 +216,8 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
       statusDetailPopupEnabled: s.statusDetailPopupEnabled,
       statusDetailPopupPosition: s.statusDetailPopupPosition,
       statusDetailPopupWidth: s.statusDetailPopupWidth,
+      autoLoadLongText: s.autoLoadLongText,
+      textOnlyFeed: s.textOnlyFeed,
       theme: s.theme,
       backgroundEnabled: s.backgroundEnabled,
       backgroundImageUrl: s.backgroundImageUrl,
@@ -224,6 +229,7 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
       feedPrimaryActionOrder: s.feedPrimaryActionOrder,
       feedToolbarButtonIds: s.feedToolbarButtonIds,
       contentWidth: s.contentWidth,
+      customContentWidth: s.customContentWidth,
       xbTopicPage: s.xbTopicPage,
       ratingEnabled: s.ratingEnabled,
       rememberPlaybackRate: s.rememberPlaybackRate,
@@ -534,19 +540,41 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                       onChange={(value) => void updateSettings({ theme: value as AppTheme })}
                     />
                   </Field>
-                  <Field label="内容宽度" description="调整主时间线在大屏幕上的宽度">
+                  <StackedField label="内容宽度" description="调整应用内容区域在大屏幕上的宽度">
                     <OptionPills
                       value={contentWidth}
                       options={[
+                        { value: 'narrower', label: '更窄' },
+                        { value: 'narrow', label: '窄' },
                         { value: 'standard', label: '标准' },
                         { value: 'wide', label: '宽' },
                         { value: 'wider', label: '更宽' },
+                        { value: 'custom', label: '自定义' },
                       ]}
                       onChange={(value) =>
                         void updateSettings({ contentWidth: value as ContentWidth })
                       }
                     />
-                  </Field>
+                    {contentWidth === 'custom' ? (
+                      <div className="flex items-center gap-3 pt-1">
+                        <Slider
+                          min={800}
+                          max={1600}
+                          step={20}
+                          value={[customContentWidth]}
+                          aria-label="自定义内容宽度"
+                          onValueChange={([value]) => {
+                            if (value !== undefined) {
+                              void updateSettings({ customContentWidth: value })
+                            }
+                          }}
+                        />
+                        <output className="text-muted-foreground w-16 shrink-0 text-right font-mono text-xs tabular-nums">
+                          {customContentWidth}px
+                        </output>
+                      </div>
+                    ) : null}
+                  </StackedField>
                   <StackedField
                     label="微博操作顺序"
                     description="拖动调整评论、转发、点赞三个主操作的位置"
@@ -632,6 +660,8 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                 darkModeImageDim={darkModeImageDim}
                 xLayoutEnabled={xLayoutEnabled}
                 followGroupsEnabled={followGroupsEnabled}
+                autoLoadLongText={autoLoadLongText}
+                textOnlyFeed={textOnlyFeed}
                 rememberPlaybackRate={rememberPlaybackRate}
                 firstLoadRedirect={firstLoadRedirect}
                 renderReplyChainEnabled={renderReplyChainEnabled}
@@ -657,22 +687,6 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
 
             {activeGroup === 'features' && (
               <div className="divide-border/40 divide-y px-6 py-4">
-                <Field label="内容宽度" description="大屏幕下中间内容区域的宽度">
-                  <Select
-                    value={contentWidth}
-                    onValueChange={(v) => void updateSettings({ contentWidth: v as ContentWidth })}
-                  >
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">标准</SelectItem>
-                      <SelectItem value="wide">宽</SelectItem>
-                      <SelectItem value="wider">更宽</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-
                 <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
                   <Switch
                     checked={statusDetailPopupEnabled}

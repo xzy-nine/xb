@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -174,6 +174,85 @@ describe('FeedCard', () => {
     await waitFor(() => {
       expect(screen.getByText('expanded post content')).toBeInTheDocument()
     })
+  })
+
+  it('automatically loads long text after a timeline card enters the viewport', async () => {
+    class TestIntersectionObserver {
+      static instances: TestIntersectionObserver[] = []
+
+      constructor(readonly callback: IntersectionObserverCallback) {
+        TestIntersectionObserver.instances.push(this)
+      }
+
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+      takeRecords() {
+        return []
+      }
+    }
+
+    vi.stubGlobal('IntersectionObserver', TestIntersectionObserver)
+    const store = getAppSettingsStore()
+    store.setState({ autoLoadLongText: true })
+    vi.mocked(loadStatusLongText).mockResolvedValueOnce({ longTextContent: '自动展开的正文' })
+
+    renderCard()
+
+    expect(vi.mocked(loadStatusLongText)).not.toHaveBeenCalled()
+
+    TestIntersectionObserver.instances[0]?.callback(
+      [{ isIntersecting: true } as IntersectionObserverEntry],
+      TestIntersectionObserver.instances[0] as unknown as IntersectionObserver,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('自动展开的正文')).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('button', { name: '阅读全文' })).not.toBeInTheDocument()
+
+    vi.unstubAllGlobals()
+  })
+
+  it('hides avatars and media in text-only timeline mode', () => {
+    const store = getAppSettingsStore()
+    store.setState({ textOnlyFeed: true })
+
+    renderCard({
+      item: {
+        author: { id: '1', name: 'Alice', avatarUrl: 'https://example.com/avatar.jpg' },
+        text: 'preview content http://t.cn/inline-image',
+        images: [
+          {
+            id: 'image-1',
+            thumbnailUrl: 'https://example.com/thumbnail.jpg',
+            largeUrl: 'https://example.com/large.jpg',
+          },
+        ],
+        mixMediaInfo: [
+          {
+            id: 'video-1',
+            type: 'video',
+            videoCoverUrl: 'https://example.com/video-cover.jpg',
+          },
+        ],
+        imageEntities: {
+          'http://t.cn/inline-image': [
+            {
+              id: 'inline-image',
+              thumbnailUrl: 'https://example.com/inline-thumbnail.jpg',
+              largeUrl: 'https://example.com/inline-large.jpg',
+            },
+          ],
+        },
+      },
+    })
+
+    expect(screen.queryByRole('img', { name: 'Alice' })).not.toBeInTheDocument()
+    expect(document.querySelector('img[src="https://example.com/thumbnail.jpg"]')).toBeNull()
+    expect(document.querySelector('img[src="https://example.com/video-cover.jpg"]')).toBeNull()
+    expect(document.querySelector('img[src="https://example.com/inline-thumbnail.jpg"]')).toBeNull()
+    expect(screen.getByText('preview content http://t.cn/inline-image')).toBeInTheDocument()
   })
 
   it('renders long text entities and images from the expanded payload', async () => {
@@ -442,6 +521,55 @@ describe('FeedCard', () => {
     expect(screen.getByRole('button', { name: '点赞微博' }).className).toContain('rounded-full')
   })
 
+  it('renders actions and the media download menu for a retweeted status', () => {
+    const store = getAppSettingsStore()
+    store.setState({ feedInteractionMode: 'x' })
+    const onCommentClick = vi.fn()
+    const onRepostClick = vi.fn()
+
+    renderCard({
+      onCommentClick,
+      onRepostClick,
+      item: {
+        retweetedStatus: {
+          id: 'retweeted-501',
+          mblogId: 'm-retweeted-501',
+          isLongText: false,
+          text: 'retweeted content',
+          createdAt: '2024-01-01',
+          createdAtLabel: 'today',
+          author: { id: '2', name: 'Bob', avatarUrl: null },
+          stats: { likes: 4, comments: 5, reposts: 6 },
+          images: [
+            {
+              id: 'retweeted-image-1',
+              thumbnailUrl: 'https://example.com/retweeted-thumbnail.jpg',
+              largeUrl: 'https://example.com/retweeted-large.jpg',
+            },
+          ],
+          media: null,
+          regionName: '',
+          source: '',
+        },
+      },
+    })
+
+    const retweetedCard = screen.getAllByTestId('feed-card-body')[1]!
+    const commentButton = within(retweetedCard).getByRole('button', { name: '回复微博' })
+    const repostButton = within(retweetedCard).getByRole('button', { name: '转发微博' })
+
+    expect(within(retweetedCard).getByRole('button', { name: '点赞微博' })).toBeInTheDocument()
+
+    fireEvent.click(commentButton)
+    fireEvent.click(repostButton)
+    const moreButton = within(retweetedCard).getByRole('button', { name: '更多操作' })
+    fireEvent.pointerDown(moreButton, { button: 0, ctrlKey: false })
+
+    expect(onCommentClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'retweeted-501' }))
+    expect(onRepostClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'retweeted-501' }))
+    expect(screen.getByRole('menuitem', { name: '批量下载' })).toBeInTheDocument()
+  })
+
   it('exposes inline comment expansion state when comments can expand in weibo mode', async () => {
     renderCard({})
 
@@ -638,6 +766,118 @@ describe('FeedCard', () => {
       expect(onNavigate).not.toHaveBeenCalled()
     })
 
+    it('opens retweeted status detail in a new tab on cmd + click', () => {
+      const queryClient = new QueryClient()
+      const onNavigate = vi.fn()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <GenImageDialogProvider>
+              <FeedCard
+                item={{
+                  id: 'outer',
+                  mblogId: 'm-outer',
+                  isLongText: false,
+                  text: 'outer post',
+                  createdAt: '2024-01-01',
+                  createdAtLabel: 'today',
+                  author: { id: '1', name: 'Alice', avatarUrl: null },
+                  stats: { likes: 0, comments: 0, reposts: 0 },
+                  images: [],
+                  media: null,
+                  regionName: '',
+                  source: '',
+                  retweetedStatus: {
+                    id: 'inner',
+                    mblogId: 'm-inner',
+                    isLongText: false,
+                    text: 'inner post',
+                    createdAt: '2024-01-01',
+                    createdAtLabel: 'today',
+                    author: { id: '2', name: 'Bob', avatarUrl: null },
+                    stats: { likes: 0, comments: 0, reposts: 0 },
+                    images: [],
+                    media: null,
+                    regionName: '',
+                    source: '',
+                  },
+                }}
+                onNavigate={onNavigate}
+              />
+            </GenImageDialogProvider>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+
+      const retweeted = screen.getAllByTestId('feed-card-body')[1]!
+      fireEvent.click(retweeted, { button: 0, metaKey: true })
+
+      expect(windowOpenSpy).toHaveBeenCalledTimes(1)
+      expect(windowOpenSpy).toHaveBeenCalledWith(
+        `${window.location.origin}/2/m-inner`,
+        '_blank',
+        'noopener,noreferrer',
+      )
+      expect(onNavigate).not.toHaveBeenCalled()
+    })
+
+    it('opens retweeted status detail in a new tab on middle click', () => {
+      const queryClient = new QueryClient()
+      const onNavigate = vi.fn()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <GenImageDialogProvider>
+              <FeedCard
+                item={{
+                  id: 'outer',
+                  mblogId: 'm-outer',
+                  isLongText: false,
+                  text: 'outer post',
+                  createdAt: '2024-01-01',
+                  createdAtLabel: 'today',
+                  author: { id: '1', name: 'Alice', avatarUrl: null },
+                  stats: { likes: 0, comments: 0, reposts: 0 },
+                  images: [],
+                  media: null,
+                  regionName: '',
+                  source: '',
+                  retweetedStatus: {
+                    id: 'inner',
+                    mblogId: 'm-inner',
+                    isLongText: false,
+                    text: 'inner post',
+                    createdAt: '2024-01-01',
+                    createdAtLabel: 'today',
+                    author: { id: '2', name: 'Bob', avatarUrl: null },
+                    stats: { likes: 0, comments: 0, reposts: 0 },
+                    images: [],
+                    media: null,
+                    regionName: '',
+                    source: '',
+                  },
+                }}
+                onNavigate={onNavigate}
+              />
+            </GenImageDialogProvider>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+
+      const retweeted = screen.getAllByTestId('feed-card-body')[1]!
+      fireEvent(retweeted, new MouseEvent('auxclick', { button: 1, bubbles: true }))
+
+      expect(windowOpenSpy).toHaveBeenCalledTimes(1)
+      expect(windowOpenSpy).toHaveBeenCalledWith(
+        `${window.location.origin}/2/m-inner`,
+        '_blank',
+        'noopener,noreferrer',
+      )
+      expect(onNavigate).not.toHaveBeenCalled()
+    })
+
     it('does not open a new tab when retweeted card body left-clicks without modifier', () => {
       const store = getAppSettingsStore()
       store.setState({ feedInteractionMode: 'x' })
@@ -684,11 +924,176 @@ describe('FeedCard', () => {
         </QueryClientProvider>,
       )
 
-      const retweeted = screen.getAllByTestId('feed-card-body')[1]
+      const retweeted = screen.getAllByTestId('feed-card-body')[1]!
       fireEvent.click(retweeted, { button: 0 })
 
       expect(windowOpenSpy).not.toHaveBeenCalled()
       expect(onNavigate).toHaveBeenCalledWith(expect.objectContaining({ id: 'inner' }))
+    })
+
+    it('does not trigger retweeted card navigation after dragging across retweeted body text', () => {
+      const onNavigate = vi.fn()
+      const queryClient = new QueryClient()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <GenImageDialogProvider>
+              <FeedCard
+                item={{
+                  id: 'outer',
+                  mblogId: 'm-outer',
+                  isLongText: false,
+                  text: 'outer post',
+                  createdAt: '2024-01-01',
+                  createdAtLabel: 'today',
+                  author: { id: '1', name: 'Alice', avatarUrl: null },
+                  stats: { likes: 0, comments: 0, reposts: 0 },
+                  images: [],
+                  media: null,
+                  regionName: '',
+                  source: '',
+                  retweetedStatus: {
+                    id: 'inner',
+                    mblogId: 'm-inner',
+                    isLongText: false,
+                    text: 'inner post content',
+                    createdAt: '2024-01-01',
+                    createdAtLabel: 'today',
+                    author: { id: '2', name: 'Bob', avatarUrl: null },
+                    stats: { likes: 0, comments: 0, reposts: 0 },
+                    images: [],
+                    media: null,
+                    regionName: '',
+                    source: '',
+                  },
+                }}
+                onNavigate={onNavigate}
+              />
+            </GenImageDialogProvider>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+
+      const retweeted = screen.getAllByTestId('feed-card-body')[1]!
+      const text = within(retweeted).getByText('inner post content')
+
+      fireEvent.mouseDown(text, { button: 0, clientX: 10, clientY: 10 })
+      fireEvent.mouseUp(text, { button: 0, clientX: 26, clientY: 12 })
+      fireEvent.click(retweeted, { button: 0, clientX: 26, clientY: 12 })
+
+      expect(onNavigate).not.toHaveBeenCalled()
+      expect(windowOpenSpy).not.toHaveBeenCalled()
+    })
+
+    it('does not open a new tab for retweeted card after dragging across retweeted body text', () => {
+      const onNavigate = vi.fn()
+      const queryClient = new QueryClient()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <GenImageDialogProvider>
+              <FeedCard
+                item={{
+                  id: 'outer',
+                  mblogId: 'm-outer',
+                  isLongText: false,
+                  text: 'outer post',
+                  createdAt: '2024-01-01',
+                  createdAtLabel: 'today',
+                  author: { id: '1', name: 'Alice', avatarUrl: null },
+                  stats: { likes: 0, comments: 0, reposts: 0 },
+                  images: [],
+                  media: null,
+                  regionName: '',
+                  source: '',
+                  retweetedStatus: {
+                    id: 'inner',
+                    mblogId: 'm-inner',
+                    isLongText: false,
+                    text: 'inner post content',
+                    createdAt: '2024-01-01',
+                    createdAtLabel: 'today',
+                    author: { id: '2', name: 'Bob', avatarUrl: null },
+                    stats: { likes: 0, comments: 0, reposts: 0 },
+                    images: [],
+                    media: null,
+                    regionName: '',
+                    source: '',
+                  },
+                }}
+                onNavigate={onNavigate}
+              />
+            </GenImageDialogProvider>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+
+      const retweeted = screen.getAllByTestId('feed-card-body')[1]!
+      const text = within(retweeted).getByText('inner post content')
+
+      fireEvent.mouseDown(text, { button: 0, clientX: 10, clientY: 10 })
+      fireEvent.mouseUp(text, { button: 0, clientX: 26, clientY: 12 })
+      fireEvent(retweeted, new MouseEvent('auxclick', { button: 1, clientX: 26, clientY: 12 }))
+
+      expect(windowOpenSpy).not.toHaveBeenCalled()
+      expect(onNavigate).not.toHaveBeenCalled()
+    })
+
+    it('still triggers retweeted card navigation on a clean click (no drag)', () => {
+      const onNavigate = vi.fn()
+      const queryClient = new QueryClient()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <GenImageDialogProvider>
+              <FeedCard
+                item={{
+                  id: 'outer',
+                  mblogId: 'm-outer',
+                  isLongText: false,
+                  text: 'outer post',
+                  createdAt: '2024-01-01',
+                  createdAtLabel: 'today',
+                  author: { id: '1', name: 'Alice', avatarUrl: null },
+                  stats: { likes: 0, comments: 0, reposts: 0 },
+                  images: [],
+                  media: null,
+                  regionName: '',
+                  source: '',
+                  retweetedStatus: {
+                    id: 'inner',
+                    mblogId: 'm-inner',
+                    isLongText: false,
+                    text: 'inner post content',
+                    createdAt: '2024-01-01',
+                    createdAtLabel: 'today',
+                    author: { id: '2', name: 'Bob', avatarUrl: null },
+                    stats: { likes: 0, comments: 0, reposts: 0 },
+                    images: [],
+                    media: null,
+                    regionName: '',
+                    source: '',
+                  },
+                }}
+                onNavigate={onNavigate}
+              />
+            </GenImageDialogProvider>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+
+      const retweeted = screen.getAllByTestId('feed-card-body')[1]!
+      const text = within(retweeted).getByText('inner post content')
+
+      fireEvent.mouseDown(text, { button: 0, clientX: 10, clientY: 10 })
+      fireEvent.mouseUp(text, { button: 0, clientX: 11, clientY: 11 })
+      fireEvent.click(retweeted, { button: 0, clientX: 11, clientY: 11 })
+
+      expect(onNavigate).toHaveBeenCalledWith(expect.objectContaining({ id: 'inner' }))
+      expect(windowOpenSpy).not.toHaveBeenCalled()
     })
   })
 })

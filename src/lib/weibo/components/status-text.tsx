@@ -603,6 +603,7 @@ function renderReplyChainText(
     const secondItem = chain[1]
     const middleItems = chain.slice(2, chain.length - 1)
     const lastItem = chain[chain.length - 1]
+    if (!firstItem || !secondItem || !lastItem) return null
 
     return (
       <span className="flex flex-col gap-2">
@@ -705,6 +706,7 @@ export function StatusText({
   text,
   mode = 'plain',
   onNavigateTopic,
+  hideMedia = false,
 }: {
   item: Pick<
     FeedItem,
@@ -713,13 +715,14 @@ export function StatusText({
   text: string
   mode?: 'plain' | 'markdown'
   onNavigateTopic?: (topic: string) => void
+  hideMedia?: boolean
 }) {
   const emoticonQuery = useEmoticonConfigQuery()
   const collapseRepliesEnabled = useAppSettings((s) => s.collapseRepliesEnabled)
   const renderReplyChainEnabled = useAppSettings((s) => s.renderReplyChainEnabled)
   const phraseMap = {
-    ...emoticonQuery.data?.phraseMap,
-    ...item.emoticons,
+    ...(hideMedia ? {} : emoticonQuery.data?.phraseMap),
+    ...(hideMedia ? {} : item.emoticons),
   }
   const raw = text ?? ''
   if (!raw) {
@@ -733,7 +736,9 @@ export function StatusText({
   const hasUrlEntities = Boolean(item.urlEntities && item.urlEntities.length > 0)
   const hasTopicEntities = Boolean(item.topicEntities && item.topicEntities.length > 0)
   const imageEntities = item.imageEntities ?? {}
-  const extractImages = createImageExtractor(imageEntities)
+  const extractImages: ImageExtractor = hideMedia
+    ? (value) => ({ strippedText: value, images: [] })
+    : createImageExtractor(imageEntities)
   const parsedReplyChain = parseReplyChainText(raw)
   const shouldRenderAsReplyChain =
     renderReplyChainEnabled && parsedReplyChain.kind === 'reply-chain'

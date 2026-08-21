@@ -33,6 +33,7 @@ import {
 } from '@/lib/weibo/data/weibo-data'
 import { browsingHistoryStore } from '@/lib/weibo/hooks/use-browsing-history'
 import { useFeedLongText } from '@/lib/weibo/hooks/use-feed-long-text'
+import { useHasEnteredViewport } from '@/lib/weibo/hooks/use-has-entered-viewport'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 import {
   type StatusFeedSurface,
@@ -90,6 +91,8 @@ export const FeedCard = memo(function FeedCard({
     feedToolbarButtonIds,
     ratingEnabled,
     statusDetailPopupEnabled,
+    autoLoadLongText,
+    textOnlyFeed,
   } = useAppSettings(
     useShallow((s) => ({
       feedInteractionMode: s.feedInteractionMode,
@@ -97,19 +100,26 @@ export const FeedCard = memo(function FeedCard({
       feedToolbarButtonIds: s.feedToolbarButtonIds,
       ratingEnabled: s.ratingEnabled,
       statusDetailPopupEnabled: s.statusDetailPopupEnabled,
+      autoLoadLongText: s.autoLoadLongText,
+      textOnlyFeed: s.textOnlyFeed,
     })),
   )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
   const commentsPanelId = useId()
   const pointerDownPositionRef = useRef<{ x: number; y: number } | null>(null)
   const suppressNextClickRef = useRef(false)
+  const feedCardRef = useRef<HTMLDivElement>(null)
+  const hasEnteredViewport = useHasEnteredViewport(feedCardRef)
+  const isTimeline = surfaceProp === 'timeline'
+  const shouldAutoLoadLongText = isTimeline && autoLoadLongText && hasEnteredViewport
+  const isTextOnly = isTimeline && textOnlyFeed
   const {
     resolvedItem,
     shouldShowLoadLongText,
     isLongTextLoading,
     hasLongTextError,
     onLoadLongText,
-  } = useFeedLongText(item)
+  } = useFeedLongText(item, shouldAutoLoadLongText)
 
   const addEntry = useCallback(() => {
     browsingHistoryStore.getState().addEntry(resolvedItem)
@@ -143,13 +153,15 @@ export const FeedCard = memo(function FeedCard({
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteWeiboStatus(item.id),
+    mutationFn: (target: FeedItem) => deleteWeiboStatus(target.id),
     meta: {
       invalidates: [['weibo']],
     },
-    onSuccess: () => {
+    onSuccess: (_data, target) => {
       toast.success('已删除')
-      onStatusDeleted?.()
+      if (target.id === item.id) {
+        onStatusDeleted?.()
+      }
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : '删除失败')
@@ -338,44 +350,6 @@ export const FeedCard = memo(function FeedCard({
     )
   }
 
-  const cardContentElement = (
-    <CardContent
-      className="flex flex-col gap-4"
-      onMouseDown={handleCardMouseDown}
-      onMouseUp={handleCardMouseUp}
-    >
-      <FeedTextBlock
-        item={resolvedItem}
-        canLoadLongText={shouldShowLoadLongText}
-        isLongTextLoading={isLongTextLoading}
-        hasLongTextError={hasLongTextError}
-        onLoadLongText={onLoadLongText}
-        onNavigateTopic={onNavigateTopic}
-      />
-
-      <FeedMediaBlock item={resolvedItem} />
-
-      <ImageCarousel
-        images={resolvedItem.images}
-        mixMediaItems={resolvedItem.mixMediaInfo}
-        downloadFilename={getMediaDownloadFilename(resolvedItem)}
-        onOpen={addEntry}
-      />
-
-      {resolvedItem.retweetedStatus ? (
-        <RetweetedFeedBlock
-          item={resolvedItem.retweetedStatus}
-          onNavigate={onNavigate}
-          onNavigateProfile={onNavigateProfile}
-          onNavigateTopic={onNavigateTopic}
-          likePendingForId={likePendingId}
-          feedInteractionMode={feedInteractionMode}
-        />
-      ) : null}
-    </CardContent>
-  )
-
-  // 当弹窗模式开启时，使用按钮组件；否则使用 Link 组件支持中键在新标签页打开
   const shouldUsePopupMode = statusDetailPopupEnabled && canNavigate
   const cardClassName = cn(
     'group/card py-4 relative',
@@ -399,7 +373,7 @@ export const FeedCard = memo(function FeedCard({
           onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
           contentLabel="这条微博"
           isDeleting={deleteMutation.isPending}
-          onDelete={() => deleteMutation.mutateAsync()}
+          onDelete={() => deleteMutation.mutateAsync(resolvedItem)}
           visibleActionIds={moreMenuActionIds}
           onCopyText={() => handleCopyText(resolvedItem)}
         />
@@ -414,13 +388,64 @@ export const FeedCard = memo(function FeedCard({
           <FeedAuthorHeader
             item={resolvedItem}
             onNavigateProfile={onNavigateProfile}
+            hideAvatar={isTextOnly}
             trailing={
               ratingEnabled ? (
                 <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" useBatchCache />
               ) : null
             }
           />
-          {cardContentElement}
+          <CardContent
+            className="flex flex-col gap-4"
+            onMouseDown={handleCardMouseDown}
+            onMouseUp={handleCardMouseUp}
+          >
+            <FeedTextBlock
+              item={resolvedItem}
+              canLoadLongText={shouldShowLoadLongText}
+              isLongTextLoading={isLongTextLoading}
+              hasLongTextError={hasLongTextError}
+              onLoadLongText={onLoadLongText}
+              onNavigateTopic={onNavigateTopic}
+              hideMedia={isTextOnly}
+            />
+
+            {!isTextOnly ? <FeedMediaBlock item={resolvedItem} /> : null}
+
+            {!isTextOnly ? (
+              <ImageCarousel
+                images={resolvedItem.images}
+                mixMediaItems={resolvedItem.mixMediaInfo}
+                downloadFilename={getMediaDownloadFilename(resolvedItem)}
+                onOpen={addEntry}
+              />
+            ) : null}
+
+            {resolvedItem.retweetedStatus ? (
+              <RetweetedFeedBlock
+                item={resolvedItem.retweetedStatus}
+                onNavigate={onNavigate}
+                onNavigateProfile={onNavigateProfile}
+                onNavigateTopic={onNavigateTopic}
+                onCommentClick={onCommentClick}
+                onRepostClick={onRepostClick}
+                onLikeClick={(target) => likeMutation.mutate(target)}
+                likePending={likePendingId === resolvedItem.retweetedStatus.id}
+                onFavorite={(target) => favoriteMutation.mutateAsync(target)}
+                favoritePending={
+                  favoriteMutation.isPending &&
+                  favoriteMutation.variables?.id === resolvedItem.retweetedStatus.id
+                }
+                onDelete={(target) => deleteMutation.mutateAsync(target)}
+                feedInteractionMode={feedInteractionMode}
+                primaryActionOrder={feedPrimaryActionOrder}
+                toolbarButtonIds={feedToolbarButtonIds}
+                moreMenuActionIds={moreMenuActionIds}
+                autoLoadLongText={shouldAutoLoadLongText}
+                textOnly={isTextOnly}
+              />
+            ) : null}
+          </CardContent>
           <div className="flex-1" />
         </div>
       ) : (
@@ -428,13 +453,64 @@ export const FeedCard = memo(function FeedCard({
           <FeedAuthorHeader
             item={resolvedItem}
             onNavigateProfile={onNavigateProfile}
+            hideAvatar={isTextOnly}
             trailing={
               ratingEnabled ? (
                 <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" useBatchCache />
               ) : null
             }
           />
-          {cardContentElement}
+          <CardContent
+            className="flex flex-col gap-4"
+            onMouseDown={handleCardMouseDown}
+            onMouseUp={handleCardMouseUp}
+          >
+            <FeedTextBlock
+              item={resolvedItem}
+              canLoadLongText={shouldShowLoadLongText}
+              isLongTextLoading={isLongTextLoading}
+              hasLongTextError={hasLongTextError}
+              onLoadLongText={onLoadLongText}
+              onNavigateTopic={onNavigateTopic}
+              hideMedia={isTextOnly}
+            />
+
+            {!isTextOnly ? <FeedMediaBlock item={resolvedItem} /> : null}
+
+            {!isTextOnly ? (
+              <ImageCarousel
+                images={resolvedItem.images}
+                mixMediaItems={resolvedItem.mixMediaInfo}
+                downloadFilename={getMediaDownloadFilename(resolvedItem)}
+                onOpen={addEntry}
+              />
+            ) : null}
+
+            {resolvedItem.retweetedStatus ? (
+              <RetweetedFeedBlock
+                item={resolvedItem.retweetedStatus}
+                onNavigate={onNavigate}
+                onNavigateProfile={onNavigateProfile}
+                onNavigateTopic={onNavigateTopic}
+                onCommentClick={onCommentClick}
+                onRepostClick={onRepostClick}
+                onLikeClick={(target) => likeMutation.mutate(target)}
+                likePending={likePendingId === resolvedItem.retweetedStatus.id}
+                onFavorite={(target) => favoriteMutation.mutateAsync(target)}
+                favoritePending={
+                  favoriteMutation.isPending &&
+                  favoriteMutation.variables?.id === resolvedItem.retweetedStatus.id
+                }
+                onDelete={(target) => deleteMutation.mutateAsync(target)}
+                feedInteractionMode={feedInteractionMode}
+                primaryActionOrder={feedPrimaryActionOrder}
+                toolbarButtonIds={feedToolbarButtonIds}
+                moreMenuActionIds={moreMenuActionIds}
+                autoLoadLongText={shouldAutoLoadLongText}
+                textOnly={isTextOnly}
+              />
+            ) : null}
+          </CardContent>
         </>
       )}
       <CardFooter>
@@ -477,74 +553,76 @@ export const FeedCard = memo(function FeedCard({
   // 弹窗模式：使用 SmartLink 处理点击和键盘事件
   // 非弹窗模式：使用 SmartLink 的 auto 模式处理链接行为
   return (
-    <SmartLink
-      to={canNavigate ? detailPath : '#'}
-      mode={shouldUsePopupMode ? 'modal' : 'auto'}
-      onNavigate={handleCardClick}
-      onClick={(e) => {
-        // UI-level suppression: prevent navigation when clicking interactive children,
-        // text selection, or after a drag. Use preventDefault to stop SmartLink from navigating.
-        if (!canNavigate) {
-          e.preventDefault()
-          return
-        }
-
-        if (suppressNextClickRef.current) {
-          suppressNextClickRef.current = false
-          e.preventDefault()
-          return
-        }
-
-        const target = e.target as HTMLElement | null
-        const interactiveSelectors =
-          'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-
-        // Check if the click target is a nested interactive element (not the card itself)
-        if (target) {
-          const closestInteractive = target.closest(interactiveSelectors)
-          if (closestInteractive && closestInteractive !== e.currentTarget) {
+    <div ref={feedCardRef}>
+      <SmartLink
+        to={canNavigate ? detailPath : '#'}
+        mode={shouldUsePopupMode ? 'modal' : 'auto'}
+        onNavigate={handleCardClick}
+        onClick={(e) => {
+          // UI-level suppression: prevent navigation when clicking interactive children,
+          // text selection, or after a drag. Use preventDefault to stop SmartLink from navigating.
+          if (!canNavigate) {
             e.preventDefault()
             return
           }
-        }
 
-        if (e.currentTarget && hasTextSelectionWithin(e.currentTarget)) {
-          e.preventDefault()
-          return
-        }
-      }}
-      onAuxClick={(e) => {
-        // UI-level suppression for middle click
-        if (!canNavigate) {
-          e.preventDefault()
-          return
-        }
-
-        const target = e.target as HTMLElement | null
-        const interactiveSelectors =
-          'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
-
-        // Check if the click target is a nested interactive element (not the card itself)
-        if (target) {
-          const closestInteractive = target.closest(interactiveSelectors)
-          if (closestInteractive && closestInteractive !== e.currentTarget) {
+          if (suppressNextClickRef.current) {
+            suppressNextClickRef.current = false
             e.preventDefault()
             return
           }
-        }
 
-        if (e.currentTarget && hasTextSelectionWithin(e.currentTarget)) {
-          e.preventDefault()
-          return
-        }
-      }}
-      onKeyDown={handleCardKeyDown}
-      className={cardClassName}
-      data-testid="feed-card-body"
-      data-slot="card"
-      {...(canNavigate ? navigationProps : {})}
-    >
-      {cardContent}
-    </SmartLink>
+          const target = e.target as HTMLElement | null
+          const interactiveSelectors =
+            'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+
+          // Check if the click target is a nested interactive element (not the card itself)
+          if (target) {
+            const closestInteractive = target.closest(interactiveSelectors)
+            if (closestInteractive && closestInteractive !== e.currentTarget) {
+              e.preventDefault()
+              return
+            }
+          }
+
+          if (e.currentTarget && hasTextSelectionWithin(e.currentTarget)) {
+            e.preventDefault()
+            return
+          }
+        }}
+        onAuxClick={(e) => {
+          // UI-level suppression for middle click
+          if (!canNavigate) {
+            e.preventDefault()
+            return
+          }
+
+          const target = e.target as HTMLElement | null
+          const interactiveSelectors =
+            'a,button,[role="button"],input,textarea,select,label,video,audio,img,[data-radix-collection-item]'
+
+          // Check if the click target is a nested interactive element (not the card itself)
+          if (target) {
+            const closestInteractive = target.closest(interactiveSelectors)
+            if (closestInteractive && closestInteractive !== e.currentTarget) {
+              e.preventDefault()
+              return
+            }
+          }
+
+          if (e.currentTarget && hasTextSelectionWithin(e.currentTarget)) {
+            e.preventDefault()
+            return
+          }
+        }}
+        onKeyDown={handleCardKeyDown}
+        className={cardClassName}
+        data-testid="feed-card-body"
+        data-slot="card"
+        {...(canNavigate ? navigationProps : {})}
+      >
+        {cardContent}
+      </SmartLink>
+    </div>
   )
 })

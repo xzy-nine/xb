@@ -55,6 +55,7 @@ export function AppShell() {
     theme,
     rewriteEnabled,
     contentWidth,
+    customContentWidth,
     statusDetailPopupEnabled,
     statusDetailPopupPosition,
     statusDetailPopupWidth,
@@ -64,6 +65,7 @@ export function AppShell() {
       theme: state.theme,
       rewriteEnabled: state.rewriteEnabled,
       contentWidth: state.contentWidth,
+      customContentWidth: state.customContentWidth,
       statusDetailPopupEnabled: state.statusDetailPopupEnabled,
       statusDetailPopupPosition: state.statusDetailPopupPosition,
       statusDetailPopupWidth: state.statusDetailPopupWidth,
@@ -295,6 +297,7 @@ export function AppShell() {
         rewriteEnabled={rewriteEnabled}
         theme={theme}
         contentWidth={contentWidth}
+        customContentWidth={customContentWidth}
         onRewriteEnabledChange={(enabled: boolean) => {
           void updateSettings({ rewriteEnabled: enabled })
           if (!enabled) {

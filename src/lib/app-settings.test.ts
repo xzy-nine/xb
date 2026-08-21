@@ -112,6 +112,7 @@ describe('app-settings', () => {
 
     expect(await loadAppSettings(storage)).toEqual({
       contentWidth: 'standard',
+      customContentWidth: 1200,
       theme: 'dark',
       rewriteEnabled: false,
       fontSizeClass: 'text-sm',
@@ -132,9 +133,12 @@ describe('app-settings', () => {
       showRightRail: true,
       xbEntryCollapsed: false,
       sidebarCollapsed: false,
+      immersiveMode: false,
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
       darkModeImageDim: false,
+      autoLoadLongText: false,
+      textOnlyFeed: false,
       lightModeBgColor: 'white',
       darkModeBgColor: 'near-black',
       imageGenEnabled: true,
@@ -179,6 +183,7 @@ describe('app-settings', () => {
     await persistAppSettings(
       {
         contentWidth: 'standard',
+        customContentWidth: 1200,
         theme: 'light',
         rewriteEnabled: true,
         fontSizeClass: 'text-lg',
@@ -199,9 +204,12 @@ describe('app-settings', () => {
         showRightRail: true,
         xbEntryCollapsed: false,
         sidebarCollapsed: false,
+        immersiveMode: true,
         collapseRepliesEnabled: false,
         renderReplyChainEnabled: true,
         darkModeImageDim: false,
+        autoLoadLongText: false,
+        textOnlyFeed: false,
         lightModeBgColor: 'paper',
         darkModeBgColor: 'dark-gray',
         imageGenEnabled: true,
@@ -247,6 +255,7 @@ describe('app-settings', () => {
 
     expect(storage.read()).toEqual({
       contentWidth: 'standard',
+      customContentWidth: 1200,
       theme: 'light',
       rewriteEnabled: true,
       fontSizeClass: 'text-lg',
@@ -267,9 +276,12 @@ describe('app-settings', () => {
       showRightRail: true,
       xbEntryCollapsed: false,
       sidebarCollapsed: false,
+      immersiveMode: true,
       collapseRepliesEnabled: false,
       renderReplyChainEnabled: true,
       darkModeImageDim: false,
+      autoLoadLongText: false,
+      textOnlyFeed: false,
       lightModeBgColor: 'paper',
       darkModeBgColor: 'dark-gray',
       imageGenEnabled: true,
@@ -335,5 +347,22 @@ describe('app-settings', () => {
     expect(
       normalizeAppSettings({ rememberPlaybackRate: 'yes' as never }).rememberPlaybackRate,
     ).toBe(false)
+  })
+
+  it('normalizes reading preferences and custom content widths', () => {
+    expect(normalizeAppSettings({ autoLoadLongText: true }).autoLoadLongText).toBe(true)
+    expect(normalizeAppSettings({ textOnlyFeed: true }).textOnlyFeed).toBe(true)
+    expect(normalizeAppSettings({ customContentWidth: 801 }).customContentWidth).toBe(800)
+    expect(normalizeAppSettings({ customContentWidth: 1511 }).customContentWidth).toBe(1520)
+    expect(normalizeAppSettings({ customContentWidth: 2000 }).customContentWidth).toBe(1600)
+    expect(normalizeAppSettings({ customContentWidth: 0 }).customContentWidth).toBe(800)
+    expect(normalizeAppSettings({ customContentWidth: 'wide' as never }).customContentWidth).toBe(
+      1200,
+    )
+    expect(normalizeAppSettings({ contentWidth: 'narrower' }).contentWidth).toBe('narrower')
+    expect(normalizeAppSettings({ contentWidth: 'narrow' }).contentWidth).toBe('narrow')
+    expect(normalizeAppSettings({ contentWidth: 'custom' }).contentWidth).toBe('custom')
+    expect(normalizeAppSettings({ immersiveMode: true }).immersiveMode).toBe(true)
+    expect(normalizeAppSettings({ immersiveMode: 'yes' as never }).immersiveMode).toBe(false)
   })
 })

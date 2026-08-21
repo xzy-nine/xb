@@ -1,8 +1,9 @@
 import { Maximize2, Minimize2, Sparkles, Zap } from 'lucide-react'
-import { useReducedMotion } from 'motion/react'
-import type { KeyboardEvent, MouseEvent } from 'react'
+import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion } from 'motion/react'
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useLocation, useOutletContext } from 'react-router'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
@@ -11,8 +12,10 @@ import { useAppSettings } from '@/lib/app-settings-store'
 import { getCachedImageUrl } from '@/lib/image-cache'
 import { cn } from '@/lib/utils'
 import type { AppShellContext } from '@/lib/weibo/app/app-shell'
+import { getContentWidthAdjustedMaxWidth } from '@/lib/weibo/app/content-width'
+import { ImmersiveHeaderHiddenContext } from '@/lib/weibo/app/immersive-header'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
-import { NavigationRail } from '@/lib/weibo/components/navigation-rail'
+import { ImmersiveExitRail, NavigationRail } from '@/lib/weibo/components/navigation-rail'
 import { RightRail } from '@/lib/weibo/components/right-rail'
 import {
   PAGE_KINDS_WITH_SCROLL_RESTORATION,
@@ -29,12 +32,74 @@ function mainScrollRestorationKey(pathname: string, search: string): string | nu
   return null
 }
 
+export function getContentColumnOffset(previousLeft: number, nextLeft: number): number | null {
+  const offset = previousLeft - nextLeft
+  return Number.isFinite(offset) && Math.abs(offset) >= 1 ? offset : null
+}
+
+export function scheduleContentColumnAnimation(
+  onCenter: FrameRequestCallback,
+  requestFrame: (callback: FrameRequestCallback) => number = window.requestAnimationFrame,
+) {
+  return requestFrame(() => {
+    requestFrame(onCenter)
+  })
+}
+
+interface ContentColumnMotionValue {
+  get: () => number
+  set: (value: number) => void
+}
+
+type ContentColumnAnimate = (
+  motionX: ContentColumnMotionValue,
+  target: number,
+  transition: { duration: number; ease?: readonly [number, number, number, number] },
+) => { stop: () => void }
+
+export function startContentColumnTransition({
+  motionX,
+  offset,
+  transition,
+  animateTo = (value, target, options) => {
+    const playback = animate(value as never, target, options)
+    return { stop: () => playback.stop() }
+  },
+  requestFrame = window.requestAnimationFrame,
+}: {
+  motionX: ContentColumnMotionValue
+  offset: number
+  transition: { duration: number; ease?: readonly [number, number, number, number] }
+  animateTo?: ContentColumnAnimate
+  requestFrame?: (callback: FrameRequestCallback) => number
+}) {
+  motionX.set(offset)
+  return scheduleContentColumnAnimation(() => {
+    animateTo(motionX, 0, transition)
+  }, requestFrame)
+}
+
+const immersiveChromeTransition = {
+  duration: 0.18,
+  ease: [0.23, 1, 0.32, 1] as const,
+}
+
+const immersiveColumnTransition = {
+  duration: 0.28,
+  ease: [0.23, 1, 0.32, 1] as const,
+}
+
+const reducedMotionChromeTransition = { duration: 0.12 }
+
+const immersiveChromeStyle = { willChange: 'transform, opacity' }
+
 interface ShellFrameProps {
   pageKind: WeiboPageDescriptor['kind']
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
   contentWidth: ContentWidth
+  customContentWidth: number
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
@@ -54,6 +119,7 @@ export function ShellFrame({
   rewriteEnabled,
   theme,
   contentWidth,
+  customContentWidth,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
@@ -68,9 +134,21 @@ export function ShellFrame({
   const locationRef = useRef(location)
   locationRef.current = location
   const showRightRail = useAppSettings((state) => state.showRightRail)
+  const immersiveMode = useAppSettings((state) => state.immersiveMode)
   const updateSettings = useAppSettings((state) => state.updateSettings)
+  const shouldReduceMotion = useReducedMotion()
+  const contentColumnX = useMotionValue(0)
 
   const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
+  const [areImmersiveHeadersHidden, setAreImmersiveHeadersHidden] = useState(false)
+  const [immersiveColumnWidth, setImmersiveColumnWidth] = useState<number | null>(null)
+  const contentMainRef = useRef<HTMLElement | null>(null)
+  const contentColumnPreviousLeftRef = useRef<number | null>(null)
+  const contentColumnFrameRef = useRef<number | null>(null)
+  const contentColumnAnimateStopRef = useRef<(() => void) | null>(null)
+  const lastScrollTopRef = useRef(0)
+  const scrollDirectionRef = useRef<'up' | 'down' | null>(null)
+  const scrollDirectionStartRef = useRef(0)
   const assignShellRef = useCallback(
     (node: HTMLDivElement | null) => {
       mainRef.current = node
@@ -78,6 +156,104 @@ export function ShellFrame({
     },
     [mainRef],
   )
+  const handleImmersiveModeChange = useCallback(
+    (enabled: boolean) => {
+      if (enabled === immersiveMode) {
+        return
+      }
+      const rect = contentMainRef.current?.getBoundingClientRect()
+      contentColumnPreviousLeftRef.current = rect && Number.isFinite(rect.left) ? rect.left : null
+
+      flushSync(() => {
+        if (enabled && rect?.width && Number.isFinite(rect.width)) {
+          setImmersiveColumnWidth(rect.width)
+        }
+        void updateSettings({ immersiveMode: enabled })
+      })
+    },
+    [immersiveMode, updateSettings],
+  )
+
+  useEffect(
+    () => () => {
+      if (contentColumnFrameRef.current !== null) {
+        window.cancelAnimationFrame(contentColumnFrameRef.current)
+      }
+      contentColumnAnimateStopRef.current?.()
+    },
+    [],
+  )
+
+  useLayoutEffect(() => {
+    const previousLeft = contentColumnPreviousLeftRef.current
+    if (previousLeft === null) {
+      return
+    }
+    contentColumnPreviousLeftRef.current = null
+
+    const node = contentMainRef.current
+    if (!node) {
+      return
+    }
+
+    // Measure the layout position without the current transform.
+    const currentX = contentColumnX.get()
+    if (currentX !== 0) {
+      contentColumnX.set(0)
+    }
+    const nextLeft = node.getBoundingClientRect().left
+
+    if (shouldReduceMotion) {
+      contentColumnX.set(0)
+      return
+    }
+    if (!Number.isFinite(nextLeft)) {
+      return
+    }
+    const offset = getContentColumnOffset(previousLeft, nextLeft)
+    if (offset === null) {
+      contentColumnX.set(0)
+      return
+    }
+
+    contentColumnAnimateStopRef.current?.()
+    startContentColumnTransition({
+      motionX: contentColumnX,
+      offset,
+      transition: immersiveColumnTransition,
+      animateTo: (value, target, options) => {
+        const playback = animate(value as never, target, options)
+        contentColumnAnimateStopRef.current = () => playback.stop()
+        return { stop: () => playback.stop() }
+      },
+      requestFrame: (callback) => {
+        const frame = window.requestAnimationFrame((timestamp) => {
+          if (contentColumnFrameRef.current === frame) {
+            contentColumnFrameRef.current = null
+          }
+          callback(timestamp)
+        })
+        contentColumnFrameRef.current = frame
+        return frame
+      },
+    })
+
+    return () => {
+      if (contentColumnFrameRef.current !== null) {
+        window.cancelAnimationFrame(contentColumnFrameRef.current)
+        contentColumnFrameRef.current = null
+      }
+      contentColumnAnimateStopRef.current?.()
+      contentColumnAnimateStopRef.current = null
+    }
+  }, [contentColumnX, immersiveMode, shouldReduceMotion])
+
+  useEffect(() => {
+    if (!shouldReduceMotion) {
+      return
+    }
+    contentColumnX.set(0)
+  }, [contentColumnX, shouldReduceMotion])
 
   const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
   const backgroundColor = useAppSettings((s) => s.backgroundColor)
@@ -126,6 +302,31 @@ export function ShellFrame({
       return
     }
     const onScroll = () => {
+      const scrollTop = main.scrollTop
+
+      if (immersiveMode) {
+        if (scrollTop <= 24) {
+          setAreImmersiveHeadersHidden(false)
+          scrollDirectionRef.current = null
+          scrollDirectionStartRef.current = scrollTop
+        } else {
+          const delta = scrollTop - lastScrollTopRef.current
+          const direction = delta > 0 ? 'down' : delta < 0 ? 'up' : null
+          if (direction && direction !== scrollDirectionRef.current) {
+            scrollDirectionRef.current = direction
+            scrollDirectionStartRef.current = lastScrollTopRef.current
+          }
+
+          if (direction === 'down' && scrollTop - scrollDirectionStartRef.current >= 12) {
+            setAreImmersiveHeadersHidden(true)
+          }
+          if (direction === 'up' && scrollDirectionStartRef.current - scrollTop >= 8) {
+            setAreImmersiveHeadersHidden(false)
+          }
+        }
+      }
+      lastScrollTopRef.current = scrollTop
+
       const { pathname, search } = locationRef.current
       const key = mainScrollRestorationKey(pathname, search)
       if (key) {
@@ -147,7 +348,16 @@ export function ShellFrame({
     }
     main.addEventListener('scroll', onScroll, { passive: true })
     return () => main.removeEventListener('scroll', onScroll)
-  }, [mainRef])
+  }, [immersiveMode, mainRef])
+
+  useEffect(() => {
+    lastScrollTopRef.current = mainRef.current?.scrollTop ?? 0
+    scrollDirectionRef.current = null
+    scrollDirectionStartRef.current = lastScrollTopRef.current
+    if (!immersiveMode) {
+      setAreImmersiveHeadersHidden(false)
+    }
+  }, [immersiveMode, mainRef])
 
   useLayoutEffect(() => {
     const main = mainRef.current
@@ -214,67 +424,143 @@ export function ShellFrame({
   }, [location.pathname, location.search, mainRef])
 
   const contentWidthClass: Record<ContentWidth, string> = {
-    standard: 'lg:max-w-[1000px] xl:max-w-[1200px]',
-    wide: 'lg:max-w-[1100px] xl:max-w-[1300px]',
-    wider: 'lg:max-w-[1200px] xl:max-w-[1400px]',
+    narrower: 'lg:max-w-[800px] xl:max-w-[1000px]',
+    narrow: 'lg:max-w-[950px] xl:max-w-[1150px]',
+    standard: 'lg:max-w-[1100px] xl:max-w-[1300px]',
+    wide: 'lg:max-w-[1250px] xl:max-w-[1450px]',
+    wider: 'lg:max-w-[1400px] xl:max-w-[1600px]',
+    custom: 'lg:max-w-[var(--xb-content-width)]',
   }
-
+  const contentWidthStyle =
+    contentWidth === 'custom'
+      ? ({ '--xb-content-width': `${customContentWidth}px` } as CSSProperties)
+      : undefined
+  const immersiveContentWidth = getContentWidthAdjustedMaxWidth(
+    contentWidth,
+    720,
+    customContentWidth,
+  )
+  const activeImmersiveColumnWidth = immersiveColumnWidth
+    ? `${immersiveColumnWidth}px`
+    : immersiveContentWidth
+  const chromeTransition = shouldReduceMotion
+    ? reducedMotionChromeTransition
+    : immersiveChromeTransition
+  const railFade = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  }
+  const exitRailFade = shouldReduceMotion
+    ? railFade
+    : {
+        initial: { opacity: 0, scale: 0.96 },
+        animate: { opacity: 1, scale: 1 },
+        exit: { opacity: 0, scale: 0.98 },
+      }
   return (
-    <div
-      className="bg-background text-foreground flex h-screen flex-col overflow-hidden"
-      style={{
-        ...glassStyle,
-        ...(backgroundEnabled
-          ? cachedBackgroundImageUrl
-            ? {
-                backgroundImage: `url(${cachedBackgroundImageUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundAttachment: 'fixed',
-              }
-            : { backgroundColor }
-          : {}),
-      }}
-      data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
-    >
+    <ImmersiveHeaderHiddenContext.Provider value={immersiveMode && areImmersiveHeadersHidden}>
       <div
-        className={cn(
-          'relative mx-auto flex h-full w-full gap-3 px-3 md:gap-4 md:px-4',
-          waterfallColumnCount > 1 ? '' : contentWidthClass[contentWidth],
-        )}
+        className="bg-background text-foreground flex h-screen flex-col overflow-y-auto"
+        ref={assignShellRef}
+        style={{
+          ...glassStyle,
+          ...(backgroundEnabled
+            ? cachedBackgroundImageUrl
+              ? {
+                  backgroundImage: `url(${cachedBackgroundImageUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundAttachment: 'fixed',
+                }
+              : { backgroundColor }
+            : {}),
+        }}
+        data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
       >
-        <div className="sticky top-0 h-screen shrink-0 flex-col">
-          <NavigationRail
-            pageKind={pageKind}
-            viewingProfileUserId={viewingProfileUserId}
-            rewriteEnabled={rewriteEnabled}
-            theme={theme}
-            onRewriteEnabledChange={onRewriteEnabledChange}
-            onThemeChange={onThemeChange}
-            onSettingsOpen={onSettingsOpen}
-            onComposeOpen={onComposeOpen}
-            onSidebarCollapsedChange={(collapsed) =>
-              updateSettings({ sidebarCollapsed: collapsed })
-            }
-          />
-        </div>
-        <main className="no-scrollbar min-w-0 flex-1 overflow-y-auto pb-8" ref={assignShellRef}>
-          {children}
-        </main>
-        {showRightRail && (
-          <div
-            className={cn(
-              'sticky top-0 hidden shrink-0 self-start pt-4 md:flex md:w-[240px] xl:w-[300px]',
-              'h-screen',
+        <div
+          className={cn(
+            'relative mx-auto flex w-full px-3 md:px-4',
+            immersiveMode
+              ? 'gap-0 [&_[data-shell-rail=left]]:absolute [&_[data-shell-rail=left]]:top-0 [&_[data-shell-rail=left]]:left-0 [&_[data-shell-rail=right]]:absolute [&_[data-shell-rail=right]]:top-0 [&_[data-shell-rail=right]]:right-0'
+              : `gap-3 md:gap-4 ${waterfallColumnCount > 1 ? '' : contentWidthClass[contentWidth]}`,
+          )}
+          style={immersiveMode ? undefined : contentWidthStyle}
+        >
+          <AnimatePresence initial={false}>
+            {immersiveMode ? (
+              <motion.div
+                key="immersive-exit-rail"
+                className="fixed top-0 left-0 z-50 h-screen"
+                initial={exitRailFade.initial}
+                animate={exitRailFade.animate}
+                exit={exitRailFade.exit}
+                transition={
+                  shouldReduceMotion ? chromeTransition : { ...chromeTransition, delay: 0.06 }
+                }
+                style={immersiveChromeStyle}
+              >
+                <ImmersiveExitRail onImmersiveModeChange={handleImmersiveModeChange} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="navigation-rail"
+                data-shell-rail="left"
+                className="sticky top-0 h-screen shrink-0"
+                initial={railFade.initial}
+                animate={railFade.animate}
+                exit={railFade.exit}
+                transition={chromeTransition}
+                style={immersiveChromeStyle}
+              >
+                <NavigationRail
+                  pageKind={pageKind}
+                  viewingProfileUserId={viewingProfileUserId}
+                  rewriteEnabled={rewriteEnabled}
+                  theme={theme}
+                  onRewriteEnabledChange={onRewriteEnabledChange}
+                  onThemeChange={onThemeChange}
+                  onSettingsOpen={onSettingsOpen}
+                  onComposeOpen={onComposeOpen}
+                  onSidebarCollapsedChange={(collapsed) =>
+                    updateSettings({ sidebarCollapsed: collapsed })
+                  }
+                  onImmersiveModeChange={handleImmersiveModeChange}
+                />
+              </motion.div>
             )}
+          </AnimatePresence>
+          <motion.main
+            ref={contentMainRef}
+            className={cn('min-w-0 flex-1 pb-8', immersiveMode && 'mx-auto w-full')}
+            style={{
+              x: contentColumnX,
+              ...(immersiveMode ? { maxWidth: activeImmersiveColumnWidth } : null),
+            }}
           >
-            <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
-          </div>
-        )}
-        <BackToTop scrollRoot={mainScrollRoot} />
+            {children}
+          </motion.main>
+          <AnimatePresence initial={false}>
+            {!immersiveMode && showRightRail && (
+              <motion.div
+                key="right-rail"
+                data-shell-rail="right"
+                className="sticky top-0 hidden h-screen w-[240px] shrink-0 self-start pt-4 md:flex xl:w-[300px]"
+                initial={railFade.initial}
+                animate={railFade.animate}
+                exit={railFade.exit}
+                transition={chromeTransition}
+                style={immersiveChromeStyle}
+              >
+                <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
+                <BackToTop scrollRoot={mainScrollRoot} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </ImmersiveHeaderHiddenContext.Provider>
   )
 }
 

@@ -37,6 +37,8 @@ export function SettingsPersonalizeSection({
   darkModeImageDim,
   xLayoutEnabled,
   followGroupsEnabled,
+  autoLoadLongText,
+  textOnlyFeed,
   rememberPlaybackRate,
   firstLoadRedirect,
   renderReplyChainEnabled,
@@ -47,6 +49,8 @@ export function SettingsPersonalizeSection({
   darkModeImageDim: boolean
   xLayoutEnabled: boolean
   followGroupsEnabled: boolean
+  autoLoadLongText: boolean
+  textOnlyFeed: boolean
   rememberPlaybackRate: boolean
   firstLoadRedirect: string
   renderReplyChainEnabled: boolean
@@ -82,6 +86,22 @@ export function SettingsPersonalizeSection({
           ))}
         </div>
       </StackedField>
+      <div>
+        <Field label="自动查看全文" description="长微博进入视口时自动加载完整内容">
+          <Switch
+            checked={autoLoadLongText}
+            onCheckedChange={(checked) => void updateSettings({ autoLoadLongText: checked })}
+          />
+        </Field>
+      </div>
+      <div>
+        <Field label="纯文字信息流" description="隐藏头像与所有媒体内容，提高信息密度">
+          <Switch
+            checked={textOnlyFeed}
+            onCheckedChange={(checked) => void updateSettings({ textOnlyFeed: checked })}
+          />
+        </Field>
+      </div>
       <div>
         <Field label="暗色模式降低图片亮度" description="降低小图亮度，减少深色模式下的刺眼感">
           <Switch

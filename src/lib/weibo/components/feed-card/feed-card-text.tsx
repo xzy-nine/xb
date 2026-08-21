@@ -13,6 +13,7 @@ export function FeedTextBlock({
   hasLongTextError,
   onLoadLongText,
   onNavigateTopic,
+  hideMedia = false,
 }: {
   item: FeedItem
   canLoadLongText: boolean
@@ -20,6 +21,7 @@ export function FeedTextBlock({
   hasLongTextError: boolean
   onLoadLongText: () => void
   onNavigateTopic?: (topic: string) => void
+  hideMedia?: boolean
 }) {
   const { textClassName } = useFontSettings()
   const [textMode, setTextMode] = useState<'markdown' | 'plain'>('markdown')
@@ -33,6 +35,7 @@ export function FeedTextBlock({
         text={item.text}
         mode={resolvedTextMode}
         onNavigateTopic={onNavigateTopic}
+        hideMedia={hideMedia}
       />
 
       {canLoadLongText ? (

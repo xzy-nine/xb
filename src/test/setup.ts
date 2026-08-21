@@ -54,3 +54,15 @@ Object.defineProperty(globalThis, 'browser', {
     },
   },
 })
+
+class TestResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: TestResizeObserver,
+})
