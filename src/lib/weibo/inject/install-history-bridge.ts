@@ -83,6 +83,6 @@ export function installHistoryBridge(targetWindow: Window) {
       }
       return documentAddEventListener(type, wrappedHandler as EventListener, options)
     }
-    return documentAddEventListener(type, handler, options)
+    return documentAddEventListener(type, handler as EventListenerOrEventListenerObject, options)
   }
 }

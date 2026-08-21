@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expanded'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
-import { ImageCarousel } from '@/lib/weibo/components/image-carousel'
 import { RatingSummaryBadge } from '@/lib/weibo/components/rating-panel'
 import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { useFeedCardMediaDownload } from '@/lib/weibo/components/use-feed-card-media-download'
@@ -49,7 +48,7 @@ import {
 
 import { FeedActions } from './feed-card/feed-card-actions'
 import { type ProfileLookup, FeedAuthorHeader } from './feed-card/feed-card-author'
-import { FeedMediaBlock } from './feed-card/feed-card-media'
+import { FeedCardMediaContent } from './feed-card/feed-card-media-content'
 import { RetweetedFeedBlock } from './feed-card/feed-card-retweeted'
 import { FeedTextBlock } from './feed-card/feed-card-text'
 import {
@@ -93,7 +92,17 @@ export const FeedCard = memo(function FeedCard({
     ratingEnabled,
     statusDetailPopupEnabled,
     autoLoadLongText,
-    textOnlyFeed,
+    feedDensity,
+    weiboCardShowAvatar,
+    weiboCardShowTimestamp,
+    weiboCardShowPublishInfo,
+    weiboCardShowTitleBadge,
+    weiboCardShowInteractionCounts,
+    weiboCardImageDisplay,
+    weiboCardVideoDisplay,
+    weiboCardAudioDisplay,
+    weiboCardSingleImageMaxWidth,
+    weiboCardSingleVideoMaxWidth,
   } = useAppSettings(
     useShallow((s) => ({
       feedInteractionMode: s.feedInteractionMode,
@@ -102,7 +111,17 @@ export const FeedCard = memo(function FeedCard({
       ratingEnabled: s.ratingEnabled,
       statusDetailPopupEnabled: s.statusDetailPopupEnabled,
       autoLoadLongText: s.autoLoadLongText,
-      textOnlyFeed: s.textOnlyFeed,
+      feedDensity: s.feedDensity,
+      weiboCardShowAvatar: s.weiboCardShowAvatar,
+      weiboCardShowTimestamp: s.weiboCardShowTimestamp,
+      weiboCardShowPublishInfo: s.weiboCardShowPublishInfo,
+      weiboCardShowTitleBadge: s.weiboCardShowTitleBadge,
+      weiboCardShowInteractionCounts: s.weiboCardShowInteractionCounts,
+      weiboCardImageDisplay: s.weiboCardImageDisplay,
+      weiboCardVideoDisplay: s.weiboCardVideoDisplay,
+      weiboCardAudioDisplay: s.weiboCardAudioDisplay,
+      weiboCardSingleImageMaxWidth: s.weiboCardSingleImageMaxWidth,
+      weiboCardSingleVideoMaxWidth: s.weiboCardSingleVideoMaxWidth,
     })),
   )
   const [commentsExpanded, setCommentsExpanded] = useState(false)
@@ -113,7 +132,7 @@ export const FeedCard = memo(function FeedCard({
   const hasEnteredViewport = useHasEnteredViewport(feedCardRef)
   const isTimeline = surfaceProp === 'timeline'
   const shouldAutoLoadLongText = isTimeline && autoLoadLongText && hasEnteredViewport
-  const isTextOnly = isTimeline && textOnlyFeed
+  const effectiveDensity = isTimeline ? feedDensity : 'standard'
   const {
     resolvedItem,
     shouldShowLoadLongText,
@@ -346,9 +365,12 @@ export const FeedCard = memo(function FeedCard({
 
   const shouldUsePopupMode = statusDetailPopupEnabled && canNavigate
   const cardClassName = cn(
-    'group/card py-4 relative',
-    uniformHeight ? 'gap-0 flex-1' : 'gap-4',
-    'xb-feed-card group/card gap-4 py-4 relative text-left',
+    'group/card relative',
+    uniformHeight ? 'gap-0 flex-1' : '',
+    effectiveDensity === 'compact' && 'gap-3 py-3',
+    effectiveDensity === 'standard' && 'gap-4 py-4',
+    effectiveDensity === 'relaxed' && 'gap-5 py-5',
+    'xb-feed-card relative text-left',
     'flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm',
     canNavigate
       ? 'cursor-pointer focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none'
@@ -358,37 +380,47 @@ export const FeedCard = memo(function FeedCard({
 
   const cardContent = (
     <>
-      <div className="absolute top-4 right-4">
-        <FeedCardMoreMenu
-          type="status"
-          isOwner={showOwnerMenu}
-          item={resolvedItem}
-          favorited={resolvedItem.favorited}
-          onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
-          contentLabel="这条微博"
-          isDeleting={deleteMutation.isPending}
-          onDelete={() => deleteMutation.mutateAsync(resolvedItem)}
-          visibleActionIds={moreMenuActionIds}
-          onCopyText={() => handleCopyText(resolvedItem)}
-        />
-      </div>
-      {resolvedItem.title ? (
+      {weiboCardShowTitleBadge && resolvedItem.title ? (
         <div className={cn('px-4', uniformHeight && 'mb-4')}>
           <Badge variant="secondary">{resolvedItem.title.text}</Badge>
         </div>
       ) : null}
       {uniformHeight ? (
         <div className="flex min-h-0 flex-1 flex-col gap-4 px-0">
-          <FeedAuthorHeader
-            item={resolvedItem}
-            onNavigateProfile={onNavigateProfile}
-            hideAvatar={isTextOnly}
-            trailing={
-              ratingEnabled ? (
-                <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" useBatchCache />
-              ) : null
-            }
-          />
+          <div className="relative flex items-start gap-2 pr-2 pl-0">
+            <div className="min-w-0 flex-1">
+              <FeedAuthorHeader
+                item={resolvedItem}
+                onNavigateProfile={onNavigateProfile}
+                hideAvatar={!weiboCardShowAvatar}
+                showTimestamp={weiboCardShowTimestamp}
+                showPublishInfo={weiboCardShowPublishInfo}
+                trailing={
+                  ratingEnabled ? (
+                    <RatingSummaryBadge
+                      targetUid={resolvedItem.author.id}
+                      size="sm"
+                      useBatchCache
+                    />
+                  ) : null
+                }
+              />
+            </div>
+            <div className="shrink-0 pt-1 pr-2">
+              <FeedCardMoreMenu
+                type="status"
+                isOwner={showOwnerMenu}
+                item={resolvedItem}
+                favorited={resolvedItem.favorited}
+                onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
+                contentLabel="这条微博"
+                isDeleting={deleteMutation.isPending}
+                onDelete={() => deleteMutation.mutateAsync(resolvedItem)}
+                visibleActionIds={moreMenuActionIds}
+                onCopyText={() => handleCopyText(resolvedItem)}
+              />
+            </div>
+          </div>
           <CardContent
             className="flex flex-col gap-4"
             onMouseDown={handleCardMouseDown}
@@ -401,19 +433,19 @@ export const FeedCard = memo(function FeedCard({
               hasLongTextError={hasLongTextError}
               onLoadLongText={onLoadLongText}
               onNavigateTopic={onNavigateTopic}
-              hideMedia={isTextOnly}
+              imageDisplay={weiboCardImageDisplay}
             />
 
-            {!isTextOnly ? <FeedMediaBlock item={resolvedItem} /> : null}
-
-            {!isTextOnly ? (
-              <ImageCarousel
-                images={resolvedItem.images}
-                mixMediaItems={resolvedItem.mixMediaInfo}
-                downloadFilename={getMediaDownloadFilename(resolvedItem)}
-                onOpen={addEntry}
-              />
-            ) : null}
+            <FeedCardMediaContent
+              item={resolvedItem}
+              imageDisplay={weiboCardImageDisplay}
+              videoDisplay={weiboCardVideoDisplay}
+              audioDisplay={weiboCardAudioDisplay}
+              singleImageMaxWidth={weiboCardSingleImageMaxWidth}
+              singleVideoMaxWidth={weiboCardSingleVideoMaxWidth}
+              downloadFilename={getMediaDownloadFilename(resolvedItem)}
+              onOpen={addEntry}
+            />
 
             {resolvedItem.retweetedStatus ? (
               <RetweetedFeedBlock
@@ -436,7 +468,16 @@ export const FeedCard = memo(function FeedCard({
                 toolbarButtonIds={feedToolbarButtonIds}
                 moreMenuActionIds={moreMenuActionIds}
                 autoLoadLongText={shouldAutoLoadLongText}
-                textOnly={isTextOnly}
+                density={effectiveDensity}
+                showAvatar={weiboCardShowAvatar}
+                showTimestamp={weiboCardShowTimestamp}
+                showPublishInfo={weiboCardShowPublishInfo}
+                showInteractionCounts={weiboCardShowInteractionCounts}
+                imageDisplay={weiboCardImageDisplay}
+                videoDisplay={weiboCardVideoDisplay}
+                audioDisplay={weiboCardAudioDisplay}
+                singleImageMaxWidth={weiboCardSingleImageMaxWidth}
+                singleVideoMaxWidth={weiboCardSingleVideoMaxWidth}
               />
             ) : null}
           </CardContent>
@@ -463,23 +504,53 @@ export const FeedCard = memo(function FeedCard({
               onGenImage={() => openGenImage(resolvedItem)}
               onDownload={() => void handleDownload()}
               downloadPending={downloadLoading}
+              showInteractionCounts={weiboCardShowInteractionCounts}
             />
           </CardFooter>
         </div>
       ) : (
         <>
-          <FeedAuthorHeader
-            item={resolvedItem}
-            onNavigateProfile={onNavigateProfile}
-            hideAvatar={isTextOnly}
-            trailing={
-              ratingEnabled ? (
-                <RatingSummaryBadge targetUid={resolvedItem.author.id} size="sm" useBatchCache />
-              ) : null
-            }
-          />
+          <div className="relative flex items-start gap-2 pr-2 pl-0">
+            <div className="min-w-0 flex-1">
+              <FeedAuthorHeader
+                item={resolvedItem}
+                onNavigateProfile={onNavigateProfile}
+                hideAvatar={!weiboCardShowAvatar}
+                showTimestamp={weiboCardShowTimestamp}
+                showPublishInfo={weiboCardShowPublishInfo}
+                trailing={
+                  ratingEnabled ? (
+                    <RatingSummaryBadge
+                      targetUid={resolvedItem.author.id}
+                      size="sm"
+                      useBatchCache
+                    />
+                  ) : null
+                }
+              />
+            </div>
+            <div className="shrink-0 pt-1 pr-2">
+              <FeedCardMoreMenu
+                type="status"
+                isOwner={showOwnerMenu}
+                item={resolvedItem}
+                favorited={resolvedItem.favorited}
+                onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
+                contentLabel="这条微博"
+                isDeleting={deleteMutation.isPending}
+                onDelete={() => deleteMutation.mutateAsync(resolvedItem)}
+                visibleActionIds={moreMenuActionIds}
+                onCopyText={() => handleCopyText(resolvedItem)}
+              />
+            </div>
+          </div>
           <CardContent
-            className="flex flex-col gap-4"
+            className={cn(
+              'flex flex-col px-4',
+              effectiveDensity === 'compact' && 'gap-3',
+              effectiveDensity === 'standard' && 'gap-4',
+              effectiveDensity === 'relaxed' && 'gap-5',
+            )}
             onMouseDown={handleCardMouseDown}
             onMouseUp={handleCardMouseUp}
           >
@@ -490,19 +561,19 @@ export const FeedCard = memo(function FeedCard({
               hasLongTextError={hasLongTextError}
               onLoadLongText={onLoadLongText}
               onNavigateTopic={onNavigateTopic}
-              hideMedia={isTextOnly}
+              imageDisplay={weiboCardImageDisplay}
             />
 
-            {!isTextOnly ? <FeedMediaBlock item={resolvedItem} /> : null}
-
-            {!isTextOnly ? (
-              <ImageCarousel
-                images={resolvedItem.images}
-                mixMediaItems={resolvedItem.mixMediaInfo}
-                downloadFilename={getMediaDownloadFilename(resolvedItem)}
-                onOpen={addEntry}
-              />
-            ) : null}
+            <FeedCardMediaContent
+              item={resolvedItem}
+              imageDisplay={weiboCardImageDisplay}
+              videoDisplay={weiboCardVideoDisplay}
+              audioDisplay={weiboCardAudioDisplay}
+              singleImageMaxWidth={weiboCardSingleImageMaxWidth}
+              singleVideoMaxWidth={weiboCardSingleVideoMaxWidth}
+              downloadFilename={getMediaDownloadFilename(resolvedItem)}
+              onOpen={addEntry}
+            />
 
             {resolvedItem.retweetedStatus ? (
               <RetweetedFeedBlock
@@ -525,7 +596,16 @@ export const FeedCard = memo(function FeedCard({
                 toolbarButtonIds={feedToolbarButtonIds}
                 moreMenuActionIds={moreMenuActionIds}
                 autoLoadLongText={shouldAutoLoadLongText}
-                textOnly={isTextOnly}
+                density={effectiveDensity}
+                showAvatar={weiboCardShowAvatar}
+                showTimestamp={weiboCardShowTimestamp}
+                showPublishInfo={weiboCardShowPublishInfo}
+                showInteractionCounts={weiboCardShowInteractionCounts}
+                imageDisplay={weiboCardImageDisplay}
+                videoDisplay={weiboCardVideoDisplay}
+                audioDisplay={weiboCardAudioDisplay}
+                singleImageMaxWidth={weiboCardSingleImageMaxWidth}
+                singleVideoMaxWidth={weiboCardSingleVideoMaxWidth}
               />
             ) : null}
           </CardContent>
@@ -554,6 +634,7 @@ export const FeedCard = memo(function FeedCard({
             onGenImage={() => openGenImage(resolvedItem)}
             onDownload={() => void handleDownload()}
             downloadPending={downloadLoading}
+            showInteractionCounts={weiboCardShowInteractionCounts}
           />
         </CardFooter>
       )}

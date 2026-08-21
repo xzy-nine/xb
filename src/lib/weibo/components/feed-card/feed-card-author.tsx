@@ -13,11 +13,15 @@ export function FeedAuthorHeader({
   trailing,
   onNavigateProfile,
   hideAvatar = false,
+  showTimestamp = true,
+  showPublishInfo = true,
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
   trailing?: ReactNode
   onNavigateProfile?: (lookup: ProfileLookup) => void
   hideAvatar?: boolean
+  showTimestamp?: boolean
+  showPublishInfo?: boolean
 }) {
   const navigateToProfile = () => {
     if (onNavigateProfile) {
@@ -61,7 +65,7 @@ export function FeedAuthorHeader({
                   </CardTitle>
                 </SmartLink>
               </UserHoverCard>
-              <CreatedAtBadge label={item.createdAtLabel} />
+              {showTimestamp ? <CreatedAtBadge label={item.createdAtLabel} /> : null}
               {trailing ? (
                 <div
                   onClick={(event) => event.stopPropagation()}
@@ -71,9 +75,11 @@ export function FeedAuthorHeader({
                 </div>
               ) : null}
             </div>
-            <CardDescription className="text-xs">
-              {item.source ? `${item.source}` : ''} {item.regionName ? `${item.regionName}` : ''}
-            </CardDescription>
+            {showPublishInfo && (item.source || item.regionName) ? (
+              <CardDescription className="text-xs">
+                {[item.source, item.regionName].filter(Boolean).join(' ')}
+              </CardDescription>
+            ) : null}
           </div>
         </div>
       </div>
@@ -85,10 +91,14 @@ export function RetweetedAuthorHeader({
   item,
   onNavigateProfile,
   hideAvatar = false,
+  showTimestamp = true,
+  showPublishInfo = true,
 }: {
   item: Pick<FeedItem, 'author' | 'createdAtLabel' | 'source' | 'regionName'>
   onNavigateProfile?: (lookup: ProfileLookup) => void
   hideAvatar?: boolean
+  showTimestamp?: boolean
+  showPublishInfo?: boolean
 }) {
   const isDeletedAuthor = !item.author.id
 
@@ -136,11 +146,13 @@ export function RetweetedAuthorHeader({
               </p>
             </SmartLink>
           </UserHoverCard>
-          <CreatedAtBadge label={item.createdAtLabel} />
+          {showTimestamp ? <CreatedAtBadge label={item.createdAtLabel} /> : null}
         </div>
-        <p className="text-muted-foreground text-xs">
-          {item.source ? `${item.source}` : ''} {item.regionName ? `${item.regionName}` : ''}
-        </p>
+        {showPublishInfo && (item.source || item.regionName) ? (
+          <p className="text-muted-foreground text-xs">
+            {[item.source, item.regionName].filter(Boolean).join(' ')}
+          </p>
+        ) : null}
       </div>
     </div>
   )

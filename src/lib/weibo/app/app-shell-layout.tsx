@@ -554,11 +554,11 @@ export function ShellFrame({
                 style={immersiveChromeStyle}
               >
                 <RightRail onNavigateProfile={appShellContext.navigateToProfile} />
-                <BackToTop scrollRoot={mainScrollRoot} />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+        {!immersiveMode && <BackToTop scrollRoot={mainScrollRoot} />}
       </div>
     </ImmersiveHeaderHiddenContext.Provider>
   )

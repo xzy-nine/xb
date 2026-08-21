@@ -128,7 +128,7 @@ function ManualPopoverPopup(
       if (!triggerElement || !popupElement) return
 
       const triggerRect = triggerElement.getBoundingClientRect()
-      const popupRect = getPopupPositionRect(popupElement)
+      const popupRect = getPopupPositionRect(popupElement, positionOptions.side)
       const boundaryElement = resolvePositioningBoundary(boundary, {
         container,
         root: getPopupRoot(popupElement),

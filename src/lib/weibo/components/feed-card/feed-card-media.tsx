@@ -9,7 +9,7 @@ import { LivePlayer } from '../media-player/live-player'
 import { VideoPlayer } from '../media-player/video-player'
 import { getMediaDownloadFilename } from './feed-card-utils'
 
-export function FeedMediaBlock({ item }: { item: FeedItem }) {
+export function FeedMediaBlock({ item, maxWidth }: { item: FeedItem; maxWidth?: number }) {
   const addEntry = useCallback(() => {
     browsingHistoryStore.getState().addEntry(item)
   }, [item])
@@ -93,7 +93,8 @@ export function FeedMediaBlock({ item }: { item: FeedItem }) {
         event.stopPropagation()
         event.preventDefault()
       }}
-      className="max-w-[650px]"
+      className="w-full"
+      style={maxWidth !== undefined ? { maxWidth: `${maxWidth}px` } : undefined}
     >
       <AspectRatio
         ratio={item.media.videoOrientation === 'vertical' ? 4 / 3 : 16 / 9}

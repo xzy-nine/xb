@@ -1,6 +1,7 @@
 import { useState, type MouseEvent } from 'react'
 
 import { Button } from '@/components/ui/button'
+import type { ContentDisplay } from '@/lib/app-settings'
 import { cn } from '@/lib/utils'
 import { StatusText } from '@/lib/weibo/components/status-text'
 import { useFontSettings } from '@/lib/weibo/hooks/use-font-settings'
@@ -14,6 +15,7 @@ export function FeedTextBlock({
   onLoadLongText,
   onNavigateTopic,
   hideMedia = false,
+  imageDisplay = 'expanded',
 }: {
   item: FeedItem
   canLoadLongText: boolean
@@ -22,6 +24,7 @@ export function FeedTextBlock({
   onLoadLongText: () => void
   onNavigateTopic?: (topic: string) => void
   hideMedia?: boolean
+  imageDisplay?: ContentDisplay
 }) {
   const { textClassName } = useFontSettings()
   const [textMode, setTextMode] = useState<'markdown' | 'plain'>('markdown')
@@ -36,6 +39,7 @@ export function FeedTextBlock({
         mode={resolvedTextMode}
         onNavigateTopic={onNavigateTopic}
         hideMedia={hideMedia}
+        imageDisplay={imageDisplay}
       />
 
       {canLoadLongText ? (
