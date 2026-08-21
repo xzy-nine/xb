@@ -447,6 +447,30 @@ export const FeedCard = memo(function FeedCard({
             ) : null}
           </CardContent>
           <div className="flex-1" />
+          <CardFooter>
+            <FeedActions
+              item={resolvedItem}
+              surface={surfaceProp}
+              onCommentClick={onCommentClick}
+              onCommentExpand={handleCommentExpand}
+              commentsExpanded={commentsExpanded}
+              commentsPanelId={canExpandInlineComments ? commentsPanelId : undefined}
+              onRepostClick={onRepostClick}
+              onLikeClick={(target) => likeMutation.mutate(target)}
+              likePending={likePendingId === resolvedItem.id}
+              feedInteractionMode={feedInteractionMode}
+              primaryActionOrder={feedPrimaryActionOrder}
+              toolbarButtonIds={feedToolbarButtonIds}
+              favorited={resolvedItem.favorited}
+              onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
+              favoritePending={favoriteMutation.isPending}
+              onCopyLink={() => handleCopyLink(resolvedItem)}
+              onCopyText={() => handleCopyText(resolvedItem)}
+              onGenImage={() => openGenImage(resolvedItem)}
+              onDownload={() => void handleDownload()}
+              downloadPending={downloadLoading}
+            />
+          </CardFooter>
         </div>
       ) : (
         <>
@@ -513,30 +537,32 @@ export const FeedCard = memo(function FeedCard({
           </CardContent>
         </>
       )}
-      <CardFooter>
-        <FeedActions
-          item={resolvedItem}
-          surface={surfaceProp}
-          onCommentClick={onCommentClick}
-          onCommentExpand={handleCommentExpand}
-          commentsExpanded={commentsExpanded}
-          commentsPanelId={canExpandInlineComments ? commentsPanelId : undefined}
-          onRepostClick={onRepostClick}
-          onLikeClick={(target) => likeMutation.mutate(target)}
-          likePending={likePendingId === resolvedItem.id}
-          feedInteractionMode={feedInteractionMode}
-          primaryActionOrder={feedPrimaryActionOrder}
-          toolbarButtonIds={feedToolbarButtonIds}
-          favorited={resolvedItem.favorited}
-          onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
-          favoritePending={favoriteMutation.isPending}
-          onCopyLink={() => handleCopyLink(resolvedItem)}
-          onCopyText={() => handleCopyText(resolvedItem)}
-          onGenImage={() => openGenImage(resolvedItem)}
-          onDownload={() => void handleDownload()}
-          downloadPending={downloadLoading}
-        />
-      </CardFooter>
+      {uniformHeight ? null : (
+        <CardFooter>
+          <FeedActions
+            item={resolvedItem}
+            surface={surfaceProp}
+            onCommentClick={onCommentClick}
+            onCommentExpand={handleCommentExpand}
+            commentsExpanded={commentsExpanded}
+            commentsPanelId={canExpandInlineComments ? commentsPanelId : undefined}
+            onRepostClick={onRepostClick}
+            onLikeClick={(target) => likeMutation.mutate(target)}
+            likePending={likePendingId === resolvedItem.id}
+            feedInteractionMode={feedInteractionMode}
+            primaryActionOrder={feedPrimaryActionOrder}
+            toolbarButtonIds={feedToolbarButtonIds}
+            favorited={resolvedItem.favorited}
+            onFavorite={() => favoriteMutation.mutateAsync(resolvedItem)}
+            favoritePending={favoriteMutation.isPending}
+            onCopyLink={() => handleCopyLink(resolvedItem)}
+            onCopyText={() => handleCopyText(resolvedItem)}
+            onGenImage={() => openGenImage(resolvedItem)}
+            onDownload={() => void handleDownload()}
+            downloadPending={downloadLoading}
+          />
+        </CardFooter>
+      )}
       {commentsExpanded && canExpandInlineComments ? (
         <FeedCommentsExpanded
           id={commentsPanelId}
@@ -553,7 +579,7 @@ export const FeedCard = memo(function FeedCard({
   // 弹窗模式：使用 SmartLink 处理点击和键盘事件
   // 非弹窗模式：使用 SmartLink 的 auto 模式处理链接行为
   return (
-    <div ref={feedCardRef}>
+    <div ref={feedCardRef} className={cn(uniformHeight && 'flex-1 flex flex-col')}>
       <SmartLink
         to={canNavigate ? detailPath : '#'}
         mode={shouldUsePopupMode ? 'modal' : 'auto'}
