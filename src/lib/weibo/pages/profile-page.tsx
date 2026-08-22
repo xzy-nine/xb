@@ -14,7 +14,6 @@ import {
   profileSearchInfiniteOptions,
 } from '@/lib/weibo/data/weibo-data'
 import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-data'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { TimelinePage } from '@/lib/weibo/models/feed'
 import {
   parseProfileSearchUrlState,
@@ -29,20 +28,12 @@ export function ProfilePostsTabs({
   searchBarKey,
   searchParams,
   setSearchParams,
-  onNavigate,
-  onCommentClick,
-  onRepostClick,
-  onCommentReply,
 }: {
   profileId: string
   searchState?: ReturnType<typeof parseProfileSearchUrlState>
   searchBarKey?: string
   searchParams?: URLSearchParams
   setSearchParams?: ReturnType<typeof useSearchParams>[1]
-  onNavigate: ReturnType<typeof useAppShellContext>['navigateToStatusDetail']
-  onCommentClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
-  onRepostClick: (item: Parameters<typeof composeTargetFromFeedItem>[0]) => void
-  onCommentReply?: (target: import('@/lib/weibo/models/compose').ComposeTarget) => void
 }) {
   const isSearchEnabled =
     searchState !== undefined && searchParams !== undefined && setSearchParams !== undefined
@@ -102,10 +93,6 @@ export function ProfilePostsTabs({
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={activeQuery.fetchNextPage}
         onRetry={() => void activeQuery.refetch()}
-        onNavigate={onNavigate}
-        onCommentClick={onCommentClick}
-        onRepostClick={onRepostClick}
-        onCommentReply={onCommentReply}
         className="flex flex-col gap-4"
       />
     </div>
@@ -157,18 +144,10 @@ export function ProfilePage() {
           <ProfileHeader profile={profileQuery.data} />
           <ProfilePostsTabs
             profileId={profileQuery.data.id}
-            onNavigate={ctx?.navigateToStatusDetail}
             searchState={searchState}
             searchBarKey={searchBarKey}
             searchParams={searchParams}
             setSearchParams={setSearchParams}
-            onCommentClick={(item) =>
-              ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
-            }
-            onRepostClick={(item) =>
-              ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))
-            }
-            onCommentReply={ctx?.setComposeTarget}
           />
         </div>
       ) : null}

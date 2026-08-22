@@ -1,13 +1,16 @@
+import { useElementSize } from '@reactuses/core'
 import { useEffect, useMemo, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { FeedList } from '@/lib/weibo/components/feed-list'
-import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { useAppSettings } from '@/lib/app-settings-store'
+import { PageEmptyState, PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { StatusCard } from '@/lib/weibo/components/status-card'
 import { flattenInfiniteItems } from '@/lib/weibo/data/weibo-data'
-import type { ComposeTarget } from '@/lib/weibo/models/compose'
 import type { FeedItem } from '@/lib/weibo/models/feed'
 import { useFeedRatingBatchSync } from '@/lib/weibo/rating/xb-rating'
+
+const MIN_CARD_WIDTH = 300
 
 interface InfiniteFeedListProps {
   pages: Array<{ items: FeedItem[] }> | undefined
@@ -20,11 +23,58 @@ interface InfiniteFeedListProps {
   isFetchingNextPage: boolean
   fetchNextPage: () => void | Promise<unknown>
   onRetry?: () => void
-  onNavigate?: (item: FeedItem) => void
-  onCommentClick?: (item: FeedItem) => void
-  onRepostClick?: (item: FeedItem) => void
-  onCommentReply?: (target: ComposeTarget) => void
   className?: string
+}
+
+function FeedCards({ items, emptyLabel }: { items: FeedItem[]; emptyLabel: string }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth] = useElementSize(containerRef)
+  const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
+  const immersiveMode = useAppSettings((s) => s.immersiveMode)
+  const sidebarCollapsed = useAppSettings((s) => s.sidebarCollapsed)
+  const waterfallExpandOnWideLayout = useAppSettings((s) => s.waterfallExpandOnWideLayout)
+
+  if (items.length === 0) {
+    return <PageEmptyState label={emptyLabel} />
+  }
+
+  const isExpanded = waterfallExpandOnWideLayout && (immersiveMode || sidebarCollapsed)
+
+  const effectiveColumnCount =
+    waterfallColumnCount > 1 && containerWidth > 0
+      ? isExpanded
+        ? waterfallColumnCount
+        : Math.min(waterfallColumnCount, Math.max(1, Math.floor(containerWidth / MIN_CARD_WIDTH)))
+      : 1
+
+  if (effectiveColumnCount <= 1) {
+    return (
+      <div ref={containerRef}>
+        <div className="flex flex-col gap-3">
+          {items.map((item) => (
+            <div key={item.id} data-feed-id={item.id}>
+              <StatusCard status={item} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const gap = 16
+  const cardWidth = (containerWidth - gap * (effectiveColumnCount - 1)) / effectiveColumnCount
+
+  return (
+    <div ref={containerRef}>
+      <div className="flex flex-wrap items-stretch gap-4">
+        {items.map((item) => (
+          <div key={item.id} className="flex flex-col" style={{ width: cardWidth }}>
+            <StatusCard status={item} uniformHeight />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function InfiniteFeedList({
@@ -38,10 +88,6 @@ export function InfiniteFeedList({
   isFetchingNextPage,
   fetchNextPage,
   onRetry,
-  onNavigate,
-  onCommentClick,
-  onRepostClick,
-  onCommentReply,
   className = 'flex flex-col gap-3',
 }: InfiniteFeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -84,16 +130,7 @@ export function InfiniteFeedList({
       {!isLoading && showInitialError ? (
         <PageErrorState description={errorMessage!} onRetry={onRetry} />
       ) : null}
-      {!isLoading && showFeed ? (
-        <FeedList
-          items={items}
-          emptyLabel={emptyLabel}
-          onNavigate={onNavigate}
-          onCommentClick={onCommentClick}
-          onRepostClick={onRepostClick}
-          onCommentReply={onCommentReply}
-        />
-      ) : null}
+      {!isLoading && showFeed ? <FeedCards items={items} emptyLabel={emptyLabel} /> : null}
       {!isLoading && loadMoreErrorMessage ? (
         <div className="flex flex-col items-center gap-2 py-3">
           <p className="text-destructive text-sm">{loadMoreErrorMessage}</p>

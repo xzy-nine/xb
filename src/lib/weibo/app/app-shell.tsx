@@ -11,8 +11,9 @@ import { CommentModal } from '@/lib/weibo/components/comment-modal'
 import { ComposeDialog } from '@/lib/weibo/components/compose-dialog'
 import { GenImageDialogProvider } from '@/lib/weibo/components/gen-image-dialog-context'
 import { SettingsDialog } from '@/lib/weibo/components/settings-dialog'
+import { type StatusCardHost, StatusCardHostProvider } from '@/lib/weibo/components/status-card'
 import { followGroupsQueryOptions } from '@/lib/weibo/data/weibo-data'
-import type { ComposeTarget } from '@/lib/weibo/models/compose'
+import { composeTargetFromFeedItem, type ComposeTarget } from '@/lib/weibo/models/compose'
 import { getDefaultFollowGroupForHomeTab } from '@/lib/weibo/models/explore-utils'
 import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { homeTimelinePathFromTab } from '@/lib/weibo/route/home-timeline-path'
@@ -206,6 +207,14 @@ export function AppShell() {
     />
   )
 
+  const statusCardHost = useMemo<StatusCardHost>(
+    () => ({
+      openStatus: navigateToStatusDetail,
+      composeStatus: (status, mode) => setComposeTarget(composeTargetFromFeedItem(status, mode)),
+    }),
+    [navigateToStatusDetail],
+  )
+
   if (!rewriteEnabled) {
     return (
       <>
@@ -225,9 +234,6 @@ export function AppShell() {
           setProfileDialogOpen={dialogs.setProfileDialogOpen}
           setTopicDialogOpen={dialogs.setTopicDialogOpen}
           setComposeTarget={handleSetComposeTarget}
-          onNavigateStatusDetail={navigateToStatusDetail}
-          onNavigateProfile={dialogs.navigateToProfile}
-          onNavigateTopic={dialogs.openTopicDialog}
         />
       </>
     )
@@ -241,57 +247,56 @@ export function AppShell() {
 
   return (
     <GenImageDialogProvider>
-      <ShellFrame
-        pageKind={page.kind}
-        viewingProfileUserId={viewingProfileUserId}
-        rewriteEnabled={rewriteEnabled}
-        theme={theme}
-        contentWidth={contentWidth}
-        customContentWidth={customContentWidth}
-        onRewriteEnabledChange={(enabled: boolean) => {
-          void updateSettings({ rewriteEnabled: enabled })
-          if (!enabled) {
-            window.location.reload()
-          }
-        }}
-        onThemeChange={(nextTheme: typeof theme) => void updateSettings({ theme: nextTheme })}
-        onSettingsOpen={() => setSettingsOpen(true)}
-        onComposeOpen={() => setComposeOpen(true)}
-        mainRef={mainRef}
-        appShellContext={context}
-      >
-        <Outlet context={context} />
-        {composeModal}
-        <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-        <Suspense fallback={null}>
-          <GenImageDialog />
-        </Suspense>
-        <AuthRequiredDialog
-          open={authDialogOpen}
-          onLogin={async () => {
-            await updateSettings({ rewriteEnabled: false })
-            window.location.href = 'https://weibo.com/newlogin'
+      <StatusCardHostProvider host={statusCardHost}>
+        <ShellFrame
+          pageKind={page.kind}
+          viewingProfileUserId={viewingProfileUserId}
+          rewriteEnabled={rewriteEnabled}
+          theme={theme}
+          contentWidth={contentWidth}
+          customContentWidth={customContentWidth}
+          onRewriteEnabledChange={(enabled: boolean) => {
+            void updateSettings({ rewriteEnabled: enabled })
+            if (!enabled) {
+              window.location.reload()
+            }
           }}
-        />
-        <AppShellDialogs
-          statusDetailDialogOpen={dialogs.statusDetailDialogOpen}
-          statusDetailItem={dialogs.statusDetailItem}
-          profileDialogOpen={dialogs.profileDialogOpen}
-          profileLookup={dialogs.profileLookup}
-          topicDialogOpen={dialogs.topicDialogOpen}
-          topicDialogTopic={dialogs.topicDialogTopic}
-          position={statusDetailPopupPosition}
-          width={statusDetailPopupWidth}
-          setStatusDetailDialogOpen={dialogs.setStatusDetailDialogOpen}
-          setProfileDialogOpen={dialogs.setProfileDialogOpen}
-          setTopicDialogOpen={dialogs.setTopicDialogOpen}
-          setComposeTarget={handleSetComposeTarget}
-          onNavigateStatusDetail={navigateToStatusDetail}
-          onNavigateProfile={dialogs.navigateToProfile}
-          onNavigateTopic={dialogs.openTopicDialog}
-        />
-      </ShellFrame>
+          onThemeChange={(nextTheme: typeof theme) => void updateSettings({ theme: nextTheme })}
+          onSettingsOpen={() => setSettingsOpen(true)}
+          onComposeOpen={() => setComposeOpen(true)}
+          mainRef={mainRef}
+          appShellContext={context}
+        >
+          <Outlet context={context} />
+          {composeModal}
+          <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
+          <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+          <Suspense fallback={null}>
+            <GenImageDialog />
+          </Suspense>
+          <AuthRequiredDialog
+            open={authDialogOpen}
+            onLogin={async () => {
+              await updateSettings({ rewriteEnabled: false })
+              window.location.href = 'https://weibo.com/newlogin'
+            }}
+          />
+          <AppShellDialogs
+            statusDetailDialogOpen={dialogs.statusDetailDialogOpen}
+            statusDetailItem={dialogs.statusDetailItem}
+            profileDialogOpen={dialogs.profileDialogOpen}
+            profileLookup={dialogs.profileLookup}
+            topicDialogOpen={dialogs.topicDialogOpen}
+            topicDialogTopic={dialogs.topicDialogTopic}
+            position={statusDetailPopupPosition}
+            width={statusDetailPopupWidth}
+            setStatusDetailDialogOpen={dialogs.setStatusDetailDialogOpen}
+            setProfileDialogOpen={dialogs.setProfileDialogOpen}
+            setTopicDialogOpen={dialogs.setTopicDialogOpen}
+            setComposeTarget={handleSetComposeTarget}
+          />
+        </ShellFrame>
+      </StatusCardHostProvider>
     </GenImageDialogProvider>
   )
 }

@@ -4,9 +4,6 @@ import { DialogContainer } from '@/lib/weibo/components/dialog-container.custom'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
 import { ProfileHeader } from '@/lib/weibo/components/profile-header'
 import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-io'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { ProfilePostsTabs } from '@/lib/weibo/pages/profile-page'
 
 type ProfileLookup = { uid: string } | { screenName: string }
@@ -17,19 +14,9 @@ interface ProfileDialogProps {
   position: string
   width?: number
   onOpenChange: (open: boolean) => void
-  setComposeTarget: (target: ComposeTarget | null) => void
-  onNavigateStatusDetail: (item: StatusDetailNavigationItem) => void
 }
 
-export function ProfileDialog({
-  open,
-  lookup,
-  position,
-  width,
-  onOpenChange,
-  setComposeTarget,
-  onNavigateStatusDetail,
-}: ProfileDialogProps) {
+export function ProfileDialog({ open, lookup, position, width, onOpenChange }: ProfileDialogProps) {
   if (!open || !lookup) {
     return null
   }
@@ -62,13 +49,7 @@ export function ProfileDialog({
       {profile ? (
         <div className="flex flex-col gap-4">
           <ProfileHeader profile={profile} />
-          <ProfilePostsTabs
-            profileId={profile.id}
-            onNavigate={onNavigateStatusDetail}
-            onCommentClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
-            onRepostClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-            onCommentReply={setComposeTarget}
-          />
+          <ProfilePostsTabs profileId={profile.id} />
         </div>
       ) : null}
     </DialogContainer>

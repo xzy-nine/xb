@@ -13,7 +13,6 @@ export function FeedTextBlock({
   isLongTextLoading,
   hasLongTextError,
   onLoadLongText,
-  onNavigateTopic,
   hideMedia = false,
   imageDisplay = 'expanded',
 }: {
@@ -22,7 +21,6 @@ export function FeedTextBlock({
   isLongTextLoading: boolean
   hasLongTextError: boolean
   onLoadLongText: () => void
-  onNavigateTopic?: (topic: string) => void
   hideMedia?: boolean
   imageDisplay?: ContentDisplay
 }) {
@@ -37,7 +35,6 @@ export function FeedTextBlock({
         item={item}
         text={item.text}
         mode={resolvedTextMode}
-        onNavigateTopic={onNavigateTopic}
         hideMedia={hideMedia}
         imageDisplay={imageDisplay}
       />

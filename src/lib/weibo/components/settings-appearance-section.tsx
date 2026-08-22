@@ -131,9 +131,7 @@ const WEIBO_CARD_SETTING_KEYS = [
   'weiboCardShowPublishInfo',
   'weiboCardShowTitleBadge',
   'weiboCardShowInteractionCounts',
-  'weiboCardImageDisplay',
-  'weiboCardVideoDisplay',
-  'weiboCardAudioDisplay',
+  'weiboCardMediaDisplay',
   'weiboCardSingleImageMaxWidth',
   'weiboCardSingleVideoMaxWidth',
   'weiboCardMultiMediaLayout',
@@ -572,24 +570,15 @@ function WeiboCardSettingsPanel({ settings }: { settings: AppSettingsStoreState 
 
       <>
         <DisplayModeField
-          label="图片内容"
-          description="包含普通图片和 Live Photo"
-          value={settings.weiboCardImageDisplay}
-          onChange={(value) => void settings.updateSettings({ weiboCardImageDisplay: value })}
+          label="媒体区域"
+          description="统一控制图片、视频、直播、回放、音频与播客的默认展示状态"
+          value={settings.weiboCardMediaDisplay}
+          onChange={(value) => void settings.updateSettings({ weiboCardMediaDisplay: value })}
         />
-        <DisplayModeField
-          label="视频与直播"
-          description="包含普通视频、混合媒体视频、直播与回放"
-          value={settings.weiboCardVideoDisplay}
-          onChange={(value) => void settings.updateSettings({ weiboCardVideoDisplay: value })}
-        />
-        <DisplayModeField
-          label="音频与播客"
-          description="控制音频和播客播放器的默认展示状态"
-          value={settings.weiboCardAudioDisplay}
-          onChange={(value) => void settings.updateSettings({ weiboCardAudioDisplay: value })}
-        />
-        <StackedField label="单图最大宽度" description="实际宽度不会超过中间列可用宽度">
+        <StackedField
+          label="单图最大宽度"
+          description="适用于微博媒体、正文引用图和评论图片，不会超过中间列可用宽度"
+        >
           <div className="flex items-center gap-3 pt-1">
             <Slider
               min={WEIBO_CARD_SINGLE_MEDIA_MAX_WIDTH_MIN}

@@ -6,9 +6,13 @@ import {
   createMediaRequestHeaderRule,
   handleMediaFetch,
   handleMediaHead,
+  handleMweiboFetch,
   maxBackgroundMediaBytes,
 } from '@/entrypoints/background'
-import { buildTopicSearchUrl } from '@/lib/weibo/services/m-weibo-client'
+
+function topicSearchUrl() {
+  return 'https://m.weibo.cn/api/container/getIndex?containerid=231522type%3D1%26q%3D%23%E6%B5%8B%E8%AF%95%23&page_type=searchall&v_p=42&page=1'
+}
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -204,9 +208,9 @@ describe('m.weibo fetch allowlist', () => {
     }).not.toThrow()
   })
 
-  it('allows topic search URLs built by the m.weibo client', () => {
+  it('allows topic search URLs used by the topic delivery module', () => {
     expect(() => {
-      assertAllowedMweiboFetchUrl(buildTopicSearchUrl('测试', 1))
+      assertAllowedMweiboFetchUrl(topicSearchUrl())
     }).not.toThrow()
   })
 
@@ -226,5 +230,118 @@ describe('m.weibo fetch allowlist', () => {
     expect(() => {
       assertAllowedMweiboFetchUrl('https://m.weibo.cn/api/config')
     }).toThrow('unsupported-mweibo-endpoint')
+  })
+})
+
+describe('m.weibo fetch responses', () => {
+  function installBrowserCookies() {
+    Object.defineProperty(globalThis, 'browser', {
+      configurable: true,
+      value: {
+        cookies: {
+          get: vi.fn(async () => ({ value: 'xsrf-token' })),
+        },
+      },
+    })
+  }
+
+  it('returns JSON with safe response metadata', async () => {
+    installBrowserCookies()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: 1, data: { cards: [] } }), {
+          headers: { 'content-type': 'application/json; charset=utf-8' },
+          status: 200,
+        }),
+      ),
+    )
+
+    await expect(
+      handleMweiboFetch({
+        type: 'mweibo-fetch',
+        url: topicSearchUrl(),
+      }),
+    ).resolves.toEqual({
+      ok: true,
+      data: { ok: 1, data: { cards: [] } },
+      status: 200,
+      contentType: 'application/json',
+    })
+  })
+
+  it('classifies HTML challenge pages without returning their body', async () => {
+    installBrowserCookies()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('<html>challenge</html>', {
+          headers: { 'content-type': 'text/html; charset=utf-8' },
+          status: 200,
+        }),
+      ),
+    )
+
+    await expect(
+      handleMweiboFetch({
+        type: 'mweibo-fetch',
+        url: topicSearchUrl(),
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: 'mweibo-fetch-unexpected-content',
+      status: 200,
+      contentType: 'text/html',
+    })
+  })
+
+  it('accepts JSON payloads served as text/plain', async () => {
+    installBrowserCookies()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: 1, data: {} }), {
+          headers: { 'content-type': 'text/plain' },
+          status: 200,
+        }),
+      ),
+    )
+
+    await expect(
+      handleMweiboFetch({
+        type: 'mweibo-fetch',
+        url: topicSearchUrl(),
+      }),
+    ).resolves.toEqual({
+      ok: true,
+      data: { ok: 1, data: {} },
+      status: 200,
+      contentType: 'text/plain',
+    })
+  })
+
+  it('preserves HTTP status and content type for failed responses', async () => {
+    installBrowserCookies()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: 0 }), {
+          headers: { 'content-type': 'application/json' },
+          status: 403,
+        }),
+      ),
+    )
+
+    await expect(
+      handleMweiboFetch({
+        type: 'mweibo-fetch',
+        url: topicSearchUrl(),
+      }),
+    ).resolves.toEqual({
+      ok: false,
+      error: 'mweibo-fetch-failed:403',
+      status: 403,
+      contentType: 'application/json',
+    })
   })
 })

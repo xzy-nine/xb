@@ -4,24 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 import { DialogContainer } from '@/lib/weibo/components/dialog-container.custom'
-import { FeedList } from '@/lib/weibo/components/feed-list'
-import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { PageEmptyState, PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { StatusCard } from '@/lib/weibo/components/status-card'
 import {
   extractTopicChannels,
   extractTopicHeadData,
   flattenInfiniteItems,
   topicSearchInfiniteOptions,
 } from '@/lib/weibo/data/weibo-data'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
-import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import type {
-  FeedItem,
-  StatusDetailNavigationItem,
-  TimelinePage,
-  TopicChannel,
-} from '@/lib/weibo/models/feed'
-
-type ProfileLookup = { uid: string } | { screenName: string }
+import type { FeedItem, TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 
 interface TopicDialogProps {
   open: boolean
@@ -29,9 +20,6 @@ interface TopicDialogProps {
   position: string
   width?: number
   onOpenChange: (open: boolean) => void
-  setComposeTarget: (target: ComposeTarget | null) => void
-  onNavigate: (item: StatusDetailNavigationItem) => void
-  onNavigateProfile: (lookup: ProfileLookup) => void
 }
 
 function TopicChannelBar({
@@ -82,16 +70,7 @@ function TopicChannelPill({
   )
 }
 
-export function TopicDialog({
-  open,
-  topic,
-  position,
-  width,
-  onOpenChange,
-  setComposeTarget,
-  onNavigate,
-  onNavigateProfile,
-}: TopicDialogProps) {
+export function TopicDialog({ open, topic, position, width, onOpenChange }: TopicDialogProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const [selectedChannelId, setSelectedChannelId] = useState<string>('1')
 
@@ -187,14 +166,15 @@ export function TopicDialog({
           <PageErrorState description={errorMessage} onRetry={() => void topicQuery.refetch()} />
         ) : null}
         {!isLoading && !errorMessage ? (
-          <FeedList
-            items={items}
-            emptyLabel="暂无话题内容"
-            onNavigate={onNavigate}
-            onNavigateProfile={onNavigateProfile}
-            onCommentClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
-            onRepostClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-          />
+          items.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {items.map((item) => (
+                <StatusCard key={item.id} status={item} />
+              ))}
+            </div>
+          ) : (
+            <PageEmptyState label="暂无话题内容" />
+          )
         ) : null}
         {hasNextPage ? (
           <div ref={loadMoreRef} className="flex justify-center py-3">

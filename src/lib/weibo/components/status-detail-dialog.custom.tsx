@@ -1,15 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { DialogContainer } from '@/lib/weibo/components/dialog-container.custom'
-import { FeedCard } from '@/lib/weibo/components/feed-card'
 import { PageErrorState, PageLoadingState } from '@/lib/weibo/components/page-state'
+import { DetailStatusCard } from '@/lib/weibo/components/status-card'
 import { loadStatusDetail } from '@/lib/weibo/data/weibo-io'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { ComposeTarget } from '@/lib/weibo/models/compose'
-import type { FeedItem, StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
+import type { StatusDetailNavigationItem } from '@/lib/weibo/models/feed'
 import { StatusCommentsSection } from '@/lib/weibo/pages/status-detail-page'
-
-type ProfileLookup = { uid: string } | { screenName: string }
 
 interface StatusDetailDialogProps {
   open: boolean
@@ -18,9 +15,6 @@ interface StatusDetailDialogProps {
   width?: number
   onOpenChange: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
-  onNavigate?: (item: FeedItem) => void
-  onNavigateProfile?: (lookup: ProfileLookup) => void
-  onNavigateTopic?: (topic: string) => void
 }
 
 export function StatusDetailDialog({
@@ -30,9 +24,6 @@ export function StatusDetailDialog({
   width,
   onOpenChange,
   setComposeTarget,
-  onNavigate,
-  onNavigateProfile,
-  onNavigateTopic,
 }: StatusDetailDialogProps) {
   if (!open || !item) {
     return null
@@ -62,16 +53,7 @@ export function StatusDetailDialog({
       ) : null}
       {detail ? (
         <div className="flex flex-col gap-4">
-          <FeedCard
-            item={detail.status}
-            surface="detail"
-            onNavigate={onNavigate}
-            onNavigateProfile={onNavigateProfile}
-            onNavigateTopic={onNavigateTopic}
-            onCommentClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'comment'))}
-            onRepostClick={(item) => setComposeTarget(composeTargetFromFeedItem(item, 'repost'))}
-            onStatusDeleted={() => onOpenChange(false)}
-          />
+          <DetailStatusCard status={detail.status} />
           <div className="border-t pt-4">
             <h3 className="text-muted-foreground mb-4 text-sm font-medium">评论</h3>
             <StatusCommentsSection

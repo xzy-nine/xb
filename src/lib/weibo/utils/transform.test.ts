@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { buildMediaAssets } from '@/lib/weibo/components/media-region/media-region-model'
 import { extractMediaUrls } from '@/lib/weibo/utils/download-media'
 import { normalizeSafeExternalUrl } from '@/lib/weibo/utils/safe-url'
 
@@ -373,6 +374,27 @@ describe('toFeedItem media images', () => {
     ])
   })
 
+  it('ignores unsupported mixed-media types instead of treating them as pictures', () => {
+    const result = toFeedItem({
+      idstr: 'mixed-live-1',
+      text_raw: 'mixed live media',
+      user: { idstr: '1', screen_name: 'Alice' },
+      mix_media_info: {
+        items: [
+          {
+            type: 'live',
+            id: 'live-1',
+            data: {
+              page_pic: 'https://example.com/live.jpg',
+            },
+          },
+        ],
+      },
+    } as any)
+
+    expect(result.mixMediaInfo).toBeUndefined()
+  })
+
   it('keeps a mixed-media Live Photo video in the batch download queue', () => {
     const result = toFeedItem({
       idstr: 'mixed-live-photo',
@@ -398,7 +420,12 @@ describe('toFeedItem media images', () => {
       },
     } as any)
 
-    expect(extractMediaUrls(result).map(({ url }) => url)).toEqual([
+    expect(
+      extractMediaUrls(buildMediaAssets(result), {
+        author: result.author.name,
+        text: result.text,
+      }).map(({ url }) => url),
+    ).toEqual([
       'https://wx3.sinaimg.cn/large/live-pic.jpg',
       'https://livephoto.us.sinaimg.cn/live-pic.mp4',
     ])

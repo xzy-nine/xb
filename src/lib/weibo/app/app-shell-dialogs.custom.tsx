@@ -20,9 +20,6 @@ interface AppShellDialogsProps {
   setProfileDialogOpen: (open: boolean) => void
   setTopicDialogOpen: (open: boolean) => void
   setComposeTarget: (target: ComposeTarget | null) => void
-  onNavigateStatusDetail: (item: StatusDetailNavigationItem) => void
-  onNavigateProfile: (lookup: ProfileLookup) => void
-  onNavigateTopic: (topic: string) => void
 }
 
 export function AppShellDialogs({
@@ -38,9 +35,6 @@ export function AppShellDialogs({
   setProfileDialogOpen,
   setTopicDialogOpen,
   setComposeTarget,
-  onNavigateStatusDetail,
-  onNavigateProfile,
-  onNavigateTopic,
 }: AppShellDialogsProps) {
   return (
     <>
@@ -51,9 +45,6 @@ export function AppShellDialogs({
         width={width}
         onOpenChange={setStatusDetailDialogOpen}
         setComposeTarget={setComposeTarget}
-        onNavigate={onNavigateStatusDetail}
-        onNavigateProfile={onNavigateProfile}
-        onNavigateTopic={onNavigateTopic}
       />
       <ProfileDialog
         open={profileDialogOpen}
@@ -61,8 +52,6 @@ export function AppShellDialogs({
         position={position}
         width={width}
         onOpenChange={setProfileDialogOpen}
-        setComposeTarget={setComposeTarget}
-        onNavigateStatusDetail={onNavigateStatusDetail}
       />
       <TopicDialog
         open={topicDialogOpen}
@@ -70,9 +59,6 @@ export function AppShellDialogs({
         position={position}
         width={width}
         onOpenChange={setTopicDialogOpen}
-        setComposeTarget={setComposeTarget}
-        onNavigate={onNavigateStatusDetail}
-        onNavigateProfile={onNavigateProfile}
       />
     </>
   )

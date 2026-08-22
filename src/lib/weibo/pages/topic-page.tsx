@@ -3,19 +3,17 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
-import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { useImmersiveHeaderClassName } from '@/lib/weibo/app/immersive-header'
 import { InfiniteFeedList } from '@/lib/weibo/components/infinite-feed-list'
-import { MweiboCaptchaPrompt } from '@/lib/weibo/components/mweibo-captcha-prompt'
+import { MweiboTopicRecoveryPrompt } from '@/lib/weibo/components/mweibo-topic-recovery-prompt'
 import {
   extractTopicChannels,
   extractTopicHeadData,
+  getMweiboTopicRecoveryState,
   topicSearchInfiniteOptions,
 } from '@/lib/weibo/data/weibo-data'
-import { composeTargetFromFeedItem } from '@/lib/weibo/models/compose'
 import type { TimelinePage, TopicChannel } from '@/lib/weibo/models/feed'
 import { useWeiboPage } from '@/lib/weibo/route/use-weibo-page'
-import { MweiboCaptchaError } from '@/lib/weibo/services/mweibo-errors'
 
 function TopicChannelBar({
   channels,
@@ -71,7 +69,6 @@ function TopicChannelPill({
 }
 
 export function TopicPage() {
-  const ctx = useAppShellContext()
   const page = useWeiboPage()
   const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
   const headerClassName = useImmersiveHeaderClassName('bg-muted/80 sticky top-0 z-10 backdrop-blur')
@@ -100,27 +97,20 @@ export function TopicPage() {
     setSelectedChannelId(id)
   }, [])
 
-  const errorMessage =
-    topicQuery.error instanceof Error && !topicQuery.isFetchNextPageError
-      ? topicQuery.error.message
-      : null
-  const loadMoreErrorMessage =
-    topicQuery.error instanceof Error && topicQuery.isFetchNextPageError
-      ? topicQuery.error.message
-      : null
+  const isInitialError = topicQuery.error instanceof Error && !topicQuery.isFetchNextPageError
+  const isLoadMoreError = topicQuery.error instanceof Error && topicQuery.isFetchNextPageError
+  const errorMessage = isInitialError ? '话题内容加载失败，请稍后重试。' : null
+  const loadMoreErrorMessage = isLoadMoreError ? '微博暂时无法加载更多话题内容。' : null
   const hasNextPage = Boolean(topicQuery.hasNextPage)
   const isFetchingNextPage = topicQuery.isFetchingNextPage
   const isLoading = topicQuery.isLoading
 
-  const captchaError = useMemo(
-    () => (topicQuery.error instanceof MweiboCaptchaError ? topicQuery.error : null),
-    [topicQuery.error],
-  )
+  const recovery = isInitialError ? getMweiboTopicRecoveryState(topicQuery.error) : null
 
-  if (captchaError) {
+  if (recovery) {
     return (
       <div className="flex flex-col gap-3">
-        <MweiboCaptchaPrompt onRetry={() => void topicQuery.refetch()} />
+        <MweiboTopicRecoveryPrompt recovery={recovery} onRetry={() => void topicQuery.refetch()} />
       </div>
     )
   }
@@ -159,12 +149,6 @@ export function TopicPage() {
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={topicQuery.fetchNextPage}
         onRetry={() => void topicQuery.refetch()}
-        onNavigate={ctx?.navigateToStatusDetail}
-        onCommentClick={(item) =>
-          ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'comment'))
-        }
-        onRepostClick={(item) => ctx?.setComposeTarget?.(composeTargetFromFeedItem(item, 'repost'))}
-        onCommentReply={ctx?.setComposeTarget}
       />
     </div>
   )
