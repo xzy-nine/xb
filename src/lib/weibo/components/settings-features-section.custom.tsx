@@ -1,9 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -13,36 +11,42 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { DEFAULT_APP_SETTINGS, type StatusDetailPopupPosition } from '@/lib/app-settings'
+import type { AppSettings, StatusDetailPopupPosition } from '@/lib/app-settings'
+import { type AppSettingsStoreState, useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 
-import { Field } from './settings-dialog-ui'
+import { defaultsFor, Field, ResetSectionButton, SettingsPanel } from './settings-dialog-ui'
 
-interface SettingsFeaturesSectionProps {
-  statusDetailPopupEnabled: boolean
-  statusDetailPopupPosition: StatusDetailPopupPosition
-  statusDetailPopupWidth: number
-  backgroundEnabled: boolean
-  backgroundImageUrl: string
-  glassOpacity: number
-  glassBlur: number
-  waterfallColumnCount: number
-  waterfallExpandOnWideLayout: boolean
-  updateSettings: (patch: Record<string, unknown>) => void
-}
+const FEATURES_SETTING_KEYS = [
+  'statusDetailPopupEnabled',
+  'statusDetailPopupPosition',
+  'statusDetailPopupWidth',
+  'waterfallColumnCount',
+  'waterfallExpandOnWideLayout',
+  'backgroundEnabled',
+  'backgroundImageUrl',
+  'glassOpacity',
+  'glassBlur',
+] as const satisfies readonly (keyof AppSettings)[]
 
 export function SettingsFeaturesSection({
-  statusDetailPopupEnabled,
-  statusDetailPopupPosition,
-  statusDetailPopupWidth,
-  backgroundEnabled,
-  backgroundImageUrl,
-  glassOpacity,
-  glassBlur,
-  waterfallColumnCount,
-  waterfallExpandOnWideLayout,
   updateSettings,
-}: SettingsFeaturesSectionProps) {
+}: {
+  updateSettings: AppSettingsStoreState['updateSettings']
+}) {
+  const settings = useAppSettings(
+    useShallow((state) => ({
+      statusDetailPopupEnabled: state.statusDetailPopupEnabled,
+      statusDetailPopupPosition: state.statusDetailPopupPosition,
+      statusDetailPopupWidth: state.statusDetailPopupWidth,
+      waterfallColumnCount: state.waterfallColumnCount,
+      waterfallExpandOnWideLayout: state.waterfallExpandOnWideLayout,
+      backgroundEnabled: state.backgroundEnabled,
+      backgroundImageUrl: state.backgroundImageUrl,
+      glassOpacity: state.glassOpacity,
+      glassBlur: state.glassBlur,
+    })),
+  )
   const [imagePreviewError, setImagePreviewError] = useState(false)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -70,17 +74,18 @@ export function SettingsFeaturesSection({
 
   const handleBackgroundImageUrlChange = useCallback(
     (url: string) => {
-      updateSettings({ backgroundImageUrl: url })
+      void updateSettings({ backgroundImageUrl: url })
       validateImageUrl(url)
     },
     [updateSettings, validateImageUrl],
   )
 
   return (
-    <div className="divide-border/40 divide-y px-6 py-4">
+    <SettingsPanel>
       <Field label="弹窗详情" description="点击微博后在弹窗中打开详情，而非新页面">
         <Switch
-          checked={statusDetailPopupEnabled}
+          aria-label="弹窗详情"
+          checked={settings.statusDetailPopupEnabled}
           onCheckedChange={(checked) =>
             void updateSettings({
               statusDetailPopupEnabled: checked,
@@ -90,17 +95,17 @@ export function SettingsFeaturesSection({
         />
       </Field>
 
-      {statusDetailPopupEnabled && (
+      {settings.statusDetailPopupEnabled ? (
         <Field label="弹窗位置" description="详情弹窗在屏幕上的显示位置">
           <Select
-            value={statusDetailPopupPosition}
+            value={settings.statusDetailPopupPosition}
             onValueChange={(value) =>
-              updateSettings({
+              void updateSettings({
                 statusDetailPopupPosition: value as StatusDetailPopupPosition,
               })
             }
           >
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[100px]" aria-label="弹窗位置">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -110,44 +115,49 @@ export function SettingsFeaturesSection({
             </SelectContent>
           </Select>
         </Field>
-      )}
+      ) : null}
 
-      {statusDetailPopupEnabled && (
-        <div className="flex flex-col gap-2">
-          <Label>弹窗宽度</Label>
-          <p className="text-muted-foreground text-xs">
-            详情弹窗占页面宽度的比例 ({statusDetailPopupWidth}%)
-          </p>
+      {settings.statusDetailPopupEnabled ? (
+        <Field
+          label="弹窗宽度"
+          description={`详情弹窗占页面宽度的比例 (${settings.statusDetailPopupWidth}%)`}
+        >
           <Slider
-            value={[statusDetailPopupWidth]}
             min={50}
             max={80}
             step={5}
-            onValueChange={([value]) => void updateSettings({ statusDetailPopupWidth: value })}
+            value={[settings.statusDetailPopupWidth]}
+            aria-label="弹窗宽度"
+            onValueChange={([value]) => {
+              if (value !== undefined) void updateSettings({ statusDetailPopupWidth: value })
+            }}
           />
-        </div>
-      )}
+        </Field>
+      ) : null}
 
-      <div className="flex flex-col gap-2">
-        <Label>瀑布流栏数</Label>
-        <p className="text-muted-foreground text-xs">
-          设为 1 时关闭瀑布流，2-5 栏自适应排列 ({waterfallColumnCount} 栏)单栏不低于 300px
-        </p>
+      <Field
+        label="瀑布流栏数"
+        description={`设为 1 时关闭瀑布流，2-5 栏自适应排列 (${settings.waterfallColumnCount} 栏)，单栏不低于 300px`}
+      >
         <Slider
-          value={[waterfallColumnCount]}
           min={1}
           max={5}
           step={1}
-          onValueChange={([value]) => void updateSettings({ waterfallColumnCount: value })}
+          value={[settings.waterfallColumnCount]}
+          aria-label="瀑布流栏数"
+          onValueChange={([value]) => {
+            if (value !== undefined) void updateSettings({ waterfallColumnCount: value })
+          }}
         />
-      </div>
+      </Field>
 
       <Field
         label="展开时放大卡片"
         description="当主栏空间变宽时（沉浸模式/收起左栏），增加单个卡片宽度而非列数"
       >
         <Switch
-          checked={waterfallExpandOnWideLayout}
+          aria-label="展开时放大卡片"
+          checked={settings.waterfallExpandOnWideLayout}
           onCheckedChange={(checked) =>
             void updateSettings({ waterfallExpandOnWideLayout: checked })
           }
@@ -156,22 +166,23 @@ export function SettingsFeaturesSection({
 
       <Field label="自定义背景" description="为页面添加自定义背景图片">
         <Switch
-          checked={backgroundEnabled}
+          aria-label="自定义背景"
+          checked={settings.backgroundEnabled}
           onCheckedChange={(checked) => void updateSettings({ backgroundEnabled: checked })}
         />
       </Field>
 
-      {backgroundEnabled && (
+      {settings.backgroundEnabled ? (
         <Field label="背景图片" description="输入图片 URL 作为背景">
           <div className="flex items-center gap-2">
             <Input
               type="url"
               placeholder="https://example.com/bg.jpg"
-              value={backgroundImageUrl}
+              value={settings.backgroundImageUrl}
               onChange={(e) => handleBackgroundImageUrlChange(e.target.value)}
               className="h-8 w-[180px]"
             />
-            {backgroundImageUrl ? (
+            {settings.backgroundImageUrl ? (
               <div
                 className={cn(
                   'size-8 shrink-0 overflow-hidden rounded-md border',
@@ -179,7 +190,7 @@ export function SettingsFeaturesSection({
                 )}
               >
                 <img
-                  src={`${backgroundImageUrl}${backgroundImageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
+                  src={`${settings.backgroundImageUrl}${settings.backgroundImageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
                   alt="背景预览"
                   className="block size-full object-cover"
                   onError={() => setImagePreviewError(true)}
@@ -189,54 +200,39 @@ export function SettingsFeaturesSection({
             ) : null}
           </div>
         </Field>
-      )}
+      ) : null}
 
-      <div className="flex flex-col gap-2">
-        <Label>玻璃透明度</Label>
-        <p className="text-muted-foreground text-xs">卡片和弹窗的半透明程度 ({glassOpacity}%)</p>
+      <Field label="玻璃透明度" description={`卡片和弹窗的半透明程度 (${settings.glassOpacity}%)`}>
         <Slider
-          value={[glassOpacity]}
           min={0}
           max={100}
           step={5}
-          onValueChange={([v]) => void updateSettings({ glassOpacity: v })}
+          value={[settings.glassOpacity]}
+          aria-label="玻璃透明度"
+          onValueChange={([value]) => {
+            if (value !== undefined) void updateSettings({ glassOpacity: value })
+          }}
         />
-      </div>
+      </Field>
 
-      <div className="flex flex-col gap-2">
-        <Label>玻璃模糊</Label>
-        <p className="text-muted-foreground text-xs">卡片和弹窗的背景模糊程度 ({glassBlur}px)</p>
+      <Field label="玻璃模糊" description={`卡片和弹窗的背景模糊程度 (${settings.glassBlur}px)`}>
         <Slider
-          value={[glassBlur]}
           min={0}
           max={20}
           step={1}
-          onValueChange={([v]) => void updateSettings({ glassBlur: v })}
-        />
-      </div>
-
-      <div className="mt-3 flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            void updateSettings({
-              contentWidth: DEFAULT_APP_SETTINGS.contentWidth,
-              statusDetailPopupEnabled: DEFAULT_APP_SETTINGS.statusDetailPopupEnabled,
-              statusDetailPopupPosition: DEFAULT_APP_SETTINGS.statusDetailPopupPosition,
-              statusDetailPopupWidth: DEFAULT_APP_SETTINGS.statusDetailPopupWidth,
-              waterfallColumnCount: DEFAULT_APP_SETTINGS.waterfallColumnCount,
-              backgroundEnabled: DEFAULT_APP_SETTINGS.backgroundEnabled,
-              backgroundImageUrl: DEFAULT_APP_SETTINGS.backgroundImageUrl,
-              glassOpacity: DEFAULT_APP_SETTINGS.glassOpacity,
-              glassBlur: DEFAULT_APP_SETTINGS.glassBlur,
-              followGroupsEnabled: DEFAULT_APP_SETTINGS.followGroupsEnabled,
-            })
+          value={[settings.glassBlur]}
+          aria-label="玻璃模糊"
+          onValueChange={([value]) => {
+            if (value !== undefined) void updateSettings({ glassBlur: value })
           }}
-        >
-          恢复默认
-        </Button>
-      </div>
-    </div>
+        />
+      </Field>
+
+      <ResetSectionButton
+        label="特色功能"
+        keys={FEATURES_SETTING_KEYS}
+        onReset={() => void updateSettings(defaultsFor(FEATURES_SETTING_KEYS))}
+      />
+    </SettingsPanel>
   )
 }

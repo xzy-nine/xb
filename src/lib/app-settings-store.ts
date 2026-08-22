@@ -76,7 +76,9 @@ export function createAppSettingsStore(
       async addUserTheme(theme) {
         const current = get()
         await updateAndPersist({
-          userThemes: [...current.userThemes, theme],
+          userThemes: current.userThemes.some((item) => item.id === theme.id)
+            ? current.userThemes
+            : [...current.userThemes, theme],
         })
       },
       async deleteUserTheme(id) {
@@ -89,6 +91,14 @@ export function createAppSettingsStore(
         const current = get()
         await updateAndPersist({
           userThemes: current.userThemes.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+          ...(current.selectedThemeType === 'custom' && current.selectedThemeId === id
+            ? {
+                ...(updates.lightCss === undefined
+                  ? {}
+                  : { customThemeLightCss: updates.lightCss }),
+                ...(updates.darkCss === undefined ? {} : { customThemeDarkCss: updates.darkCss }),
+              }
+            : {}),
         })
       },
     }

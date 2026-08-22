@@ -67,8 +67,7 @@ describe('StatusText', () => {
     })
     store.setState({
       ...store.getState(),
-      collapseRepliesEnabled: false,
-      renderReplyChainEnabled: true,
+      replyChainDisplay: 'expanded',
       statusDetailPopupEnabled: false,
       isHydrated: true,
     })
@@ -461,22 +460,20 @@ describe('StatusText reply-chain collapsible', () => {
   afterEach(() => {
     const store = getAppSettingsStore()
     store.setState({
-      collapseRepliesEnabled: false,
-      renderReplyChainEnabled: true,
+      replyChainDisplay: 'expanded',
     })
   })
 
   const setupStore = (overrides = {}) => {
     const store = getAppSettingsStore()
     store.setState({
-      collapseRepliesEnabled: false,
-      renderReplyChainEnabled: true,
+      replyChainDisplay: 'expanded',
       isHydrated: true,
       ...overrides,
     })
   }
 
-  it('renders all items without collapsible when collapseRepliesEnabled is false', () => {
+  it('renders all items when reply chains are expanded', () => {
     setupStore()
     const { container } = renderWithProviders(
       <StatusText
@@ -493,7 +490,7 @@ describe('StatusText reply-chain collapsible', () => {
   })
 
   it('renders all items without collapsible when chain has 2 or fewer items', () => {
-    setupStore({ collapseRepliesEnabled: true })
+    setupStore({ replyChainDisplay: 'collapsed' })
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
@@ -508,8 +505,8 @@ describe('StatusText reply-chain collapsible', () => {
     expect(container.querySelectorAll('[data-slot="collapsible"]')).toHaveLength(0)
   })
 
-  it('collapses middle items when collapseRepliesEnabled is true and chain length > 2', () => {
-    setupStore({ collapseRepliesEnabled: true })
+  it('collapses middle items when reply chains default to collapsed', () => {
+    setupStore({ replyChainDisplay: 'collapsed' })
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
@@ -522,7 +519,7 @@ describe('StatusText reply-chain collapsible', () => {
   })
 
   it('places collapsible trigger after second item', () => {
-    setupStore({ collapseRepliesEnabled: true })
+    setupStore({ replyChainDisplay: 'collapsed' })
     const { container } = renderWithProviders(
       <StatusText
         item={{ urlEntities: [], topicEntities: [] }}
