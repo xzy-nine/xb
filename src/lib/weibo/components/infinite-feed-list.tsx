@@ -26,7 +26,15 @@ interface InfiniteFeedListProps {
   className?: string
 }
 
-function FeedCards({ items, emptyLabel }: { items: FeedItem[]; emptyLabel: string }) {
+function FeedCards({
+  items,
+  emptyLabel,
+  onRetry,
+}: {
+  items: FeedItem[]
+  emptyLabel: string
+  onRetry?: () => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth] = useElementSize(containerRef)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
@@ -35,7 +43,7 @@ function FeedCards({ items, emptyLabel }: { items: FeedItem[]; emptyLabel: strin
   const waterfallExpandOnWideLayout = useAppSettings((s) => s.waterfallExpandOnWideLayout)
 
   if (items.length === 0) {
-    return <PageEmptyState label={emptyLabel} />
+    return <PageEmptyState label={emptyLabel} onRetry={onRetry} />
   }
 
   const isExpanded = waterfallExpandOnWideLayout && (immersiveMode || sidebarCollapsed)
@@ -124,26 +132,40 @@ export function InfiniteFeedList({
     void fetchNextPage()
   }
 
+  const isBusy = isLoading || isFetchingNextPage
+  const loadingAnnouncement = isLoading
+    ? loadingLabel
+    : isFetchingNextPage
+      ? '正在加载更多微博…'
+      : ''
+
   return (
-    <div className={className}>
-      {isLoading ? <PageLoadingState label={loadingLabel} /> : null}
-      {!isLoading && showInitialError ? (
-        <PageErrorState description={errorMessage!} onRetry={onRetry} />
-      ) : null}
-      {!isLoading && showFeed ? <FeedCards items={items} emptyLabel={emptyLabel} /> : null}
-      {!isLoading && loadMoreErrorMessage ? (
-        <div className="flex flex-col items-center gap-2 py-3">
-          <p className="text-destructive text-sm">{loadMoreErrorMessage}</p>
-          <Button size="sm" variant="outline" onClick={handleLoadMoreRetry}>
-            加载失败，点击重试
-          </Button>
-        </div>
-      ) : null}
-      {hasNextPage ? (
-        <div ref={loadMoreRef} className="flex justify-center py-3">
-          {isFetchingNextPage ? <Spinner size="sm" /> : null}
-        </div>
-      ) : null}
-    </div>
+    <>
+      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {loadingAnnouncement}
+      </span>
+      <div className={className} aria-busy={isBusy || undefined}>
+        {isLoading ? <PageLoadingState label={loadingLabel} isAnnouncedSeparately /> : null}
+        {!isLoading && showInitialError ? (
+          <PageErrorState description={errorMessage!} onRetry={onRetry} />
+        ) : null}
+        {!isLoading && showFeed ? (
+          <FeedCards items={items} emptyLabel={emptyLabel} onRetry={onRetry} />
+        ) : null}
+        {!isLoading && loadMoreErrorMessage ? (
+          <div className="flex flex-col items-center gap-2 py-3">
+            <p className="text-destructive text-sm">{loadMoreErrorMessage}</p>
+            <Button size="sm" variant="outline" onClick={handleLoadMoreRetry}>
+              加载失败，点击重试
+            </Button>
+          </div>
+        ) : null}
+        {hasNextPage ? (
+          <div ref={loadMoreRef} className="flex justify-center py-3">
+            {isFetchingNextPage ? <Spinner size="sm" aria-hidden="true" /> : null}
+          </div>
+        ) : null}
+      </div>
+    </>
   )
 }

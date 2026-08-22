@@ -119,6 +119,22 @@ describe('NavigationRail', () => {
     expect(screen.getByRole('navigation', { name: '主导航' })).toBeInTheDocument()
   })
 
+  it('renders private messages as a real external link without nesting a button', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    renderNavigationRail()
+
+    const link = screen.getByRole('link', { name: '私信' })
+    expect(link).toHaveAttribute('href', 'https://api.weibo.com/chat')
+    fireEvent.click(link)
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://api.weibo.com/chat',
+      '_blank',
+      'noopener,noreferrer',
+    )
+    expect(link.querySelector('button')).not.toBeInTheDocument()
+    openSpy.mockRestore()
+  })
+
   it('marks active items through aria-current', () => {
     renderNavigationRail()
     expect(screen.getByRole('button', { name: '主页' })).toHaveAttribute('aria-current', 'page')

@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router'
 import WeiboLogo from '@/assets/icons/weibo.svg'
 import { BellIcon } from '@/components/ui/bell'
 import { BookmarkIcon } from '@/components/ui/bookmark'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { CogIcon } from '@/components/ui/cog'
 import { CompassIcon } from '@/components/ui/compass'
 import { HistoryIcon } from '@/components/ui/history'
@@ -65,6 +65,7 @@ function navButtonClassName(showLabel: boolean) {
 function NavButton({
   children,
   label,
+  ariaLabel,
   showLabel,
   isActive,
   onClick,
@@ -75,6 +76,7 @@ function NavButton({
 }: {
   children: React.ReactNode
   label: React.ReactNode
+  ariaLabel: string
   showLabel: boolean
   isActive?: boolean
   onClick?: () => void
@@ -93,32 +95,33 @@ function NavButton({
     ) : (
       icon
     )
+  const size = showLabel ? 'default' : 'icon'
   const sharedClassName = navButtonClassName(showLabel)
   const button = href ? (
     <SmartLink
       href={href}
       external={isExternal}
-      aria-label={showLabel ? undefined : String(label)}
+      aria-label={showLabel ? undefined : ariaLabel}
       aria-current={isActive ? 'page' : undefined}
+      className={cn(
+        buttonVariants({ variant: buttonVariant, size }),
+        'active:scale-[0.96]',
+        sharedClassName,
+      )}
+      onClick={onClick}
     >
-      <Button
-        className={sharedClassName}
-        variant={buttonVariant}
-        onClick={onClick}
-        size={showLabel ? 'default' : 'icon'}
-      >
-        {iconWrap(children)}
-        {showLabel && <span>{label}</span>}
-      </Button>
+      {iconWrap(children)}
+      {showLabel && <span>{label}</span>}
     </SmartLink>
   ) : (
     <Button
+      type="button"
       variant={buttonVariant}
-      aria-label={showLabel ? undefined : String(label)}
+      aria-label={showLabel ? undefined : ariaLabel}
       aria-current={isActive ? 'page' : undefined}
       className={sharedClassName}
       onClick={onClick}
-      size={showLabel ? 'default' : 'icon'}
+      size={size}
     >
       {iconWrap(children)}
       {showLabel && <span>{label}</span>}
@@ -293,6 +296,7 @@ export function NavigationRail({
               <div className="flex flex-col gap-1">
                 <NavButton
                   label="主页"
+                  ariaLabel="主页"
                   showLabel={!isCollapsed}
                   isActive={!isOwnProfileActive && pageKind === 'home'}
                   onClick={() => {
@@ -309,6 +313,7 @@ export function NavigationRail({
                 {showExplore && (
                   <NavButton
                     label="探索"
+                    ariaLabel="探索"
                     showLabel={!isCollapsed}
                     isActive={pageKind === 'explore'}
                     onClick={() => navigate('/hot/weibo/102803')}
@@ -320,6 +325,7 @@ export function NavigationRail({
                 {showFavorites && (
                   <NavButton
                     label="收藏"
+                    ariaLabel="收藏"
                     showLabel={!isCollapsed}
                     isActive={isSavedItemsActive}
                     onClick={() => navigate(favoritesHref)}
@@ -331,6 +337,7 @@ export function NavigationRail({
                 {showHistorySetting && (
                   <NavButton
                     label="历史"
+                    ariaLabel="历史"
                     showLabel={!isCollapsed}
                     isActive={pageKind === 'history'}
                     onClick={() => navigate('/history')}
@@ -342,6 +349,7 @@ export function NavigationRail({
                 {showNotifications && (
                   <NavButton
                     label="通知"
+                    ariaLabel="通知"
                     showLabel={!isCollapsed}
                     isActive={pageKind === 'notifications'}
                     showBadge={showNotificationBadge}
@@ -359,6 +367,7 @@ export function NavigationRail({
                         <ArrowUpRightIcon className="size-3" />
                       </span>
                     }
+                    ariaLabel="私信"
                     showLabel={!isCollapsed}
                     href="https://api.weibo.com/chat"
                     isExternal
@@ -371,6 +380,7 @@ export function NavigationRail({
                 {showProfile && (
                   <NavButton
                     label="我的"
+                    ariaLabel="我的"
                     showLabel={!isCollapsed}
                     isActive={isOwnProfileActive}
                     onClick={() => navigate(profileHref)}
@@ -382,6 +392,7 @@ export function NavigationRail({
                 {showCompose && (
                   <NavButton
                     label="发微博"
+                    ariaLabel="发微博"
                     showLabel={!isCollapsed}
                     onClick={onComposeOpen}
                     variant="default"

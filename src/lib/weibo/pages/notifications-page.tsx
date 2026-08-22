@@ -77,7 +77,7 @@ function NotificationTabContent({
   }, [hasNextPage])
 
   if (isLoading) {
-    return <PageLoadingState label="正在加载..." />
+    return <PageLoadingState label="正在加载…" />
   }
 
   if (errorMessage) {

@@ -67,7 +67,10 @@ export function SmartLink({
   )
 
   const openInNewTab = useCallback((url: string) => {
-    window.open(`${window.location.origin}${url}`, '_blank', 'noopener,noreferrer')
+    // Resolve relative paths against the current origin while keeping
+    // absolute URLs (e.g. external links) untouched.
+    const resolved = new URL(url, window.location.origin).href
+    window.open(resolved, '_blank', 'noopener,noreferrer')
   }, [])
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
