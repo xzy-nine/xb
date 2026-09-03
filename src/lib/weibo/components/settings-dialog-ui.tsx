@@ -25,9 +25,10 @@ import {
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { type AppSettings, DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 const DIALOG_CONTENT_CLASSES =
-  'fixed bottom-4 left-4 z-50 flex h-[min(560px,80vh)] w-[min(720px,84vw)] max-w-none flex-col gap-0 overflow-hidden rounded-lg border bg-background p-0 shadow-lg outline-none'
+  'fixed bottom-4 left-4 flex h-[min(560px,80vh)] w-[min(720px,84vw)] max-w-none flex-col gap-0 overflow-hidden rounded-lg border bg-background p-0 shadow-lg outline-none'
 
 export function DialogContentMaybeForced({
   forceMount,
@@ -37,6 +38,7 @@ export function DialogContentMaybeForced({
   children: React.ReactNode
 }) {
   const container = React.useMemo(() => getUiPortalContainer(), [])
+  const zIndex = React.useMemo(() => getNextZIndex(), [])
   // Nest Content inside Overlay so react-remove-scroll treats the dialog as a
   // scrollable descendant. Sibling Overlay/Content relies on shards, which can
   // fail to unlock wheel scrolling for nested overflow panes in the shadow root.
@@ -48,13 +50,15 @@ export function DialogContentMaybeForced({
     >
       <DialogPrimitive.Overlay
         data-slot="dialog-overlay"
-        className="data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/25"
+        className="data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 bg-black/25"
+        style={{ zIndex }}
         forceMount={forceMount || undefined}
       >
         <DialogPrimitive.Content
           data-slot="dialog-content"
           forceMount={forceMount || undefined}
           className={DIALOG_CONTENT_CLASSES}
+          style={{ zIndex: zIndex + 1 }}
         >
           {children}
           <DialogPrimitive.Close

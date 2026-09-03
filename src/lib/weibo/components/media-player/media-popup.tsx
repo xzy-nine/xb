@@ -15,6 +15,7 @@ import { forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } f
 import { createPortal } from 'react-dom'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 const POPUP_RESET_STYLE = {
   position: 'fixed',
@@ -96,6 +97,7 @@ function ManualPopoverPopup(
   forwardedRef: ForwardedRef<HTMLDivElement>,
 ) {
   const { core, popover, state, stateAttrMap, popupId, boundary, container } = usePopoverContext()
+  const zIndex = useMemo(() => getNextZIndex(), [])
   const internalRef = useRef<HTMLDivElement | null>(null)
   const composedRef = composeRefs(
     forwardedRef,
@@ -208,7 +210,7 @@ function ManualPopoverPopup(
       props: [
         {
           id: popupId,
-          style: manualStyle ?? POPUP_RESET_STYLE,
+          style: { ...(manualStyle ?? POPUP_RESET_STYLE), zIndex },
           ...core.getPopupAttrs(state),
         },
         {

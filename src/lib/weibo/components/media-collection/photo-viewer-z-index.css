@@ -1,0 +1,8 @@
+/* 图片查看器（react-photo-view）接入 xb 自动层级系统。
+   库把 .PhotoView-Portal 的 z-index 写死为 2000，本规则用变量覆盖；
+   实际值由 media-collection.tsx 在查看器打开时写入
+   --xb-photo-viewer-z-index（取自 getNextZIndex），从而遵循“后开者上”。
+   使用 !important 以免疫样式打包顺序影响，确保覆盖库自带规则。 */
+.PhotoView-Portal {
+  z-index: var(--xb-photo-viewer-z-index, 2000) !important;
+}

@@ -3,9 +3,11 @@ import { memo, useMemo } from 'react'
 import { PhotoProvider } from 'react-photo-view'
 
 import 'react-photo-view/dist/react-photo-view.css'
+import './photo-viewer-z-index.css'
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
+import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 import { PhotoToolbar } from '../photo-toolbar'
 import { MediaCollectionItemView } from './media-collection-item'
@@ -99,7 +101,9 @@ export const MediaCollection = memo(function MediaCollection({
         photoClosable={true}
         loop={photoLoopEnabled}
         onVisibleChange={(visible) => {
-          if (visible) onOpen?.()
+          if (!visible) return
+          container?.style.setProperty('--xb-photo-viewer-z-index', String(getNextZIndex()))
+          onOpen?.()
         }}
         toolbarRender={(overlayProps) => <PhotoToolbar overlayProps={overlayProps} />}
       >
