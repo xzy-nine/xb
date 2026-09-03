@@ -127,10 +127,12 @@ function applyAppFontFamily(
 
 export function bindShellState({
   container,
+  portalContainer,
   appRoot,
   settingsStore,
 }: {
   container: HTMLElement
+  portalContainer?: HTMLElement | null
   appRoot: HTMLElement
   settingsStore: AppSettingsStore
 }) {
@@ -140,24 +142,36 @@ export function bindShellState({
     const settings = settingsStore.getState()
     const isDark = resolveIsDarkMode(settings.theme, mediaQuery.matches)
 
-    container.classList.toggle('dark', isDark)
-    clearCustomThemeVariables(container)
+    // 标准 Dialog/Select/DropdownMenu/HoverCard 等通过 getUiPortalContainer() 渲染到
+    // #xb-portal-root，它与 container 平级、不在 .dark 子树内，因此不会自动继承
+    // container 上的深色 class 与主题变量（:root 只有浅色兜底）。把主题作用域同时
+    // 写到 container 与 portal 容器，使 portal 内的弹窗/浮层在深色下也正确。
+    const themeTargets = [container, portalContainer].filter((el): el is HTMLElement => el != null)
+
+    for (const target of themeTargets) {
+      target.classList.toggle('dark', isDark)
+      clearCustomThemeVariables(target)
+    }
 
     // Apply background color preset CSS variables first
     const preset = isDark
       ? DARK_BG_PRESETS.find((p) => p.key === settings.darkModeBgColor)
       : LIGHT_BG_PRESETS.find((p) => p.key === settings.lightModeBgColor)
 
-    if (preset) {
-      container.style.setProperty('--background', preset.background)
-      container.style.setProperty('--card', preset.card)
+    for (const target of themeTargets) {
+      if (preset) {
+        target.style.setProperty('--background', preset.background)
+        target.style.setProperty('--card', preset.card)
+      }
     }
 
     const customThemeCss = isDark ? settings.customThemeDarkCss : settings.customThemeLightCss
     if (customThemeCss.trim()) {
       const variables = parseCustomThemeVariables(customThemeCss)
-      for (const [name, value] of Object.entries(variables)) {
-        container.style.setProperty(name, value)
+      for (const target of themeTargets) {
+        for (const [name, value] of Object.entries(variables)) {
+          target.style.setProperty(name, value)
+        }
       }
     } else {
       // Inject default theme CSS variables so shadow DOM gets all semantic colors.
@@ -165,20 +179,26 @@ export function bindShellState({
       if (defaultPreset) {
         const css = isDark ? defaultPreset.darkCss : defaultPreset.lightCss
         const variables = parseCustomThemeVariables(css)
-        for (const [name, value] of Object.entries(variables)) {
-          container.style.setProperty(name, value)
+        for (const target of themeTargets) {
+          for (const [name, value] of Object.entries(variables)) {
+            target.style.setProperty(name, value)
+          }
         }
       }
       // Re-apply preset background/card so user choice wins over default theme
       if (preset) {
-        container.style.setProperty('--background', preset.background)
-        container.style.setProperty('--card', preset.card)
+        for (const target of themeTargets) {
+          target.style.setProperty('--background', preset.background)
+          target.style.setProperty('--card', preset.card)
+        }
       }
     }
 
     // 用户字体设置优先于主题 --font-*（在主题变量之后写入）
-    applyAppFontFamily(container, settings.fontFamilyClass, settings.fontApplyScope)
-    applyTypographyVariables(container, settings.uiFontSize, settings.contentFontSize)
+    for (const target of themeTargets) {
+      applyAppFontFamily(target, settings.fontFamilyClass, settings.fontApplyScope)
+      applyTypographyVariables(target, settings.uiFontSize, settings.contentFontSize)
+    }
 
     // When route is unsupported, release the host page and hide xb UI
     // so Weibo's native UI is visible and functional.
@@ -251,6 +271,15 @@ export function bindShellState({
     // 应用模式可能额外写过 --font-sans/--font-serif（在主题变量名之外的覆盖）
     container.style.removeProperty('--font-sans')
     container.style.removeProperty('--font-serif')
+    // portal 容器与 container 平级、同样承载主题作用域，随 UI 卸载一并清理
+    if (portalContainer) {
+      portalContainer.classList.remove('dark')
+      clearCustomThemeVariables(portalContainer)
+      clearAppFontFamily(portalContainer)
+      clearTypographyVariables(portalContainer)
+      portalContainer.style.removeProperty('--font-sans')
+      portalContainer.style.removeProperty('--font-serif')
+    }
     container.style.removeProperty('display')
     const previousOverflow = document.documentElement.getAttribute(OVERFLOW_STORAGE_KEY)
     document.documentElement.style.overflow =

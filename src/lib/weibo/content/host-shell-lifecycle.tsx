@@ -97,6 +97,7 @@ export async function mountWeiboHostShell({
       setUiPortalContainer(portalContainer)
       const cleanupShellState = bindShellState({
         container: container as unknown as HTMLElement,
+        portalContainer,
         appRoot: regions.appRoot,
         settingsStore,
       })

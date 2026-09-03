@@ -48,6 +48,43 @@ describe('bindShellState', () => {
     cleanup()
   })
 
+  it('applies dark mode to the portal container so portaled dialogs keep the theme', async () => {
+    const container = document.createElement('div')
+    const portalContainer = document.createElement('div')
+    const appRoot = document.createElement('div')
+    const store = createAppSettingsStore({
+      get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
+      set: async () => {},
+    })
+
+    Object.defineProperty(window, 'matchMedia', {
+      value: () => ({
+        matches: false,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+      configurable: true,
+    })
+
+    const cleanup = bindShellState({
+      container,
+      portalContainer,
+      appRoot,
+      settingsStore: store,
+    })
+
+    await store.getState().updateSettings({ theme: 'dark' })
+
+    // 修复前 portal 容器与 container 平级，弹窗走 portal 时拿不到 .dark，会显示浅色
+    expect(container.classList.contains('dark')).toBe(true)
+    expect(portalContainer.classList.contains('dark')).toBe(true)
+    expect(portalContainer.style.getPropertyValue('--background')).not.toBe('')
+
+    cleanup()
+
+    expect(portalContainer.classList.contains('dark')).toBe(false)
+  })
+
   it('projects independent UI and content font sizes onto the shadow container', async () => {
     const container = document.createElement('div')
     const appRoot = document.createElement('div')
