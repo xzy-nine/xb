@@ -6,7 +6,11 @@ import {
   type UiFontSize,
 } from '@/lib/app-settings'
 import type { AppSettingsStore } from '@/lib/app-settings-store'
-import { CUSTOM_THEME_VARIABLE_NAMES, parseCustomThemeVariables } from '@/lib/custom-theme'
+import {
+  CUSTOM_THEME_PRESETS,
+  CUSTOM_THEME_VARIABLE_NAMES,
+  parseCustomThemeVariables,
+} from '@/lib/custom-theme'
 import { isRemoteFont, loadFont, resolveFontFamilyStack } from '@/lib/font-loader'
 import {
   applyPageTakeover,
@@ -139,7 +143,7 @@ export function bindShellState({
     container.classList.toggle('dark', isDark)
     clearCustomThemeVariables(container)
 
-    // Apply background color preset CSS variables
+    // Apply background color preset CSS variables first
     const preset = isDark
       ? DARK_BG_PRESETS.find((p) => p.key === settings.darkModeBgColor)
       : LIGHT_BG_PRESETS.find((p) => p.key === settings.lightModeBgColor)
@@ -154,6 +158,21 @@ export function bindShellState({
       const variables = parseCustomThemeVariables(customThemeCss)
       for (const [name, value] of Object.entries(variables)) {
         container.style.setProperty(name, value)
+      }
+    } else {
+      // Inject default theme CSS variables so shadow DOM gets all semantic colors.
+      const defaultPreset = CUSTOM_THEME_PRESETS.find((p) => p.key === 'default')
+      if (defaultPreset) {
+        const css = isDark ? defaultPreset.darkCss : defaultPreset.lightCss
+        const variables = parseCustomThemeVariables(css)
+        for (const [name, value] of Object.entries(variables)) {
+          container.style.setProperty(name, value)
+        }
+      }
+      // Re-apply preset background/card so user choice wins over default theme
+      if (preset) {
+        container.style.setProperty('--background', preset.background)
+        container.style.setProperty('--card', preset.card)
       }
     }
 

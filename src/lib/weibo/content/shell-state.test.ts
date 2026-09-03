@@ -163,7 +163,7 @@ describe('bindShellState', () => {
       customThemeDarkCss: '',
     })
 
-    expect(container.style.getPropertyValue('--primary')).toBe('')
+    expect(container.style.getPropertyValue('--primary')).toBe('oklch(0.922 0 0)')
     expect(container.style.getPropertyValue('--background')).toBe('oklch(0.1908 0.002 106.59)')
 
     cleanup()
