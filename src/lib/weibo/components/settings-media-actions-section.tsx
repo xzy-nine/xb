@@ -427,8 +427,8 @@ function SliderSetting({
   onChange: (value: number) => void
 }) {
   return (
-    <Field label={label} description={description}>
-      <div className="flex w-72 min-w-0 items-center gap-3">
+    <StackedField label={label} description={description}>
+      <div className="flex w-full min-w-0 items-center gap-3">
         <Slider
           min={min}
           max={max}
@@ -443,6 +443,6 @@ function SliderSetting({
           {value}px
         </output>
       </div>
-    </Field>
+    </StackedField>
   )
 }

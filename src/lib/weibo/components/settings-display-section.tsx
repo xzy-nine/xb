@@ -24,6 +24,7 @@ import {
   OptionPills,
   ResetSectionButton,
   SettingsPanel,
+  StackedField,
 } from './settings-dialog-ui'
 
 const DISPLAY_SETTING_KEYS = [
@@ -50,12 +51,8 @@ export function SettingsDisplaySection({
   return (
     <div className="flex flex-col">
       <SettingsPanel>
-        <Field label="内容宽度" description="调整应用内容区域在大屏幕上的宽度">
-          <div
-            className={`flex min-w-0 flex-col items-end gap-2 ${
-              settings.contentWidth === 'custom' ? 'w-72' : 'w-fit'
-            }`}
-          >
+        <StackedField label="内容宽度" description="调整应用内容区域在大屏幕上的宽度">
+          <div className="flex min-w-0 flex-col gap-2">
             <Select
               value={settings.contentWidth}
               onValueChange={(value) =>
@@ -77,7 +74,7 @@ export function SettingsDisplaySection({
               </SelectContent>
             </Select>
             {settings.contentWidth === 'custom' ? (
-              <div className="flex w-full items-center gap-3 pt-1">
+              <div className="flex w-full items-center gap-3">
                 <Slider
                   min={CUSTOM_CONTENT_WIDTH_MIN}
                   max={CUSTOM_CONTENT_WIDTH_MAX}
@@ -94,7 +91,7 @@ export function SettingsDisplaySection({
               </div>
             ) : null}
           </div>
-        </Field>
+        </StackedField>
 
         <Field label="动态效果" description="控制 xb 动画是否跟随系统的减少动态效果设置">
           <OptionPills

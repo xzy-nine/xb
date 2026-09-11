@@ -15,7 +15,13 @@ import type { AppSettings, StatusDetailPopupPosition } from '@/lib/app-settings'
 import { type AppSettingsStoreState, useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 
-import { defaultsFor, Field, ResetSectionButton, SettingsPanel } from './settings-dialog-ui'
+import {
+  defaultsFor,
+  Field,
+  ResetSectionButton,
+  SettingsPanel,
+  StackedField,
+} from './settings-dialog-ui'
 
 const FEATURES_SETTING_KEYS = [
   'statusDetailPopupEnabled',
@@ -118,7 +124,7 @@ export function SettingsFeaturesSection({
       ) : null}
 
       {settings.statusDetailPopupEnabled ? (
-        <Field
+        <StackedField
           label="弹窗宽度"
           description={`详情弹窗占页面宽度的比例 (${settings.statusDetailPopupWidth}%)`}
         >
@@ -132,10 +138,10 @@ export function SettingsFeaturesSection({
               if (value !== undefined) void updateSettings({ statusDetailPopupWidth: value })
             }}
           />
-        </Field>
+        </StackedField>
       ) : null}
 
-      <Field
+      <StackedField
         label="瀑布流栏数"
         description={`设为 1 时关闭瀑布流，2-5 栏自适应排列 (${settings.waterfallColumnCount} 栏)，单栏不低于 300px`}
       >
@@ -149,7 +155,7 @@ export function SettingsFeaturesSection({
             if (value !== undefined) void updateSettings({ waterfallColumnCount: value })
           }}
         />
-      </Field>
+      </StackedField>
 
       <Field
         label="展开时放大卡片"
@@ -202,7 +208,10 @@ export function SettingsFeaturesSection({
         </Field>
       ) : null}
 
-      <Field label="玻璃透明度" description={`卡片和弹窗的半透明程度 (${settings.glassOpacity}%)`}>
+      <StackedField
+        label="玻璃透明度"
+        description={`卡片和弹窗的半透明程度 (${settings.glassOpacity}%)`}
+      >
         <Slider
           min={0}
           max={100}
@@ -213,9 +222,12 @@ export function SettingsFeaturesSection({
             if (value !== undefined) void updateSettings({ glassOpacity: value })
           }}
         />
-      </Field>
+      </StackedField>
 
-      <Field label="玻璃模糊" description={`卡片和弹窗的背景模糊程度 (${settings.glassBlur}px)`}>
+      <StackedField
+        label="玻璃模糊"
+        description={`卡片和弹窗的背景模糊程度 (${settings.glassBlur}px)`}
+      >
         <Slider
           min={0}
           max={20}
@@ -226,7 +238,7 @@ export function SettingsFeaturesSection({
             if (value !== undefined) void updateSettings({ glassBlur: value })
           }}
         />
-      </Field>
+      </StackedField>
 
       <ResetSectionButton
         label="特色功能"
