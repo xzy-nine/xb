@@ -143,9 +143,8 @@ export function bindShellState({
     const isDark = resolveIsDarkMode(settings.theme, mediaQuery.matches)
 
     // 标准 Dialog/Select/DropdownMenu/HoverCard 等通过 getUiPortalContainer() 渲染到
-    // #xb-portal-root，它与 container 平级、不在 .dark 子树内，因此不会自动继承
-    // container 上的深色 class 与主题变量（:root 只有浅色兜底）。把主题作用域同时
-    // 写到 container 与 portal 容器，使 portal 内的弹窗/浮层在深色下也正确。
+    // #xb-portal-root。它承载独立的主题作用域：写在同一处可保证无论它被挂在哪里
+    // （当前由 UiPortalMount 挂在 container 内部）都能拿到深色 class 与主题变量。
     const themeTargets = [container, portalContainer].filter((el): el is HTMLElement => el != null)
 
     for (const target of themeTargets) {
@@ -271,7 +270,7 @@ export function bindShellState({
     // 应用模式可能额外写过 --font-sans/--font-serif（在主题变量名之外的覆盖）
     container.style.removeProperty('--font-sans')
     container.style.removeProperty('--font-serif')
-    // portal 容器与 container 平级、同样承载主题作用域，随 UI 卸载一并清理
+    // portal 容器承载独立的主题作用域，随 UI 卸载一并清理
     if (portalContainer) {
       portalContainer.classList.remove('dark')
       clearCustomThemeVariables(portalContainer)

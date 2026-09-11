@@ -4,6 +4,15 @@ import { getUiPortalContainer } from '@/components/ui/portal'
 
 const INLINE_FULLSCREEN_CLASS_NAME = 'media-inline-fullscreen'
 
+/**
+ * 网页全屏：把播放器容器搬到 UI portal 容器（#xb-portal-root）里，躲开信息流里
+ * 祖先节点的 overflow / transform / 层叠上下文。
+ *
+ * 注意：目标容器必须位于 React 根容器内（见 components/ui/portal-mount.tsx），
+ * 否则 React 19 挂在根容器上的事件委托收不到这里的事件，控制栏按钮会变成
+ * 「有 CSS 动效但不响应」。
+ */
+
 interface InlineFullscreenSession {
   deactivate: () => void
 }

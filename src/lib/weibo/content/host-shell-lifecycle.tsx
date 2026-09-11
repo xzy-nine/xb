@@ -1,6 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 
 import { setUiPortalContainer } from '@/components/ui/portal'
+import { UiPortalMount } from '@/components/ui/portal-mount'
 import type { HomeTab } from '@/lib/app-settings'
 import { bindAppSettingsStorageSync, getAppSettingsStore } from '@/lib/app-settings-store'
 import { AppRoot } from '@/lib/weibo/app/app-root'
@@ -88,12 +89,12 @@ export async function mountWeiboHostShell({
     append: 'first',
     onMount(container, shadow) {
       injectSonnerStyles(shadow, sonnerStyles)
-      // Create a portal container inside the shadow root so portal-rendered
-      // content (e.g. HoverCard, DropdownMenu) stays within the shadow DOM.
-      // This prevents host page JavaScript from intercepting click events.
+      // Create a portal container for portal-rendered content (e.g. HoverCard,
+      // DropdownMenu) inside the shadow DOM so host page JavaScript cannot
+      // intercept their click events. It is attached to the React root container
+      // by <UiPortalMount /> once React is mounted.
       const portalContainer = document.createElement('div')
       portalContainer.id = 'xb-portal-root'
-      shadow.appendChild(portalContainer)
       setUiPortalContainer(portalContainer)
       const cleanupShellState = bindShellState({
         container: container as unknown as HTMLElement,
@@ -102,7 +103,12 @@ export async function mountWeiboHostShell({
         settingsStore,
       })
       const root = createRoot(container)
-      root.render(<AppRoot />)
+      root.render(
+        <>
+          <AppRoot />
+          <UiPortalMount container={container as unknown as HTMLElement} />
+        </>,
+      )
       return {
         cleanup() {
           cleanupStorageSync()
