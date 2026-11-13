@@ -1,5 +1,5 @@
 import { useElementSize } from '@reactuses/core'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -24,6 +24,7 @@ interface InfiniteFeedListProps {
   fetchNextPage: () => void | Promise<unknown>
   onRetry?: () => void
   className?: string
+  scrollRootRef?: RefObject<HTMLElement | null>
 }
 
 function FeedCards({
@@ -41,6 +42,7 @@ function FeedCards({
   const immersiveMode = useAppSettings((s) => s.immersiveMode)
   const sidebarCollapsed = useAppSettings((s) => s.sidebarCollapsed)
   const waterfallExpandOnWideLayout = useAppSettings((s) => s.waterfallExpandOnWideLayout)
+  const multiColumnEnabled = useAppSettings((s) => s.multiColumnEnabled)
 
   if (items.length === 0) {
     return <PageEmptyState label={emptyLabel} onRetry={onRetry} />
@@ -48,8 +50,9 @@ function FeedCards({
 
   const isExpanded = waterfallExpandOnWideLayout && (immersiveMode || sidebarCollapsed)
 
+  // 多列工作区里主列宽度由列设置决定，瀑布流不参与排布。
   const effectiveColumnCount =
-    waterfallColumnCount > 1 && containerWidth > 0
+    !multiColumnEnabled && waterfallColumnCount > 1 && containerWidth > 0
       ? isExpanded
         ? waterfallColumnCount
         : Math.min(waterfallColumnCount, Math.max(1, Math.floor(containerWidth / MIN_CARD_WIDTH)))
@@ -97,12 +100,16 @@ export function InfiniteFeedList({
   fetchNextPage,
   onRetry,
   className = 'flex flex-col gap-3',
+  scrollRootRef,
 }: InfiniteFeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const fetchNextPageRef = useRef(fetchNextPage)
   const isFetchingNextPageRef = useRef(isFetchingNextPage)
-  fetchNextPageRef.current = fetchNextPage
-  isFetchingNextPageRef.current = isFetchingNextPage
+
+  useEffect(() => {
+    fetchNextPageRef.current = fetchNextPage
+    isFetchingNextPageRef.current = isFetchingNextPage
+  }, [fetchNextPage, isFetchingNextPage])
 
   const items = useMemo(() => flattenInfiniteItems<FeedItem>(pages), [pages])
   const hasItems = items.length > 0
@@ -121,12 +128,12 @@ export function InfiniteFeedList({
           void fetchNextPageRef.current()
         }
       },
-      { threshold: 0.2 },
+      { root: scrollRootRef?.current ?? null, threshold: 0.2 },
     )
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasNextPage])
+  }, [hasNextPage, scrollRootRef])
 
   const handleLoadMoreRetry = () => {
     void fetchNextPage()

@@ -4,6 +4,7 @@ import {
   ArrowUpRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
+  Columns3,
   Diamond,
   DiamondMinus,
   Pencil,
@@ -210,6 +211,10 @@ interface NavigationRailProps {
   onSidebarCollapsedChange: (collapsed: boolean) => void
   immersiveMode?: boolean
   onImmersiveModeChange?: (enabled: boolean) => void
+  /** 打开列管理；仅在多列工作区启用时提供。 */
+  onColumnPickerOpen?: () => void
+  /** 主导航跳转时把焦点交还主列。 */
+  onPrimaryNavigate?: () => void
 }
 
 export function ImmersiveExitRail({
@@ -251,6 +256,8 @@ export function NavigationRail({
   onSidebarCollapsedChange,
   immersiveMode = false,
   onImmersiveModeChange,
+  onColumnPickerOpen,
+  onPrimaryNavigate,
 }: NavigationRailProps) {
   const {
     homeTab,
@@ -342,6 +349,7 @@ export function NavigationRail({
                         ? '/'
                         : '/mygroups'
                   }
+                  onClick={onPrimaryNavigate}
                 >
                   <HomeIcon aria-hidden="true" className="size-4 shrink-0" />
                 </NavButton>
@@ -353,6 +361,7 @@ export function NavigationRail({
                     showLabel={!isCollapsed}
                     isActive={pageKind === 'explore'}
                     to="/hot/weibo/102803"
+                    onClick={onPrimaryNavigate}
                   >
                     <CompassIcon aria-hidden="true" className="size-4 shrink-0" />
                   </NavButton>
@@ -366,6 +375,7 @@ export function NavigationRail({
                     isActive={isSavedItemsActive}
                     to={favoritesHref ?? undefined}
                     disabled={!favoritesHref}
+                    onClick={onPrimaryNavigate}
                   >
                     <BookmarkIcon aria-hidden="true" className="size-4 shrink-0" />
                   </NavButton>
@@ -378,6 +388,7 @@ export function NavigationRail({
                     showLabel={!isCollapsed}
                     isActive={pageKind === 'history'}
                     to="/history"
+                    onClick={onPrimaryNavigate}
                   >
                     <HistoryIcon aria-hidden="true" className="size-4 shrink-0" />
                   </NavButton>
@@ -391,6 +402,7 @@ export function NavigationRail({
                     isActive={pageKind === 'notifications'}
                     showBadge={showNotificationBadge}
                     to="/at/weibo"
+                    onClick={onPrimaryNavigate}
                   >
                     <BellIcon aria-hidden="true" className="size-4 shrink-0" />
                   </NavButton>
@@ -422,6 +434,7 @@ export function NavigationRail({
                     isActive={isOwnProfileActive}
                     to={profileHref ?? undefined}
                     disabled={!profileHref}
+                    onClick={onPrimaryNavigate}
                   >
                     <UserIcon aria-hidden="true" className="size-4 shrink-0" />
                   </NavButton>
@@ -453,6 +466,20 @@ export function NavigationRail({
             <div role="group" aria-label="界面控制" className="pt-4">
               <Separator className="bg-border/40 mb-3" />
               <div className={cn('flex flex-col gap-3', !isCollapsed && 'gap-3.5')}>
+                {onColumnPickerOpen ? (
+                  <RailControl label="列管理" isCollapsed={isCollapsed}>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="secondary"
+                      aria-label="列管理"
+                      onClick={onColumnPickerOpen}
+                    >
+                      <Columns3 className="size-4" aria-hidden="true" />
+                    </Button>
+                  </RailControl>
+                ) : null}
+
                 <RailControl label="设置" isCollapsed={isCollapsed}>
                   <Button
                     type="button"

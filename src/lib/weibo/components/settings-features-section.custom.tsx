@@ -54,6 +54,7 @@ export function SettingsFeaturesSection({
     })),
   )
   const [imagePreviewError, setImagePreviewError] = useState(false)
+  const [imagePreviewNonce, setImagePreviewNonce] = useState(0)
   const validateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const validateImageUrl = useCallback((url: string) => {
@@ -61,6 +62,7 @@ export function SettingsFeaturesSection({
       clearTimeout(validateTimerRef.current)
     }
     setImagePreviewError(false)
+    setImagePreviewNonce((nonce) => nonce + 1)
 
     if (!url) return
 
@@ -196,7 +198,7 @@ export function SettingsFeaturesSection({
                 )}
               >
                 <img
-                  src={`${settings.backgroundImageUrl}${settings.backgroundImageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`}
+                  src={`${settings.backgroundImageUrl}${settings.backgroundImageUrl.includes('?') ? '&' : '?'}t=${imagePreviewNonce}`}
                   alt="背景预览"
                   className="block size-full object-cover"
                   onError={() => setImagePreviewError(true)}

@@ -1,9 +1,9 @@
+import { cn } from 'cn'
 import { AlertDialog as AlertDialogPrimitive } from 'radix-ui'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
 import { getUiPortalContainer } from '@/components/ui/portal'
-import { cn } from '@/lib/utils'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 function AlertDialog(props: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {

@@ -1,19 +1,25 @@
+import { cn } from 'cn'
 import { Maximize2, Minimize2, Sparkles, Zap } from 'lucide-react'
 import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion } from 'motion/react'
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { useLocation, useOutletContext } from 'react-router'
+import { useLocation } from 'react-router'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
 import type { AppTheme, ContentWidth } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
 import { getCachedImageUrl } from '@/lib/image-cache.custom'
-import { cn } from '@/lib/utils'
-import type { AppShellContext } from '@/lib/weibo/app/app-shell'
+import type { AppShellContextValue } from '@/lib/weibo/app/app-shell-context'
+import { resolveColumnWidthPx } from '@/lib/weibo/app/column-width'
 import { getContentWidthAdjustedMaxWidth } from '@/lib/weibo/app/content-width'
 import { ImmersiveHeaderHiddenContext } from '@/lib/weibo/app/immersive-header'
+import {
+  type MainScrollRoot,
+  readMainScrollRoot,
+  setMainScrollRootNode,
+} from '@/lib/weibo/app/main-scroll-root'
 import { BackToTop } from '@/lib/weibo/components/back-to-top'
 import { ImmersiveExitRail, NavigationRail } from '@/lib/weibo/components/navigation-rail'
 import { RightRail } from '@/lib/weibo/components/right-rail'
@@ -22,6 +28,11 @@ import {
   type WeiboPageDescriptor,
 } from '@/lib/weibo/route/page-descriptor'
 import { parseWeiboUrl } from '@/lib/weibo/route/parse-weibo-url'
+import { forwardBlankAreaWheelToMainColumn } from '@/lib/weibo/workspace/blank-area-wheel'
+import { SortableColumnCanvas } from '@/lib/weibo/workspace/sortable-column-canvas'
+import type { AuxiliaryColumn } from '@/lib/weibo/workspace/workspace-store'
+
+export { useAppShellContext } from '@/lib/weibo/app/app-shell-context'
 
 /** Routes whose primary feed scrolls inside ShellFrame `<main>` (timeline + profile posts). */
 function mainScrollRestorationKey(pathname: string, search: string): string | null {
@@ -93,6 +104,15 @@ const reducedMotionChromeTransition = { duration: 0.12 }
 
 const immersiveChromeStyle = { willChange: 'transform, opacity' }
 
+const contentWidthClass: Record<ContentWidth, string> = {
+  narrower: 'lg:max-w-[800px] xl:max-w-[1000px]',
+  narrow: 'lg:max-w-[950px] xl:max-w-[1150px]',
+  standard: 'lg:max-w-[1100px] xl:max-w-[1300px]',
+  wide: 'lg:max-w-[1250px] xl:max-w-[1450px]',
+  wider: 'lg:max-w-[1400px] xl:max-w-[1600px]',
+  custom: 'lg:max-w-[var(--xb-content-width)]',
+}
+
 interface ShellFrameProps {
   pageKind: WeiboPageDescriptor['kind']
   viewingProfileUserId?: string | null
@@ -100,17 +120,26 @@ interface ShellFrameProps {
   theme: AppTheme
   contentWidth: ContentWidth
   customContentWidth: number
+  /** 多列工作区开关；关闭时按单栏布局渲染。 */
+  multiColumnEnabled: boolean
   onRewriteEnabledChange: (enabled: boolean) => void
   onThemeChange: (theme: AppTheme) => void
   onSettingsOpen: () => void
   onComposeOpen: () => void
-  mainRef: React.RefObject<HTMLDivElement | null>
-  appShellContext: AppShellContext
+  onSidebarCollapsedChange?: (collapsed: boolean) => void
+  auxiliaryColumns?: AuxiliaryColumn[]
+  onColumnPickerOpen?: () => void
+  onRemoveAuxiliaryColumn?: (columnId: string) => void
+  onMoveAuxiliaryColumn?: (columnId: string, targetIndex: number) => Promise<void>
+  onWidthAuxiliaryColumn?: (columnId: string, width: number) => Promise<void>
+  onMainWidthChange?: (width: number) => Promise<void>
+  onFocusAuxiliaryColumn?: (columnId: string | null) => void
+  focusedColumnId?: string | null
+  canvasScrollLeft?: number
+  onCanvasScrollLeftChange?: (scrollLeft: number) => void
+  mainRef: MainScrollRoot
+  appShellContext: AppShellContextValue
   children: ReactNode
-}
-
-export function useAppShellContext() {
-  return useOutletContext<AppShellContext>()
 }
 
 export function ShellFrame({
@@ -120,10 +149,22 @@ export function ShellFrame({
   theme,
   contentWidth,
   customContentWidth,
+  multiColumnEnabled,
   onRewriteEnabledChange,
   onThemeChange,
   onSettingsOpen,
   onComposeOpen,
+  onSidebarCollapsedChange,
+  auxiliaryColumns = [],
+  onColumnPickerOpen,
+  onRemoveAuxiliaryColumn,
+  onMoveAuxiliaryColumn,
+  onWidthAuxiliaryColumn,
+  onMainWidthChange,
+  onFocusAuxiliaryColumn,
+  focusedColumnId,
+  canvasScrollLeft,
+  onCanvasScrollLeftChange,
   mainRef,
   appShellContext,
   children,
@@ -132,17 +173,34 @@ export function ShellFrame({
   const savedMainScrollByRouteRef = useRef<Partial<Record<string, number>>>({})
   const savedScrollAnchorByRouteRef = useRef<Partial<Record<string, string>>>({})
   const locationRef = useRef(location)
-  locationRef.current = location
+  useLayoutEffect(() => {
+    locationRef.current = location
+  }, [location])
   const showRightRail = useAppSettings((state) => state.showRightRail)
   const immersiveMode = useAppSettings((state) => state.immersiveMode)
   const updateSettings = useAppSettings((state) => state.updateSettings)
   const shouldReduceMotion = useReducedMotion()
   const contentColumnX = useMotionValue(0)
+  const columnWidthPx = useAppSettings((state) =>
+    resolveColumnWidthPx(state.columnWidth, state.customColumnWidth),
+  )
 
   const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
-  const [areImmersiveHeadersHidden, setAreImmersiveHeadersHidden] = useState(false)
+  const [immersiveHeaderState, setImmersiveHeaderState] = useState({
+    immersive: immersiveMode,
+    hidden: false,
+  })
+  const areImmersiveHeadersHidden =
+    immersiveHeaderState.immersive === immersiveMode && immersiveHeaderState.hidden
+  const setAreImmersiveHeadersHidden = useCallback(
+    (hidden: boolean) => {
+      setImmersiveHeaderState({ immersive: immersiveMode, hidden })
+    },
+    [immersiveMode],
+  )
   const [immersiveColumnWidth, setImmersiveColumnWidth] = useState<number | null>(null)
   const contentMainRef = useRef<HTMLElement | null>(null)
+  const workspaceRef = useRef<HTMLDivElement | null>(null)
   const contentColumnPreviousLeftRef = useRef<number | null>(null)
   const contentColumnFrameRef = useRef<number | null>(null)
   const contentColumnAnimateStopRef = useRef<(() => void) | null>(null)
@@ -151,7 +209,7 @@ export function ShellFrame({
   const scrollDirectionStartRef = useRef(0)
   const assignShellRef = useCallback(
     (node: HTMLDivElement | null) => {
-      mainRef.current = node
+      setMainScrollRootNode(mainRef, node)
       setMainScrollRoot(node)
     },
     [mainRef],
@@ -262,14 +320,20 @@ export function ShellFrame({
   const glassBlur = useAppSettings((s) => s.glassBlur)
   const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
 
-  const [cachedBackgroundImageUrl, setCachedBackgroundImageUrl] = useState<string | null>(null)
+  const [cachedBackgroundEntry, setCachedBackgroundEntry] = useState<{
+    url: string
+    value: string
+  } | null>(null)
+  const cachedBackgroundImageUrl =
+    cachedBackgroundEntry && cachedBackgroundEntry.url === backgroundImageUrl
+      ? cachedBackgroundEntry.value
+      : null
 
   useEffect(() => {
-    setCachedBackgroundImageUrl(null)
     if (!backgroundImageUrl) return
     getCachedImageUrl(backgroundImageUrl)
-      .then((url) => setCachedBackgroundImageUrl(url))
-      .catch(() => setCachedBackgroundImageUrl(backgroundImageUrl))
+      .then((url) => setCachedBackgroundEntry({ url: backgroundImageUrl, value: url }))
+      .catch(() => setCachedBackgroundEntry({ url: backgroundImageUrl, value: backgroundImageUrl }))
   }, [backgroundImageUrl])
 
   const glassStyle = useMemo<React.CSSProperties>(
@@ -296,8 +360,27 @@ export function ShellFrame({
     portal.style.setProperty('--xb-glass-blur', `${glassBlur}px`)
     portal.style.setProperty('--xb-custom-bg', backgroundColor)
   }, [isGlassActive, glassOpacity, glassBlur, backgroundColor])
+
+  const shellStyle = useMemo<CSSProperties>(
+    () => ({
+      ...glassStyle,
+      ...(backgroundEnabled
+        ? cachedBackgroundImageUrl
+          ? {
+              backgroundImage: `url(${cachedBackgroundImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              backgroundAttachment: 'fixed',
+            }
+          : { backgroundColor }
+        : {}),
+    }),
+    [backgroundEnabled, backgroundColor, cachedBackgroundImageUrl, glassStyle],
+  )
+
   useEffect(() => {
-    const main = mainRef.current
+    const main = readMainScrollRoot(mainRef)
     if (!main) {
       return
     }
@@ -348,19 +431,16 @@ export function ShellFrame({
     }
     main.addEventListener('scroll', onScroll, { passive: true })
     return () => main.removeEventListener('scroll', onScroll)
-  }, [immersiveMode, mainRef])
+  }, [immersiveMode, mainRef, setAreImmersiveHeadersHidden])
 
   useEffect(() => {
-    lastScrollTopRef.current = mainRef.current?.scrollTop ?? 0
+    lastScrollTopRef.current = readMainScrollRoot(mainRef)?.scrollTop ?? 0
     scrollDirectionRef.current = null
     scrollDirectionStartRef.current = lastScrollTopRef.current
-    if (!immersiveMode) {
-      setAreImmersiveHeadersHidden(false)
-    }
   }, [immersiveMode, mainRef])
 
   useLayoutEffect(() => {
-    const main = mainRef.current
+    const main = readMainScrollRoot(mainRef)
     const key = mainScrollRestorationKey(location.pathname, location.search)
     if (!main || !key) {
       return
@@ -423,14 +503,16 @@ export function ShellFrame({
     return () => clearTimeout(timerId)
   }, [location.pathname, location.search, mainRef])
 
-  const contentWidthClass: Record<ContentWidth, string> = {
-    narrower: 'lg:max-w-[800px] xl:max-w-[1000px]',
-    narrow: 'lg:max-w-[950px] xl:max-w-[1150px]',
-    standard: 'lg:max-w-[1100px] xl:max-w-[1300px]',
-    wide: 'lg:max-w-[1250px] xl:max-w-[1450px]',
-    wider: 'lg:max-w-[1400px] xl:max-w-[1600px]',
-    custom: 'lg:max-w-[var(--xb-content-width)]',
-  }
+  useEffect(() => {
+    const workspace = workspaceRef.current
+    if (!workspace) return
+    const onWheel = (event: WheelEvent) => {
+      forwardBlankAreaWheelToMainColumn(event, workspace, readMainScrollRoot(mainRef))
+    }
+    workspace.addEventListener('wheel', onWheel, { passive: false })
+    return () => workspace.removeEventListener('wheel', onWheel)
+  }, [mainRef])
+
   const contentWidthStyle =
     contentWidth === 'custom'
       ? ({ '--xb-content-width': `${customContentWidth}px` } as CSSProperties)
@@ -458,25 +540,68 @@ export function ShellFrame({
         animate: { opacity: 1, scale: 1 },
         exit: { opacity: 0, scale: 0.98 },
       }
+
+  if (multiColumnEnabled) {
+    return (
+      <ImmersiveHeaderHiddenContext.Provider value={false}>
+        <div
+          ref={workspaceRef}
+          className="bg-background text-foreground flex h-screen overflow-hidden"
+          style={shellStyle}
+          data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
+        >
+          <a
+            href="#xb-main-content"
+            className="bg-background text-foreground focus-visible:ring-ring fixed top-2 left-2 z-[100] -translate-y-20 rounded-lg px-3 py-2 text-sm font-medium shadow-lg transition-transform outline-none focus-visible:translate-y-0 focus-visible:ring-3"
+            onClick={(event) => {
+              event.preventDefault()
+              contentMainRef.current?.focus()
+            }}
+          >
+            跳到主要内容
+          </a>
+          <div className="h-screen shrink-0">
+            <NavigationRail
+              pageKind={pageKind}
+              viewingProfileUserId={viewingProfileUserId}
+              rewriteEnabled={rewriteEnabled}
+              theme={theme}
+              onRewriteEnabledChange={onRewriteEnabledChange}
+              onThemeChange={onThemeChange}
+              onSettingsOpen={onSettingsOpen}
+              onComposeOpen={onComposeOpen}
+              onColumnPickerOpen={onColumnPickerOpen}
+              onPrimaryNavigate={() => onFocusAuxiliaryColumn?.(null)}
+              onSidebarCollapsedChange={onSidebarCollapsedChange ?? (() => undefined)}
+            />
+          </div>
+          <SortableColumnCanvas
+            auxiliaryColumns={auxiliaryColumns}
+            columnWidthPx={columnWidthPx}
+            focusedColumnId={focusedColumnId ?? null}
+            canvasScrollLeft={canvasScrollLeft}
+            onCanvasScrollLeftChange={onCanvasScrollLeftChange}
+            shouldReduceMotion={Boolean(shouldReduceMotion)}
+            assignMainScrollRef={assignShellRef}
+            contentMainRef={contentMainRef}
+            onMoveColumn={onMoveAuxiliaryColumn}
+            onWidthColumn={onWidthAuxiliaryColumn}
+            onMainWidthChange={onMainWidthChange}
+            onRemoveColumn={onRemoveAuxiliaryColumn}
+          >
+            {children}
+          </SortableColumnCanvas>
+        </div>
+      </ImmersiveHeaderHiddenContext.Provider>
+    )
+  }
+
   return (
     <ImmersiveHeaderHiddenContext.Provider value={immersiveMode && areImmersiveHeadersHidden}>
       <div
         className="bg-background text-foreground flex h-screen flex-col overflow-y-auto"
         ref={assignShellRef}
-        style={{
-          ...glassStyle,
-          ...(backgroundEnabled
-            ? cachedBackgroundImageUrl
-              ? {
-                  backgroundImage: `url(${cachedBackgroundImageUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundAttachment: 'fixed',
-                }
-              : { backgroundColor }
-            : {}),
-        }}
+        style={shellStyle}
         data-glass={glassBlur > 0 || glassOpacity < 100 ? '' : undefined}
       >
         <a
@@ -533,9 +658,8 @@ export function ShellFrame({
                   onThemeChange={onThemeChange}
                   onSettingsOpen={onSettingsOpen}
                   onComposeOpen={onComposeOpen}
-                  onSidebarCollapsedChange={(collapsed) =>
-                    updateSettings({ sidebarCollapsed: collapsed })
-                  }
+                  onColumnPickerOpen={onColumnPickerOpen}
+                  onSidebarCollapsedChange={onSidebarCollapsedChange ?? (() => undefined)}
                   onImmersiveModeChange={handleImmersiveModeChange}
                 />
               </motion.div>

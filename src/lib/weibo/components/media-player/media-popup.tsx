@@ -1,21 +1,25 @@
 import { PopoverCSSVars } from '@videojs/core'
 import {
-  getManualPositionStyle,
-  getPopupPositionRect,
   getPositioningBoundaryRect,
-  getPositioningCSSVars,
   isEventWithinElement,
-  resolveOffsets,
   resolvePositioningBoundary,
 } from '@videojs/core/dom'
 import type { PositioningCSSVars } from '@videojs/core/dom'
-import { Popover, composeRefs, renderElement, usePopoverContext } from '@videojs/react'
+import { Popover, renderElement, usePopoverContext } from '@videojs/react'
 import type { ComponentProps, ForwardedRef, ReactElement } from 'react'
-import { forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
+
+import {
+  getManualPositionStyle,
+  getPopupPositionRect,
+  getPositionedSide,
+  getPositioningCSSVars,
+  resolveOffsets,
+} from './videojs-positioning-compat'
 
 const POPUP_RESET_STYLE = {
   position: 'fixed',
@@ -96,37 +100,49 @@ function ManualPopoverPopup(
   { render, className, style, ...elementProps }: ComponentProps<typeof Popover.Popup>,
   forwardedRef: ForwardedRef<HTMLDivElement>,
 ) {
-  const { core, popover, state, stateAttrMap, popupId, boundary, container } = usePopoverContext()
+  const {
+    core,
+    popover,
+    state,
+    preferredSide,
+    setPositionedSide,
+    stateAttrMap,
+    popupId,
+    boundary,
+    container,
+  } = usePopoverContext()
   const zIndex = useMemo(() => getNextZIndex(), [])
-  const internalRef = useRef<HTMLDivElement | null>(null)
-  const composedRef = composeRefs(
-    forwardedRef,
-    useCallback(
-      (element: HTMLDivElement | null) => {
-        popover.setPopupElement(element)
-      },
-      [popover],
-    ),
-    internalRef,
+  const [popupElement, setPopupElement] = useState<HTMLDivElement | null>(null)
+  const setPopupNode = useCallback(
+    (element: HTMLDivElement | null) => {
+      setPopupElement(element)
+      popover.setPopupElement(element)
+    },
+    [popover],
   )
-  const positionOptions = useMemo(
-    () => ({
-      side: state.side,
-      align: state.align,
-    }),
-    [state.side, state.align],
-  )
-  const [manualStyle, setManualStyle] = useState<Record<string, string | number> | null>(null)
 
   useLayoutEffect(() => {
-    if (!state.open) {
-      setManualStyle(null)
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(popupElement)
       return
     }
+    if (forwardedRef) forwardedRef.current = popupElement
+  }, [forwardedRef, popupElement])
+  const positionOptions = useMemo(
+    () => ({
+      side: preferredSide,
+      align: state.align,
+    }),
+    [preferredSide, state.align],
+  )
+  const [measuredStyle, setMeasuredStyle] = useState<Record<string, string | number> | null>(null)
+  const manualStyle = state.open ? measuredStyle : null
+
+  useLayoutEffect(() => {
+    if (!state.open) return
 
     function measure() {
       const triggerElement = popover.triggerElement
-      const popupElement = internalRef.current
       if (!triggerElement || !popupElement) return
 
       const triggerRect = triggerElement.getBoundingClientRect()
@@ -137,24 +153,25 @@ function ManualPopoverPopup(
       })
       const boundaryRect = getPositioningBoundaryRect(boundaryElement)
       const offsets = resolveOffsets(popupElement)
+      const side = getPositionedSide(triggerRect, popupRect, boundaryRect, positionOptions, offsets)
 
-      setManualStyle(
+      setMeasuredStyle(
         buildManualPopupStyle({
           triggerRect,
           popupRect,
           boundaryRect,
-          side: positionOptions.side,
+          side,
           align: positionOptions.align,
           offsets,
           cssVars: PopoverCSSVars,
         }),
       )
+      setPositionedSide(side)
     }
 
     measure()
 
     const triggerElement = popover.triggerElement
-    const popupElement = internalRef.current
     const boundaryElement = popupElement
       ? resolvePositioningBoundary(boundary, {
           container,
@@ -164,7 +181,7 @@ function ManualPopoverPopup(
 
     let rafId = 0
     function reposition(event?: Event) {
-      if (event && isEventWithinElement(event, internalRef.current)) return
+      if (event && isEventWithinElement(event, popupElement)) return
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(measure)
     }
@@ -191,7 +208,7 @@ function ManualPopoverPopup(
       window.removeEventListener('scroll', reposition, true)
       window.removeEventListener('resize', reposition)
     }
-  }, [state.open, popover, boundary, container, positionOptions])
+  }, [state.open, popover, boundary, container, positionOptions, popupElement, setPositionedSide])
 
   if (!state.open) return null
 
@@ -206,7 +223,7 @@ function ManualPopoverPopup(
     {
       state,
       stateAttrMap,
-      ref: composedRef,
+      ref: setPopupNode,
       props: [
         {
           id: popupId,

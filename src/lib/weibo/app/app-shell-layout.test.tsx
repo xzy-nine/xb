@@ -1,18 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createRef } from 'react'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { APP_SETTINGS_STORAGE_KEY } from '@/lib/app-settings'
 import { getAppSettingsStore, resetAppSettingsStoreForTest } from '@/lib/app-settings-store'
-import type { AppShellContext } from '@/lib/weibo/app/app-shell'
+import type { AppShellContextValue } from '@/lib/weibo/app/app-shell-context'
 import {
   getContentColumnOffset,
   scheduleContentColumnAnimation,
   ShellFrame,
   startContentColumnTransition,
 } from '@/lib/weibo/app/app-shell-layout'
+import { createMainScrollRoot, readMainScrollRoot } from '@/lib/weibo/app/main-scroll-root'
+import { createBrowserPageRuntime, PageRuntimeProvider } from '@/lib/weibo/app/page-runtime'
 import { TimelineTopBar } from '@/lib/weibo/components/timeline-top-bar'
 
 const queryClient = new QueryClient({
@@ -112,7 +113,7 @@ describe('ShellFrame', () => {
     onHomeTabChange: vi.fn(),
     refreshTimeline: vi.fn(),
     onFollowGroupChange: vi.fn(),
-  } as AppShellContext
+  } as AppShellContextValue
 
   it('calculates the transform that keeps a re-centered reading column visually stationary', () => {
     expect(getContentColumnOffset(164, 296)).toBe(-132)
@@ -166,7 +167,7 @@ describe('ShellFrame', () => {
   })
 
   it('renders one navigation landmark and preserves page content', () => {
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     const mockAppShellContext = {
       page: { kind: 'home' as const, tab: 'for-you' as const },
       navigateToStatusDetail: vi.fn(),
@@ -184,7 +185,7 @@ describe('ShellFrame', () => {
       onHomeTabChange: vi.fn(),
       refreshTimeline: vi.fn(),
       onFollowGroupChange: vi.fn(),
-    } as AppShellContext
+    } as AppShellContextValue
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -196,6 +197,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
@@ -224,7 +226,7 @@ describe('ShellFrame', () => {
       ...getAppSettingsStore().getState(),
       showRightRail: false,
     })
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -235,6 +237,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
@@ -259,7 +262,7 @@ describe('ShellFrame', () => {
       ...getAppSettingsStore().getState(),
       immersiveMode: true,
     })
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -270,6 +273,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
@@ -277,7 +281,15 @@ describe('ShellFrame', () => {
             mainRef={mainRef}
             appShellContext={mockAppShellContext}
           >
-            <TimelineTopBar title="推荐" />
+            <PageRuntimeProvider
+              runtime={createBrowserPageRuntime({
+                page: { kind: 'home', tab: 'for-you' },
+                navigate: vi.fn(),
+                getScrollRoot: () => readMainScrollRoot(mainRef),
+              })}
+            >
+              <TimelineTopBar title="推荐" />
+            </PageRuntimeProvider>
           </ShellFrame>
         </MemoryRouter>
       </QueryClientProvider>,
@@ -288,7 +300,7 @@ describe('ShellFrame', () => {
     expect(screen.queryByTestId('right-rail')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '返回顶部' })).toBeInTheDocument()
 
-    const main = mainRef.current
+    const main = readMainScrollRoot(mainRef)
     expect(main).not.toBeNull()
     if (!main) return
 
@@ -308,7 +320,7 @@ describe('ShellFrame', () => {
   })
 
   it('preserves the measured reading-column width when entering immersive mode', () => {
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -319,6 +331,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
@@ -342,7 +355,7 @@ describe('ShellFrame', () => {
   })
 
   it('takes shell rails out of document flow when entering immersive mode', () => {
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -353,6 +366,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
@@ -383,7 +397,7 @@ describe('ShellFrame', () => {
       return frames.length
     })
 
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -394,6 +408,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}
@@ -433,7 +448,7 @@ describe('ShellFrame', () => {
       return frames.length
     })
 
-    const mainRef = createRef<HTMLDivElement>()
+    const mainRef = createMainScrollRoot()
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -444,6 +459,7 @@ describe('ShellFrame', () => {
             theme="system"
             contentWidth="standard"
             customContentWidth={1200}
+            multiColumnEnabled={false}
             onRewriteEnabledChange={vi.fn()}
             onThemeChange={vi.fn()}
             onSettingsOpen={vi.fn()}

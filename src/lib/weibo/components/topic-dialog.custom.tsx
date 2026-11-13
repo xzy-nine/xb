@@ -71,14 +71,32 @@ function TopicChannelPill({
 }
 
 export function TopicDialog({ open, topic, position, width, onOpenChange }: TopicDialogProps) {
+  if (!open || !topic) {
+    return null
+  }
+
+  return (
+    <TopicDialogContent
+      topic={topic}
+      position={position}
+      width={width}
+      onOpenChange={onOpenChange}
+    />
+  )
+}
+
+function TopicDialogContent({
+  topic,
+  position,
+  width,
+  onOpenChange,
+}: Omit<TopicDialogProps, 'open' | 'topic'> & { topic: string }) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const [selectedChannelId, setSelectedChannelId] = useState<string>('1')
 
-  const isEnabled = open && !!topic
-
   const topicQuery = useInfiniteQuery({
-    ...topicSearchInfiniteOptions(topic ?? '', selectedChannelId),
-    enabled: isEnabled,
+    ...topicSearchInfiniteOptions(topic, selectedChannelId),
+    enabled: true,
   })
 
   const items = useMemo(
@@ -122,23 +140,8 @@ export function TopicDialog({ open, topic, position, width, onOpenChange }: Topi
     return () => observer.disconnect()
   }, [hasNextPage, topicQuery])
 
-  useEffect(() => {
-    if (!open) {
-      setSelectedChannelId('1')
-    }
-  }, [open])
-
-  if (!open || !topic) {
-    return null
-  }
-
   return (
-    <DialogContainer
-      open={open}
-      position={position as any}
-      width={width}
-      onOpenChange={onOpenChange}
-    >
+    <DialogContainer open position={position as any} width={width} onOpenChange={onOpenChange}>
       <div className="flex flex-col gap-3">
         <div className="bg-muted/80 sticky top-0 z-10 -mx-4 -mt-4 backdrop-blur">
           <div className="gap-0.5 px-4 py-3">

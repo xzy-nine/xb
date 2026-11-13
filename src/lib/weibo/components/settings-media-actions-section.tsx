@@ -1,3 +1,4 @@
+import { cn } from 'cn'
 import {
   Bookmark,
   Copy,
@@ -22,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import {
   FEED_TOOLBAR_BUTTON_IDS,
@@ -46,9 +46,9 @@ import {
   type WeiboCardMultiMediaLayout,
 } from '@/lib/app-settings'
 import { type AppSettingsStoreState, useAppSettings, useShallow } from '@/lib/app-settings-store'
-import { cn } from '@/lib/utils'
 
 import {
+  CommitSlider,
   defaultsFor,
   Field,
   FineTuning,
@@ -429,15 +429,13 @@ function SliderSetting({
   return (
     <StackedField label={label} description={description}>
       <div className="flex w-full min-w-0 items-center gap-3">
-        <Slider
+        <CommitSlider
+          label={label}
+          value={value}
           min={min}
           max={max}
           step={step}
-          value={[value]}
-          aria-label={label}
-          onValueChange={([next]) => {
-            if (next !== undefined) onChange(next)
-          }}
+          onCommit={onChange}
         />
         <output className="text-muted-foreground w-16 shrink-0 text-right font-mono text-xs tabular-nums">
           {value}px

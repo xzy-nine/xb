@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { cn } from 'cn'
 import { Bookmark } from 'lucide-react'
 import {
   createContext,
@@ -13,7 +14,6 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -28,7 +28,7 @@ import {
   type WeiboCardMediaCollapseType,
 } from '@/lib/app-settings'
 import { useAppSettings, useShallow } from '@/lib/app-settings-store'
-import { cn } from '@/lib/utils'
+import { usePageRuntime } from '@/lib/weibo/app/page-runtime'
 import { FeedCardMoreMenu } from '@/lib/weibo/components/feed-card-more-menu'
 import { FeedCommentsExpanded } from '@/lib/weibo/components/feed-comments-expanded'
 import { useGenImageDialog } from '@/lib/weibo/components/gen-image-dialog-context'
@@ -141,8 +141,8 @@ export const StatusCard = memo(function StatusCard({
 })
 
 export const DetailStatusCard = memo(function DetailStatusCard({ status }: { status: FeedItem }) {
-  const navigate = useNavigate()
-  const handleRootDeleted = useCallback(() => navigate(-1), [navigate])
+  const runtime = usePageRuntime()
+  const handleRootDeleted = useCallback(() => runtime.back(), [runtime])
   return <StatusCardRoot status={status} surface="detail" onRootDeleted={handleRootDeleted} />
 })
 
@@ -558,11 +558,16 @@ function StatusCardView({
       })
   }, [])
 
+  const flatInColumn = role === 'root' && (isTimeline || surface === 'detail')
+  const timelineCardClassName =
+    flatInColumn && 'rounded-none border-x-0 border-t-0 bg-transparent shadow-none'
+
   if (resolvedItem.deleted) {
     return (
       <Card
         className={cn(
           'xb-feed-card xb-feed-card--compact relative gap-4 py-4',
+          timelineCardClassName,
           role === 'quoted' &&
             '-mx-4 rounded-none border-0 bg-muted/55 shadow-none sm:mx-0 sm:rounded-xl',
         )}
@@ -597,7 +602,7 @@ function StatusCardView({
       <Card
         className={cn(
           'xb-feed-card group/card relative',
-          surface === 'detail' && role === 'root' && 'border-border/55 bg-card/95',
+          timelineCardClassName,
           role === 'quoted' &&
             '-mx-4 rounded-none border-0 bg-muted/55 shadow-none sm:mx-0 sm:rounded-xl',
           uniformHeight && 'flex-1 gap-0',

@@ -136,6 +136,9 @@ describe('app-settings', () => {
     expect(await loadAppSettings(storage)).toEqual({
       contentWidth: 'standard',
       customContentWidth: 1200,
+      columnWidth: 'standard',
+      customColumnWidth: 480,
+      multiColumnEnabled: false,
       theme: 'dark',
       rewriteEnabled: false,
       uiFontSize: 14,
@@ -229,6 +232,9 @@ describe('app-settings', () => {
       {
         contentWidth: 'standard',
         customContentWidth: 1200,
+        columnWidth: 'standard',
+        customColumnWidth: 480,
+        multiColumnEnabled: false,
         theme: 'light',
         rewriteEnabled: true,
         uiFontSize: 18,
@@ -323,6 +329,9 @@ describe('app-settings', () => {
     expect(storage.read()).toEqual({
       contentWidth: 'standard',
       customContentWidth: 1200,
+      columnWidth: 'standard',
+      customColumnWidth: 480,
+      multiColumnEnabled: false,
       theme: 'light',
       rewriteEnabled: true,
       uiFontSize: 18,

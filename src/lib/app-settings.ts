@@ -93,6 +93,25 @@ export const CUSTOM_CONTENT_WIDTH_MAX = 2000
 export const CUSTOM_CONTENT_WIDTH_STEP = 20
 export const DEFAULT_CUSTOM_CONTENT_WIDTH = 1200
 
+export type ColumnWidth = 'narrower' | 'narrow' | 'standard' | 'wide' | 'wider' | 'custom'
+
+export const CUSTOM_COLUMN_WIDTH_MIN = 300
+export const CUSTOM_COLUMN_WIDTH_MAX = 720
+
+/** 主列与辅助列共用的标准宽度，其余预设以此为基准。 */
+const STANDARD_COLUMN_WIDTH_PX = 480
+
+export const COLUMN_WIDTH_PX = {
+  narrower: STANDARD_COLUMN_WIDTH_PX - 80,
+  narrow: STANDARD_COLUMN_WIDTH_PX - 40,
+  standard: STANDARD_COLUMN_WIDTH_PX,
+  wide: STANDARD_COLUMN_WIDTH_PX + 60,
+  wider: Math.min(CUSTOM_COLUMN_WIDTH_MAX, STANDARD_COLUMN_WIDTH_PX + 140),
+} as const satisfies Record<Exclude<ColumnWidth, 'custom'>, number>
+
+export const CUSTOM_COLUMN_WIDTH_STEP = 20
+export const DEFAULT_CUSTOM_COLUMN_WIDTH = COLUMN_WIDTH_PX.standard
+
 export type HomeTab = 'for-you' | 'following' | 'special-follow' | 'friend-circle'
 
 export type CustomThemePreset =
@@ -184,8 +203,14 @@ export const DEFAULT_WEIBO_CARD_SINGLE_IMAGE_MAX_WIDTH = 450
 export const DEFAULT_WEIBO_CARD_SINGLE_VIDEO_MAX_WIDTH = 650
 
 export interface AppSettings extends CustomAppSettingsFields {
+  /** 单栏模式的整页内容宽度。 */
   contentWidth: ContentWidth
   customContentWidth: number
+  /** 多列模式的单列宽度，主列与辅助列共用。 */
+  columnWidth: ColumnWidth
+  customColumnWidth: number
+  /** 是否启用多列工作区；关闭时按单栏布局渲染。 */
+  multiColumnEnabled: boolean
   theme: AppTheme
   rewriteEnabled: boolean
   uiFontSize: UiFontSize
@@ -285,6 +310,9 @@ export const APP_SETTINGS_STORAGE_KEY = 'xb:app-settings'
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   contentWidth: 'standard' as ContentWidth,
   customContentWidth: DEFAULT_CUSTOM_CONTENT_WIDTH,
+  columnWidth: 'standard' as ColumnWidth,
+  customColumnWidth: DEFAULT_CUSTOM_COLUMN_WIDTH,
+  multiColumnEnabled: false,
   theme: 'system',
   rewriteEnabled: true,
   uiFontSize: 14,
@@ -583,6 +611,17 @@ function isContentWidth(value: unknown): value is ContentWidth {
   )
 }
 
+function isColumnWidth(value: unknown): value is ColumnWidth {
+  return (
+    value === 'narrower' ||
+    value === 'narrow' ||
+    value === 'standard' ||
+    value === 'wide' ||
+    value === 'wider' ||
+    value === 'custom'
+  )
+}
+
 export function normalizeCustomContentWidth(value: unknown): number {
   const numeric = typeof value === 'number' ? value : Number.NaN
   if (!Number.isFinite(numeric)) {
@@ -674,6 +713,20 @@ export function normalizeAppSettings(value: unknown): AppSettings {
       ? candidate.contentWidth
       : DEFAULT_APP_SETTINGS.contentWidth,
     customContentWidth: normalizeCustomContentWidth(candidate.customContentWidth),
+    columnWidth: isColumnWidth(candidate.columnWidth)
+      ? candidate.columnWidth
+      : DEFAULT_APP_SETTINGS.columnWidth,
+    customColumnWidth: normalizeSteppedNumber(
+      candidate.customColumnWidth,
+      CUSTOM_COLUMN_WIDTH_MIN,
+      CUSTOM_COLUMN_WIDTH_MAX,
+      CUSTOM_COLUMN_WIDTH_STEP,
+      DEFAULT_APP_SETTINGS.customColumnWidth,
+    ),
+    multiColumnEnabled:
+      typeof candidate.multiColumnEnabled === 'boolean'
+        ? candidate.multiColumnEnabled
+        : DEFAULT_APP_SETTINGS.multiColumnEnabled,
     theme: isAppTheme(candidate.theme) ? candidate.theme : DEFAULT_APP_SETTINGS.theme,
     rewriteEnabled:
       typeof candidate.rewriteEnabled === 'boolean'

@@ -1,8 +1,8 @@
+import { cn } from 'cn'
 import { memo } from 'react'
 
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { cn } from '@/lib/utils'
 import { useAppShellContext } from '@/lib/weibo/app/app-shell-layout'
 import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { MentionInlineText } from '@/lib/weibo/components/status-text'
@@ -223,7 +223,12 @@ export const NotificationCard = memo(function NotificationCard({
   className?: string
 }) {
   return (
-    <Card className={cn('gap-4 py-4', className)}>
+    <Card
+      className={cn(
+        'gap-4 rounded-none border-x-0 border-t-0 bg-transparent py-4 shadow-none',
+        className,
+      )}
+    >
       <NotificationHeader
         user={item.user}
         createdAtLabel={item.createdAtLabel}

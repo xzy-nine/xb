@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { cn } from 'cn'
 import { ArrowUpRightIcon, Search, X } from 'lucide-react'
 import { useState, useRef } from 'react'
 
@@ -15,7 +16,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { useAppSettings } from '@/lib/app-settings-store'
-import { cn } from '@/lib/utils'
 import { SmartLink } from '@/lib/weibo/components/smart-link.custom'
 import { searchQueryOptions } from '@/lib/weibo/data/weibo-data'
 

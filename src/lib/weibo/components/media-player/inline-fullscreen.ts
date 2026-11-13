@@ -89,7 +89,10 @@ export function useInlineFullscreen(
   onExit: () => void,
 ) {
   const onExitRef = useRef(onExit)
-  onExitRef.current = onExit
+
+  useLayoutEffect(() => {
+    onExitRef.current = onExit
+  }, [onExit])
 
   useLayoutEffect(() => {
     if (!active) {

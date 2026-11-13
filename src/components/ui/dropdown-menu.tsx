@@ -1,9 +1,9 @@
+import { cn } from 'cn'
 import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react'
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui'
 import * as React from 'react'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
-import { cn } from '@/lib/utils'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 function DropdownMenu({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
