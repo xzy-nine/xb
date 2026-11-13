@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -68,6 +68,38 @@ describe('ColumnPickerDialog', () => {
     expect(store.getState().auxiliaryColumns[1]?.source).toEqual({ kind: 'explore' })
     expect(screen.getByText('已添加 2 列')).toBeInTheDocument()
     expect(onOpenChange).not.toHaveBeenCalled()
+  })
+
+  it('counts added columns per source instead of per kind', async () => {
+    const store = getWorkspaceStore()
+    await store.getState().addColumn({ kind: 'home', tab: 'for-you' })
+    await store.getState().addColumn({ kind: 'home', tab: 'for-you' })
+    await store.getState().addColumn({ kind: 'home', tab: 'following' })
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ColumnPickerDialog
+          open
+          onOpenChange={vi.fn()}
+          primaryPage={{ kind: 'home', tab: 'for-you' }}
+        />
+      </QueryClientProvider>,
+    )
+
+    const rowFor = (title: string) => {
+      const row = screen.getByText(title).closest('li')
+      expect(row).not.toBeNull()
+      return within(row as HTMLElement)
+    }
+
+    expect(rowFor('推荐').getByText('已添加 2 列')).toBeInTheDocument()
+    expect(rowFor('用户分组').getByText('已添加 1 列')).toBeInTheDocument()
+    expect(rowFor('特别关注').queryByText(/已添加/)).toBeNull()
+    expect(rowFor('朋友圈').queryByText(/已添加/)).toBeNull()
   })
 
   it('offers the combined saved column', async () => {
