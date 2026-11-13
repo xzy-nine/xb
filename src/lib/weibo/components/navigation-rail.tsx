@@ -211,7 +211,7 @@ interface NavigationRailProps {
   onSidebarCollapsedChange: (collapsed: boolean) => void
   immersiveMode?: boolean
   onImmersiveModeChange?: (enabled: boolean) => void
-  /** 打开列管理；仅在多列工作区启用时提供。 */
+  /** 打开列管理；仅在多列工作区启用时生效。 */
   onColumnPickerOpen?: () => void
   /** 主导航跳转时把焦点交还主列。 */
   onPrimaryNavigate?: () => void
@@ -270,6 +270,7 @@ export function NavigationRail({
     showProfile,
     showCompose,
     sidebarCollapsed,
+    multiColumnEnabled,
   } = useAppSettings(
     useShallow((state) => ({
       homeTab: state.homeTab,
@@ -282,6 +283,7 @@ export function NavigationRail({
       showProfile: state.showProfile,
       showCompose: state.showCompose,
       sidebarCollapsed: state.sidebarCollapsed,
+      multiColumnEnabled: state.multiColumnEnabled,
     })),
   )
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
@@ -466,7 +468,7 @@ export function NavigationRail({
             <div role="group" aria-label="界面控制" className="pt-4">
               <Separator className="bg-border/40 mb-3" />
               <div className={cn('flex flex-col gap-3', !isCollapsed && 'gap-3.5')}>
-                {onColumnPickerOpen ? (
+                {multiColumnEnabled && onColumnPickerOpen ? (
                   <RailControl label="列管理" isCollapsed={isCollapsed}>
                     <Button
                       type="button"

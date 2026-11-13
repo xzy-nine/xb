@@ -80,10 +80,12 @@ describe('NavigationRail', () => {
     pageKind = 'home',
     viewingProfileUserId = null,
     rewriteEnabled = false,
+    onColumnPickerOpen,
   }: {
     pageKind?: 'home' | 'profile' | 'status' | 'unsupported'
     viewingProfileUserId?: string | null
     rewriteEnabled?: boolean
+    onColumnPickerOpen?: () => void
   } = {}) {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -102,6 +104,7 @@ describe('NavigationRail', () => {
             onSettingsOpen={vi.fn()}
             onComposeOpen={vi.fn()}
             onSidebarCollapsedChange={vi.fn()}
+            onColumnPickerOpen={onColumnPickerOpen}
           />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -114,6 +117,25 @@ describe('NavigationRail', () => {
     expect(screen.getByRole('group', { name: '界面控制' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '设置' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '返回主页' })).toHaveAttribute('href', '/')
+  })
+
+  it('hides the column picker while the multi-column workspace is off', () => {
+    const onColumnPickerOpen = vi.fn()
+    getAppSettingsStore().setState({ multiColumnEnabled: false })
+
+    renderNavigationRail({ onColumnPickerOpen })
+
+    expect(screen.queryByRole('button', { name: '列管理' })).not.toBeInTheDocument()
+  })
+
+  it('shows the column picker once the multi-column workspace is on', () => {
+    const onColumnPickerOpen = vi.fn()
+    getAppSettingsStore().setState({ multiColumnEnabled: true })
+
+    renderNavigationRail({ onColumnPickerOpen })
+
+    fireEvent.click(screen.getByRole('button', { name: '列管理' }))
+    expect(onColumnPickerOpen).toHaveBeenCalledTimes(1)
   })
 
   it('uses real links for internal destinations', () => {

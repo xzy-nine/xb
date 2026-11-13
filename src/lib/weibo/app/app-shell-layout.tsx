@@ -658,7 +658,6 @@ export function ShellFrame({
                   onThemeChange={onThemeChange}
                   onSettingsOpen={onSettingsOpen}
                   onComposeOpen={onComposeOpen}
-                  onColumnPickerOpen={onColumnPickerOpen}
                   onSidebarCollapsedChange={onSidebarCollapsedChange ?? (() => undefined)}
                   onImmersiveModeChange={handleImmersiveModeChange}
                 />
