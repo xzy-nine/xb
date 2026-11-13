@@ -29,6 +29,24 @@ export function StatusDetailDialog({
     return null
   }
 
+  return (
+    <StatusDetailDialogContent
+      item={item}
+      position={position}
+      width={width}
+      onOpenChange={onOpenChange}
+      setComposeTarget={setComposeTarget}
+    />
+  )
+}
+
+function StatusDetailDialogContent({
+  item,
+  position,
+  width,
+  onOpenChange,
+  setComposeTarget,
+}: Omit<StatusDetailDialogProps, 'open' | 'item'> & { item: StatusDetailNavigationItem }) {
   const statusId = item.mblogId ?? item.id
   const authorId = item.author.id
 
@@ -41,12 +59,7 @@ export function StatusDetailDialog({
   const detail = detailQuery.data
 
   return (
-    <DialogContainer
-      open={open}
-      position={position as any}
-      width={width}
-      onOpenChange={onOpenChange}
-    >
+    <DialogContainer open position={position as any} width={width} onOpenChange={onOpenChange}>
       {detailQuery.isLoading ? <PageLoadingState label="正在加载此微博..." /> : null}
       {detailQuery.error instanceof Error ? (
         <PageErrorState description={detailQuery.error.message} />

@@ -234,15 +234,16 @@ export function AppShell() {
 
   const statusCardHost = useMemo<StatusCardHost>(
     () => ({
-      openStatus: pageRuntime.openStatus,
+      // 单栏下由特色分支的详情弹窗接管，关闭弹窗时才回落到路由跳转。
+      openStatus: navigateToStatusDetail,
       composeStatus: (status, mode) => setComposeTarget(composeTargetFromFeedItem(status, mode)),
     }),
-    [pageRuntime],
+    [navigateToStatusDetail],
   )
 
   if (!rewriteEnabled) {
     return (
-      <>
+      <PageRuntimeProvider runtime={pageRuntime}>
         <RewritePausedCard onResume={() => void updateSettings({ rewriteEnabled: true })} />
         {composeModal}
         <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
@@ -260,7 +261,7 @@ export function AppShell() {
           setTopicDialogOpen={dialogs.setTopicDialogOpen}
           setComposeTarget={handleSetComposeTarget}
         />
-      </>
+      </PageRuntimeProvider>
     )
   }
 
@@ -274,75 +275,75 @@ export function AppShell() {
     <GenImageDialogProvider>
       <AppShellContextProvider value={context}>
         <StatusCardHostProvider host={statusCardHost}>
-          <ShellFrame
-            pageKind={page.kind}
-            viewingProfileUserId={viewingProfileUserId}
-            rewriteEnabled={rewriteEnabled}
-            theme={theme}
-            contentWidth={contentWidth}
-            customContentWidth={customContentWidth}
-            multiColumnEnabled={multiColumnEnabled}
-            onRewriteEnabledChange={(enabled: boolean) => {
-              void updateSettings({ rewriteEnabled: enabled })
-              if (!enabled) {
-                window.location.reload()
-              }
-            }}
-            onThemeChange={(nextTheme: typeof theme) => void updateSettings({ theme: nextTheme })}
-            onSettingsOpen={() => setSettingsOpen(true)}
-            onComposeOpen={() => setComposeOpen(true)}
-            onSidebarCollapsedChange={(collapsed) =>
-              void updateSettings({ sidebarCollapsed: collapsed })
-            }
-            auxiliaryColumns={auxiliaryColumns}
-            onColumnPickerOpen={() => setColumnPickerOpen(true)}
-            onRemoveAuxiliaryColumn={(columnId) => persistWorkspaceChange(removeColumn(columnId))}
-            onMoveAuxiliaryColumn={(columnId, targetIndex) => moveColumn(columnId, targetIndex)}
-            onWidthAuxiliaryColumn={(columnId, width) => setColumnWidth(columnId, width)}
-            onMainWidthChange={(width) => updateSettings({ customColumnWidth: width })}
-            onFocusAuxiliaryColumn={(columnId) => persistWorkspaceChange(focusColumn(columnId))}
-            focusedColumnId={focusedColumnId}
-            canvasScrollLeft={canvasScrollLeft}
-            onCanvasScrollLeftChange={handleCanvasScrollLeftChange}
-            appShellContext={context}
-            mainRef={mainScrollRoot}
-          >
-            <PageRuntimeProvider runtime={pageRuntime}>
-              <Outlet context={context} />
-            </PageRuntimeProvider>
-            {composeModal}
-            <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
-            <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-            <Suspense fallback={null}>
-              <GenImageDialog />
-            </Suspense>
-            <AuthRequiredDialog
-              open={authDialogOpen}
-              onLogin={async () => {
-                await updateSettings({ rewriteEnabled: false })
-                window.location.assign('https://weibo.com/newlogin')
+          <PageRuntimeProvider runtime={pageRuntime}>
+            <ShellFrame
+              pageKind={page.kind}
+              viewingProfileUserId={viewingProfileUserId}
+              rewriteEnabled={rewriteEnabled}
+              theme={theme}
+              contentWidth={contentWidth}
+              customContentWidth={customContentWidth}
+              multiColumnEnabled={multiColumnEnabled}
+              onRewriteEnabledChange={(enabled: boolean) => {
+                void updateSettings({ rewriteEnabled: enabled })
+                if (!enabled) {
+                  window.location.reload()
+                }
               }}
+              onThemeChange={(nextTheme: typeof theme) => void updateSettings({ theme: nextTheme })}
+              onSettingsOpen={() => setSettingsOpen(true)}
+              onComposeOpen={() => setComposeOpen(true)}
+              onSidebarCollapsedChange={(collapsed) =>
+                void updateSettings({ sidebarCollapsed: collapsed })
+              }
+              auxiliaryColumns={auxiliaryColumns}
+              onColumnPickerOpen={() => setColumnPickerOpen(true)}
+              onRemoveAuxiliaryColumn={(columnId) => persistWorkspaceChange(removeColumn(columnId))}
+              onMoveAuxiliaryColumn={(columnId, targetIndex) => moveColumn(columnId, targetIndex)}
+              onWidthAuxiliaryColumn={(columnId, width) => setColumnWidth(columnId, width)}
+              onMainWidthChange={(width) => updateSettings({ customColumnWidth: width })}
+              onFocusAuxiliaryColumn={(columnId) => persistWorkspaceChange(focusColumn(columnId))}
+              focusedColumnId={focusedColumnId}
+              canvasScrollLeft={canvasScrollLeft}
+              onCanvasScrollLeftChange={handleCanvasScrollLeftChange}
+              appShellContext={context}
+              mainRef={mainScrollRoot}
+            >
+              <Outlet context={context} />
+              {composeModal}
+              <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
+              <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+              <Suspense fallback={null}>
+                <GenImageDialog />
+              </Suspense>
+              <AuthRequiredDialog
+                open={authDialogOpen}
+                onLogin={async () => {
+                  await updateSettings({ rewriteEnabled: false })
+                  window.location.assign('https://weibo.com/newlogin')
+                }}
+              />
+              <AppShellDialogs
+                statusDetailDialogOpen={dialogs.statusDetailDialogOpen}
+                statusDetailItem={dialogs.statusDetailItem}
+                profileDialogOpen={dialogs.profileDialogOpen}
+                profileLookup={dialogs.profileLookup}
+                topicDialogOpen={dialogs.topicDialogOpen}
+                topicDialogTopic={dialogs.topicDialogTopic}
+                position={statusDetailPopupPosition}
+                width={statusDetailPopupWidth}
+                setStatusDetailDialogOpen={dialogs.setStatusDetailDialogOpen}
+                setProfileDialogOpen={dialogs.setProfileDialogOpen}
+                setTopicDialogOpen={dialogs.setTopicDialogOpen}
+                setComposeTarget={handleSetComposeTarget}
+              />
+            </ShellFrame>
+            <ColumnPickerDialog
+              open={columnPickerOpen}
+              onOpenChange={setColumnPickerOpen}
+              primaryPage={page}
             />
-            <AppShellDialogs
-              statusDetailDialogOpen={dialogs.statusDetailDialogOpen}
-              statusDetailItem={dialogs.statusDetailItem}
-              profileDialogOpen={dialogs.profileDialogOpen}
-              profileLookup={dialogs.profileLookup}
-              topicDialogOpen={dialogs.topicDialogOpen}
-              topicDialogTopic={dialogs.topicDialogTopic}
-              position={statusDetailPopupPosition}
-              width={statusDetailPopupWidth}
-              setStatusDetailDialogOpen={dialogs.setStatusDetailDialogOpen}
-              setProfileDialogOpen={dialogs.setProfileDialogOpen}
-              setTopicDialogOpen={dialogs.setTopicDialogOpen}
-              setComposeTarget={handleSetComposeTarget}
-            />
-          </ShellFrame>
-          <ColumnPickerDialog
-            open={columnPickerOpen}
-            onOpenChange={setColumnPickerOpen}
-            primaryPage={page}
-          />
+          </PageRuntimeProvider>
         </StatusCardHostProvider>
       </AppShellContextProvider>
     </GenImageDialogProvider>

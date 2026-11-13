@@ -21,6 +21,22 @@ export function ProfileDialog({ open, lookup, position, width, onOpenChange }: P
     return null
   }
 
+  return (
+    <ProfileDialogContent
+      lookup={lookup}
+      position={position}
+      width={width}
+      onOpenChange={onOpenChange}
+    />
+  )
+}
+
+function ProfileDialogContent({
+  lookup,
+  position,
+  width,
+  onOpenChange,
+}: Omit<ProfileDialogProps, 'open' | 'lookup'> & { lookup: ProfileLookup }) {
   const profileQuery = useQuery({
     queryKey: [
       'weibo',
@@ -36,12 +52,7 @@ export function ProfileDialog({ open, lookup, position, width, onOpenChange }: P
   const profile = profileQuery.data
 
   return (
-    <DialogContainer
-      open={open}
-      position={position as any}
-      width={width}
-      onOpenChange={onOpenChange}
-    >
+    <DialogContainer open position={position as any} width={width} onOpenChange={onOpenChange}>
       {profileQuery.isLoading ? <PageLoadingState label="正在加载此用户主页..." /> : null}
       {profileQuery.error instanceof Error ? (
         <PageErrorState description={profileQuery.error.message} />

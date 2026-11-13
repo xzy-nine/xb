@@ -259,6 +259,57 @@ describe('AppShell', () => {
     expect(vi.mocked(loadStatusComments)).not.toHaveBeenCalled()
   })
 
+  it('opens the status detail popup instead of navigating when the popup is enabled', async () => {
+    vi.mocked(loadHomeTimeline).mockResolvedValue({
+      items: [
+        {
+          id: '501',
+          isLongText: false,
+          mblogId: '501',
+          text: 'main post',
+          createdAt: '2024-01-01',
+          createdAtLabel: 'just now',
+          author: { id: '1', name: 'Alice', avatarUrl: null },
+          stats: { likes: 1, comments: 0, reposts: 0 },
+          images: [],
+          media: null,
+          regionName: '',
+          source: '',
+        },
+      ],
+      nextCursor: null,
+    } as never)
+    vi.mocked(loadStatusDetail).mockResolvedValue({
+      status: {
+        id: '501',
+        mblogId: '501',
+        isLongText: false,
+        text: 'main post',
+        createdAt: '2024-01-01',
+        createdAtLabel: 'today',
+        author: { id: '1', name: 'Alice', avatarUrl: null },
+        stats: { likes: 1, comments: 0, reposts: 0 },
+        images: [],
+        media: null,
+        regionName: '',
+        source: '',
+      },
+    } as never)
+    vi.mocked(loadStatusComments).mockResolvedValue({ items: [], nextCursor: null } as never)
+    getAppSettingsStore().setState({ statusDetailPopupEnabled: true })
+
+    renderWeiboShell(['/'])
+
+    const card = await screen.findByRole('link', { name: /查看 Alice 的微博详情/ })
+    fireEvent.click(card)
+
+    // 弹窗接管点击：渲染弹层并就地加载详情，而不是切换路由。
+    expect(await screen.findByRole('button', { name: '返回' })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(vi.mocked(loadStatusDetail)).toHaveBeenCalledWith('501')
+    })
+  })
+
   it('opens the compose modal from a status-detail reply action', async () => {
     vi.mocked(loadStatusDetail).mockResolvedValue({
       status: {
