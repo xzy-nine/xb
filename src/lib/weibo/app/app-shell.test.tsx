@@ -149,9 +149,8 @@ describe('AppShell', () => {
 
     store.setState({
       ...store.getState(),
-      theme: 'system',
-      rewriteEnabled: true,
       isHydrated: true,
+      appearance: { ...store.getState().appearance, theme: 'system', rewriteEnabled: true },
     })
     const workspaceStore = getWorkspaceStore({
       get: async () => ({}),
@@ -179,9 +178,12 @@ describe('AppShell', () => {
   it('renders primary and auxiliary columns at the configured column width', async () => {
     const user = userEvent.setup()
     getAppSettingsStore().setState({
-      multiColumnEnabled: true,
-      columnWidth: 'custom',
-      customColumnWidth: 500,
+      features: { ...getAppSettingsStore().getState().features, multiColumnEnabled: true },
+      navigation: {
+        ...getAppSettingsStore().getState().navigation,
+        columnWidth: 'custom',
+        customColumnWidth: 500,
+      },
     })
     getWorkspaceStore().setState({
       isHydrated: true,
@@ -296,7 +298,9 @@ describe('AppShell', () => {
       },
     } as never)
     vi.mocked(loadStatusComments).mockResolvedValue({ items: [], nextCursor: null } as never)
-    getAppSettingsStore().setState({ statusDetailPopupEnabled: true })
+    getAppSettingsStore().setState((state) => ({
+      appearance: { ...state.appearance, statusDetailPopupEnabled: true },
+    }))
 
     renderWeiboShell(['/'])
 

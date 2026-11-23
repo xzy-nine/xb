@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { loadProfileHoverCard } from '@/lib/weibo/data/weibo-data'
+import { followGroupsQueryOptions, loadProfileHoverCard } from '@/lib/weibo/data/weibo-data'
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 import { parseProfileSearchUrlState } from '@/lib/weibo/route/profile-search-params'
@@ -60,6 +60,17 @@ export function ColumnPickerDialog({
     queryFn: primaryProfileLookup ? () => loadProfileHoverCard(primaryProfileLookup) : skipToken,
     enabled: open && primaryProfileLookup !== null,
   })
+  const followGroupsQuery = useQuery({
+    ...followGroupsQueryOptions,
+    enabled: open,
+  })
+  const followGroupOptions = useMemo<ColumnOption[]>(
+    () =>
+      (followGroupsQuery.data?.groups ?? []).map((group) => ({
+        source: { kind: 'home', tab: 'following', groupId: group.gid, label: group.title },
+      })),
+    [followGroupsQuery.data?.groups],
+  )
   const currentUserOption = useMemo<ColumnOption | null>(() => {
     const uid = getCurrentUserUid()
     return uid ? { source: { kind: 'saved', uid } } : null
@@ -90,10 +101,11 @@ export function ColumnPickerDialog({
   const options = useMemo(
     () => [
       ...BASE_COLUMN_OPTIONS,
+      ...followGroupOptions,
       ...(currentUserOption ? [currentUserOption] : []),
       ...currentPageOptions,
     ],
-    [currentPageOptions, currentUserOption],
+    [currentPageOptions, currentUserOption, followGroupOptions],
   )
   // 同一个来源类型下有多个互不相同的选项（如四个首页标签），计数按完整来源而非 kind。
   const addedCountBySource = useMemo(() => {

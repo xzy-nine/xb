@@ -68,8 +68,8 @@ describe('NavigationRail', () => {
     })
     store.setState({
       ...store.getState(),
-      homeTab: 'for-you',
       isHydrated: true,
+      home: { ...store.getState().home, homeTab: 'for-you' },
     })
   })
   afterEach(() => {
@@ -121,7 +121,9 @@ describe('NavigationRail', () => {
 
   it('hides the column picker while the multi-column workspace is off', () => {
     const onColumnPickerOpen = vi.fn()
-    getAppSettingsStore().setState({ multiColumnEnabled: false })
+    getAppSettingsStore().setState((state) => ({
+      features: { ...state.features, multiColumnEnabled: false },
+    }))
 
     renderNavigationRail({ onColumnPickerOpen })
 
@@ -130,7 +132,9 @@ describe('NavigationRail', () => {
 
   it('shows the column picker once the multi-column workspace is on', () => {
     const onColumnPickerOpen = vi.fn()
-    getAppSettingsStore().setState({ multiColumnEnabled: true })
+    getAppSettingsStore().setState((state) => ({
+      features: { ...state.features, multiColumnEnabled: true },
+    }))
 
     renderNavigationRail({ onColumnPickerOpen })
 
@@ -200,8 +204,9 @@ describe('NavigationRail', () => {
     renderNavigationRail()
 
     const rewriteLabel = screen.getByText('返回原模式')
-    expect(rewriteLabel.parentElement).toHaveClass('justify-between')
-    expect(screen.getByRole('complementary')).toHaveClass('w-[204px]', 'overflow-y-auto')
+    expect(rewriteLabel.parentElement).toHaveClass('justify-end')
+    expect(screen.getByRole('complementary')).toHaveClass('overflow-y-auto')
+    expect(screen.getByRole('complementary')).toHaveStyle({ width: '204px' })
   })
 
   it('announces unread navigation entries in addition to showing their badge', async () => {
@@ -221,8 +226,11 @@ describe('NavigationRail', () => {
   it('does not poll unread counts when notifications and DMs are hidden', async () => {
     getAppSettingsStore().setState({
       ...getAppSettingsStore().getState(),
-      showNotifications: false,
-      showDMs: false,
+      navigation: {
+        ...getAppSettingsStore().getState().navigation,
+        showNotifications: false,
+        showDMs: false,
+      },
     })
 
     renderNavigationRail()
@@ -235,8 +243,11 @@ describe('NavigationRail', () => {
   it('polls unread counts when either notification entry point is visible', async () => {
     getAppSettingsStore().setState({
       ...getAppSettingsStore().getState(),
-      showNotifications: false,
-      showDMs: true,
+      navigation: {
+        ...getAppSettingsStore().getState().navigation,
+        showNotifications: false,
+        showDMs: true,
+      },
     })
 
     renderNavigationRail()

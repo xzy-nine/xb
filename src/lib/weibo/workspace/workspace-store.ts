@@ -2,7 +2,7 @@ import { useStore } from 'zustand'
 import { createStore, type StoreApi } from 'zustand/vanilla'
 
 import {
-  CUSTOM_COLUMN_WIDTH_MAX,
+  clampColumnWidth,
   CUSTOM_COLUMN_WIDTH_MIN,
   type AppSettingsStorageArea,
   type HomeTab,
@@ -44,6 +44,8 @@ export interface AuxiliaryColumn {
   width?: number
   lastLocation?: ColumnNavigationLocation
   lastBaseLocation?: ColumnNavigationLocation
+  searchQuery?: string
+  searchActiveQuery?: string
 }
 
 export type ColumnWidthOverrides = Partial<Record<ColumnSource['kind'], number>>
@@ -69,6 +71,8 @@ export interface WorkspaceStoreState extends WorkspaceSnapshot {
     location: ColumnNavigationLocation | null,
     baseLocation?: ColumnNavigationLocation | null,
   ) => Promise<void>
+  setColumnSearch: (columnId: string, query: string, activeQuery: string) => Promise<void>
+  setHotSearchType: (columnId: string, type: HotSearchType) => Promise<void>
   setColumnWidth: (columnId: string, width: number) => Promise<void>
   resetColumnWidths: () => Promise<void>
   setCanvasScrollLeft: (scrollLeft: number) => Promise<void>
@@ -97,7 +101,7 @@ export function normalizeCanvasScrollLeft(value: unknown): number {
 export function normalizeColumnWidth(value: unknown, fallback = CUSTOM_COLUMN_WIDTH_MIN): number {
   const numeric = typeof value === 'number' ? value : Number.NaN
   if (!Number.isFinite(numeric)) return fallback
-  return Math.round(Math.min(CUSTOM_COLUMN_WIDTH_MAX, Math.max(CUSTOM_COLUMN_WIDTH_MIN, numeric)))
+  return clampColumnWidth(numeric)
 }
 
 export interface WorkspaceStoreOptions {
@@ -287,7 +291,7 @@ export function columnSourceTitle(source: ColumnSource): string {
       if (source.groupId) return source.label ?? '用户分组'
       if (source.tab === 'for-you') return '推荐'
       if (source.tab === 'following')
-        return source.groupId ? (source.label ?? '用户分组') : '用户分组'
+        return source.groupId ? (source.label ?? '我关注的') : '我关注的'
       if (source.tab === 'special-follow') return '特别关注'
       return '朋友圈'
     case 'explore':
@@ -381,6 +385,8 @@ function normalizeAuxiliaryColumn(value: unknown): AuxiliaryColumn | null {
   const lastBaseLocation = normalizeColumnNavigationLocation(value.lastBaseLocation)
   const normalizedLastLocation = lastLocation ?? undefined
   const normalizedLastBaseLocation = lastBaseLocation ?? undefined
+  const searchQuery = normalizeString(value.searchQuery) ?? undefined
+  const searchActiveQuery = normalizeString(value.searchActiveQuery) ?? undefined
   const width = normalizeColumnWidth(value.width, CUSTOM_COLUMN_WIDTH_MIN)
 
   return {
@@ -389,6 +395,8 @@ function normalizeAuxiliaryColumn(value: unknown): AuxiliaryColumn | null {
     ...(typeof value.width === 'number' ? { width } : {}),
     ...(normalizedLastLocation ? { lastLocation: normalizedLastLocation } : {}),
     ...(normalizedLastBaseLocation ? { lastBaseLocation: normalizedLastBaseLocation } : {}),
+    ...(searchQuery ? { searchQuery } : {}),
+    ...(searchActiveQuery ? { searchActiveQuery } : {}),
   }
 }
 
@@ -590,6 +598,34 @@ export function createWorkspaceStore(
             nextColumn.lastLocation = location ?? undefined
             if (baseLocation !== undefined) nextColumn.lastBaseLocation = baseLocation ?? undefined
             return nextColumn
+          }),
+        }))
+      },
+      async setColumnSearch(columnId, query, activeQuery) {
+        await updateAndPersist((snapshot) => ({
+          ...snapshot,
+          auxiliaryColumns: snapshot.auxiliaryColumns.map((column) => {
+            if (column.id !== columnId) return column
+            return {
+              ...column,
+              ...(query ? { searchQuery: query } : { searchQuery: undefined }),
+              ...(activeQuery
+                ? { searchActiveQuery: activeQuery }
+                : { searchActiveQuery: undefined }),
+            }
+          }),
+        }))
+      },
+      async setHotSearchType(columnId, type) {
+        await updateAndPersist((snapshot) => ({
+          ...snapshot,
+          auxiliaryColumns: snapshot.auxiliaryColumns.map((column) => {
+            if (column.id !== columnId || column.source.kind !== 'hot-search') return column
+            if ((column.source.type ?? 'hot') === type) return column
+            return {
+              ...column,
+              source: { kind: 'hot-search', ...(type === 'hot' ? {} : { type }) },
+            }
           }),
         }))
       },

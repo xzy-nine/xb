@@ -3,7 +3,9 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useStore } from 'zustand'
 
+import type { AppSettingsStorageArea } from '@/lib/app-settings'
 import {
   AppShellContextProvider,
   type AppShellContextValue,
@@ -130,7 +132,10 @@ vi.mock('@/lib/weibo/pages/notifications-page', async () => {
         <div>
           {controls}
           <p>通知 {page.kind === 'notifications' ? page.tab : ''}</p>
-          <button type="button" onClick={() => runtime.navigate('/comment/inbox')}>
+          <button
+            type="button"
+            onClick={() => runtime.navigate('/comment/inbox', { replace: true })}
+          >
             切换评论
           </button>
         </div>
@@ -174,9 +179,15 @@ vi.mock('@/lib/weibo/pages/follow-fans-page', async () => {
   }
 })
 
-vi.mock('@/lib/weibo/components/hotsearch-list', () => ({
-  HotSearchCard: () => <p>热搜列表</p>,
-}))
+vi.mock('@/lib/weibo/components/hotsearch-list', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/weibo/components/hotsearch-list')>(
+    '@/lib/weibo/components/hotsearch-list',
+  )
+  return {
+    ...actual,
+    HotSearchCard: ({ type }: { type?: string }) => <p>热搜列表 {type}</p>,
+  }
+})
 vi.mock('@/lib/weibo/pages/explore-page', () => ({ ExplorePage: () => null }))
 vi.mock('@/lib/weibo/pages/liked-statuses-page', () => ({ LikedStatusesPage: () => null }))
 vi.mock('@/lib/weibo/pages/history-page', () => ({ HistoryPage: () => null }))
@@ -223,7 +234,7 @@ function renderColumn(
   )
 }
 
-function createMemoryStorage(initial: unknown = undefined) {
+function createMemoryStorage(initial: unknown = undefined): AppSettingsStorageArea {
   const values = new Map<string, unknown>(
     initial === undefined ? [] : [[WORKSPACE_STORAGE_KEY, initial]],
   )
@@ -234,7 +245,7 @@ function createMemoryStorage(initial: unknown = undefined) {
         typeof keys === 'string' ? [keys] : Array.isArray(keys) ? keys : Object.keys(keys)
       return Object.fromEntries(list.map((key) => [key, values.get(key)]))
     },
-    set: async (items: Record<string, unknown>) => {
+    set: async (items) => {
       for (const [key, value] of Object.entries(items)) values.set(key, value)
     },
   }
@@ -273,7 +284,7 @@ describe('AuxiliaryColumnView navigation', () => {
     expect(screen.getByText('话题 测试话题')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '返回' }))
-    expect(screen.getByText('热搜列表')).toBeInTheDocument()
+    expect(screen.getByText('热搜列表 hot')).toBeInTheDocument()
     await waitFor(() =>
       expect(workspace.getState().auxiliaryColumns[0]?.lastLocation).toBeUndefined(),
     )
@@ -281,7 +292,56 @@ describe('AuxiliaryColumnView navigation', () => {
     unmount()
     const restored = workspace.getState().auxiliaryColumns[0]!
     renderColumn(restored.source, { lastLocation: restored.lastLocation })
-    expect(screen.getByText('热搜列表')).toBeInTheDocument()
+    expect(screen.getByText('热搜列表 hot')).toBeInTheDocument()
+  })
+
+  it('switches a hot search column type from the title menu and keeps it', async () => {
+    const user = userEvent.setup()
+    await workspace.getState().addColumn({ kind: 'hot-search' })
+
+    function LiveHotSearchColumn() {
+      const column = useStore(
+        workspace,
+        (state) =>
+          state.auxiliaryColumns[0] ?? { id: 'missing', source: { kind: 'hot-search' as const } },
+      )
+      return (
+        <AuxiliaryColumnView
+          column={column}
+          columnWidthPx={420}
+          index={0}
+          columnCount={1}
+          sortingDisabled
+          shouldReduceMotion
+          onMove={vi.fn()}
+          onRemove={vi.fn()}
+        />
+      )
+    }
+
+    render(
+      <AppShellContextProvider value={shellContext}>
+        <DndContext>
+          <SortableContext
+            items={[workspace.getState().auxiliaryColumns[0]?.id ?? 'missing']}
+            strategy={horizontalListSortingStrategy}
+          >
+            <LiveHotSearchColumn />
+          </SortableContext>
+        </DndContext>
+      </AppShellContextProvider>,
+    )
+
+    expect(screen.getByText('热搜列表 hot')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '热搜' }))
+    await user.click(screen.getByRole('menuitem', { name: '文娱' }))
+
+    await waitFor(() =>
+      expect(workspace.getState().auxiliaryColumns[0]?.source).toEqual({
+        kind: 'hot-search',
+        type: 'entertainment',
+      }),
+    )
   })
 
   it('renders an accessible resize handle and persists pointer width changes', async () => {
@@ -306,9 +366,9 @@ describe('AuxiliaryColumnView navigation', () => {
       </AppShellContextProvider>,
     )
 
-    const handle = screen.getByRole('separator', { name: '调整用户分组列宽' })
+    const handle = screen.getByRole('separator', { name: '调整我关注的列宽' })
     expect(handle).toHaveAttribute('aria-valuemin', '300')
-    expect(handle).toHaveAttribute('aria-valuemax', '720')
+    expect(handle).not.toHaveAttribute('aria-valuemax')
     expect(handle).toHaveAttribute('aria-valuenow', '420')
     fireEvent.pointerDown(handle, { button: 0, isPrimary: true, pointerId: 1, clientX: 100 })
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 260 })
@@ -320,7 +380,7 @@ describe('AuxiliaryColumnView navigation', () => {
 
   it('supports keyboard resizing and keeps the width within bounds', async () => {
     renderColumn({ kind: 'home', tab: 'following' }, { width: 420 })
-    const handle = screen.getByRole('separator', { name: '调整用户分组列宽' })
+    const handle = screen.getByRole('separator', { name: '调整我关注的列宽' })
 
     await userEvent.setup().click(handle)
     fireEvent.keyDown(handle, { key: 'ArrowLeft' })
@@ -329,10 +389,8 @@ describe('AuxiliaryColumnView navigation', () => {
     expect(handle).toHaveAttribute('aria-valuenow', '300')
     fireEvent.keyDown(handle, { key: 'ArrowLeft' })
     expect(handle).toHaveAttribute('aria-valuenow', '300')
-    fireEvent.keyDown(handle, { key: 'End' })
-    expect(handle).toHaveAttribute('aria-valuenow', '720')
     fireEvent.keyDown(handle, { key: 'ArrowRight' })
-    expect(handle).toHaveAttribute('aria-valuenow', '720')
+    expect(handle).toHaveAttribute('aria-valuenow', '310')
   })
 
   it('opens profiles, topics, follows, and notifications inside the column', async () => {

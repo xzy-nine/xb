@@ -51,6 +51,8 @@ import {
   optimisticallyRemoveStatusFromFavorites,
   optimisticallyToggleStatusFavorite,
   optimisticallyToggleStatusLike,
+  refreshStatusFavoriteLists,
+  refreshStatusLikeLists,
   restoreStatusCacheMutation,
 } from '@/lib/weibo/queries/status-cache'
 
@@ -173,18 +175,18 @@ function StatusCardRoot({
     weiboCardCollapsedMediaTypes,
   } = useAppSettings(
     useShallow((s) => ({
-      feedInteractionMode: s.feedInteractionMode,
-      feedPrimaryActionOrder: s.feedPrimaryActionOrder,
-      feedToolbarButtonIds: s.feedToolbarButtonIds,
-      ratingEnabled: s.ratingEnabled,
-      autoLoadLongText: s.autoLoadLongText,
-      feedDensity: s.feedDensity,
-      weiboCardShowAvatar: s.weiboCardShowAvatar,
-      weiboCardShowTimestamp: s.weiboCardShowTimestamp,
-      weiboCardShowPublishInfo: s.weiboCardShowPublishInfo,
-      weiboCardShowTitleBadge: s.weiboCardShowTitleBadge,
-      weiboCardShowInteractionCounts: s.weiboCardShowInteractionCounts,
-      weiboCardCollapsedMediaTypes: s.weiboCardCollapsedMediaTypes,
+      feedInteractionMode: s.feed.feedInteractionMode,
+      feedPrimaryActionOrder: s.feed.feedPrimaryActionOrder,
+      feedToolbarButtonIds: s.feed.feedToolbarButtonIds,
+      ratingEnabled: s.features.ratingEnabled,
+      autoLoadLongText: s.feed.autoLoadLongText,
+      feedDensity: s.feed.feedDensity,
+      weiboCardShowAvatar: s.feed.weiboCardShowAvatar,
+      weiboCardShowTimestamp: s.feed.weiboCardShowTimestamp,
+      weiboCardShowPublishInfo: s.feed.weiboCardShowPublishInfo,
+      weiboCardShowTitleBadge: s.feed.weiboCardShowTitleBadge,
+      weiboCardShowInteractionCounts: s.feed.weiboCardShowInteractionCounts,
+      weiboCardCollapsedMediaTypes: s.feed.weiboCardCollapsedMediaTypes,
     })),
   )
   const queryClient = useQueryClient()
@@ -202,7 +204,7 @@ function StatusCardRoot({
     },
     onMutate: (target: FeedItem) => optimisticallyToggleStatusLike(queryClient, target),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['weibo', 'liked-statuses'] })
+      refreshStatusLikeLists(queryClient)
     },
     onError: (_error, _target, context) => {
       restoreStatusCacheMutation(queryClient, context)
@@ -236,6 +238,7 @@ function StatusCardRoot({
     },
     onMutate: (target: FeedItem) => optimisticallyToggleStatusFavorite(queryClient, target),
     onSuccess: (_data, target) => {
+      refreshStatusFavoriteLists(queryClient)
       toast.success(target.favorited ? '取消收藏成功' : '收藏成功')
     },
     onError: (_error, target, context) => {
@@ -248,6 +251,7 @@ function StatusCardRoot({
     mutationFn: (targetId: string) => destroyFavorite(targetId),
     onMutate: (targetId: string) => optimisticallyRemoveStatusFromFavorites(queryClient, targetId),
     onSuccess: () => {
+      refreshStatusFavoriteLists(queryClient)
       toast.success('取消收藏成功')
     },
     onError: (error, _targetId, context) => {
@@ -586,7 +590,7 @@ function StatusCardView({
                 void controller.unfavorite(resolvedItem.id)
               }}
             >
-              <Bookmark className="mr-1 size-3" />
+              <Bookmark data-icon="inline-start" />
               取消收藏
             </Button>
           ) : null}

@@ -81,14 +81,14 @@ export function FeedCommentsExpanded({
             {onCollapse && (
               <Button
                 variant="ghost"
-                className="text-muted-foreground gap-2"
+                className="text-muted-foreground"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   onCollapse()
                 }}
               >
-                <ChevronUp className="size-3.5" />
+                <ChevronUp data-icon="inline-start" />
                 收起评论
               </Button>
             )}

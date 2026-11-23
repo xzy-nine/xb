@@ -1,6 +1,7 @@
 export type StatusDetailPopupPosition = 'left' | 'center' | 'right'
 
-export interface CustomAppSettingsFields {
+/** 特色分支独有设置。分组归属：appearance 背景与毛玻璃，feed 瀑布流，features 其余项。 */
+export interface CustomAppearanceFields {
   statusDetailPopupEnabled: boolean
   statusDetailPopupPosition: StatusDetailPopupPosition
   statusDetailPopupWidth: number
@@ -9,12 +10,36 @@ export interface CustomAppSettingsFields {
   backgroundImageUrl: string
   glassOpacity: number
   glassBlur: number
-  xLayoutEnabled: boolean
+}
+
+export interface CustomFeedFields {
   waterfallColumnCount: number
   waterfallExpandOnWideLayout: boolean
+}
+
+export interface CustomFeatureFields {
+  xLayoutEnabled: boolean
   browsingHistoryEnabled: boolean
   followGroupsEnabled: boolean
+  /** 单栏模式的整页内容宽度。 */
+  contentWidth: 'narrower' | 'narrow' | 'standard' | 'wide' | 'wider' | 'custom'
+  customContentWidth: number
+  /** 是否启用多列工作区；关闭时按单栏布局渲染。 */
+  multiColumnEnabled: boolean
+  immersiveMode: boolean
+  showRightRail: boolean
+  showHotSearchCard: boolean
+  showFollowedSuperTopicsCard: boolean
 }
+
+export type CustomAppSettingsFields = CustomAppearanceFields &
+  CustomFeedFields &
+  CustomFeatureFields
+
+export const CUSTOM_COLOR_WIDTH_MIN = 800
+export const CUSTOM_COLOR_WIDTH_MAX = 2000
+export const CUSTOM_COLOR_WIDTH_STEP = 20
+export const DEFAULT_CUSTOM_CONTENT_WIDTH = 1200
 
 export const CUSTOM_SETTINGS_DEFAULTS: CustomAppSettingsFields = {
   statusDetailPopupEnabled: true,
@@ -25,11 +50,18 @@ export const CUSTOM_SETTINGS_DEFAULTS: CustomAppSettingsFields = {
   backgroundImageUrl: 'https://uapis.cn/api/v1/image/bing-daily',
   glassOpacity: 80,
   glassBlur: 12,
-  xLayoutEnabled: true,
   waterfallColumnCount: 1,
   waterfallExpandOnWideLayout: true,
+  xLayoutEnabled: true,
   browsingHistoryEnabled: true,
   followGroupsEnabled: true,
+  contentWidth: 'standard',
+  customContentWidth: DEFAULT_CUSTOM_CONTENT_WIDTH,
+  multiColumnEnabled: false,
+  immersiveMode: false,
+  showRightRail: true,
+  showHotSearchCard: true,
+  showFollowedSuperTopicsCard: false,
 }
 
 function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopupPosition {
@@ -38,6 +70,33 @@ function isStatusDetailPopupPosition(value: unknown): value is StatusDetailPopup
 
 function isStatusDetailPopupWidth(value: unknown): value is number {
   return typeof value === 'number' && value >= 50 && value <= 80
+}
+
+export type CustomContentWidth = CustomFeatureFields['contentWidth']
+
+function isContentWidthCustom(value: unknown): value is CustomContentWidth {
+  return (
+    value === 'narrower' ||
+    value === 'narrow' ||
+    value === 'standard' ||
+    value === 'wide' ||
+    value === 'wider' ||
+    value === 'custom'
+  )
+}
+
+export function normalizeCustomContentWidth(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number.NaN
+  if (!Number.isFinite(numeric)) {
+    return CUSTOM_SETTINGS_DEFAULTS.customContentWidth
+  }
+
+  const clamped = Math.min(CUSTOM_COLOR_WIDTH_MAX, Math.max(CUSTOM_COLOR_WIDTH_MIN, numeric))
+  return (
+    Math.round((clamped - CUSTOM_COLOR_WIDTH_MIN) / CUSTOM_COLOR_WIDTH_STEP) *
+      CUSTOM_COLOR_WIDTH_STEP +
+    CUSTOM_COLOR_WIDTH_MIN
+  )
 }
 
 export function normalizeCustomSettings(
@@ -78,10 +137,6 @@ export function normalizeCustomSettings(
       candidate.glassBlur <= 20
         ? candidate.glassBlur
         : CUSTOM_SETTINGS_DEFAULTS.glassBlur,
-    xLayoutEnabled:
-      typeof candidate.xLayoutEnabled === 'boolean'
-        ? candidate.xLayoutEnabled
-        : CUSTOM_SETTINGS_DEFAULTS.xLayoutEnabled,
     waterfallColumnCount:
       typeof candidate.waterfallColumnCount === 'number' &&
       candidate.waterfallColumnCount >= 1 &&
@@ -92,6 +147,10 @@ export function normalizeCustomSettings(
       typeof candidate.waterfallExpandOnWideLayout === 'boolean'
         ? candidate.waterfallExpandOnWideLayout
         : CUSTOM_SETTINGS_DEFAULTS.waterfallExpandOnWideLayout,
+    xLayoutEnabled:
+      typeof candidate.xLayoutEnabled === 'boolean'
+        ? candidate.xLayoutEnabled
+        : CUSTOM_SETTINGS_DEFAULTS.xLayoutEnabled,
     browsingHistoryEnabled:
       typeof candidate.browsingHistoryEnabled === 'boolean'
         ? candidate.browsingHistoryEnabled
@@ -100,5 +159,29 @@ export function normalizeCustomSettings(
       typeof candidate.followGroupsEnabled === 'boolean'
         ? candidate.followGroupsEnabled
         : CUSTOM_SETTINGS_DEFAULTS.followGroupsEnabled,
+    contentWidth: isContentWidthCustom(candidate.contentWidth)
+      ? candidate.contentWidth
+      : CUSTOM_SETTINGS_DEFAULTS.contentWidth,
+    customContentWidth: normalizeCustomContentWidth(candidate.customContentWidth),
+    multiColumnEnabled:
+      typeof candidate.multiColumnEnabled === 'boolean'
+        ? candidate.multiColumnEnabled
+        : CUSTOM_SETTINGS_DEFAULTS.multiColumnEnabled,
+    immersiveMode:
+      typeof candidate.immersiveMode === 'boolean'
+        ? candidate.immersiveMode
+        : CUSTOM_SETTINGS_DEFAULTS.immersiveMode,
+    showRightRail:
+      typeof candidate.showRightRail === 'boolean'
+        ? candidate.showRightRail
+        : CUSTOM_SETTINGS_DEFAULTS.showRightRail,
+    showHotSearchCard:
+      typeof candidate.showHotSearchCard === 'boolean'
+        ? candidate.showHotSearchCard
+        : CUSTOM_SETTINGS_DEFAULTS.showHotSearchCard,
+    showFollowedSuperTopicsCard:
+      typeof candidate.showFollowedSuperTopicsCard === 'boolean'
+        ? candidate.showFollowedSuperTopicsCard
+        : CUSTOM_SETTINGS_DEFAULTS.showFollowedSuperTopicsCard,
   }
 }

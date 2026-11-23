@@ -176,7 +176,7 @@ export function bindShellState({
 
   const applyShellState = () => {
     const settings = settingsStore.getState()
-    const isDark = resolveIsDarkMode(settings.theme, mediaQuery.matches)
+    const isDark = resolveIsDarkMode(settings.appearance.theme, mediaQuery.matches)
 
     // 标准 Dialog/Select/DropdownMenu/HoverCard 等通过 getUiPortalContainer() 渲染到
     // #xb-portal-root。它承载独立的主题作用域：写在同一处可保证无论它被挂在哪里
@@ -191,8 +191,8 @@ export function bindShellState({
 
     // Apply background color preset CSS variables first
     const preset = isDark
-      ? DARK_BG_PRESETS.find((p) => p.key === settings.darkModeBgColor)
-      : LIGHT_BG_PRESETS.find((p) => p.key === settings.lightModeBgColor)
+      ? DARK_BG_PRESETS.find((p) => p.key === settings.appearance.darkModeBgColor)
+      : LIGHT_BG_PRESETS.find((p) => p.key === settings.appearance.lightModeBgColor)
 
     for (const target of themeTargets) {
       if (preset) {
@@ -201,7 +201,9 @@ export function bindShellState({
       }
     }
 
-    const customThemeCss = isDark ? settings.customThemeDarkCss : settings.customThemeLightCss
+    const customThemeCss = isDark
+      ? settings.themes.customThemeDarkCss
+      : settings.themes.customThemeLightCss
     if (customThemeCss.trim()) {
       const variables = parseCustomThemeVariables(customThemeCss)
       for (const target of themeTargets) {
@@ -232,8 +234,16 @@ export function bindShellState({
 
     // 用户字体设置优先于主题 --font-*（在主题变量之后写入）
     for (const target of themeTargets) {
-      applyAppFontFamily(target, settings.fontFamilyClass, settings.fontApplyScope)
-      applyTypographyVariables(target, settings.uiFontSize, settings.contentFontSize)
+      applyAppFontFamily(
+        target,
+        settings.appearance.fontFamilyClass,
+        settings.appearance.fontApplyScope,
+      )
+      applyTypographyVariables(
+        target,
+        settings.appearance.uiFontSize,
+        settings.appearance.contentFontSize,
+      )
     }
 
     // When route is unsupported, release the host page and hide xb UI
@@ -252,15 +262,15 @@ export function bindShellState({
     // Route is supported — make sure xb container is visible
     container.style.removeProperty('display')
 
-    if (settings.rewriteEnabled) {
+    if (settings.appearance.rewriteEnabled) {
       if (!document.documentElement.hasAttribute(OVERFLOW_STORAGE_KEY)) {
         document.documentElement.setAttribute(
           OVERFLOW_STORAGE_KEY,
           document.documentElement.style.overflow || '',
         )
       }
-      document.documentElement.style.overflow = 'hidden'
       lockDocumentHorizontalOverflow()
+      document.documentElement.style.overflow = 'hidden'
       applyPageTakeover(appRoot)
       return
     }

@@ -8,8 +8,9 @@ import { flushSync } from 'react-dom'
 import { useLocation } from 'react-router'
 
 import { getUiPortalContainer } from '@/components/ui/portal'
-import type { AppTheme, ContentWidth } from '@/lib/app-settings'
+import type { AppTheme } from '@/lib/app-settings'
 import { useAppSettings } from '@/lib/app-settings-store'
+import type { CustomContentWidth } from '@/lib/app-settings.custom'
 import { getCachedImageUrl } from '@/lib/image-cache.custom'
 import type { AppShellContextValue } from '@/lib/weibo/app/app-shell-context'
 import { resolveColumnWidthPx } from '@/lib/weibo/app/column-width'
@@ -104,7 +105,7 @@ const reducedMotionChromeTransition = { duration: 0.12 }
 
 const immersiveChromeStyle = { willChange: 'transform, opacity' }
 
-const contentWidthClass: Record<ContentWidth, string> = {
+const contentWidthClass: Record<CustomContentWidth, string> = {
   narrower: 'lg:max-w-[800px] xl:max-w-[1000px]',
   narrow: 'lg:max-w-[950px] xl:max-w-[1150px]',
   standard: 'lg:max-w-[1100px] xl:max-w-[1300px]',
@@ -118,7 +119,7 @@ interface ShellFrameProps {
   viewingProfileUserId?: string | null
   rewriteEnabled: boolean
   theme: AppTheme
-  contentWidth: ContentWidth
+  contentWidth: CustomContentWidth
   customContentWidth: number
   /** 多列工作区开关；关闭时按单栏布局渲染。 */
   multiColumnEnabled: boolean
@@ -176,13 +177,13 @@ export function ShellFrame({
   useLayoutEffect(() => {
     locationRef.current = location
   }, [location])
-  const showRightRail = useAppSettings((state) => state.showRightRail)
-  const immersiveMode = useAppSettings((state) => state.immersiveMode)
+  const showRightRail = useAppSettings((state) => state.navigation.showRightRail)
+  const immersiveMode = useAppSettings((state) => state.navigation.immersiveMode)
   const updateSettings = useAppSettings((state) => state.updateSettings)
   const shouldReduceMotion = useReducedMotion()
   const contentColumnX = useMotionValue(0)
   const columnWidthPx = useAppSettings((state) =>
-    resolveColumnWidthPx(state.columnWidth, state.customColumnWidth),
+    resolveColumnWidthPx(state.navigation.columnWidth, state.navigation.customColumnWidth),
   )
 
   const [mainScrollRoot, setMainScrollRoot] = useState<HTMLDivElement | null>(null)
@@ -226,7 +227,7 @@ export function ShellFrame({
         if (enabled && rect?.width && Number.isFinite(rect.width)) {
           setImmersiveColumnWidth(rect.width)
         }
-        void updateSettings({ immersiveMode: enabled })
+        void updateSettings({ navigation: { immersiveMode: enabled } })
       })
     },
     [immersiveMode, updateSettings],
@@ -313,12 +314,12 @@ export function ShellFrame({
     contentColumnX.set(0)
   }, [contentColumnX, shouldReduceMotion])
 
-  const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
-  const backgroundColor = useAppSettings((s) => s.backgroundColor)
-  const backgroundImageUrl = useAppSettings((s) => s.backgroundImageUrl)
-  const glassOpacity = useAppSettings((s) => s.glassOpacity)
-  const glassBlur = useAppSettings((s) => s.glassBlur)
-  const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
+  const backgroundEnabled = useAppSettings((s) => s.appearance.backgroundEnabled)
+  const backgroundColor = useAppSettings((s) => s.appearance.backgroundColor)
+  const backgroundImageUrl = useAppSettings((s) => s.appearance.backgroundImageUrl)
+  const glassOpacity = useAppSettings((s) => s.appearance.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.appearance.glassBlur)
+  const waterfallColumnCount = useAppSettings((s) => s.feed.waterfallColumnCount)
 
   const [cachedBackgroundEntry, setCachedBackgroundEntry] = useState<{
     url: string
@@ -700,7 +701,7 @@ export function ShellFrame({
 }
 
 export function RewritePausedCard({ onResume }: { onResume: () => void }) {
-  const collapsed = useAppSettings((state) => state.xbEntryCollapsed)
+  const collapsed = useAppSettings((state) => state.navigation.xbEntryCollapsed)
   const updateSettings = useAppSettings((state) => state.updateSettings)
   const shouldReduceMotion = useReducedMotion()
   const bodyTransition = shouldReduceMotion
@@ -709,7 +710,9 @@ export function RewritePausedCard({ onResume }: { onResume: () => void }) {
 
   const toggleCollapsed = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
-    void updateSettings({ xbEntryCollapsed: !collapsed })
+    void updateSettings({
+      navigation: { xbEntryCollapsed: !collapsed },
+    })
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

@@ -114,7 +114,7 @@ function ProfileContent({
   setSearchParams: SetURLSearchParams
   onProfileUserIdChange?: (userId: string | null) => void
 }) {
-  const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const rewriteEnabled = useAppSettings((s) => s.appearance.rewriteEnabled)
   const queryClient = useQueryClient()
 
   const profileLookup = profileLookupFromPage(page)

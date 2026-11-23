@@ -66,15 +66,15 @@ export const CommentCard = memo(function CommentCard({
     commentCardCollapseRepliesByDefault,
   } = useAppSettings(
     useShallow((settings) => ({
-      commentDensity: settings.commentDensity,
-      commentCardShowAvatar: settings.commentCardShowAvatar,
-      commentCardShowTimestamp: settings.commentCardShowTimestamp,
-      commentCardShowPublishInfo: settings.commentCardShowPublishInfo,
-      commentCardShowAuthorBadge: settings.commentCardShowAuthorBadge,
-      commentCardShowLikeCount: settings.commentCardShowLikeCount,
-      commentCardShowThreadLine: settings.commentCardShowThreadLine,
-      commentCardImageDisplay: settings.commentCardImageDisplay,
-      commentCardCollapseRepliesByDefault: settings.commentCardCollapseRepliesByDefault,
+      commentDensity: settings.feed.commentDensity,
+      commentCardShowAvatar: settings.feed.commentCardShowAvatar,
+      commentCardShowTimestamp: settings.feed.commentCardShowTimestamp,
+      commentCardShowPublishInfo: settings.feed.commentCardShowPublishInfo,
+      commentCardShowAuthorBadge: settings.feed.commentCardShowAuthorBadge,
+      commentCardShowLikeCount: settings.feed.commentCardShowLikeCount,
+      commentCardShowThreadLine: settings.feed.commentCardShowThreadLine,
+      commentCardImageDisplay: settings.feed.commentCardImageDisplay,
+      commentCardCollapseRepliesByDefault: settings.feed.commentCardCollapseRepliesByDefault,
     })),
   )
   const [showNestedReplies, setShowNestedReplies] = useState(!commentCardCollapseRepliesByDefault)
@@ -89,7 +89,7 @@ export const CommentCard = memo(function CommentCard({
   const { textClassName } = useFontSettings()
   const queryClient = useQueryClient()
 
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.appearance.statusDetailPopupEnabled)
   const ctx = useAppShellContext()
 
   const handleUserClick = () => {
@@ -186,11 +186,11 @@ export const CommentCard = memo(function CommentCard({
               type="button"
               variant="ghost"
               size="icon-sm"
-              className={cn('text-muted-foreground size-8 shrink-0', HIT_TARGET)}
+              className={cn('text-muted-foreground shrink-0', HIT_TARGET)}
               aria-label="删除评论"
               onClick={() => setConfirmDeleteOpen(true)}
             >
-              <Trash2 className="size-3.5" />
+              <Trash2 />
             </Button>
           </div>
         ) : null}
@@ -245,13 +245,13 @@ export const CommentCard = memo(function CommentCard({
             aria-label="回复评论"
             aria-expanded={showInlineReply}
             className={cn(
-              'text-muted-foreground size-8',
+              'text-muted-foreground',
               HIT_TARGET,
               'hover:bg-sky-500/10 hover:text-sky-500',
             )}
             onClick={handleReplyClick}
           >
-            <MessageCircleIcon className="size-3.5" />
+            <MessageCircleIcon />
           </Button>
           <Button
             type="button"

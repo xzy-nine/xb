@@ -9,6 +9,7 @@ import {
   DiamondMinus,
   Pencil,
 } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
 
@@ -38,10 +39,12 @@ import {
 import { getCurrentUserUid } from '@/lib/weibo/platform/current-user'
 import type { WeiboPageDescriptor } from '@/lib/weibo/route/page-descriptor'
 
+const railEase = [0.23, 1, 0.32, 1] as const
+
 function SidebarSection({ children }: { children: React.ReactNode }) {
-  const backgroundEnabled = useAppSettings((s) => s.backgroundEnabled)
-  const glassOpacity = useAppSettings((s) => s.glassOpacity)
-  const glassBlur = useAppSettings((s) => s.glassBlur)
+  const backgroundEnabled = useAppSettings((s) => s.appearance.backgroundEnabled)
+  const glassOpacity = useAppSettings((s) => s.appearance.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.appearance.glassBlur)
 
   const isGlassActive = glassBlur > 0 || glassOpacity < 100
 
@@ -57,14 +60,6 @@ function SidebarSection({ children }: { children: React.ReactNode }) {
     >
       {children}
     </div>
-  )
-}
-
-function navButtonClassName(showLabel: boolean) {
-  return cn(
-    'flex w-full items-center gap-2',
-    showLabel ? 'justify-start' : 'justify-center',
-    showLabel && 'font-medium',
   )
 }
 
@@ -99,24 +94,28 @@ function NavButton({
 }) {
   const buttonVariant = variant ?? (isActive ? 'secondary' : 'ghost')
   const accessibleLabel = showBadge ? `${ariaLabel}，有未读` : ariaLabel
+  const size = showLabel ? 'default' : 'icon'
+  const sharedClassName = cn(
+    showBadge && 'relative',
+    showLabel && 'w-full justify-start font-medium',
+    isActive && 'font-semibold',
+    pressable && 'active:scale-[0.96]',
+  )
+  const badge = showBadge ? (
+    <span
+      aria-hidden="true"
+      className="bg-destructive absolute top-1 right-1 size-2 rounded-full"
+    />
+  ) : null
   const iconWrap = (icon: React.ReactNode) =>
     showBadge ? (
       <span className="relative">
         {icon}
-        <span
-          aria-hidden="true"
-          className="bg-destructive absolute -top-1 -right-1 size-2 rounded-full"
-        />
+        {badge}
       </span>
     ) : (
       icon
     )
-  const size = showLabel ? 'default' : 'icon'
-  const sharedClassName = cn(
-    navButtonClassName(showLabel),
-    isActive && 'font-semibold',
-    pressable && 'active:scale-[0.96]',
-  )
   const button = href ? (
     <SmartLink
       href={href}
@@ -180,19 +179,32 @@ function RailControl({
   tooltip?: string
   children: React.ReactNode
 }) {
-  if (!isCollapsed) {
-    return (
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <span className="text-muted-foreground min-w-0 truncate text-xs font-medium">{label}</span>
-        {children}
-      </div>
-    )
-  }
+  const shouldReduceMotion = useReducedMotion()
+  const row = (
+    <div className="relative flex h-8 items-center justify-end">
+      <motion.span
+        aria-hidden={isCollapsed}
+        animate={{ opacity: isCollapsed ? 0 : 1 }}
+        className="text-muted-foreground pointer-events-none absolute inset-y-0 right-11 left-0 flex items-center truncate text-xs font-medium"
+        initial={false}
+        transition={
+          shouldReduceMotion
+            ? { duration: 0 }
+            : { duration: isCollapsed ? 0.1 : 0.16, ease: railEase, delay: isCollapsed ? 0 : 0.06 }
+        }
+      >
+        {label}
+      </motion.span>
+      {children}
+    </div>
+  )
+
+  if (!isCollapsed) return row
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex items-center justify-center">{children}</div>
+        <div>{row}</div>
       </TooltipTrigger>
       <TooltipContent side="right">{tooltip ?? label}</TooltipContent>
     </Tooltip>
@@ -273,17 +285,17 @@ export function NavigationRail({
     multiColumnEnabled,
   } = useAppSettings(
     useShallow((state) => ({
-      homeTab: state.homeTab,
-      homeGroupId: state.homeGroupId,
-      showExplore: state.showExplore,
-      showFavorites: state.showFavorites,
-      showHistory: state.showHistory,
-      showNotifications: state.showNotifications,
-      showDMs: state.showDMs,
-      showProfile: state.showProfile,
-      showCompose: state.showCompose,
-      sidebarCollapsed: state.sidebarCollapsed,
-      multiColumnEnabled: state.multiColumnEnabled,
+      homeTab: state.home.homeTab,
+      homeGroupId: state.home.homeGroupId,
+      showExplore: state.navigation.showExplore,
+      showFavorites: state.navigation.showFavorites,
+      showHistory: state.navigation.showHistory,
+      showNotifications: state.navigation.showNotifications,
+      showDMs: state.navigation.showDMs,
+      showProfile: state.navigation.showProfile,
+      showCompose: state.navigation.showCompose,
+      sidebarCollapsed: state.navigation.sidebarCollapsed,
+      multiColumnEnabled: state.features.multiColumnEnabled,
     })),
   )
   const currentUserUid = useMemo(() => getCurrentUserUid(), [])
@@ -324,6 +336,7 @@ export function NavigationRail({
           'scrollbar-none flex h-full min-h-0 flex-col overflow-y-auto px-1 py-3 transition md:px-2 md:py-4 xl:px-3 xl:py-5',
           isCollapsed ? 'w-10 md:w-14' : 'w-[204px]',
         )}
+        style={isXl ? { width: isCollapsed ? 56 : 204 } : undefined}
       >
         <div className="mb-4 flex shrink-0 justify-start px-1 transition md:px-2 xl:px-3">
           <Link

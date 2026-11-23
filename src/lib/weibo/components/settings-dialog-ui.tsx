@@ -24,7 +24,11 @@ import {
 import { getUiPortalContainer } from '@/components/ui/portal'
 import { Slider } from '@/components/ui/slider'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { type AppSettings, DEFAULT_APP_SETTINGS } from '@/lib/app-settings'
+import {
+  DEFAULT_FLAT_APP_SETTINGS,
+  type FlatAppSettings,
+  type AppSettingsPatch,
+} from '@/lib/app-settings'
 import { getNextZIndex } from '@/lib/weibo/utils/dialog-z-index.custom'
 
 const DIALOG_CONTENT_CLASSES =
@@ -66,7 +70,7 @@ export function DialogContentMaybeForced({
             aria-label="关闭"
             className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 absolute top-3 right-3 rounded-md p-2 transition-colors focus-visible:ring-3 focus-visible:outline-none"
           >
-            <XIcon aria-hidden="true" className="size-4" />
+            <XIcon aria-hidden="true" />
             <span className="sr-only">关闭</span>
           </DialogPrimitive.Close>
         </DialogPrimitive.Content>
@@ -94,9 +98,9 @@ export function SidebarItem({
       static
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
-      className="w-full justify-start gap-2.5 px-3"
+      className="w-full justify-start"
     >
-      <Icon aria-hidden="true" className="size-4 shrink-0" />
+      <Icon aria-hidden="true" data-icon="inline-start" />
       {label}
     </Button>
   )
@@ -257,7 +261,7 @@ export function ResetSectionButton({
   onReset,
 }: {
   label: string
-  keys: readonly (keyof AppSettings)[]
+  keys: readonly (keyof FlatAppSettings)[]
   onReset: () => void
 }) {
   return (
@@ -285,10 +289,122 @@ export function ResetSectionButton({
   )
 }
 
-export function defaultsFor(keys: readonly (keyof AppSettings)[]): Partial<AppSettings> {
-  return Object.fromEntries(
-    keys.map((key) => [key, DEFAULT_APP_SETTINGS[key]]),
-  ) as Partial<AppSettings>
+const SETTING_GROUPS = {
+  appearance: new Set([
+    'theme',
+    'rewriteEnabled',
+    'uiFontSize',
+    'contentFontSize',
+    'fontWeightClass',
+    'letterSpacingClass',
+    'lineHeightClass',
+    'fontFamilyClass',
+    'fontApplyScope',
+    'motionPreference',
+    'darkModeImageDim',
+    'lightModeBgColor',
+    'darkModeBgColor',
+    'statusDetailPopupEnabled',
+    'statusDetailPopupPosition',
+    'statusDetailPopupWidth',
+    'backgroundEnabled',
+    'backgroundColor',
+    'backgroundImageUrl',
+    'glassOpacity',
+    'glassBlur',
+  ]),
+  navigation: new Set([
+    'columnWidth',
+    'customColumnWidth',
+    'showExplore',
+    'showFavorites',
+    'showHistory',
+    'showNotifications',
+    'showDMs',
+    'showProfile',
+    'showCompose',
+    'xbEntryCollapsed',
+    'sidebarCollapsed',
+    'immersiveMode',
+    'showRightRail',
+    'showHotSearchCard',
+    'showFollowedSuperTopicsCard',
+  ]),
+  feed: new Set([
+    'replyChainDisplay',
+    'autoLoadLongText',
+    'feedDensity',
+    'weiboCardShowAvatar',
+    'weiboCardShowTimestamp',
+    'weiboCardShowPublishInfo',
+    'weiboCardShowTitleBadge',
+    'weiboCardShowInteractionCounts',
+    'weiboCardCollapsedMediaTypes',
+    'weiboCardSingleImageMaxWidth',
+    'weiboCardSingleVideoMaxWidth',
+    'weiboCardMultiMediaLayout',
+    'weiboCardMultiMediaGridLimit',
+    'weiboCardMultiMediaGridMaxWidth',
+    'weiboCardMultiMediaStripHeight',
+    'commentDensity',
+    'commentCardShowAvatar',
+    'commentCardShowTimestamp',
+    'commentCardShowPublishInfo',
+    'commentCardShowAuthorBadge',
+    'commentCardShowLikeCount',
+    'commentCardShowThreadLine',
+    'commentCardImageDisplay',
+    'commentCardCollapseRepliesByDefault',
+    'hotSearchType',
+    'feedInteractionMode',
+    'feedPrimaryActionOrder',
+    'feedToolbarButtonIds',
+    'browsingHistoryLimit',
+    'waterfallColumnCount',
+    'waterfallExpandOnWideLayout',
+  ]),
+  imageGen: new Set([
+    'imageGenShowDataArea',
+    'imageGenShowFullImages',
+    'imageGenShowWeiboLink',
+    'imageGenTheme',
+    'imageGenCardStyle',
+  ]),
+  home: new Set(['firstLoadRedirect', 'homeTab', 'homeGroupId']),
+  features: new Set([
+    'xLayoutEnabled',
+    'browsingHistoryEnabled',
+    'followGroupsEnabled',
+    'contentWidth',
+    'customContentWidth',
+    'multiColumnEnabled',
+    'xbTopicPage',
+    'ratingEnabled',
+  ]),
+  media: new Set([
+    'rememberPlaybackRate',
+    'playbackRate',
+    'videoQualityPreference',
+    'photoLoopEnabled',
+  ]),
+  themes: new Set([
+    'customThemeLightCss',
+    'customThemeDarkCss',
+    'selectedThemeType',
+    'selectedThemeId',
+    'userThemes',
+  ]),
+} as const
+
+export function defaultsFor(keys: readonly (keyof FlatAppSettings)[]): AppSettingsPatch {
+  const patch: AppSettingsPatch = {}
+  for (const key of keys) {
+    const group = (Object.keys(SETTING_GROUPS) as (keyof typeof SETTING_GROUPS)[]).find((name) =>
+      SETTING_GROUPS[name].has(key),
+    )
+    if (group) patch[group] = { ...patch[group], [key]: DEFAULT_FLAT_APP_SETTINGS[key] } as never
+  }
+  return patch
 }
 
 export function IllustrationPlaceholder({ children }: { children: React.ReactNode }) {

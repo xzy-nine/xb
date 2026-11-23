@@ -33,8 +33,8 @@ import {
 import { Switch } from '@/components/ui/switch'
 import {
   BROWSING_HISTORY_LIMIT_OPTIONS,
-  DEFAULT_APP_SETTINGS,
-  type AppSettings,
+  DEFAULT_FLAT_APP_SETTINGS,
+  type FlatAppSettings,
   type AppTheme,
   type BrowsingHistoryLimit,
   type FontFamilyClass,
@@ -86,13 +86,13 @@ const THEME_SETTING_KEYS = [
   'customThemeDarkCss',
   'selectedThemeType',
   'selectedThemeId',
-] as const satisfies readonly (keyof AppSettings)[]
+] as const satisfies readonly (keyof FlatAppSettings)[]
 
 const ADVANCED_SETTING_KEYS = [
   'ratingEnabled',
   'xbTopicPage',
   'browsingHistoryLimit',
-] as const satisfies readonly (keyof AppSettings)[]
+] as const satisfies readonly (keyof FlatAppSettings)[]
 
 interface SettingsDialogProps {
   open: boolean
@@ -128,15 +128,15 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     updateUserTheme,
   } = useAppSettings(
     useShallow((state) => ({
-      theme: state.theme,
-      xbTopicPage: state.xbTopicPage,
-      ratingEnabled: state.ratingEnabled,
-      selectedThemeType: state.selectedThemeType,
-      selectedThemeId: state.selectedThemeId,
-      userThemes: state.userThemes,
-      customThemeLightCss: state.customThemeLightCss,
-      customThemeDarkCss: state.customThemeDarkCss,
-      browsingHistoryLimit: state.browsingHistoryLimit,
+      theme: state.appearance.theme,
+      xbTopicPage: state.features.xbTopicPage,
+      ratingEnabled: state.features.ratingEnabled,
+      selectedThemeType: state.themes.selectedThemeType,
+      selectedThemeId: state.themes.selectedThemeId,
+      userThemes: state.themes.userThemes,
+      customThemeLightCss: state.themes.customThemeLightCss,
+      customThemeDarkCss: state.themes.customThemeDarkCss,
+      browsingHistoryLimit: state.feed.browsingHistoryLimit,
       updateSettings: state.updateSettings,
       updateUserTheme: state.updateUserTheme,
     })),
@@ -182,7 +182,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
   async function handleFontFamilyChange(value: string) {
     const next = value as FontFamilyClass
     if (!isRemoteFont(next)) {
-      await trackedUpdateSettings({ fontFamilyClass: next })
+      await trackedUpdateSettings({
+        appearance: { fontFamilyClass: next },
+      })
       return
     }
 
@@ -193,7 +195,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
         toast.error('字体加载失败，请检查网络后重试')
         return
       }
-      await trackedUpdateSettings({ fontFamilyClass: next })
+      await trackedUpdateSettings({
+        appearance: { fontFamilyClass: next },
+      })
     } finally {
       setFontFamilyLoading(false)
     }
@@ -202,11 +206,10 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
   function handleSelectPresetTheme(presetKey: string) {
     const preset = CUSTOM_THEME_PRESETS.find((item) => item.key === presetKey)
     void trackedUpdateSettings({
-      selectedThemeType: 'preset',
-      selectedThemeId: presetKey,
       ...(preset
         ? { customThemeLightCss: preset.lightCss, customThemeDarkCss: preset.darkCss }
         : {}),
+      themes: { selectedThemeType: 'preset', selectedThemeId: presetKey },
     })
   }
 
@@ -215,10 +218,12 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     if (!selectedTheme) return
 
     void trackedUpdateSettings({
-      selectedThemeType: 'custom',
-      selectedThemeId: themeId,
-      customThemeLightCss: selectedTheme.lightCss,
-      customThemeDarkCss: selectedTheme.darkCss,
+      themes: {
+        selectedThemeType: 'custom',
+        selectedThemeId: themeId,
+        customThemeLightCss: selectedTheme.lightCss,
+        customThemeDarkCss: selectedTheme.darkCss,
+      },
     })
   }
 
@@ -233,9 +238,11 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
     }
 
     void trackedUpdateSettings({
-      userThemes: [...userThemes, newTheme],
-      selectedThemeType: 'custom',
-      selectedThemeId: id,
+      themes: {
+        userThemes: [...userThemes, newTheme],
+        selectedThemeType: 'custom',
+        selectedThemeId: id,
+      },
     })
     return id
   }
@@ -243,7 +250,6 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
   function handleDeleteUserTheme(themeId: string) {
     const defaultPreset = CUSTOM_THEME_PRESETS.find((item) => item.key === 'default')
     void trackedUpdateSettings({
-      userThemes: userThemes.filter((item) => item.id !== themeId),
       ...(selectedThemeType === 'custom' && selectedThemeId === themeId
         ? {
             selectedThemeType: 'preset',
@@ -256,12 +262,13 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
               : {}),
           }
         : {}),
+      themes: { userThemes: userThemes.filter((item) => item.id !== themeId) },
     })
   }
 
   function resetThemeSettings() {
     const defaultPreset = CUSTOM_THEME_PRESETS.find(
-      (item) => item.key === DEFAULT_APP_SETTINGS.selectedThemeId,
+      (item) => item.key === DEFAULT_FLAT_APP_SETTINGS.selectedThemeId,
     )
     void trackedUpdateSettings({
       ...defaultsFor(THEME_SETTING_KEYS),
@@ -277,7 +284,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
   function handleBrowsingHistoryLimitChange(value: string) {
     const limit = Number(value) as BrowsingHistoryLimit
     void runTrackedSave(async () => {
-      await updateSettings({ browsingHistoryLimit: limit })
+      await updateSettings({
+        feed: { browsingHistoryLimit: limit },
+      })
       browsingHistoryStore.getState().trimToLimit(limit)
     })
   }
@@ -285,7 +294,7 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
   function resetAdvancedSettings() {
     void runTrackedSave(async () => {
       await updateSettings(defaultsFor(ADVANCED_SETTING_KEYS))
-      browsingHistoryStore.getState().trimToLimit(DEFAULT_APP_SETTINGS.browsingHistoryLimit)
+      browsingHistoryStore.getState().trimToLimit(DEFAULT_FLAT_APP_SETTINGS.browsingHistoryLimit)
     })
   }
 
@@ -374,7 +383,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                           { value: 'dark', label: '深色' },
                         ]}
                         onChange={(value) =>
-                          void trackedUpdateSettings({ theme: value as AppTheme })
+                          void trackedUpdateSettings({
+                            appearance: { theme: value as AppTheme },
+                          })
                         }
                       />
                     </Field>
@@ -442,7 +453,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                           aria-label="显示 xb 用户评分"
                           checked={ratingEnabled}
                           onCheckedChange={(checked) =>
-                            void trackedUpdateSettings({ ratingEnabled: checked })
+                            void trackedUpdateSettings({
+                              features: { ratingEnabled: checked },
+                            })
                           }
                         />
                       </Field>
@@ -451,7 +464,9 @@ export function SettingsDialog({ open, onOpenChange, forceMount = false }: Setti
                           aria-label="使用 xb 打开话题页"
                           checked={xbTopicPage}
                           onCheckedChange={(checked) =>
-                            void trackedUpdateSettings({ xbTopicPage: checked })
+                            void trackedUpdateSettings({
+                              features: { xbTopicPage: checked },
+                            })
                           }
                         />
                       </Field>

@@ -32,7 +32,7 @@ function renderCard(variant: 'rail' | 'column') {
     queryKey: ['weibo', 'hotsearch', 'hot'],
     queryFn: async () => ({ items: [hotItem] }),
     staleTime: Infinity,
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 30_000,
     refetchIntervalInBackground: false,
   })
 
@@ -51,7 +51,10 @@ describe('HotSearchCard topic links', () => {
     getAppSettingsStore({
       get: async () => ({ [APP_SETTINGS_STORAGE_KEY]: undefined }),
       set: async () => {},
-    }).setState({ xbTopicPage: true, isHydrated: true })
+    }).setState({
+      isHydrated: true,
+      features: { ...getAppSettingsStore().getState().features, xbTopicPage: true },
+    })
   })
 
   it('opens a hot search topic inside xb from the side rail', async () => {
@@ -73,7 +76,9 @@ describe('HotSearchCard topic links', () => {
 
   it('opens weibo search when xb topic pages are disabled', async () => {
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-    getAppSettingsStore().setState({ xbTopicPage: false })
+    getAppSettingsStore().setState({
+      features: { ...getAppSettingsStore().getState().features, xbTopicPage: false },
+    })
     renderCard('column')
 
     const link = await screen.findByRole('link', { name: /测试话题/ })

@@ -97,7 +97,7 @@ describe('ColumnPickerDialog', () => {
     }
 
     expect(rowFor('推荐').getByText('已添加 2 列')).toBeInTheDocument()
-    expect(rowFor('用户分组').getByText('已添加 1 列')).toBeInTheDocument()
+    expect(rowFor('我关注的').getByText('已添加 1 列')).toBeInTheDocument()
     expect(rowFor('特别关注').queryByText(/已添加/)).toBeNull()
     expect(rowFor('朋友圈').queryByText(/已添加/)).toBeNull()
   })

@@ -36,7 +36,7 @@ function NotificationHeader({
   createdAtLabel: string
   source?: string
 }) {
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.appearance.statusDetailPopupEnabled)
   const ctx = useAppShellContext()
 
   const handleUserClick = () => {
@@ -77,7 +77,7 @@ function NotificationHeader({
               </UserHoverCard>
               <CreatedAtBadge label={createdAtLabel} />
             </div>
-            <CardDescription className="text-xs">{source ?? ''}</CardDescription>
+            <CardDescription>{source ?? ''}</CardDescription>
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@ function ReplyCommentBlock({
     user: { id: string; name: string; avatarUrl: string | null }
   }
 }) {
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.appearance.statusDetailPopupEnabled)
   const ctx = useAppShellContext()
 
   const handleUserClick = () => {
@@ -138,7 +138,7 @@ function CommentNotificationContent({ item }: { item: CommentNotification }) {
 }
 
 function MentionNotificationContent({ item }: { item: MentionNotification }) {
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.appearance.statusDetailPopupEnabled)
   const ctx = useAppShellContext()
 
   const handleUserClick = () => {
@@ -178,7 +178,7 @@ function MentionNotificationContent({ item }: { item: MentionNotification }) {
 }
 
 function LikeNotificationContent({ item }: { item: LikeNotification }) {
-  const statusDetailPopupEnabled = useAppSettings((s) => s.statusDetailPopupEnabled)
+  const statusDetailPopupEnabled = useAppSettings((s) => s.appearance.statusDetailPopupEnabled)
   const ctx = useAppShellContext()
 
   const handleUserClick = () => {

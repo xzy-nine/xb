@@ -28,8 +28,8 @@ export function DialogContainer({
     return null
   }
 
-  const glassOpacity = useAppSettings((s) => s.glassOpacity)
-  const glassBlur = useAppSettings((s) => s.glassBlur)
+  const glassOpacity = useAppSettings((s) => s.appearance.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.appearance.glassBlur)
   const resolvedZIndex = useMemo(() => zIndex ?? getNextZIndex(), [zIndex])
 
   const glassPanelStyle = useMemo<React.CSSProperties>(

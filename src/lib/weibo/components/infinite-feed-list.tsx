@@ -38,11 +38,11 @@ function FeedCards({
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth] = useElementSize(containerRef)
-  const waterfallColumnCount = useAppSettings((s) => s.waterfallColumnCount)
-  const immersiveMode = useAppSettings((s) => s.immersiveMode)
-  const sidebarCollapsed = useAppSettings((s) => s.sidebarCollapsed)
-  const waterfallExpandOnWideLayout = useAppSettings((s) => s.waterfallExpandOnWideLayout)
-  const multiColumnEnabled = useAppSettings((s) => s.multiColumnEnabled)
+  const waterfallColumnCount = useAppSettings((s) => s.feed.waterfallColumnCount)
+  const immersiveMode = useAppSettings((s) => s.navigation.immersiveMode)
+  const sidebarCollapsed = useAppSettings((s) => s.navigation.sidebarCollapsed)
+  const waterfallExpandOnWideLayout = useAppSettings((s) => s.feed.waterfallExpandOnWideLayout)
+  const multiColumnEnabled = useAppSettings((s) => s.features.multiColumnEnabled)
 
   if (items.length === 0) {
     return <PageEmptyState label={emptyLabel} onRetry={onRetry} />

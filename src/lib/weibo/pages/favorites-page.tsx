@@ -22,7 +22,7 @@ export function FavoritesPage({
 } = {}) {
   const runtime = usePageRuntime()
   const page = runtime.page
-  const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const rewriteEnabled = useAppSettings((s) => s.appearance.rewriteEnabled)
 
   const uid = source?.uid ?? (page.kind === 'favorites' ? page.uid : '')
   const isEnabled = rewriteEnabled && (source !== undefined || page.kind === 'favorites')
@@ -55,7 +55,9 @@ export function FavoritesPage({
 
   const handleSavedListChange = (value: string) => {
     if (value === 'liked' && uid !== '') {
-      runtime.navigate(`/u/page/like/${uid}`)
+      runtime.navigate(`/u/page/like/${uid}`, {
+        replace: runtime.navigationMode === 'column',
+      })
     }
   }
 

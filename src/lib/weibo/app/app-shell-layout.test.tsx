@@ -90,9 +90,9 @@ describe('ShellFrame', () => {
     })
     store.setState({
       ...store.getState(),
-      homeTab: 'for-you',
       isHydrated: true,
-      backgroundEnabled: false,
+      home: { ...store.getState().home, homeTab: 'for-you' },
+      appearance: { ...store.getState().appearance, backgroundEnabled: false },
     })
   })
 
@@ -224,7 +224,7 @@ describe('ShellFrame', () => {
   it('keeps one fixed back-to-top button when the right rail is hidden', () => {
     getAppSettingsStore().setState({
       ...getAppSettingsStore().getState(),
-      showRightRail: false,
+      navigation: { ...getAppSettingsStore().getState().navigation, showRightRail: false },
     })
     const mainRef = createMainScrollRoot()
     render(
@@ -260,7 +260,7 @@ describe('ShellFrame', () => {
   it('uses an exit-only rail and hides headers while scrolling in immersive mode', () => {
     getAppSettingsStore().setState({
       ...getAppSettingsStore().getState(),
-      immersiveMode: true,
+      navigation: { ...getAppSettingsStore().getState().navigation, immersiveMode: true },
     })
     const mainRef = createMainScrollRoot()
     render(
@@ -381,7 +381,9 @@ describe('ShellFrame', () => {
     )
 
     const contentMain = screen.getByRole('main')
-    mockMainRect(contentMain, () => (getAppSettingsStore().getState().immersiveMode ? 296 : 164))
+    mockMainRect(contentMain, () =>
+      getAppSettingsStore().getState().navigation.immersiveMode ? 296 : 164,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: '切换沉浸模式' }))
 
@@ -423,7 +425,9 @@ describe('ShellFrame', () => {
     )
 
     const contentMain = screen.getByRole('main')
-    mockMainRect(contentMain, () => (getAppSettingsStore().getState().immersiveMode ? 296 : 164))
+    mockMainRect(contentMain, () =>
+      getAppSettingsStore().getState().navigation.immersiveMode ? 296 : 164,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: '切换沉浸模式' }))
 
@@ -439,7 +443,7 @@ describe('ShellFrame', () => {
   it('pins the reading column when leaving immersive mode before sliding back', () => {
     getAppSettingsStore().setState({
       ...getAppSettingsStore().getState(),
-      immersiveMode: true,
+      navigation: { ...getAppSettingsStore().getState().navigation, immersiveMode: true },
     })
 
     const frames: FrameRequestCallback[] = []
@@ -474,7 +478,9 @@ describe('ShellFrame', () => {
     )
 
     const contentMain = screen.getByRole('main')
-    mockMainRect(contentMain, () => (getAppSettingsStore().getState().immersiveMode ? 296 : 164))
+    mockMainRect(contentMain, () =>
+      getAppSettingsStore().getState().navigation.immersiveMode ? 296 : 164,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: '退出沉浸模式' }))
 

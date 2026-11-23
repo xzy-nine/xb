@@ -29,7 +29,6 @@ type HomeTimelineMenuValue = `tab:${HomeTab}` | `group:${string}`
 
 export interface HomeTimelinePageProps {
   source?: { tab: HomeTab; groupId?: string }
-  onSourceChange?: (source: { tab: HomeTab; groupId?: string }) => void
 }
 
 function tabMenuValue(tab: HomeTab): HomeTimelineMenuValue {
@@ -66,11 +65,11 @@ function getTimelineErrorMessage(error: unknown, phase: 'initial' | 'load-more')
     : '暂时无法加载更多微博，请稍后重试。'
 }
 
-export function HomeTimelinePage({ source, onSourceChange }: HomeTimelinePageProps = {}) {
+export function HomeTimelinePage({ source }: HomeTimelinePageProps = {}) {
   const ctx = useAppShellContext()
   const runtime = usePageRuntime()
   const page = source ? { kind: 'home' as const, ...source } : runtime.page
-  const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const rewriteEnabled = useAppSettings((s) => s.appearance.rewriteEnabled)
 
   const pageTab = page.kind === 'home' ? page.tab : 'for-you'
   const isEnabled = rewriteEnabled && (source !== undefined || page.kind === 'home')
@@ -163,10 +162,8 @@ export function HomeTimelinePage({ source, onSourceChange }: HomeTimelinePagePro
       if (value.startsWith('group:')) {
         const gid = value.slice('group:'.length)
         if (gid === selectedGroupGid) return
-        if (onSourceChange) {
-          onSourceChange({ tab: 'following', groupId: gid })
-        } else if (runtime.navigationMode === 'column') {
-          runtime.navigate(`/mygroups?gid=${gid}`)
+        if (runtime.navigationMode === 'column') {
+          runtime.navigate(`/mygroups?gid=${gid}`, { replace: true })
         } else {
           ctx.onFollowGroupChange(gid)
         }
@@ -176,20 +173,14 @@ export function HomeTimelinePage({ source, onSourceChange }: HomeTimelinePagePro
 
       const tab = value.slice('tab:'.length) as HomeTab
       if (!isCustomGroupRoute && tab === activeTab) return
-      if (onSourceChange) {
-        const defaultGroup =
-          tab === 'special-follow' || tab === 'friend-circle'
-            ? getDefaultFollowGroupForHomeTab(defaultGroups, tab)
-            : undefined
-        onSourceChange({ tab, ...(defaultGroup ? { groupId: defaultGroup.gid } : {}) })
-      } else if (runtime.navigationMode === 'column') {
-        runtime.navigate(homeTimelinePathFromTab(tab, defaultGroups))
+      if (runtime.navigationMode === 'column') {
+        runtime.navigate(homeTimelinePathFromTab(tab, defaultGroups), { replace: true })
       } else {
         ctx.onHomeTabChange(tab)
       }
       resetMainScrollAfterRouteChange(runtime.resetScroll)
     },
-    [activeTab, ctx, defaultGroups, isCustomGroupRoute, onSourceChange, runtime, selectedGroupGid],
+    [activeTab, ctx, defaultGroups, isCustomGroupRoute, runtime, selectedGroupGid],
   )
 
   const groups = groupsQuery.data?.groups ?? []

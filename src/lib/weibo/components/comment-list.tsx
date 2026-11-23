@@ -18,11 +18,11 @@ export function CommentList({
   authorUid?: string
   onCommentReply?: (target: ComposeTarget) => void
 }) {
-  const glassOpacity = useAppSettings((s) => s.glassOpacity)
-  const glassBlur = useAppSettings((s) => s.glassBlur)
-  const theme = useAppSettings((s) => s.theme)
-  const lightModeBgColor = useAppSettings((s) => s.lightModeBgColor)
-  const darkModeBgColor = useAppSettings((s) => s.darkModeBgColor)
+  const glassOpacity = useAppSettings((s) => s.appearance.glassOpacity)
+  const glassBlur = useAppSettings((s) => s.appearance.glassBlur)
+  const theme = useAppSettings((s) => s.appearance.theme)
+  const lightModeBgColor = useAppSettings((s) => s.appearance.lightModeBgColor)
+  const darkModeBgColor = useAppSettings((s) => s.appearance.darkModeBgColor)
 
   const isDark = resolveIsDarkMode(theme, window.matchMedia('(prefers-color-scheme: dark)').matches)
   const preset = isDark

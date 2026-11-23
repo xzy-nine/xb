@@ -65,7 +65,7 @@ export function UserHoverCard(props: UserHoverCardProps) {
 
   const profileUid = profile?.id ?? ''
   const displayLocation = profile?.location ?? profile?.ipLocation ?? null
-  const ratingEnabled = useAppSettings((s) => s.ratingEnabled)
+  const ratingEnabled = useAppSettings((s) => s.features.ratingEnabled)
 
   return (
     <HoverCard

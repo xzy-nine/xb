@@ -35,6 +35,14 @@ const mockSettings: AppSettings & {
   updateUserTheme: ReturnType<typeof vi.fn>
 } = {
   ...DEFAULT_APP_SETTINGS,
+  appearance: { ...DEFAULT_APP_SETTINGS.appearance },
+  navigation: { ...DEFAULT_APP_SETTINGS.navigation },
+  feed: { ...DEFAULT_APP_SETTINGS.feed },
+  imageGen: { ...DEFAULT_APP_SETTINGS.imageGen },
+  home: { ...DEFAULT_APP_SETTINGS.home },
+  features: { ...DEFAULT_APP_SETTINGS.features },
+  media: { ...DEFAULT_APP_SETTINGS.media },
+  themes: { ...DEFAULT_APP_SETTINGS.themes },
   updateSettings: mockUpdateSettings,
   addUserTheme: vi.fn().mockResolvedValue(undefined),
   deleteUserTheme: vi.fn().mockResolvedValue(undefined),
@@ -68,6 +76,14 @@ describe('SettingsDialog', () => {
       set: workspaceStorage.set,
     })
     Object.assign(mockSettings, DEFAULT_APP_SETTINGS)
+    mockSettings.appearance = { ...DEFAULT_APP_SETTINGS.appearance }
+    mockSettings.navigation = { ...DEFAULT_APP_SETTINGS.navigation }
+    mockSettings.feed = { ...DEFAULT_APP_SETTINGS.feed }
+    mockSettings.imageGen = { ...DEFAULT_APP_SETTINGS.imageGen }
+    mockSettings.home = { ...DEFAULT_APP_SETTINGS.home }
+    mockSettings.features = { ...DEFAULT_APP_SETTINGS.features }
+    mockSettings.media = { ...DEFAULT_APP_SETTINGS.media }
+    mockSettings.themes = { ...DEFAULT_APP_SETTINGS.themes }
     mockUpdateSettings.mockResolvedValue(undefined)
   })
 
@@ -109,18 +125,34 @@ describe('SettingsDialog', () => {
     expect(screen.queryByText('设置搜索')).not.toBeInTheDocument()
   })
 
-  it('shows both the single-column content width and the multi-column width settings', () => {
-    mockSettings.columnWidth = 'custom'
-    mockSettings.customColumnWidth = 500
+  it('shows both the single-column content width and the multi-column width settings', async () => {
+    const user = userEvent.setup()
+    mockSettings.navigation.columnWidth = 'custom'
+    mockSettings.navigation.customColumnWidth = 500
 
     render(<SettingsDialog open onOpenChange={() => {}} />)
 
     expect(screen.getByRole('button', { name: '显示' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('combobox', { name: '列宽度' })).toHaveTextContent('自定义')
-    expect(screen.getByRole('slider', { name: '自定义列宽度' })).toHaveValue(500)
-    expect(screen.getByText('500px')).toBeInTheDocument()
+    const input = screen.getByRole('spinbutton', { name: '自定义列宽度' })
+    expect(input).toHaveValue(500)
+    expect(input).toHaveAttribute('min', '300')
     expect(screen.getByRole('switch', { name: '多列工作区' })).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: '内容宽度' })).toHaveTextContent('标准')
+
+    await user.clear(input)
+    await user.type(input, '1200')
+    await user.tab()
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      navigation: { customColumnWidth: 1200 },
+    })
+
+    await user.clear(input)
+    await user.type(input, '100')
+    await user.tab()
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      navigation: { customColumnWidth: 300 },
+    })
   })
 
   it('forgets dragged column widths after confirming reset', async () => {
@@ -162,13 +194,19 @@ describe('SettingsDialog', () => {
     await user.click(screen.getByRole('button', { name: '恢复默认' }))
 
     expect(mockUpdateSettings).toHaveBeenCalledWith({
-      contentWidth: DEFAULT_APP_SETTINGS.contentWidth,
-      customContentWidth: DEFAULT_APP_SETTINGS.customContentWidth,
-      multiColumnEnabled: DEFAULT_APP_SETTINGS.multiColumnEnabled,
-      columnWidth: DEFAULT_APP_SETTINGS.columnWidth,
-      customColumnWidth: DEFAULT_APP_SETTINGS.customColumnWidth,
-      motionPreference: DEFAULT_APP_SETTINGS.motionPreference,
-      darkModeImageDim: DEFAULT_APP_SETTINGS.darkModeImageDim,
+      features: {
+        contentWidth: DEFAULT_APP_SETTINGS.features.contentWidth,
+        customContentWidth: DEFAULT_APP_SETTINGS.features.customContentWidth,
+        multiColumnEnabled: DEFAULT_APP_SETTINGS.features.multiColumnEnabled,
+      },
+      navigation: {
+        columnWidth: DEFAULT_APP_SETTINGS.navigation.columnWidth,
+        customColumnWidth: DEFAULT_APP_SETTINGS.navigation.customColumnWidth,
+      },
+      appearance: {
+        motionPreference: DEFAULT_APP_SETTINGS.appearance.motionPreference,
+        darkModeImageDim: DEFAULT_APP_SETTINGS.appearance.darkModeImageDim,
+      },
     })
   })
 
@@ -245,7 +283,7 @@ describe('SettingsDialog', () => {
     await user.click(screen.getByRole('tab', { name: '微博' }))
     expect(screen.getByText('转发链样式')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '折叠卡片' }))
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ replyChainDisplay: 'collapsed' })
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ feed: { replyChainDisplay: 'collapsed' } })
 
     await user.click(screen.getByRole('tab', { name: '评论' }))
     expect(screen.getByText('评论密度')).toBeInTheDocument()
@@ -263,7 +301,7 @@ describe('SettingsDialog', () => {
     const imageWidth = screen.getByRole('slider', { name: '单图最大宽度' })
     imageWidth.focus()
     await user.keyboard('{ArrowRight}')
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ weiboCardSingleImageMaxWidth: 460 })
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ feed: { weiboCardSingleImageMaxWidth: 460 } })
     expect(screen.queryByRole('button', { name: '精细调整' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '操作' }))
@@ -299,8 +337,10 @@ describe('SettingsDialog', () => {
     await user.click(screen.getByRole('button', { name: '恢复默认' }))
 
     expect(mockUpdateSettings).toHaveBeenCalledWith({
-      feedDensity: DEFAULT_APP_SETTINGS.feedDensity,
-      autoLoadLongText: DEFAULT_APP_SETTINGS.autoLoadLongText,
+      feed: {
+        feedDensity: DEFAULT_APP_SETTINGS.feed.feedDensity,
+        autoLoadLongText: DEFAULT_APP_SETTINGS.feed.autoLoadLongText,
+      },
     })
   })
 

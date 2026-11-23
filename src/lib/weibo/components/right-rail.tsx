@@ -13,8 +13,10 @@ interface RightRailProps {
 }
 
 export function RightRail({ onNavigateProfile }: RightRailProps) {
-  const showHotSearchCard = useAppSettings((state) => state.showHotSearchCard)
-  const showFollowedSuperTopicsCard = useAppSettings((state) => state.showFollowedSuperTopicsCard)
+  const showHotSearchCard = useAppSettings((state) => state.navigation.showHotSearchCard)
+  const showFollowedSuperTopicsCard = useAppSettings(
+    (state) => state.navigation.showFollowedSuperTopicsCard,
+  )
 
   return (
     <div className="flex w-full flex-col gap-4">

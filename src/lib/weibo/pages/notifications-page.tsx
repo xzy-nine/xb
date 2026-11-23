@@ -107,13 +107,15 @@ function NotificationTabContent({
 export function NotificationsPage({ source }: { source?: { tab: NotificationTab } } = {}) {
   const runtime = usePageRuntime()
   const page = runtime.page
-  const rewriteEnabled = useAppSettings((s) => s.rewriteEnabled)
+  const rewriteEnabled = useAppSettings((s) => s.appearance.rewriteEnabled)
   const activeTab = source?.tab ?? (page.kind === 'notifications' ? page.tab : 'mentions')
   const isEnabled = rewriteEnabled && (source !== undefined || page.kind === 'notifications')
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) return
-    runtime.navigate(TAB_ROUTES[tab as NotificationTab])
+    runtime.navigate(TAB_ROUTES[tab as NotificationTab], {
+      replace: runtime.navigationMode === 'column',
+    })
     resetMainScrollAfterRouteChange(runtime.resetScroll)
   }
 

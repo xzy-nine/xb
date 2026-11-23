@@ -67,9 +67,12 @@ describe('StatusText', () => {
     })
     store.setState({
       ...store.getState(),
-      replyChainDisplay: 'expanded',
-      statusDetailPopupEnabled: false,
       isHydrated: true,
+      feed: { ...getAppSettingsStore().getState().feed, replyChainDisplay: 'expanded' },
+      appearance: {
+        ...getAppSettingsStore().getState().appearance,
+        statusDetailPopupEnabled: false,
+      },
     })
   })
   it('opens topic_struct topics inside xb when xb topic pages are enabled', () => {
@@ -96,7 +99,9 @@ describe('StatusText', () => {
   })
 
   it('opens topic_struct topics on weibo search when xb topic pages are disabled', () => {
-    getAppSettingsStore().setState({ xbTopicPage: false })
+    getAppSettingsStore().setState({
+      features: { ...getAppSettingsStore().getState().features, xbTopicPage: false },
+    })
     const { container } = renderWithProviders(
       <StatusText
         item={{
@@ -375,7 +380,9 @@ describe('StatusText', () => {
   })
 
   it('renders an inline image carousel after the text when the short_url lives outside any reply chain', () => {
-    getAppSettingsStore().setState({ weiboCardSingleImageMaxWidth: 620 })
+    getAppSettingsStore().setState({
+      feed: { ...getAppSettingsStore().getState().feed, weiboCardSingleImageMaxWidth: 620 },
+    })
 
     const { container } = renderWithProviders(
       <StatusText
@@ -481,16 +488,18 @@ describe('StatusText reply-chain collapsible', () => {
   afterEach(() => {
     const store = getAppSettingsStore()
     store.setState({
-      replyChainDisplay: 'expanded',
+      feed: { ...getAppSettingsStore().getState().feed, replyChainDisplay: 'expanded' },
     })
   })
 
-  const setupStore = (overrides = {}) => {
+  const setupStore = (overrides: { replyChainDisplay?: 'expanded' | 'collapsed' } = {}) => {
     const store = getAppSettingsStore()
     store.setState({
-      replyChainDisplay: 'expanded',
       isHydrated: true,
-      ...overrides,
+      feed: {
+        ...getAppSettingsStore().getState().feed,
+        replyChainDisplay: overrides.replyChainDisplay ?? 'expanded',
+      },
     })
   }
 
@@ -562,7 +571,7 @@ describe('MentionInlineText', () => {
     })
     store.setState({
       ...store.getState(),
-      statusDetailPopupEnabled: false,
+      appearance: { ...store.getState().appearance, statusDetailPopupEnabled: false },
       isHydrated: true,
     })
   })

@@ -202,7 +202,7 @@ function StatusDetailTopBar({
                 className="shrink-0"
                 onClick={onBack}
               >
-                <ArrowLeft className="size-4" />
+                <ArrowLeft />
               </Button>
             ) : null}
             <div className="relative min-w-0 flex-1 overflow-hidden">
@@ -256,7 +256,7 @@ export function StatusDetailPage() {
   const runtime = usePageRuntime()
   const page = runtime.page
   const { setComposeTarget } = useAppShellContext()
-  const rewriteEnabled = useAppSettings((state) => state.rewriteEnabled)
+  const rewriteEnabled = useAppSettings((state) => state.appearance.rewriteEnabled)
   const statusArticleRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {

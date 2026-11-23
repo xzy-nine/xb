@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import type { AppSettings, StatusDetailPopupPosition } from '@/lib/app-settings'
+import type { FlatAppSettings, StatusDetailPopupPosition } from '@/lib/app-settings'
 import { type AppSettingsStoreState, useAppSettings, useShallow } from '@/lib/app-settings-store'
 import { cn } from '@/lib/utils'
 
@@ -33,7 +33,7 @@ const FEATURES_SETTING_KEYS = [
   'backgroundImageUrl',
   'glassOpacity',
   'glassBlur',
-] as const satisfies readonly (keyof AppSettings)[]
+] as const satisfies readonly (keyof FlatAppSettings)[]
 
 export function SettingsFeaturesSection({
   updateSettings,
@@ -42,15 +42,15 @@ export function SettingsFeaturesSection({
 }) {
   const settings = useAppSettings(
     useShallow((state) => ({
-      statusDetailPopupEnabled: state.statusDetailPopupEnabled,
-      statusDetailPopupPosition: state.statusDetailPopupPosition,
-      statusDetailPopupWidth: state.statusDetailPopupWidth,
-      waterfallColumnCount: state.waterfallColumnCount,
-      waterfallExpandOnWideLayout: state.waterfallExpandOnWideLayout,
-      backgroundEnabled: state.backgroundEnabled,
-      backgroundImageUrl: state.backgroundImageUrl,
-      glassOpacity: state.glassOpacity,
-      glassBlur: state.glassBlur,
+      statusDetailPopupEnabled: state.appearance.statusDetailPopupEnabled,
+      statusDetailPopupPosition: state.appearance.statusDetailPopupPosition,
+      statusDetailPopupWidth: state.appearance.statusDetailPopupWidth,
+      waterfallColumnCount: state.feed.waterfallColumnCount,
+      waterfallExpandOnWideLayout: state.feed.waterfallExpandOnWideLayout,
+      backgroundEnabled: state.appearance.backgroundEnabled,
+      backgroundImageUrl: state.appearance.backgroundImageUrl,
+      glassOpacity: state.appearance.glassOpacity,
+      glassBlur: state.appearance.glassBlur,
     })),
   )
   const [imagePreviewError, setImagePreviewError] = useState(false)
@@ -82,7 +82,7 @@ export function SettingsFeaturesSection({
 
   const handleBackgroundImageUrlChange = useCallback(
     (url: string) => {
-      void updateSettings({ backgroundImageUrl: url })
+      void updateSettings({ appearance: { backgroundImageUrl: url } })
       validateImageUrl(url)
     },
     [updateSettings, validateImageUrl],
@@ -96,8 +96,8 @@ export function SettingsFeaturesSection({
           checked={settings.statusDetailPopupEnabled}
           onCheckedChange={(checked) =>
             void updateSettings({
-              statusDetailPopupEnabled: checked,
-              ...(checked && { feedInteractionMode: 'x' }),
+              appearance: { statusDetailPopupEnabled: checked },
+              ...(checked && { feed: { feedInteractionMode: 'x' as const } }),
             })
           }
         />
@@ -109,7 +109,7 @@ export function SettingsFeaturesSection({
             value={settings.statusDetailPopupPosition}
             onValueChange={(value) =>
               void updateSettings({
-                statusDetailPopupPosition: value as StatusDetailPopupPosition,
+                appearance: { statusDetailPopupPosition: value as StatusDetailPopupPosition },
               })
             }
           >
@@ -137,7 +137,8 @@ export function SettingsFeaturesSection({
             value={[settings.statusDetailPopupWidth]}
             aria-label="弹窗宽度"
             onValueChange={([value]) => {
-              if (value !== undefined) void updateSettings({ statusDetailPopupWidth: value })
+              if (value !== undefined)
+                void updateSettings({ appearance: { statusDetailPopupWidth: value } })
             }}
           />
         </StackedField>
@@ -154,7 +155,7 @@ export function SettingsFeaturesSection({
           value={[settings.waterfallColumnCount]}
           aria-label="瀑布流栏数"
           onValueChange={([value]) => {
-            if (value !== undefined) void updateSettings({ waterfallColumnCount: value })
+            if (value !== undefined) void updateSettings({ feed: { waterfallColumnCount: value } })
           }}
         />
       </StackedField>
@@ -167,7 +168,7 @@ export function SettingsFeaturesSection({
           aria-label="展开时放大卡片"
           checked={settings.waterfallExpandOnWideLayout}
           onCheckedChange={(checked) =>
-            void updateSettings({ waterfallExpandOnWideLayout: checked })
+            void updateSettings({ feed: { waterfallExpandOnWideLayout: checked } })
           }
         />
       </Field>
@@ -176,7 +177,9 @@ export function SettingsFeaturesSection({
         <Switch
           aria-label="自定义背景"
           checked={settings.backgroundEnabled}
-          onCheckedChange={(checked) => void updateSettings({ backgroundEnabled: checked })}
+          onCheckedChange={(checked) =>
+            void updateSettings({ appearance: { backgroundEnabled: checked } })
+          }
         />
       </Field>
 
@@ -221,7 +224,7 @@ export function SettingsFeaturesSection({
           value={[settings.glassOpacity]}
           aria-label="玻璃透明度"
           onValueChange={([value]) => {
-            if (value !== undefined) void updateSettings({ glassOpacity: value })
+            if (value !== undefined) void updateSettings({ appearance: { glassOpacity: value } })
           }}
         />
       </StackedField>
@@ -237,7 +240,7 @@ export function SettingsFeaturesSection({
           value={[settings.glassBlur]}
           aria-label="玻璃模糊"
           onValueChange={([value]) => {
-            if (value !== undefined) void updateSettings({ glassBlur: value })
+            if (value !== undefined) void updateSettings({ appearance: { glassBlur: value } })
           }}
         />
       </StackedField>

@@ -40,7 +40,9 @@ describe('bindShellState', () => {
     expect(document.documentElement.getAttribute('data-xb-weibo-ready')).toBe('')
     expect(container.style.colorScheme).toBe('light')
 
-    await store.getState().updateSettings({ theme: 'dark', rewriteEnabled: false })
+    await store.getState().updateSettings({
+      appearance: { theme: 'dark', rewriteEnabled: false },
+    })
 
     expect(container.classList.contains('dark')).toBe(true)
     expect(container.style.colorScheme).toBe('dark')
@@ -75,7 +77,7 @@ describe('bindShellState', () => {
       settingsStore: store,
     })
 
-    await store.getState().updateSettings({ theme: 'dark' })
+    await store.getState().updateSettings({ appearance: { theme: 'dark' } })
 
     // 修复前 portal 容器与 container 平级，弹窗走 portal 时拿不到 .dark，会显示浅色
     expect(container.classList.contains('dark')).toBe(true)
@@ -110,7 +112,9 @@ describe('bindShellState', () => {
     expect(container.style.getPropertyValue('--text-xs')).toBe('12px')
     expect(container.style.getPropertyValue('--xb-content-font-size')).toBe('16px')
 
-    await store.getState().updateSettings({ uiFontSize: 20, contentFontSize: 32 })
+    await store.getState().updateSettings({
+      appearance: { uiFontSize: 20, contentFontSize: 32 },
+    })
 
     expect(container.style.getPropertyValue('--text-xs')).toBe('18px')
     expect(container.style.getPropertyValue('--text-sm')).toBe('20px')
@@ -150,7 +154,9 @@ describe('bindShellState', () => {
       settingsStore: store,
     })
 
-    await store.getState().updateSettings({ theme: 'dark' })
+    await store.getState().updateSettings({
+      appearance: { theme: 'dark' },
+    })
 
     expect(container.classList.contains('dark')).toBe(true)
     expect(container.style.colorScheme).toBe('dark')
@@ -193,21 +199,24 @@ describe('bindShellState', () => {
     })
 
     await store.getState().updateSettings({
-      customThemeLightCss: '--primary: #111111; --background: #ffffff;',
-      customThemeDarkCss: '--primary: #eeeeee; --background: #000000;',
+      themes: {
+        customThemeLightCss: '--primary: #111111; --background: #ffffff;',
+        customThemeDarkCss: '--primary: #eeeeee; --background: #000000;',
+      },
     })
 
     expect(container.style.getPropertyValue('--primary')).toBe('#111111')
     expect(container.style.getPropertyValue('--background')).toBe('#ffffff')
 
-    await store.getState().updateSettings({ theme: 'dark' })
+    await store.getState().updateSettings({
+      appearance: { theme: 'dark' },
+    })
 
     expect(container.style.getPropertyValue('--primary')).toBe('#eeeeee')
     expect(container.style.getPropertyValue('--background')).toBe('#000000')
 
     await store.getState().updateSettings({
-      customThemeLightCss: '',
-      customThemeDarkCss: '',
+      themes: { customThemeLightCss: '', customThemeDarkCss: '' },
     })
 
     expect(container.style.getPropertyValue('--primary')).toBe('oklch(0.922 0 0)')
@@ -240,8 +249,7 @@ describe('bindShellState', () => {
     })
 
     await store.getState().updateSettings({
-      fontFamilyClass: 'font-serif',
-      fontApplyScope: 'content',
+      appearance: { fontFamilyClass: 'font-serif', fontApplyScope: 'content' },
     })
 
     expect(container.style.fontFamily).toBe('')
@@ -275,8 +283,7 @@ describe('bindShellState', () => {
     })
 
     await store.getState().updateSettings({
-      fontFamilyClass: 'font-lxgw-wenkai',
-      fontApplyScope: 'app',
+      appearance: { fontFamilyClass: 'font-lxgw-wenkai', fontApplyScope: 'app' },
     })
 
     const stack = resolveFontFamilyStack('font-lxgw-wenkai')
@@ -288,14 +295,14 @@ describe('bindShellState', () => {
 
     // User font setting overrides theme --font-sans
     await store.getState().updateSettings({
-      customThemeLightCss: '--font-sans: Inter, sans-serif;',
+      themes: { customThemeLightCss: '--font-sans: Inter, sans-serif;' },
     })
     expect(container.style.getPropertyValue('--font-sans')).toBe(stack)
 
     // 切回正文：去掉 font-family；主题 --font-sans 若存在则恢复（本例无主题字体）
     await store.getState().updateSettings({
-      fontApplyScope: 'content',
-      customThemeLightCss: '',
+      appearance: { fontApplyScope: 'content' },
+      themes: { customThemeLightCss: '' },
     })
     expect(container.style.fontFamily).toBe('')
     // 无主题字体时 --font-sans 应为空（主题变量已清空，应用模式也不再写入）
@@ -303,8 +310,8 @@ describe('bindShellState', () => {
 
     // 正文模式不得抹掉主题的 --font-sans
     await store.getState().updateSettings({
-      fontApplyScope: 'content',
-      customThemeLightCss: '--font-sans: Inter, sans-serif;',
+      appearance: { fontApplyScope: 'content' },
+      themes: { customThemeLightCss: '--font-sans: Inter, sans-serif;' },
     })
     expect(container.style.fontFamily).toBe('')
     expect(container.style.getPropertyValue('--font-sans')).toBe('Inter, sans-serif')
@@ -336,8 +343,7 @@ describe('bindShellState', () => {
     })
 
     await store.getState().updateSettings({
-      fontFamilyClass: 'font-simhei',
-      fontApplyScope: 'app',
+      appearance: { fontFamilyClass: 'font-simhei', fontApplyScope: 'app' },
     })
 
     expect(container.style.fontFamily).toContain('SimHei')

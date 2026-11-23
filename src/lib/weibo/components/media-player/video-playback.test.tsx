@@ -18,14 +18,12 @@ vi.mock('@reactuses/core', () => ({
 vi.mock('@/lib/app-settings-store', () => ({
   useAppSettings: (
     selector: (state: {
-      rememberPlaybackRate: boolean
-      playbackRate: number
+      media: { rememberPlaybackRate: boolean; playbackRate: number }
       updateSettings: ReturnType<typeof vi.fn>
     }) => unknown,
   ) =>
     selector({
-      rememberPlaybackRate: false,
-      playbackRate: 1,
+      media: { rememberPlaybackRate: false, playbackRate: 1 },
       updateSettings: vi.fn(),
     }),
   useShallow: (selector: unknown) => selector,

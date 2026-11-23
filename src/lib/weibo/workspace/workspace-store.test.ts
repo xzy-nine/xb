@@ -208,7 +208,7 @@ describe('workspace store', () => {
         label: '不会进入唯一标识',
       }),
     ).toBe(columnSourceIdentity({ kind: 'explore', groupId: '102803' }))
-    expect(columnSourceTitle({ kind: 'home', tab: 'following' })).toBe('用户分组')
+    expect(columnSourceTitle({ kind: 'home', tab: 'following' })).toBe('我关注的')
     expect(columnSourceTitle({ kind: 'explore', groupId: '102803', label: '热门' })).toBe('热门')
   })
 
@@ -276,11 +276,11 @@ describe('workspace store', () => {
     const store = createWorkspaceStore(storage)
     await store.getState().hydrate()
 
-    expect(store.getState().auxiliaryColumns[0]).toMatchObject({ width: 720 })
+    expect(store.getState().auxiliaryColumns[0]).toMatchObject({ width: 9999 })
     expect(store.getState().columnWidths).toEqual({ explore: 300 })
     await store.getState().setColumnWidth('column', 1000)
-    expect(store.getState().auxiliaryColumns[0]).toMatchObject({ width: 720 })
-    expect(store.getState().columnWidths).toEqual({ explore: 720 })
+    expect(store.getState().auxiliaryColumns[0]).toMatchObject({ width: 1000 })
+    expect(store.getState().columnWidths).toEqual({ explore: 1000 })
   })
 
   it('migrates legacy saved width aliases for newly added saved columns', async () => {
@@ -366,6 +366,20 @@ describe('workspace store', () => {
       { id: 'first-column', source: { kind: 'home', tab: 'for-you' } },
       { id: 'second-column', source: { kind: 'hot-search', type: 'social' } },
     ])
+  })
+
+  it('remembers the hot search type selected for one column', async () => {
+    const store = createWorkspaceStore(createStorageArea(), { createId: () => 'hot-column' })
+    await store.getState().addColumn({ kind: 'hot-search' })
+    await store.getState().setHotSearchType('hot-column', 'life')
+
+    expect(store.getState().auxiliaryColumns[0]?.source).toEqual({
+      kind: 'hot-search',
+      type: 'life',
+    })
+
+    await store.getState().setHotSearchType('hot-column', 'hot')
+    expect(store.getState().auxiliaryColumns[0]?.source).toEqual({ kind: 'hot-search' })
   })
 
   it('supports an explicit default width when no per-kind width exists', async () => {

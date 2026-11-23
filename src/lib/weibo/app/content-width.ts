@@ -1,6 +1,6 @@
-import { DEFAULT_CUSTOM_CONTENT_WIDTH, type ContentWidth } from '@/lib/app-settings'
+import { type CustomContentWidth, DEFAULT_CUSTOM_CONTENT_WIDTH } from '@/lib/app-settings.custom'
 
-const CONTENT_WIDTH_DELTA_PX: Record<ContentWidth, number> = {
+const CONTENT_WIDTH_DELTA_PX: Record<CustomContentWidth, number> = {
   narrower: -300,
   narrow: -150,
   standard: 0,
@@ -10,7 +10,7 @@ const CONTENT_WIDTH_DELTA_PX: Record<ContentWidth, number> = {
 }
 
 export function getContentWidthAdjustedMaxWidth(
-  contentWidth: ContentWidth,
+  contentWidth: CustomContentWidth,
   baseWidth: number,
   customContentWidth = DEFAULT_CUSTOM_CONTENT_WIDTH,
 ) {
